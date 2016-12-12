@@ -42,28 +42,26 @@ void About (void){
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 void Help(void){
-  std::cout                                               << "\n"
-  << "Synopsis:"                                          << "\n"
-  << "    cryfa [OPTION]... -t [TARGET] -r [REFERENCE]"   << "\n"
-                                                          << "\n"
-  << "Options:"                                           << "\n"
-  << "    -h,  --help"                                    << "\n"
-  << "         usage guide"                               << "\n"
-                                                          << "\n"
-  << "    -a,  --about"                                   << "\n"
-  << "         about the program"                         << "\n"
-                                                          << "\n"
-  << "    -v,  --verbose"                                 << "\n"
-  << "         verbose mode (more information)"           << "\n"
-                                                          << "\n"
-  << "    -n [NUMBER],  --number [NUMBER]"                << "\n"
-  << "         number of something."                      << "\n"
-  << "         requires an integer number (NUMBER)"       << "\n"
-                                                          << "\n"
-  // TODO: ADD MODE & KEYFILE
-  << "    -t [TARGET],  --target [TARGET]"                << "\n"
-  << "         target file"                               << "\n"
-                                                          << "\n";
+  std::cout                                                  << "\n"
+  << "Synopsis:"                                             << "\n"
+  << "    cryfa [OPTION]... -k [KEYFILENAME] [FILENAME]"     << "\n"
+                                                             << "\n"
+  << "Options:"                                              << "\n"
+  << "    -h,  --help"                                       << "\n"
+  << "         usage guide"                                  << "\n"
+                                                             << "\n"
+  << "    -a,  --about"                                      << "\n"
+  << "         about the program"                            << "\n"
+                                                             << "\n"
+  << "    -v,  --verbose"                                    << "\n"
+  << "         verbose mode (more information)"              << "\n"
+                                                             << "\n"
+  << "    -d,  --decrypt"                                    << "\n"
+  << "         decrypt mode"                                 << "\n"
+                                                             << "\n"
+  << "    -k [KEYFILE],  --key [KEYFILE]"                    << "\n"
+  << "         key filename"                                 << "\n"
+                                                             << "\n";
   }
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
