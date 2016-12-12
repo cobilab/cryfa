@@ -8,6 +8,8 @@
 
 #include <iostream>
 #include <fstream>
+#include <getopt.h>
+#include <string>
 #include <iomanip>
 
 #include "defs.h"
@@ -35,6 +37,33 @@ void About (void){
   << "License v3 <http://www.gnu.org/licenses/gpl.html>. There"   << "\n"
   << "is NOT ANY WARRANTY, to the extent permitted by law."       << "\n"
                                                                   << "\n";
+  }
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+void Help(void){
+  std::cout                                               << "\n"
+  << "Synopsis:"                                          << "\n"
+  << "    cryfa [OPTION]... -t [TARGET] -r [REFERENCE]"   << "\n"
+                                                          << "\n"
+  << "Options:"                                           << "\n"
+  << "    -h,  --help"                                    << "\n"
+  << "         usage guide"                               << "\n"
+                                                          << "\n"
+  << "    -a,  --about"                                   << "\n"
+  << "         about the program"                         << "\n"
+                                                          << "\n"
+  << "    -v,  --verbose"                                 << "\n"
+  << "         verbose mode (more information)"           << "\n"
+                                                          << "\n"
+  << "    -n [NUMBER],  --number [NUMBER]"                << "\n"
+  << "         number of something."                      << "\n"
+  << "         requires an integer number (NUMBER)"       << "\n"
+                                                          << "\n"
+  // TODO: ADD MODE & KEYFILE
+  << "    -t [TARGET],  --target [TARGET]"                << "\n"
+  << "         target file"                               << "\n"
+                                                          << "\n";
   }
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -138,15 +167,81 @@ void DecryptFA(int argc, char **argv){
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 int main(int argc, char* argv[]){
+  static int h_flag, a_flag, v_flag, d_flag;
+  bool t_flag = false;          // target file name entered
+  std::string FileName = "";    // argument of option 't'
+  int c;              // deal with getopt_long()
+  int option_index;   // option index stored by getopt_long()
 
-  if(argc <= 1){
-    std::cerr << "" << std::endl;
-    std::cerr << "cryfa v" << VERSION << "." << RELEASE << 
-    ": a FASTA encryption and decryption tool.\n" << std::endl;
-    std::cerr << "Usage: "<<argv[0]<<" [file]\n" << std::endl;
-    std::cerr << "The output is written in the stdout.\n" << std::endl;
-    return 0;
+  opterr = 0;         // force getopt_long() to remain silent when it finds a problem
+
+  static struct option long_options[] = {
+    {"help",            no_argument, &h_flag, (int) 'h'},   // help
+    {"about",           no_argument, &a_flag, (int) 'a'},   // about
+    {"verbose",         no_argument, &v_flag, (int) 'v'},   // verbose
+    {"decrypt",         no_argument, &d_flag, (int) 'd'},   // verbose
+    {"number",    required_argument,       0,       'n'},   // number (integer)
+    {"target",    required_argument,       0,       't'},   // target file
+    {0, 0, 0, 0}
+    };
+
+  while(1){
+    option_index = 0;
+    switch((c = getopt_long(argc, argv, ":havdn:t:r:", long_options, &option_index))){
+      case -1:
+      break;
+
+      case 0:
+        // If this option set a flag, do nothing else now.
+        if (long_options[option_index].flag != 0)
+          break;
+        std::cout << "option '" << long_options[option_index].name << "'\n";
+        if(optarg)
+          std::cout << " with arg " << optarg << "\n";
+      break;
+
+      case 'h':   // show usage guide
+        h_flag = 1;
+        Help();
+      break;
+
+      case 'a':   // show About
+        a_flag = 1;
+        About();
+      break;
+
+      case 'v':   // verbose mode
+        v_flag = 1;
+      break;
+
+      case 'd':   // verbose mode
+        d_flag = 1;
+      break;
+
+
+      case 'n':   // needs an integer argument
+/*
+        try{
+          messageObj.number(std::stoi((std::string) optarg));    //for test
+          }
+        catch(const std::invalid_argument &ia)
+          {
+          std::cerr << "Option 'n' ('number') has an invalid argument.\n";
+          }
+*/
+      break;
+
+      case 't':   // needs reference file name
+        t_flag = true;
+        FileName = (std::string) optarg;
+      break;
+
+      default:
+        std::cerr << "Option '" << (char) optopt << "' is invalid.\n";
+      break;
+      }
     }
+
 
 /*
   //Key and IV setup
@@ -196,24 +291,6 @@ int main(int argc, char* argv[]){
   EncryptFA(argc, argv);
 
   DecryptFA(argc, argv);
-
-/*
-  //
-  // Decrypt
-  //
-  CryptoPP::AES::Decryption aesDecryption(key, CryptoPP::AES::MAX_KEYLENGTH);
-  CryptoPP::CBC_Mode_ExternalCipher::Decryption cbcDecryption( aesDecryption, iv );
-  CryptoPP::StreamTransformationFilter stfDecryptor(cbcDecryption, new CryptoPP::StringSink( decryptedtext ) );
-  stfDecryptor.Put( reinterpret_cast<const unsigned char*>( ciphertext.c_str() ), ciphertext.size() );
-  stfDecryptor.MessageEnd();
-
-  //
-  // Dump Decrypted Text
-  //
-  std::cout << "Decrypted Text: " << std::endl;
-  std::cout << decryptedtext;
-  std::cout << std::endl << std::endl;
-*/
 
   return 0;
   }
