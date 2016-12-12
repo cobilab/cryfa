@@ -184,10 +184,11 @@ int main(int argc, char* argv[]){
 
   while(1){
     option_index = 0;
-    switch((c = getopt_long(argc, argv, ":havd:k:", long_options, &option_index))){
-      case -1:
+
+    if((c = getopt_long(argc, argv, ":havd:k:", long_options, &option_index)) == -1)
       break;
 
+    switch(c){
       case 0:
         // If this option set a flag, do nothing else now.
         if (long_options[option_index].flag != 0)
@@ -200,18 +201,20 @@ int main(int argc, char* argv[]){
       case 'h':   // show usage guide
         h_flag = 1;
         Help();
+        exit(1);
       break;
 
       case 'a':   // show About
         a_flag = 1;
         About();
+        exit(1);
       break;
 
       case 'v':   // verbose mode
         v_flag = 1;
       break;
 
-      case 'd':   // verbose mode
+      case 'd':   // decrypt mode
         d_flag = 1;
       break;
 
@@ -226,6 +229,9 @@ int main(int argc, char* argv[]){
       }
     }
 
+  if(v_flag){
+    std::cerr << "Verbose mode on.\n";
+    }
 
 /*
   //Key and IV setup
@@ -272,10 +278,15 @@ int main(int argc, char* argv[]){
   std::cout << std::endl << std::endl;
 */
 
+  if(d_flag){
+    std::cerr << "Decryption mode on.\n";
+    DecryptFA(argc, argv);
+    return 0;
+    }
+
+  std::cerr << "Encryption mode on.\n";
   EncryptFA(argc, argv);
-
-  DecryptFA(argc, argv);
-
+  
   return 0;
   }
 
