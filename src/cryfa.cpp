@@ -178,7 +178,7 @@ int main(int argc, char* argv[]){
     {"about",           no_argument, &a_flag, (int) 'a'},   // about
     {"verbose",         no_argument, &v_flag, (int) 'v'},   // verbose
     {"decrypt",         no_argument, &d_flag, (int) 'd'},   // decrypt mode
-    {"key",       required_argument,       0,       't'},   // key file
+    {"key",       required_argument,       0,       'k'},   // key file
     {0, 0, 0, 0}
     };
 
