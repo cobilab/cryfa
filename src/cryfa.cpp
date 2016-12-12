@@ -42,26 +42,26 @@ void About (void){
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 void Help(void){
-  std::cout                                                  << "\n"
-  << "Synopsis:"                                             << "\n"
-  << "    cryfa [OPTION]... -k [KEYFILENAME] [FILENAME]"     << "\n"
-                                                             << "\n"
-  << "Options:"                                              << "\n"
-  << "    -h,  --help"                                       << "\n"
-  << "         usage guide"                                  << "\n"
-                                                             << "\n"
-  << "    -a,  --about"                                      << "\n"
-  << "         about the program"                            << "\n"
-                                                             << "\n"
-  << "    -v,  --verbose"                                    << "\n"
-  << "         verbose mode (more information)"              << "\n"
-                                                             << "\n"
-  << "    -d,  --decrypt"                                    << "\n"
-  << "         decrypt mode"                                 << "\n"
-                                                             << "\n"
-  << "    -k [KEYFILE],  --key [KEYFILE]"                    << "\n"
-  << "         key filename"                                 << "\n"
-                                                             << "\n";
+  std::cout                                                       << "\n"
+  << "Synopsis:"                                                  << "\n"
+  << "    cryfa [OPTION]... -k [KEYFILENAME] [FILENAME]"          << "\n"
+                                                                  << "\n"
+  << "Options:"                                                   << "\n"
+  << "    -h,  --help"                                            << "\n"
+  << "         usage guide"                                       << "\n"
+                                                                  << "\n"
+  << "    -a,  --about"                                           << "\n"
+  << "         about the program"                                 << "\n"
+                                                                  << "\n"
+  << "    -v,  --verbose"                                         << "\n"
+  << "         verbose mode (more information)"                   << "\n"
+                                                                  << "\n"
+  << "    -d,  --decrypt"                                         << "\n"
+  << "         decrypt mode"                                      << "\n"
+                                                                  << "\n"
+  << "    -k [KEYFILE],  --key [KEYFILE]"                         << "\n"
+  << "         key filename"                                      << "\n"
+                                                                  << "\n";
   }
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -167,7 +167,7 @@ void DecryptFA(int argc, char **argv){
 int main(int argc, char* argv[]){
   static int h_flag, a_flag, v_flag, d_flag;
   bool t_flag = false;          // target file name entered
-  std::string FileName = "";    // argument of option 't'
+  std::string KeyFileName = "";    // argument of option 'k'
   int c;              // deal with getopt_long()
   int option_index;   // option index stored by getopt_long()
 
@@ -177,15 +177,14 @@ int main(int argc, char* argv[]){
     {"help",            no_argument, &h_flag, (int) 'h'},   // help
     {"about",           no_argument, &a_flag, (int) 'a'},   // about
     {"verbose",         no_argument, &v_flag, (int) 'v'},   // verbose
-    {"decrypt",         no_argument, &d_flag, (int) 'd'},   // verbose
-    {"number",    required_argument,       0,       'n'},   // number (integer)
-    {"target",    required_argument,       0,       't'},   // target file
+    {"decrypt",         no_argument, &d_flag, (int) 'd'},   // decrypt mode
+    {"key",       required_argument,       0,       't'},   // key file
     {0, 0, 0, 0}
     };
 
   while(1){
     option_index = 0;
-    switch((c = getopt_long(argc, argv, ":havdn:t:r:", long_options, &option_index))){
+    switch((c = getopt_long(argc, argv, ":havd:k:", long_options, &option_index))){
       case -1:
       break;
 
@@ -216,22 +215,9 @@ int main(int argc, char* argv[]){
         d_flag = 1;
       break;
 
-
-      case 'n':   // needs an integer argument
-/*
-        try{
-          messageObj.number(std::stoi((std::string) optarg));    //for test
-          }
-        catch(const std::invalid_argument &ia)
-          {
-          std::cerr << "Option 'n' ('number') has an invalid argument.\n";
-          }
-*/
-      break;
-
-      case 't':   // needs reference file name
+      case 'k':   // needs reference file name
         t_flag = true;
-        FileName = (std::string) optarg;
+        KeyFileName = (std::string) optarg;
       break;
 
       default:
