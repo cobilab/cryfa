@@ -11,6 +11,8 @@
 #include <getopt.h>
 #include <string>
 #include <iomanip>
+#include <stdio.h>
+#include <stdlib.h>
 
 #include "defs.h"
 
@@ -66,7 +68,7 @@ void Help(void){
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-void EncryptFA(int argc, char **argv){
+void EncryptFA(int argc, char **argv, int v_flag){
 
   //Key and IV setup
   //AES encryption uses a secret key of a variable length (128-bit, 196-bit or 256-   
@@ -78,7 +80,7 @@ void EncryptFA(int argc, char **argv){
   memset( iv, 0x00, CryptoPP::AES::BLOCKSIZE);
 
   std::ifstream input(argv[argc-1]);
-  std::string line, header, dna_seq;
+  std::string line, header, dna_seq, header_and_dna_seq;
 
   if(!input.good()){
     std::cerr << "Error opening '"<<argv[argc-1]<<"'. Bailing out." << std::endl;
@@ -92,35 +94,36 @@ void EncryptFA(int argc, char **argv){
     if(line.empty() || line[0] == '>'){ // FASTA identifier 
       if(!header.empty()){ // Print out last entry
 
-        // TODO: ENCRYPT NAME & ENCRYPT CONTENT
-        std::cout << header << " : " << dna_seq << std::endl;
-        // String and Sink setup
-        // std::string plaintext = "Now is the time for all good men to come to the aide...";
+        // std::cout << header << " : " << dna_seq << std::endl; // DEBUG PURPOSE
+
+        // TODO: ENCAPSULATE 3 DNA BASES IN 1 BYTE
+        //
+        
+        header_and_dna_seq = header + '\n' + dna_seq; // JOIN STREAM SPLIT BY '\n'
+
         std::string ciphertext;
         std::string decryptedtext;
-
         CryptoPP::AES::Encryption aesEncryption(key, CryptoPP::AES::MAX_KEYLENGTH);
         CryptoPP::CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
         CryptoPP::StreamTransformationFilter stfEncryptor(cbcEncryption, new
         CryptoPP::StringSink(ciphertext));
-        stfEncryptor.Put(reinterpret_cast<const unsigned char*>(dna_seq.c_str()),
-        dna_seq.length()+1);
+        stfEncryptor.Put(reinterpret_cast<const unsigned char*>
+        (header_and_dna_seq.c_str()), header_and_dna_seq.length()+1);
         stfEncryptor.MessageEnd();
 
-        // DUMP CYPHER TEXT FOR DNA BASES
-        // std::cout << "Cipher Text (" << ciphertext.size() << " bytes)" << std::endl;
-        for(int i = 0; i < ciphertext.size(); ++i){
-          std::cout << "0x" << std::hex << (0xFF & static_cast<byte>(ciphertext[i])) << " ";
-        }
-        // std::cout << std::endl << std::endl;
+        if(v_flag)
+          std::cerr << "Cipher Text size: " << ciphertext.size() << " bytes." << std::endl;
 
+        // DUMP CYPHERTEXT FOR READ
+        for(int i = 0; i < ciphertext.size(); ++i)
+          std::cout << "0x" << std::hex << (0xFF & 
+          static_cast<byte>(ciphertext[i])) << " ";
 
         header.clear();
         }
-      if(!line.empty()){
-        header = line.substr(1);
-        }
+      if(!line.empty()) header = line.substr(1);
       dna_seq.clear();
+      header_and_dna_seq.clear();
       }
     else if(!header.empty()){
       if(line.find(' ') != std::string::npos){ // Invalid sequence--no spaces allowed
@@ -133,10 +136,18 @@ void EncryptFA(int argc, char **argv){
       }
     }
 
-  if(!header.empty()){ // Print out what we read from the last entry
+  // LAST ENTRY HANDLING:
+  if(!header.empty()){ 
+    header_and_dna_seq = header + '\n' + dna_seq;
+    
+
+    
     std::cout << header << " : " << dna_seq << std::endl;
     }
- 
+        
+
+  
+  std::cout << std::endl << std::endl;
   return;
   }
 
@@ -185,7 +196,8 @@ int main(int argc, char* argv[]){
   while(1){
     option_index = 0;
 
-    if((c = getopt_long(argc, argv, ":havd:k:", long_options, &option_index)) == -1)
+    if((c = getopt_long(argc, argv, ":havd:k:", 
+    long_options, &option_index)) == -1)
       break;
 
     switch(c){
@@ -204,7 +216,7 @@ int main(int argc, char* argv[]){
         exit(1);
       break;
 
-      case 'a':   // show About
+      case 'a':   // show about
         a_flag = 1;
         About();
         exit(1);
@@ -218,7 +230,7 @@ int main(int argc, char* argv[]){
         d_flag = 1;
       break;
 
-      case 'k':   // needs reference file name
+      case 'k':   // needs key filename
         t_flag = true;
         KeyFileName = (std::string) optarg;
       break;
@@ -240,7 +252,7 @@ int main(int argc, char* argv[]){
     }
 
   std::cerr << "Encryption mode on.\n";
-  EncryptFA(argc, argv);
+  EncryptFA(argc, argv, v_flag);
   
   return 0;
   }
