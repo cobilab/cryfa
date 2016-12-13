@@ -1,8 +1,9 @@
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //
-// COMPILE:  g++ -I cryptopp -o cryfa cryfa.cpp defs.h libcryptopp.a
+// COMPILE:  g++ -std=c++11 -I cryptopp -o cryfa cryfa.cpp defs.h libcryptopp.a
 //
 // DEPENDENCIES: https://github.com/weidai11/cryptopp
+// sudo apt-get install libcrypto++-dev libcrypto++-doc libcrypto++-utils
 //
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -13,6 +14,8 @@
 #include <iomanip>
 #include <stdio.h>
 #include <stdlib.h>
+#include <cstdlib>
+#include <random>
 
 #include "defs.h"
 
@@ -73,8 +76,47 @@ void Help(void){
 void PrintKey(byte *key){
   std::cerr << "KEY: [";
   for(int i = 0 ; i < CryptoPP::AES::MAX_KEYLENGTH ; ++i)
-    std::cerr << key[i];
+    std::cerr << (int) key[i] << " ";
   std::cerr << "]\n";
+  return;
+  }
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+void PrintIV(byte *iv){ // XXX: SHOULD THIS HAVE 32 OF SIZE?
+  std::cerr << "IV : [";
+  for(int i = 0 ; i < CryptoPP::AES::BLOCKSIZE ; ++i)
+    std::cerr << (int) iv[i] << " ";
+  std::cerr << "]\n";
+  return;
+  }
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+void BuildIV(byte *iv, std::string pwd){ // TODO: CHANGE FUNCTIONS
+
+  typedef std::mt19937 rng_type;
+  std::uniform_int_distribution<rng_type::result_type> udist(0, 255);
+  rng_type rng;
+
+  if(pwd.size() < 8){
+    std::cerr << "Error: password is too short!\n";
+    exit(1);
+    }
+
+  // USING OLD RAND TO GENERATE THE NEW RAND SEED
+  srand(24593 * (pwd[0] * pwd[2]) + 49157);
+  unsigned long long seed = 0;
+  for(int i = 0 ; i < pwd.size() ; ++i)
+    seed += ((unsigned long long) pwd[i] * rand()) + rand();
+  seed %= 4294967295;
+
+  rng_type::result_type const seedval = seed;
+  rng.seed(seedval);
+
+  for(int i = 0 ; i < CryptoPP::AES::BLOCKSIZE ; ++i)
+    iv[i] = udist(rng) % 255;
+
   return;
   }
 
@@ -82,9 +124,27 @@ void PrintKey(byte *key){
 
 void BuildKey(byte *key, std::string pwd){
 
-  int k = 53;
+  typedef std::mt19937 rng_type;
+  std::uniform_int_distribution<rng_type::result_type> udist(0, 255);
+  rng_type rng;
+
+  if(pwd.size() < 8){
+    std::cerr << "Error: password is too short!\n";
+    exit(1);
+    }
+
+  // USING OLD RAND TO GENERATE THE NEW RAND SEED
+  srand(24593 * (pwd[0] * pwd[2]) + 49157);
+  unsigned long long seed = 0;
+  for(int i = 0 ; i < pwd.size() ; ++i)
+    seed += ((unsigned long long) pwd[i] * rand()) + rand();
+  seed %= 4294967295;
+
+  rng_type::result_type const seedval = seed;
+  rng.seed(seedval);
+
   for(int i = 0 ; i < CryptoPP::AES::MAX_KEYLENGTH ; ++i)
-    key[i] = k++;
+    key[i] = udist(rng) % 255;
 
   return;
   }
@@ -99,11 +159,17 @@ void EncryptFA(int argc, char **argv, int v_flag){
   //begins. DEFAULT_KEYLENGTH= 16 bytes
   byte key[CryptoPP::AES::MAX_KEYLENGTH],
         iv[CryptoPP::AES::BLOCKSIZE];
-  memset(key, 0x00, CryptoPP::AES::MAX_KEYLENGTH);
-  memset( iv, 0x00, CryptoPP::AES::BLOCKSIZE);
+  memset(key, 0x00, CryptoPP::AES::MAX_KEYLENGTH); // AES KEY
+  memset( iv, 0x00, CryptoPP::AES::BLOCKSIZE);     // INITIALLIZATION VECTOR
 
   // TODO: SET KEY!
-  BuildKey(key, "erferf");
+  std::string password = "password123";
+  BuildKey(key, password);
+  BuildIV(iv, password);
+
+  PrintIV(iv);
+  PrintKey(key);
+
 
   std::ifstream input(argv[argc-1]);
   std::string line, header, dna_seq, header_and_dna_seq;
@@ -172,6 +238,7 @@ void EncryptFA(int argc, char **argv, int v_flag){
   std::cout << std::endl << std::endl;
 
 
+  PrintIV(iv);
   PrintKey(key);
   return;
   }
@@ -282,4 +349,5 @@ int main(int argc, char* argv[]){
   return 0;
   }
 
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
