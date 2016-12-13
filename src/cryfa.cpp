@@ -39,6 +39,7 @@ void About (void){
   << "License v3 <http://www.gnu.org/licenses/gpl.html>. There"   << "\n"
   << "is NOT ANY WARRANTY, to the extent permitted by law."       << "\n"
                                                                   << "\n";
+  return;
   }
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -64,6 +65,28 @@ void Help(void){
   << "    -k [KEYFILE],  --key [KEYFILE]"                         << "\n"
   << "         key filename"                                      << "\n"
                                                                   << "\n";
+  return;
+  }
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+void PrintKey(byte *key){
+  std::cerr << "KEY: [";
+  for(int i = 0 ; i < CryptoPP::AES::MAX_KEYLENGTH ; ++i)
+    std::cerr << key[i];
+  std::cerr << "]\n";
+  return;
+  }
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+void BuildKey(byte *key, std::string pwd){
+
+  int k = 53;
+  for(int i = 0 ; i < CryptoPP::AES::MAX_KEYLENGTH ; ++i)
+    key[i] = k++;
+
+  return;
   }
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -78,6 +101,9 @@ void EncryptFA(int argc, char **argv, int v_flag){
         iv[CryptoPP::AES::BLOCKSIZE];
   memset(key, 0x00, CryptoPP::AES::MAX_KEYLENGTH);
   memset( iv, 0x00, CryptoPP::AES::BLOCKSIZE);
+
+  // TODO: SET KEY!
+  BuildKey(key, "erferf");
 
   std::ifstream input(argv[argc-1]);
   std::string line, header, dna_seq, header_and_dna_seq;
@@ -140,14 +166,13 @@ void EncryptFA(int argc, char **argv, int v_flag){
   if(!header.empty()){ 
     header_and_dna_seq = header + '\n' + dna_seq;
     
-
-    
     std::cout << header << " : " << dna_seq << std::endl;
     }
         
-
-  
   std::cout << std::endl << std::endl;
+
+
+  PrintKey(key);
   return;
   }
 
