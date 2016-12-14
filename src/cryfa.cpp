@@ -291,9 +291,7 @@ void DecryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
   PrintKey(key);
 
   std::ifstream input(argv[argc-1]);
-  std::string line, header, dna_seq, header_and_dna_seq;
-  std::string decryptedtext;
-  std::string ciphertext;
+  std::string line, decryptedtext, ciphertext;
 
   if(!input.good()){
     std::cerr << "Error opening '"<<argv[argc-1]<<"'. Bailing out." << std::endl;
@@ -310,15 +308,18 @@ void DecryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
     }
 
   CryptoPP::AES::Decryption aesDecryption(key, CryptoPP::AES::MAX_KEYLENGTH);
-  CryptoPP::CBC_Mode_ExternalCipher::Decryption cbcDecryption( aesDecryption, iv );
-  CryptoPP::StreamTransformationFilter stfDecryptor(cbcDecryption, new CryptoPP::StringSink( decryptedtext ) );
-  stfDecryptor.Put( reinterpret_cast<const unsigned char*>( ciphertext.c_str() ), ciphertext.size() );
+  CryptoPP::CBC_Mode_ExternalCipher::Decryption 
+  cbcDecryption(aesDecryption, iv);
+  CryptoPP::StreamTransformationFilter stfDecryptor(cbcDecryption, new  
+  CryptoPP::StringSink(decryptedtext));
+  stfDecryptor.Put(reinterpret_cast<const unsigned char*>(ciphertext.c_str()), 
+  ciphertext.size());
   stfDecryptor.MessageEnd();
 
   //
   // Dump Decrypted Text
   //
-  std::cout << "Decrypted Text: " << std::endl;
+  std::cerr << "Decrypted Text: " << std::endl;
   std::cout << decryptedtext;
   std::cout << std::endl << std::endl;
 
