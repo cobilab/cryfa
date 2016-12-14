@@ -197,7 +197,6 @@ std::string PackIn3bDNASeq(std::string seq){
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
-
   //Key and IV setup
   //AES encryption uses a secret key of a variable length (128-bit, 196-bit or 256-   
   //bit). This key is secretly exchanged between two parties before communication   
@@ -222,9 +221,6 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
     exit(1);
     }
 
-  // WATERMAK FOR ENCRYPTED FASTA FILE
-  std::cout << "#cryfa v" << VERSION << "." << RELEASE << "" << std::endl;
-
   while(std::getline(input, line).good()){
     if(line.empty() || line[0] == '>'){ // FASTA identifier 
       if(!header.empty()){ // Print out last entry
@@ -232,7 +228,8 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
         header_and_dna_seq += ('>' + header + '\n' + PackIn3bDNASeq(dna_seq)); 
         header.clear();
         }
-      if(!line.empty()) header = line.substr(1);
+      if(!line.empty()) 
+        header = line.substr(1);
       dna_seq.clear();
       }
     else if(!header.empty()){
@@ -249,7 +246,7 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
   // LAST ENTRY HANDLING:
   if(!header.empty()){ 
     // std::cout << ">" header << "\n" << dna_seq << std::endl; // DEBUG PURPOSE
-    header_and_dna_seq += ('>' + header + '\n' + dna_seq); // JOIN STREAM SPLIT BY '\n' 
+    header_and_dna_seq += ('>' + header + '\n' + PackIn3bDNASeq(dna_seq)); 
     }
 
   std::string ciphertext;
@@ -264,6 +261,9 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
   if(v_flag)
     std::cerr << "Cipher Text size: " << ciphertext.size() << " bytes." << std::endl;
 
+  // WATERMAK FOR ENCRYPTED FASTA FILE
+  std::cout << "#cryfa v" << VERSION << "." << RELEASE << "" << std::endl;
+
   // DUMP CYPHERTEXT FOR READ
   for(int i = 0; i < ciphertext.size(); ++i)
     std::cout << std::hex << (0xFF & static_cast<byte>(ciphertext[i])) << " ";
@@ -276,10 +276,38 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-void DecryptFA(int argc, char **argv){
+void DecryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
 
-/*
+  byte key[CryptoPP::AES::MAX_KEYLENGTH],
+        iv[CryptoPP::AES::BLOCKSIZE];
+  memset(key, 0x00, CryptoPP::AES::MAX_KEYLENGTH); // AES KEY
+  memset( iv, 0x00, CryptoPP::AES::BLOCKSIZE);     // INITIALLIZATION VECTOR
+
+  std::string password = GetPasswordFromFile(keyFileName);
+  BuildKey(key, password);
+  BuildIV(iv, password);
+
+  PrintIV(iv);
+  PrintKey(key);
+
+  std::ifstream input(argv[argc-1]);
+  std::string line, header, dna_seq, header_and_dna_seq;
   std::string decryptedtext;
+  std::string ciphertext;
+
+  if(!input.good()){
+    std::cerr << "Error opening '"<<argv[argc-1]<<"'. Bailing out." << std::endl;
+    exit(1);
+    }
+
+  while(std::getline(input, line).good()){
+    if(line.empty()){
+      std::cerr << "Error: empty line file!\n";
+      exit(1);
+      }
+
+    ciphertext += line;
+    }
 
   CryptoPP::AES::Decryption aesDecryption(key, CryptoPP::AES::MAX_KEYLENGTH);
   CryptoPP::CBC_Mode_ExternalCipher::Decryption cbcDecryption( aesDecryption, iv );
@@ -293,7 +321,6 @@ void DecryptFA(int argc, char **argv){
   std::cout << "Decrypted Text: " << std::endl;
   std::cout << decryptedtext;
   std::cout << std::endl << std::endl;
-*/
 
   return;
   }
@@ -372,7 +399,7 @@ int main(int argc, char* argv[]){
 
   if(d_flag){
     std::cerr << "Decryption mode on.\n";
-    DecryptFA(argc, argv);
+    DecryptFA(argc, argv, v_flag, KeyFileName);
     return 0;
     }
 
