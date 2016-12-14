@@ -181,9 +181,9 @@ std::string GetPasswordFromFile(std::string keyFileName){
   }
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-        // TODO: ENCAPSULATE 3 DNA BASES IN 1 BYTE
-        //
-        // log_2(3) ~2.585 >> ACACTGACN R->5,'R'
+// TODO: ENCAPSULATE 3 DNA BASES IN 1 BYTE
+//
+// log_2(3) ~2.585 >> ACACTGACN R->5,'R'
 std::string PackIn3bDNASeq(std::string seq){
   std::string packedSeq;
   ULL seqSize = seq.length();
@@ -271,6 +271,7 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
   std::cout << std::endl << std::endl;
   header_and_dna_seq.clear();
   ciphertext.clear();
+  keyFileName.clear();
   return;
   }
 
@@ -298,12 +299,15 @@ void DecryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
     exit(1);
     }
 
-  while(std::getline(input, line).good()){
-    if(line.empty()){
-      std::cerr << "Error: empty line file!\n";
+  if(std::getline(input, line).good())
+    if(line != "#cryfa v1.1"){
+      std::cerr << "Error: invalid encrypted file!\n";
       exit(1);
       }
 
+  while(std::getline(input, line).good()){
+    if(line.empty())
+      break;
     ciphertext += line;
     }
 
@@ -349,7 +353,7 @@ int main(int argc, char* argv[]){
   while(1){
     option_index = 0;
 
-    if((c = getopt_long(argc, argv, ":havd:k:", 
+    if((c = getopt_long(argc, argv, ":havdk:", 
     long_options, &option_index)) == -1)
       break;
 
