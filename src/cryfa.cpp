@@ -25,6 +25,7 @@
 #include "filters.h"
 
 typedef unsigned char byte;
+typedef unsigned long long ULL;
 typedef std::mt19937 rng_type;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -112,9 +113,9 @@ void BuildIV(byte *iv, std::string pwd){
 
   // USING OLD RAND TO GENERATE THE NEW RAND SEED
   srand(7919 * (pwd[2] * pwd[5]) + 75653);
-  unsigned long long seed = 0;
+  ULL seed = 0;
   for(int i = 0 ; i < pwd.size() ; ++i)
-    seed += ((unsigned long long) pwd[i] * rand()) + rand();
+    seed += ((ULL) pwd[i] * rand()) + rand();
   seed %= 4294967295;
 
   rng_type::result_type const seedval = seed;
@@ -137,9 +138,9 @@ void BuildKey(byte *key, std::string pwd){
 
   // USING OLD RAND TO GENERATE THE NEW RAND SEED
   srand(24593 * (pwd[0] * pwd[2]) + 49157);
-  unsigned long long seed = 0;
+  ULL seed = 0;
   for(int i = 0 ; i < pwd.size() ; ++i)
-    seed += ((unsigned long long) pwd[i] * rand()) + rand();
+    seed += ((ULL) pwd[i] * rand()) + rand();
   seed %= 4294967295;
 
   rng_type::result_type const seedval = seed;
@@ -180,6 +181,20 @@ std::string GetPasswordFromFile(std::string keyFileName){
   }
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+        // TODO: ENCAPSULATE 3 DNA BASES IN 1 BYTE
+        //
+        // log_2(3) ~2.585 >> ACACTGACN R->5,'R'
+std::string PackIn3bDNASeq(std::string seq){
+  std::string packedSeq;
+  ULL seqSize = seq.length();
+
+  packedSeq = seq;
+   
+
+  return packedSeq;
+  }
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
 
@@ -192,16 +207,12 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
   memset(key, 0x00, CryptoPP::AES::MAX_KEYLENGTH); // AES KEY
   memset( iv, 0x00, CryptoPP::AES::BLOCKSIZE);     // INITIALLIZATION VECTOR
 
-  // TODO: SET KEY!
-  //std::string password = "password123";
   std::string password = GetPasswordFromFile(keyFileName);
-
   BuildKey(key, password);
   BuildIV(iv, password);
 
   PrintIV(iv);
   PrintKey(key);
-
 
   std::ifstream input(argv[argc-1]);
   std::string line, header, dna_seq, header_and_dna_seq;
@@ -218,10 +229,7 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
     if(line.empty() || line[0] == '>'){ // FASTA identifier 
       if(!header.empty()){ // Print out last entry
         // std::cout << ">" header << "\n" << dna_seq << std::endl; // DEBUG PURPOSE
-
-        // TODO: ENCAPSULATE 3 DNA BASES IN 1 BYTE
-        //
-        header_and_dna_seq += ('>' + header + '\n' + dna_seq); // JOIN STREAM SPLIT BY '\n'
+        header_and_dna_seq += ('>' + header + '\n' + PackIn3bDNASeq(dna_seq)); 
         header.clear();
         }
       if(!line.empty()) header = line.substr(1);
