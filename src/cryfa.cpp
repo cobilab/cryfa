@@ -176,7 +176,6 @@ std::string GetPasswordFromFile(std::string keyFileName){
     return line;
     }
   
-  
   return "unknown";
   }
 
@@ -218,37 +217,15 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
   while(std::getline(input, line).good()){
     if(line.empty() || line[0] == '>'){ // FASTA identifier 
       if(!header.empty()){ // Print out last entry
-
-        // std::cout << header << " : " << dna_seq << std::endl; // DEBUG PURPOSE
+        // std::cout << ">" header << "\n" << dna_seq << std::endl; // DEBUG PURPOSE
 
         // TODO: ENCAPSULATE 3 DNA BASES IN 1 BYTE
         //
-        
-        header_and_dna_seq = header + '\n' + dna_seq; // JOIN STREAM SPLIT BY '\n'
-
-        std::string ciphertext;
-        std::string decryptedtext;
-        CryptoPP::AES::Encryption aesEncryption(key, CryptoPP::AES::MAX_KEYLENGTH);
-        CryptoPP::CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
-        CryptoPP::StreamTransformationFilter stfEncryptor(cbcEncryption, new
-        CryptoPP::StringSink(ciphertext));
-        stfEncryptor.Put(reinterpret_cast<const unsigned char*>
-        (header_and_dna_seq.c_str()), header_and_dna_seq.length()+1);
-        stfEncryptor.MessageEnd();
-
-        if(v_flag)
-          std::cerr << "Cipher Text size: " << ciphertext.size() << " bytes." << std::endl;
-
-        // DUMP CYPHERTEXT FOR READ
-        for(int i = 0; i < ciphertext.size(); ++i)
-          std::cout << "0x" << std::hex << (0xFF & 
-          static_cast<byte>(ciphertext[i])) << " ";
-
+        header_and_dna_seq += ('>' + header + '\n' + dna_seq); // JOIN STREAM SPLIT BY '\n'
         header.clear();
         }
       if(!line.empty()) header = line.substr(1);
       dna_seq.clear();
-      header_and_dna_seq.clear();
       }
     else if(!header.empty()){
       if(line.find(' ') != std::string::npos){ // Invalid sequence--no spaces allowed
@@ -263,13 +240,29 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
 
   // LAST ENTRY HANDLING:
   if(!header.empty()){ 
-    header_and_dna_seq = header + '\n' + dna_seq;
-    
-    std::cout << header << " : " << dna_seq << std::endl;
+    // std::cout << ">" header << "\n" << dna_seq << std::endl; // DEBUG PURPOSE
+    header_and_dna_seq += ('>' + header + '\n' + dna_seq); // JOIN STREAM SPLIT BY '\n' 
     }
-        
-  std::cout << std::endl << std::endl;
 
+  std::string ciphertext;
+  CryptoPP::AES::Encryption aesEncryption(key, CryptoPP::AES::MAX_KEYLENGTH);
+  CryptoPP::CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
+  CryptoPP::StreamTransformationFilter stfEncryptor(cbcEncryption, new
+  CryptoPP::StringSink(ciphertext));
+  stfEncryptor.Put(reinterpret_cast<const unsigned char*>
+  (header_and_dna_seq.c_str()), header_and_dna_seq.length()+1);
+  stfEncryptor.MessageEnd();
+
+  if(v_flag)
+    std::cerr << "Cipher Text size: " << ciphertext.size() << " bytes." << std::endl;
+
+  // DUMP CYPHERTEXT FOR READ
+  for(int i = 0; i < ciphertext.size(); ++i)
+    std::cout << std::hex << (0xFF & static_cast<byte>(ciphertext[i])) << " ";
+
+  std::cout << std::endl << std::endl;
+  header_and_dna_seq.clear();
+  ciphertext.clear();
   return;
   }
 
@@ -278,6 +271,8 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
 void DecryptFA(int argc, char **argv){
 
 /*
+  std::string decryptedtext;
+
   CryptoPP::AES::Decryption aesDecryption(key, CryptoPP::AES::MAX_KEYLENGTH);
   CryptoPP::CBC_Mode_ExternalCipher::Decryption cbcDecryption( aesDecryption, iv );
   CryptoPP::StreamTransformationFilter stfDecryptor(cbcDecryption, new CryptoPP::StringSink( decryptedtext ) );
