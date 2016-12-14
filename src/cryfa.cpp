@@ -165,7 +165,7 @@ std::string GetPasswordFromFile(std::string keyFileName){
     }
 
   if(!input.good()){
-    std::cerr << "Error opening '"<<keyFileName<<"'. Bailing out." << std::endl;
+    std::cerr << "Error opening '"<<keyFileName<<"'." << std::endl;
     exit(1);
     }
 
@@ -196,6 +196,15 @@ std::string PackIn3bDNASeq(std::string seq){
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
+std::string Unpack3binDNASeq(std::string seq){
+  std::string unpackedSeq;
+
+
+  return unpackedSeq;
+  }
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
 void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
   //Key and IV setup
   //AES encryption uses a secret key of a variable length (128-bit, 196-bit or 256-   
@@ -217,7 +226,7 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
   std::string line, header, dna_seq, header_and_dna_seq;
 
   if(!input.good()){
-    std::cerr << "Error opening '"<<argv[argc-1]<<"'. Bailing out." << std::endl;
+    std::cerr << "Error opening '"<<argv[argc-1]<<"'." << std::endl;
     exit(1);
     }
 
@@ -265,7 +274,7 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
   std::cout << "#cryfa v" << VERSION << "." << RELEASE << "" << std::endl;
 
   // DUMP CYPHERTEXT FOR READ
-  for(int i = 0; i < ciphertext.size(); ++i)
+  for(ULL i = 0; i < ciphertext.size(); ++i)
     //std::cout << std::hex << (0xFF & static_cast<byte>(ciphertext[i])) << " ";
     std::cout << (char) (0xFF & static_cast<byte>(ciphertext[i]));
 
@@ -296,7 +305,7 @@ void DecryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
   std::string line, decryptedtext, ciphertext;
 
   if(!input.good()){
-    std::cerr << "Error opening '"<<argv[argc-1]<<"'. Bailing out." << std::endl;
+    std::cerr << "Error opening '"<<argv[argc-1]<<"'." << std::endl;
     exit(1);
     }
 
@@ -321,11 +330,15 @@ void DecryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
   ciphertext.size());
   stfDecryptor.MessageEnd();
 
-  //
   // Dump Decrypted Text
-  //
   std::cerr << "Decrypted Text: " << std::endl;
-  std::cout << decryptedtext;
+  for(ULL i = 0; i < decryptedtext.size(); ++i){
+    if(decryptedtext[i] == '>' && i != 0)
+      std::cout << "\n";
+    std::cout << (char) decryptedtext[i];
+    }
+  
+  //std::cout << decryptedtext;
   std::cout << std::endl << std::endl;
 
   return;
