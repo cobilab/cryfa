@@ -153,7 +153,28 @@ void BuildKey(byte *key, std::string pwd){
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-void EncryptFA(int argc, char **argv, int v_flag){
+std::string GetPasswordFromFile(std::string keyFileName){
+
+  std::ifstream input(keyFileName);
+
+  if(!input.good()){
+    std::cerr << "Error opening '"<<argv[argc-1]<<"'. Bailing out." << std::endl;
+    exit(1);
+    }
+
+  while(std::getline(input, line).good()){
+    if(!line.empty())
+      return line;
+    break;
+    }
+  
+  
+  return "unknown";
+  }
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
 
   //Key and IV setup
   //AES encryption uses a secret key of a variable length (128-bit, 196-bit or 256-   
@@ -165,7 +186,9 @@ void EncryptFA(int argc, char **argv, int v_flag){
   memset( iv, 0x00, CryptoPP::AES::BLOCKSIZE);     // INITIALLIZATION VECTOR
 
   // TODO: SET KEY!
-  std::string password = "password123";
+  //std::string password = "password123";
+  std::string password = GetPasswordFromFile(keyFileName);
+
   BuildKey(key, password);
   BuildIV(iv, password);
 
@@ -343,7 +366,7 @@ int main(int argc, char* argv[]){
     }
 
   std::cerr << "Encryption mode on.\n";
-  EncryptFA(argc, argv, v_flag);
+  EncryptFA(argc, argv, v_flag, KeyFileName);
   
   return 0;
   }
