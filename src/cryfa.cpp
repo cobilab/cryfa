@@ -156,16 +156,24 @@ void BuildKey(byte *key, std::string pwd){
 std::string GetPasswordFromFile(std::string keyFileName){
 
   std::ifstream input(keyFileName);
+  std::string line;
+
+  if(keyFileName == ""){
+    std::cerr << "Error: no password file has been set!\n";
+    exit(1);
+    }
 
   if(!input.good()){
-    std::cerr << "Error opening '"<<argv[argc-1]<<"'. Bailing out." << std::endl;
+    std::cerr << "Error opening '"<<keyFileName<<"'. Bailing out." << std::endl;
     exit(1);
     }
 
   while(std::getline(input, line).good()){
-    if(!line.empty())
-      return line;
-    break;
+    if(line.empty()){
+      std::cerr << "Error: empty password line file!\n";
+      exit(1);
+      }
+    return line;
     }
   
   
