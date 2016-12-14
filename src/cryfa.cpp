@@ -25,6 +25,7 @@
 #include "filters.h"
 
 typedef unsigned char byte;
+typedef std::mt19937 rng_type;
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
@@ -93,19 +94,24 @@ void PrintIV(byte *iv){ // XXX: SHOULD THIS HAVE 32 OF SIZE?
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-void BuildIV(byte *iv, std::string pwd){ // TODO: CHANGE FUNCTIONS
-
-  typedef std::mt19937 rng_type;
-  std::uniform_int_distribution<rng_type::result_type> udist(0, 255);
-  rng_type rng;
-
+void EvaluatePasswordSize(std::string pwd){
   if(pwd.size() < 8){
     std::cerr << "Error: password is too short!\n";
     exit(1);
     }
+  }
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+void BuildIV(byte *iv, std::string pwd){
+
+  std::uniform_int_distribution<rng_type::result_type> udist(0, 255);
+  rng_type rng;
+
+  EvaluatePasswordSize(pwd);
 
   // USING OLD RAND TO GENERATE THE NEW RAND SEED
-  srand(24593 * (pwd[0] * pwd[2]) + 49157);
+  srand(7919 * (pwd[2] * pwd[5]) + 75653);
   unsigned long long seed = 0;
   for(int i = 0 ; i < pwd.size() ; ++i)
     seed += ((unsigned long long) pwd[i] * rand()) + rand();
@@ -124,14 +130,10 @@ void BuildIV(byte *iv, std::string pwd){ // TODO: CHANGE FUNCTIONS
 
 void BuildKey(byte *key, std::string pwd){
 
-  typedef std::mt19937 rng_type;
   std::uniform_int_distribution<rng_type::result_type> udist(0, 255);
   rng_type rng;
 
-  if(pwd.size() < 8){
-    std::cerr << "Error: password is too short!\n";
-    exit(1);
-    }
+  EvaluatePasswordSize(pwd);
 
   // USING OLD RAND TO GENERATE THE NEW RAND SEED
   srand(24593 * (pwd[0] * pwd[2]) + 49157);
@@ -237,9 +239,6 @@ void EncryptFA(int argc, char **argv, int v_flag){
         
   std::cout << std::endl << std::endl;
 
-
-  PrintIV(iv);
-  PrintKey(key);
   return;
   }
 
@@ -274,7 +273,7 @@ int main(int argc, char* argv[]){
   int c;              // deal with getopt_long()
   int option_index;   // option index stored by getopt_long()
 
-  opterr = 0;         // force getopt_long() to remain silent when it finds a problem
+  opterr = 0;   // force getopt_long() to remain silent when it finds a problem
 
   static struct option long_options[] = {
     {"help",            no_argument, &h_flag, (int) 'h'},   // help
