@@ -266,7 +266,8 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
 
   // DUMP CYPHERTEXT FOR READ
   for(int i = 0; i < ciphertext.size(); ++i)
-    std::cout << std::hex << (0xFF & static_cast<byte>(ciphertext[i])) << " ";
+    //std::cout << std::hex << (0xFF & static_cast<byte>(ciphertext[i])) << " ";
+    std::cout << (char) (0xFF & static_cast<byte>(ciphertext[i]));
 
   std::cout << std::endl << std::endl;
   header_and_dna_seq.clear();
