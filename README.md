@@ -1,6 +1,4 @@
-<b>Cryfa: a FASTA encryption and decryption tool.</b>
-
-Cryfa uses AES symmetric encryption.
+<b>Cryfa: a FASTA encryption and decryption tool.</b> Cryfa uses AES symmetric encryption, with very fast processing times. Cryfa can be applied to any fasta file.
 
 
 ## INSTALLATION
@@ -17,7 +15,7 @@ cd cryptopp/
 make
 cd ..
 </pre>
-Finally
+Finally, compile with:
 <pre>
 g++ -std=c++11 -I cryptopp -o cryfa cryfa.cpp defs.h libcryptopp.a
 </pre>
