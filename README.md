@@ -1,4 +1,6 @@
-<b>Cryfa: a FASTA encryption and decryption tool.</b> Cryfa uses AES symmetric encryption, with very fast processing times. Cryfa can be applied to any fasta file.
+<b>Cryfa: a FASTA encryption and decryption tool.</b> 
+Cryfa uses AES symmetric encryption, with very fast processing times. 
+Cryfa can be applied to any fasta file.
 
 
 ## INSTALLATION
