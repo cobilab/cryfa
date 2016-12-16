@@ -210,7 +210,6 @@ std::string Unpack3binDNASeq(std::string seq){
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
-  //Key and IV setup
   //AES encryption uses a secret key of a variable length (128-bit, 196-bit or 256-   
   //bit). This key is secretly exchanged between two parties before communication   
   //begins. DEFAULT_KEYLENGTH= 16 bytes
@@ -251,7 +250,7 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
         dna_seq.clear();
         }
       else{
-        dna_seq += line;
+        dna_seq += (line + '\n');
         }
       }
     }
@@ -262,7 +261,7 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
     header_and_dna_seq += ('>' + header + '\n' + PackIn3bDNASeq(dna_seq)); 
     }
 
-//  header_and_dna_seq.erase(std::remove(header_and_dna_seq.begin(), header_and_dna_seq.end(), '\n'), header_and_dna_seq.end());
+  input.close();
 
   std::string ciphertext;
   CryptoPP::AES::Encryption aesEncryption(key, CryptoPP::AES::DEFAULT_KEYLENGTH);
@@ -284,7 +283,6 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
 
   // DUMP CYPHERTEXT FOR READ
   for(ULL i = 0; i < ciphertext.size(); ++i)
-    //std::cout << std::hex << (0xFF & static_cast<byte>(ciphertext[i])) << " ";
     std::cout << (char) (0xFF & static_cast<byte>(ciphertext[i]));
 
   std::cout << std::endl << std::endl;
@@ -343,18 +341,15 @@ void DecryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
   CryptoPP::StreamTransformationFilter stfDecryptor(cbcDecryption, new  
   CryptoPP::StringSink(decryptedtext));
   stfDecryptor.Put(reinterpret_cast<const unsigned char*>(ciphertext.c_str()), 
-  ciphertext.size());
+  ciphertext.size()-2);
   stfDecryptor.MessageEnd();
 
   // Dump Decrypted Text
   std::cerr << "Decrypted Text: " << std::endl;
-  for(ULL i = 0; i < decryptedtext.size(); ++i){
-    if(decryptedtext[i] == '>' && i != 0)
-      std::cout << "\n";
+  for(ULL i = 0; i < decryptedtext.size()-2; ++i){
     std::cout << (char) decryptedtext[i];
     }
   
-  //std::cout << decryptedtext;
   std::cout << std::endl << std::endl;
 
   return;
