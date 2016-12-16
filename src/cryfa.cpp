@@ -16,6 +16,8 @@
 #include <stdlib.h>
 #include <cstdlib>
 #include <random>
+#include <algorithm>
+#include <streambuf>
 
 #include "defs.h"
 
@@ -23,6 +25,8 @@
 #include "modes.h"
 #include "aes.h"
 #include "filters.h"
+
+#include "eax.h"
 
 typedef unsigned char byte;
 typedef unsigned long long ULL;
@@ -77,7 +81,7 @@ void Help(void){
 
 void PrintKey(byte *key){
   std::cerr << "KEY: [";
-  for(int i = 0 ; i < CryptoPP::AES::MAX_KEYLENGTH ; ++i)
+  for(int i = 0 ; i < CryptoPP::AES::DEFAULT_KEYLENGTH ; ++i)
     std::cerr << (int) key[i] << " ";
   std::cerr << "]\n";
   return;
@@ -146,7 +150,7 @@ void BuildKey(byte *key, std::string pwd){
   rng_type::result_type const seedval = seed;
   rng.seed(seedval);
 
-  for(int i = 0 ; i < CryptoPP::AES::MAX_KEYLENGTH ; ++i)
+  for(int i = 0 ; i < CryptoPP::AES::DEFAULT_KEYLENGTH ; ++i)
     key[i] = udist(rng) % 255;
 
   return;
@@ -210,9 +214,9 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
   //AES encryption uses a secret key of a variable length (128-bit, 196-bit or 256-   
   //bit). This key is secretly exchanged between two parties before communication   
   //begins. DEFAULT_KEYLENGTH= 16 bytes
-  byte key[CryptoPP::AES::MAX_KEYLENGTH],
+  byte key[CryptoPP::AES::DEFAULT_KEYLENGTH],
         iv[CryptoPP::AES::BLOCKSIZE];
-  memset(key, 0x00, CryptoPP::AES::MAX_KEYLENGTH); // AES KEY
+  memset(key, 0x00, CryptoPP::AES::DEFAULT_KEYLENGTH); // AES KEY
   memset( iv, 0x00, CryptoPP::AES::BLOCKSIZE);     // INITIALLIZATION VECTOR
 
   std::string password = GetPasswordFromFile(keyFileName);
@@ -258,8 +262,10 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
     header_and_dna_seq += ('>' + header + '\n' + PackIn3bDNASeq(dna_seq)); 
     }
 
+//  header_and_dna_seq.erase(std::remove(header_and_dna_seq.begin(), header_and_dna_seq.end(), '\n'), header_and_dna_seq.end());
+
   std::string ciphertext;
-  CryptoPP::AES::Encryption aesEncryption(key, CryptoPP::AES::MAX_KEYLENGTH);
+  CryptoPP::AES::Encryption aesEncryption(key, CryptoPP::AES::DEFAULT_KEYLENGTH);
   CryptoPP::CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
   CryptoPP::StreamTransformationFilter stfEncryptor(cbcEncryption, new
   CryptoPP::StringSink(ciphertext));
@@ -267,8 +273,11 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
   (header_and_dna_seq.c_str()), header_and_dna_seq.length()+1);
   stfEncryptor.MessageEnd();
 
-  if(v_flag)
-    std::cerr << "Cipher Text size: " << ciphertext.size() << " bytes." << std::endl;
+  if(v_flag){
+    std::cerr << "   sym size: " << header_and_dna_seq.size() << "\n";
+    std::cerr << "cipher size: " << ciphertext.size() << "\n";
+    std::cerr << " block size: " << CryptoPP::AES::BLOCKSIZE << "\n";
+    }
 
   // WATERMAK FOR ENCRYPTED FASTA FILE
   std::cout << "#cryfa v" << VERSION << "." << RELEASE << "" << std::endl;
@@ -289,9 +298,9 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
 
 void DecryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
 
-  byte key[CryptoPP::AES::MAX_KEYLENGTH],
+  byte key[CryptoPP::AES::DEFAULT_KEYLENGTH],
         iv[CryptoPP::AES::BLOCKSIZE];
-  memset(key, 0x00, CryptoPP::AES::MAX_KEYLENGTH); // AES KEY
+  memset(key, 0x00, CryptoPP::AES::DEFAULT_KEYLENGTH); // AES KEY
   memset( iv, 0x00, CryptoPP::AES::BLOCKSIZE);     // INITIALLIZATION VECTOR
 
   std::string password = GetPasswordFromFile(keyFileName);
@@ -301,27 +310,34 @@ void DecryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
   PrintIV(iv);
   PrintKey(key);
 
+  std::string line, decryptedtext;
   std::ifstream input(argv[argc-1]);
-  std::string line, decryptedtext, ciphertext;
 
   if(!input.good()){
     std::cerr << "Error opening '"<<argv[argc-1]<<"'." << std::endl;
     exit(1);
     }
 
-  if(std::getline(input, line).good())
-    if(line != "#cryfa v1.1"){
-      std::cerr << "Error: invalid encrypted file!\n";
-      exit(1);
-      }
+  std::string ciphertext((std::istreambuf_iterator<char>(input)),
+              std::istreambuf_iterator<char>());
 
-  while(std::getline(input, line).good()){
-    if(line.empty())
-      break;
-    ciphertext += line;
+  std::string watermark = "#cryfa v1.1\n";
+  std::string::size_type i = ciphertext.find(watermark);
+
+  if(i == std::string::npos){
+    std::cerr << "Error: invalid encrypted file!\n";
+    exit(1);
+    }
+  else{
+    ciphertext.erase(i, watermark.length());
     }
 
-  CryptoPP::AES::Decryption aesDecryption(key, CryptoPP::AES::MAX_KEYLENGTH);
+  if(v_flag){
+    std::cerr << "cipher size: " << ciphertext.size() << "\n";
+    std::cerr << " block size: " << CryptoPP::AES::BLOCKSIZE << "\n";
+    }
+
+  CryptoPP::AES::Decryption aesDecryption(key, CryptoPP::AES::DEFAULT_KEYLENGTH);
   CryptoPP::CBC_Mode_ExternalCipher::Decryption 
   cbcDecryption(aesDecryption, iv);
   CryptoPP::StreamTransformationFilter stfDecryptor(cbcDecryption, new  
