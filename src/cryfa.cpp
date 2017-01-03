@@ -274,6 +274,8 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
   * NEED TO KNOW THE REVERSE OF SHUFFLE, FOR DECRYPT!
 */
 
+  header_and_dna_seq += "<"; // KNOW WHERE IS END ON DECRYPTION
+
   std::string ciphertext;
   CryptoPP::AES::Encryption aesEncryption(key, CryptoPP::AES::DEFAULT_KEYLENGTH);
   CryptoPP::CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
@@ -357,12 +359,11 @@ void DecryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
 
   // Dump Decrypted Text
   std::cerr << "Decrypted Text: " << std::endl;
-  for(ULL i = 0; i < decryptedtext.size()-2; ++i){
+  for(ULL i = 0 ; i < decryptedtext.size() ; ++i){
+    if((char) decryptedtext[i] == '<') break;
     std::cout << (char) decryptedtext[i];
     }
   
-  std::cout << std::endl << std::endl;
-
   return;
   }
 
