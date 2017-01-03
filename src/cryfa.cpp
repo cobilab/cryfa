@@ -1,5 +1,9 @@
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 //
+//            ===================================================
+//            | CRYFA :: A FASTA encryption and decryption tool |
+//            ===================================================
+//
 // COMPILE:  g++ -std=c++11 -I cryptopp -o cryfa cryfa.cpp defs.h libcryptopp.a
 //
 // DEPENDENCIES: https://github.com/weidai11/cryptopp
@@ -262,6 +266,13 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
     }
 
   input.close();
+
+/*
+  // DO RANDOM SHUFFLE:
+  srand(0);
+  std::random_shuffle(header_and_dna_seq.begin(),header_and_dna_seq.end());
+  * NEED TO KNOW THE REVERSE OF SHUFFLE, FOR DECRYPT!
+*/
 
   std::string ciphertext;
   CryptoPP::AES::Encryption aesEncryption(key, CryptoPP::AES::DEFAULT_KEYLENGTH);
