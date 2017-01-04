@@ -320,6 +320,8 @@ std::string PackIn3bDNASeq(std::string seq){
     triplet += seq[x+1];
     triplet += seq[x+2];
 
+//fprintf(stderr, "%u\n", DNA_PACK(triplet));
+
     packedSeq += (char) DNA_PACK(triplet);
 
     if(first  == 1) packedSeq += firstSym;
@@ -343,14 +345,19 @@ std::string PackIn3bDNASeq(std::string seq){
   }
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-
+/*
 std::string Unpack3binDNASeq(std::string seq){
   std::string unpackedSeq;
 
 
+  for(ULL x = 0 ; x < seq.length() ; ++x){
+    unpackedSeq += DNA_UNPACK[seq[x]];
+fprintf(stderr, "%s\n", DNA_UNPACK[seq[x]]);
+    }
+
   return unpackedSeq;
   }
-
+*/
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
@@ -499,9 +506,47 @@ void DecryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
 
   // Dump Decrypted Text
   std::cerr << "Decrypted Text: " << std::endl;
+  int header = 1;
   for(ULL i = 0 ; i < decryptedtext.size() ; ++i){
-    if((char) decryptedtext[i] == '<') break;
-    std::cout << (char) decryptedtext[i];
+    unsigned char s = decryptedtext[i];
+    if(s == '<') 
+      break;
+ 
+    if(header == 1){
+      std::cout << s;
+      if(s == '\n'){
+        header = 0;
+        }
+      continue;
+      }
+    
+    if(s == '>'){
+      header = 1;
+      }
+
+    if(header == 0){
+      //std::cerr << (int) s << ":" << DNA_UNPACK[(int) s];
+      std::string triplet = DNA_UNPACK[(int) s];
+      //std::cout << triplet;
+
+      int first = 0, second = 0, third = 0;
+      if(triplet[0] == 'X')
+        first = 1;
+
+      if(triplet[1] == 'X')
+        second = 1;
+
+      if(triplet[2] == 'X')
+        third = 1;
+
+      if(first == 0 && second == 0 && third == 0)
+        std::cout << triplet;      
+      else{
+        std::cout << "\n";
+        ++i;
+        }
+      
+      }
     }
   
   return;
