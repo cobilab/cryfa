@@ -1,6 +1,6 @@
 
 <p align="center"><img src="imgs/logo.png" 
-alt="Cryfa" width="300" border="0" /></p>
+alt="Cryfa" width="200" border="0" /></p>
 
 
 Cryfa is a FASTA encryption and decryption tool.
