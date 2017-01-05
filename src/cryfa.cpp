@@ -186,7 +186,7 @@ void PrintKey(byte *key){
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
-void PrintIV(byte *iv){ // XXX: SHOULD THIS HAVE 32 OF SIZE?
+void PrintIV(byte *iv){
   std::cerr << "IV : [";
   for(int i = 0 ; i < CryptoPP::AES::BLOCKSIZE ; ++i)
     std::cerr << (int) iv[i] << " ";
@@ -313,14 +313,10 @@ std::string PackIn3bDNASeq(std::string seq){
       seq[x+2] = 'X';
       }
 
-//fprintf(stderr, "%llu,%u:%u:%u\n", seqSize, (int) seq[x], (int) seq[x+1], (int) seq[x+2]);
-
     std::string triplet;
     triplet += seq[x];
     triplet += seq[x+1];
     triplet += seq[x+2];
-
-//fprintf(stderr, "%u\n", DNA_PACK(triplet));
 
     packedSeq += (char) DNA_PACK(triplet);
 
@@ -344,20 +340,6 @@ std::string PackIn3bDNASeq(std::string seq){
   return packedSeq;
   }
 
-//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-/*
-std::string Unpack3binDNASeq(std::string seq){
-  std::string unpackedSeq;
-
-
-  for(ULL x = 0 ; x < seq.length() ; ++x){
-    unpackedSeq += DNA_UNPACK[seq[x]];
-fprintf(stderr, "%s\n", DNA_UNPACK[seq[x]]);
-    }
-
-  return unpackedSeq;
-  }
-*/
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 
 void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
@@ -414,12 +396,10 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
 
   input.close();
 
-/*
-  // DO RANDOM SHUFFLE:
-  srand(0);
-  std::random_shuffle(header_and_dna_seq.begin(),header_and_dna_seq.end());
-  * NEED TO KNOW THE REVERSE OF SHUFFLE, FOR DECRYPT!
-*/
+  // // DO RANDOM SHUFFLE:
+  // srand(0);
+  // std::random_shuffle(header_and_dna_seq.begin(),header_and_dna_seq.end());
+  // * NEED TO KNOW THE REVERSE OF SHUFFLE, FOR DECRYPT!
 
   header_and_dna_seq += "<"; // KNOW WHERE IS END ON DECRYPTION
 
