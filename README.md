@@ -1,4 +1,9 @@
-<b>Cryfa: a FASTA encryption and decryption tool.</b> 
+
+<p align="center"><img src="imgs/logo.png" 
+alt="Cryfa" width="300" border="0" /></p>
+
+
+Cryfa is a FASTA encryption and decryption tool.
 Cryfa uses AES symmetric encryption, with very fast processing times. 
 Cryfa can be applied to any fasta file (DNA sequences with headers).
 Cryfa compacts 3 DNA bases into 1 char, using a fixed block size packing. When compared with general encryption tools it allows to reduce the storage (~3x), without creating security problems such as those derived from CRIME attacks (https://en.wikipedia.org/wiki/CRIME).
