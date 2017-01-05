@@ -52,7 +52,7 @@ Options:
          key filename
 </p>
 </pre>
-Cryfa uses stdin and stout and, hence, can be directly integrated on pipelines.
+Cryfa uses stdin and stdout and, hence, can be directly integrated on pipelines.
 
 ## CITATION ##
 
