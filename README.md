@@ -8,7 +8,7 @@ Cryfa can be applied to any fasta file (DNA sequences with headers).
 Cryfa compacts 3 DNA bases into 1 char, using a fixed block size packing. When compared with general encryption tools it allows to reduce the storage (~3x), without creating security problems such as those derived from CRIME attacks.
 </p>
 
-## INSTALLATION
+## INSTALLATION ##
 
 First you need to get cryfa using:
 <pre>
@@ -27,7 +27,7 @@ Finally, compile with:
 g++ -std=c++11 -I cryptopp -o cryfa cryfa.cpp defs.h libcryptopp.a
 </pre>
 
-## PARAMETERS
+## PARAMETERS ##
 
 To see the possible options type
 <pre>
