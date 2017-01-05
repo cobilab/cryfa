@@ -1,6 +1,6 @@
 <p align="center"><img src="imgs/logo.png" 
 alt="Cryfa" width="150" border="0" /></p>
-
+<br>
 <p>
 Cryfa is a FASTA encryption and decryption tool.
 Cryfa uses AES symmetric encryption, with very fast processing times. 
