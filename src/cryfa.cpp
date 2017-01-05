@@ -539,13 +539,31 @@ void DecryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
       if(triplet[2] == 'X')
         third = 1;
 
-      if(first == 0 && second == 0 && third == 0)
+      if(first == 0 && second == 0 && third == 0){
         std::cout << triplet;      
-      else{
-        std::cout << "\n";
-        ++i;
         }
-      
+      else if(first == 1 && second == 0 && third == 0){
+        std::cout << decryptedtext[++i] << triplet[1] << triplet[2];
+        }
+      else if(first == 0 && second == 1 && third == 0){
+        std::cout << triplet[0] << decryptedtext[++i] << triplet[2];
+        }
+      else if(first == 0 && second == 0 && third == 1){
+        std::cout << triplet[0] << triplet[1] << decryptedtext[++i];
+        }
+      else if(first == 1 && second == 1 && third == 0){
+        std::cout << decryptedtext[++i] << decryptedtext[++i] << triplet[2];
+        }
+      else if(first == 1 && second == 0 && third == 1){
+        std::cout << decryptedtext[++i] << triplet[1] << decryptedtext[++i];
+        }
+      else if(first == 0 && second == 1 && third == 1){
+        std::cout << triplet[0] << decryptedtext[++i] << decryptedtext[++i];
+        }
+      else{
+        std::cout << decryptedtext[++i] << decryptedtext[++i] 
+                  << decryptedtext[++i];
+        }
       }
     }
   
