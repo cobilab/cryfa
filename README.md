@@ -20,6 +20,7 @@ Then, you need to install CryptoPP using:
 git clone https://github.com/weidai11/cryptopp
 cd cryptopp/
 make
+cp libcryptopp.a ..
 cd ..
 </pre>
 Finally, compile with:
