@@ -1,12 +1,12 @@
 #!/bin/bash
 ###############################################################################
-INSTALL_DELIMINATE=0;
-INSTALL_MFCOMPRESS=0;
-INSTALL_CRYFA=0;
-CREATE_PASS=0;
-GET_HUMAN=0;
-RUN_CRYFA=0;
-RUN_MFCOMPRESS=0;
+INSTALL_DELIMINATE=1;
+INSTALL_MFCOMPRESS=1;
+INSTALL_CRYFA=1;
+CREATE_PASS=1;
+GET_HUMAN=1;
+RUN_CRYFA=1;
+RUN_MFCOMPRESS=1;
 RUN_DELIMINATE=1;
 # GET MFCOMPRESS ==============================================================
 if [[ "$INSTALL_MFCOMPRESS" -eq "1" ]]; then
