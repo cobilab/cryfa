@@ -317,6 +317,7 @@ std::string PackIn3bDNASeq(std::string seq){
     triplet += seq[x];
     triplet += seq[x+1];
     triplet += seq[x+2];
+    triplet += '\0';
 
     packedSeq += (char) DNA_PACK(triplet);
 
@@ -336,7 +337,6 @@ std::string PackIn3bDNASeq(std::string seq){
     packedSeq += seq[x+1];
     }
 
-  //packedSeq = seq;
   return packedSeq;
   }
 
