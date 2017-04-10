@@ -485,7 +485,7 @@ void DecryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
   stfDecryptor.MessageEnd();
 
   // Dump Decrypted Text
-  std::cerr << "Decrypted Text: " << std::endl;
+  std::cerr << "Decrypting... " << std::endl;
   int header = 1;
   for(ULL i = 0 ; i < decryptedtext.size() ; ++i){
     unsigned char s = decryptedtext[i];
@@ -502,6 +502,7 @@ void DecryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
     
     if(s == '>'){
       header = 1;
+      std::cout << s;
       }
 
     if(header == 0){
