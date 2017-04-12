@@ -117,7 +117,7 @@ std::unordered_map<std::string,int> mymap = {
 
 int DNA_PACK(std::string DNA){
 
-   std::unordered_map<std::string,int>::const_iterator got = mymap.find(DNA);
+  std::unordered_map<std::string,int>::const_iterator got = mymap.find(DNA);
 
   if(got == mymap.end()){
     std::cerr << "Error: key not found!\n";
@@ -286,7 +286,8 @@ std::string GetPasswordFromFile(std::string keyFileName){
 //
 std::string PackIn3bDNASeq(std::string seq){
   std::string packedSeq;
-  ULL seqSize = seq.length(), x;
+  ULL rest = seq.length() % 3;
+  ULL seqSize = seq.length() - 3 - rest, x;
 
   for(x = 0 ; x < seqSize ; x += 3){
     int first = 0, second = 0, third = 0;
@@ -317,25 +318,15 @@ std::string PackIn3bDNASeq(std::string seq){
     triplet += seq[x];
     triplet += seq[x+1];
     triplet += seq[x+2];
-    triplet += '\0';
-
+    //triplet += '\0';
+    
     packedSeq += (char) DNA_PACK(triplet);
-
-    if(first  == 1) packedSeq += firstSym;
-    if(second == 1) packedSeq += secondSym;
-    if(third  == 1) packedSeq += thirdSym;
     }
 
-  ULL plus = seqSize % 3;
-  if(plus == 1){
-    packedSeq += 231;
-    packedSeq += seq[x];
-    }
-  else if(plus == 2){
-    packedSeq += 232;
-    packedSeq += seq[x];
-    packedSeq += seq[x+1];
-    }
+  packedSeq += (int) 244;
+  x = seq.length() - 3 - rest;
+  while(x < seq.length())
+    packedSeq += seq[x++];
 
   return packedSeq;
   }
@@ -388,20 +379,22 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
       }
     }
 
+  input.close();
+  
+  header_and_dna_seq += '<'; // THE REST IS AS IT IS
+
   // LAST ENTRY HANDLING:
   if(!header.empty()){ 
     // std::cout << ">" header << "\n" << dna_seq << std::endl; // DEBUG PURPOSE
-    header_and_dna_seq += ('>' + header + '\n' + PackIn3bDNASeq(dna_seq)); 
+    header_and_dna_seq += ('>' + header + '\n' + line); 
     }
-
-  input.close();
 
   // // DO RANDOM SHUFFLE:
   // srand(0);
   // std::random_shuffle(header_and_dna_seq.begin(),header_and_dna_seq.end());
   // * NEED TO KNOW THE REVERSE OF SHUFFLE, FOR DECRYPT!
 
-  header_and_dna_seq += "<"; // KNOW WHERE IS END ON DECRYPTION
+  header_and_dna_seq += '<'; // KNOW WHERE IS END ON DECRYPTION
 
   std::string ciphertext;
   CryptoPP::AES::Encryption aesEncryption(key, CryptoPP::AES::DEFAULT_KEYLENGTH);
@@ -424,8 +417,8 @@ void EncryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
   // DUMP CYPHERTEXT FOR READ
   for(ULL i = 0; i < ciphertext.size(); ++i)
     std::cout << (char) (0xFF & static_cast<byte>(ciphertext[i]));
+  std::cout << std::endl;
 
-  std::cout << std::endl << std::endl;
   header_and_dna_seq.clear();
   ciphertext.clear();
   keyFileName.clear();
@@ -471,7 +464,7 @@ void DecryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
     }
 
   if(v_flag){
-    std::cerr << "cipher size: " << ciphertext.size() << "\n";
+    std::cerr << "cipher size: " << ciphertext.size()-1 << "\n";
     std::cerr << " block size: " << CryptoPP::AES::BLOCKSIZE << "\n";
     }
 
@@ -481,17 +474,22 @@ void DecryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
   CryptoPP::StreamTransformationFilter stfDecryptor(cbcDecryption, new  
   CryptoPP::StringSink(decryptedtext));
   stfDecryptor.Put(reinterpret_cast<const unsigned char*>(ciphertext.c_str()), 
-  ciphertext.size()-2);
+  ciphertext.size()-1);
   stfDecryptor.MessageEnd();
-
+   
   // Dump Decrypted Text
   std::cerr << "Decrypting... " << std::endl;
   int header = 1;
-  for(ULL i = 0 ; i < decryptedtext.size() ; ++i){
+  for(ULL i = 0 ; i < ciphertext.size() ; ++i){
     unsigned char s = decryptedtext[i];
-    if(s == '<') 
-      break;
- 
+
+    if(s == '<'){ // REACHED END
+      while((s = decryptedtext[++i]) != '<')
+        std::cout << s;
+      std::cout << std::endl;
+      return;
+      }
+
     if(header == 1){
       std::cout << s;
       if(s == '\n'){
@@ -507,6 +505,17 @@ void DecryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
 
     if(header == 0){
       //std::cerr << (int) s << ":" << DNA_UNPACK[(int) s];
+
+      if(s == 244){ // EXTRA CHARS % SIZE
+        while((s = decryptedtext[i]) != '>' && s != '<'){
+          if(s != 244)
+            std::cout << s;
+          ++i;
+          }
+        --i;
+        continue;
+        }
+
       std::string triplet = DNA_UNPACK[(int) s];
       //std::cout << triplet;
 
@@ -547,7 +556,7 @@ void DecryptFA(int argc, char **argv, int v_flag, std::string keyFileName){
         }
       }
     }
-  
+
   return;
   }
 
