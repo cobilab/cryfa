@@ -17,6 +17,7 @@
 using std::cout;
 using std::cerr;
 using std::ifstream;
+using std::getline;
 using CryptoPP::AES;
 using CryptoPP::CBC_Mode_ExternalCipher;
 using CryptoPP::StreamTransformationFilter;
@@ -39,7 +40,7 @@ void EnDecrypto::encryptFA (int argc, char **argv, int v_flag,
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
     memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
     
-    string password = getPasswordFromFile(keyFileName);
+    const string password = getPasswordFromFile(keyFileName);
     buildKey(key, password);
     buildIV(iv, password);
     
@@ -55,7 +56,7 @@ void EnDecrypto::encryptFA (int argc, char **argv, int v_flag,
         exit(1);
     }
     
-    while (std::getline(input, line).good())
+    while (getline(input, line).good())
     {
         if (line.empty() || line[0] == '>')
         {   // FASTA identifier
@@ -119,7 +120,7 @@ void EnDecrypto::encryptFA (int argc, char **argv, int v_flag,
     
     // dump cyphertext for read
     for (ULL i = 0; i < ciphertext.size(); ++i)
-        cout << (char) (0xFF & static_cast<byte>(ciphertext[i]));
+        cout << (char) (0xFF & static_cast<byte>( ciphertext[i] ));
     cout << '\n';
     
     header_and_dna_seq.clear();
@@ -135,9 +136,9 @@ void EnDecrypto::decryptFA (int argc, char **argv, int v_flag,
 {
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
-    memset(iv, 0x00,  (size_t) AES::BLOCKSIZE);         // Initialization Vector
+    memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
     
-    string password = getPasswordFromFile(keyFileName);
+    const string password = getPasswordFromFile(keyFileName);
     buildKey(key, password);
     buildIV(iv, password);
     
@@ -146,7 +147,6 @@ void EnDecrypto::decryptFA (int argc, char **argv, int v_flag,
     
     string line, decryptedtext;
     ifstream input( argv[argc-1] );
-    
     if (!input.good())
     {
         cerr << "Error opening '" << argv[argc-1] << "'.\n";
@@ -316,7 +316,7 @@ inline void EnDecrypto::buildKey (byte *key, string pwd)
 /*******************************************************************************
 
 *******************************************************************************/
-inline void EnDecrypto::printIV (byte *iv)
+inline void EnDecrypto::printIV (byte *iv) const
 {
     cerr << "IV : [";
     for (int i = 0; i < AES::BLOCKSIZE; ++i)    cerr << (int) iv[i] << " ";
@@ -326,7 +326,7 @@ inline void EnDecrypto::printIV (byte *iv)
 /*******************************************************************************
 
 *******************************************************************************/
-inline void EnDecrypto::printKey (byte *key)
+inline void EnDecrypto::printKey (byte *key) const
 {
     cerr << "KEY: [";
     for (int i = 0; i < AES::DEFAULT_KEYLENGTH; ++i) cerr<< (int) key[i] << " ";
@@ -336,7 +336,8 @@ inline void EnDecrypto::printKey (byte *key)
 /*******************************************************************************
     get password from a file
 *******************************************************************************/
-inline string EnDecrypto::getPasswordFromFile (string keyFileName)
+inline const string
+EnDecrypto::getPasswordFromFile (const string &keyFileName) const
 {
     ifstream input(keyFileName);
     string line;
@@ -346,8 +347,7 @@ inline string EnDecrypto::getPasswordFromFile (string keyFileName)
         cerr << "Error: no password file has been set!\n";
         exit(1);
     }
-    
-    if (!input.good())
+    else if (!input.good())
     {
         cerr << "Error opening '" << keyFileName << "'." << std::endl;
         exit(1);
@@ -369,7 +369,7 @@ inline string EnDecrypto::getPasswordFromFile (string keyFileName)
 /*******************************************************************************
 
 *******************************************************************************/
-inline void EnDecrypto::evaluatePasswordSize (string pwd)
+inline void EnDecrypto::evaluatePasswordSize (const string &pwd) const
 {
     if (pwd.size() < 8)
     {

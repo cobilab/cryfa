@@ -17,7 +17,7 @@ using std::cerr;
 /*******************************************************************************
 
 *******************************************************************************/
-int DNA_PACK (string DNA)
+inline int DNA_PACK (const string &DNA)
 {
     htable_t::const_iterator got = mymap.find(DNA);
     if (got == mymap.end())
@@ -33,14 +33,15 @@ int DNA_PACK (string DNA)
 /*******************************************************************************
     encapsulate 3 DNA bases in 1 byte
 *******************************************************************************/
-string PackIn3bDNASeq (string seq)
+inline string PackIn3bDNASeq (string seq)
 {
     string packedSeq;
-    ULL rest = seq.length() % 3;
-    ULL seqSize = seq.length()-3-rest, x;
-    bool first, second, third;
-    char firstSym, secondSym, thirdSym;
-    char seq0, seq1, seq2;        /// to keep 3 symbols
+    const  ULL rest = seq.length() % 3;
+    const  ULL seqSize = seq.length() - 3 - rest;
+    ULL    x;
+    bool   first, second, third;
+    char   firstSym, secondSym, thirdSym;
+    char   seq0, seq1, seq2;        /// to keep 3 symbols
     
     for (x = 0; x < seqSize; x += 3)
     {
