@@ -1,15 +1,16 @@
-//
-// Created by morteza on 02-05-2017.
-//
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    Encryption / Decryption
+    - - - - - - - - - - - - - - - - - - -
+    Diogo Pratas        pratas@ua.pt
+    Morteza Hosseini    seyedmorteza@ua.pt
+    Armando J. Pinho    ap@ua.pt
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
-#ifndef CRYFA_CRYPTO_H
-#define CRYFA_CRYPTO_H
-
+#ifndef CRYFA_ENDECRYPTO_H
+#define CRYFA_ENDECRYPTO_H
 
 #include "def.h"
-
 using std::string;
-
 
 class EnDecrypto
 {
@@ -26,5 +27,4 @@ public:
     inline void   evaluatePasswordSize (string);
 };
 
-
-#endif //CRYFA_CRYPTO_H
+#endif //CRYFA_ENDECRYPTO_H

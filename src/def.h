@@ -1,11 +1,17 @@
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    Definitions
+    - - - - - - - - - - - - - - - - - - -
+    Diogo Pratas        pratas@ua.pt
+    Morteza Hosseini    seyedmorteza@ua.pt
+    Armando J. Pinho    ap@ua.pt
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
 #ifndef CRYFA_DEF_H
 #define CRYFA_DEF_H
-
 
 #include <iostream>
 #include <unordered_map>    // hash table
 #include <random>           // std::mt19937
-
 using std::cout;
 using std::string;
 using std::unordered_map;
@@ -16,7 +22,6 @@ using std::unordered_map;
 #define VERSION_CRYFA 1
 #define RELEASE_CRYFA 1
 
-
 /*******************************************************************************
     typedefs
 *******************************************************************************/
@@ -24,7 +29,6 @@ typedef unsigned char byte;
 typedef unsigned long long ULL;
 typedef std::mt19937 rng_type;
 typedef std::unordered_map<string, int> htable_t;
-
 
 /*******************************************************************************
     lookup tables
@@ -52,7 +56,7 @@ const string DNA_UNPACK[] =     // 216 elements
     "XTA", "XTC", "XTG", "XTT", "XTN", "XTX", "XNA", "XNC", "XNG", "XNT", "XNN",
     "XNX", "XXA", "XXC", "XXG", "XXT", "XXN", "XXX"
 };
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 const htable_t mymap =
 {
     {"AAA",   0}, {"AAC",   1}, {"AAG",   2}, {"AAT",   3}, {"AAN",   4},
@@ -101,7 +105,6 @@ const htable_t mymap =
     {"XXX", 215}
 };
 
-
 /*******************************************************************************
     messages
 *******************************************************************************/
@@ -128,7 +131,7 @@ inline void Help ()    // usage guide
       << "         key filename"                                      << '\n'
                                                                       << '\n';
 }
-//++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
 inline void About ()   // About cryfa
 {
     cout                                                              << '\n'
@@ -137,7 +140,7 @@ inline void About ()   // About cryfa
       << "A FASTA encryption and decryption tool"                     << '\n'
                                                                       << '\n'
       << "Diogo Pratas, Morteza Hosseini, Armando J. Pinho"           << '\n'
-      << "Copyright (C) 2017 University of Aveiro"                    << '\n'
+      << "Copyright (C) 2017, University of Aveiro"                   << '\n'
                                                                       << '\n'
       << "This is a Free software, under GPLv3. You may redistribute" << '\n'
       << "copies of it under the terms of the GNU - General Public"   << '\n'
@@ -145,6 +148,5 @@ inline void About ()   // About cryfa
       << "is NOT ANY WARRANTY, to the extent permitted by law."       << '\n'
                                                                       << '\n';
 }
-
 
 #endif //CRYFA_DEF_H

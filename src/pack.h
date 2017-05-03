@@ -1,14 +1,16 @@
-//
-// Created by morteza on 02-05-2017.
-//
+/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    Packing
+    - - - - - - - - - - - - - - - - - - -
+    Diogo Pratas        pratas@ua.pt
+    Morteza Hosseini    seyedmorteza@ua.pt
+    Armando J. Pinho    ap@ua.pt
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 #ifndef CRYFA_PACK_H
 #define CRYFA_PACK_H
 
-
 #include <iostream>
 #include "def.h"
-
 using std::string;
 using std::cerr;
 
@@ -17,8 +19,7 @@ using std::cerr;
 *******************************************************************************/
 int DNA_PACK (string DNA)
 {
-    htable_t::const_iterator got = mymap.find( DNA );
-    
+    htable_t::const_iterator got = mymap.find(DNA);
     if (got == mymap.end())
     {
         cerr << "Error: key not found!\n";
@@ -28,7 +29,6 @@ int DNA_PACK (string DNA)
     
     return -1;
 }
-
 
 /*******************************************************************************
     encapsulate 3 DNA bases in 1 byte
@@ -48,7 +48,7 @@ string PackIn3bDNASeq (string seq)
         seq0 = seq[x], seq1 = seq[x+1], seq2 = seq[x+2];
         
         if (seq0 != 'A' && seq0 != 'C' && seq0 != 'G'
-            && seq0 != 'T' && seq0 != 'N')
+                        && seq0 != 'T' && seq0 != 'N')
         {
             first = true;
             firstSym = seq0;
@@ -56,7 +56,7 @@ string PackIn3bDNASeq (string seq)
         }
         
         if (seq1 != 'A' && seq1 != 'C' && seq1 != 'G'
-            && seq1 != 'T' && seq1 != 'N')
+                        && seq1 != 'T' && seq1 != 'N')
         {
             second = true;
             secondSym = seq1;
@@ -64,7 +64,7 @@ string PackIn3bDNASeq (string seq)
         }
         
         if (seq2 != 'A' && seq2 != 'C' && seq2 != 'G'
-            && seq2 != 'T' && seq2 != 'N')
+                        && seq2 != 'T' && seq2 != 'N')
         {
             third = true;
             thirdSym = seq2;
@@ -72,7 +72,7 @@ string PackIn3bDNASeq (string seq)
         }
         
         string triplet;
-        triplet += seq[x  ];
+        triplet += seq[x];
         triplet += seq[x+1];
         triplet += seq[x+2];
         //triplet += '\0';
@@ -92,6 +92,5 @@ string PackIn3bDNASeq (string seq)
     
     return packedSeq;
 }
-
 
 #endif //CRYFA_PACK_H
