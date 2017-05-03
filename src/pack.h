@@ -36,12 +36,13 @@ inline int DNA_PACK (const string &DNA)
 inline string PackIn3bDNASeq (string seq)
 {
     string packedSeq;
-    const  ULL rest = seq.length() % 3;
-    const  ULL seqSize = seq.length() - 3 - rest;
+    const  ULL rest = seq.length() % 3;             // 0
+    const  ULL seqSize = seq.length() - 3 - rest;   // 9
     ULL    x;
     bool   first, second, third;
     char   firstSym, secondSym, thirdSym;
     char   seq0, seq1, seq2;        /// to keep 3 symbols
+    string triplet;
     
     for (x = 0; x < seqSize; x += 3)
     {
@@ -55,7 +56,6 @@ inline string PackIn3bDNASeq (string seq)
             firstSym = seq0;
             seq[x] = 'X';
         }
-        
         if (seq1 != 'A' && seq1 != 'C' && seq1 != 'G'
                         && seq1 != 'T' && seq1 != 'N')
         {
@@ -63,7 +63,6 @@ inline string PackIn3bDNASeq (string seq)
             secondSym = seq1;
             seq[x+1] = 'X';
         }
-        
         if (seq2 != 'A' && seq2 != 'C' && seq2 != 'G'
                         && seq2 != 'T' && seq2 != 'N')
         {
@@ -72,7 +71,7 @@ inline string PackIn3bDNASeq (string seq)
             seq[x+2] = 'X';
         }
         
-        string triplet;
+        triplet = "";
         triplet += seq[x];
         triplet += seq[x+1];
         triplet += seq[x+2];

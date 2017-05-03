@@ -58,9 +58,9 @@ void EnDecrypto::encryptFA (int argc, char **argv, int v_flag,
     
     while (getline(input, line).good())
     {
-        if (line.empty() || line[0] == '>')
-        {   // FASTA identifier
-            if (!header.empty())
+        if (line[0] == '>' || line.empty())     // FASTA identifier
+        {
+            if (!header.empty())    // todo. 2nd header line onwards
             {   // print out last entry
                 //cout << ">" header << '\n' << dna_seq << '\n'; //todo. debug
                 header_and_dna_seq +=
@@ -71,9 +71,9 @@ void EnDecrypto::encryptFA (int argc, char **argv, int v_flag,
             dna_seq.clear();
         }
         else if (!header.empty())
-        {
+        {   // invalid sequence--no spaces allowed
             if (line.find(' ') != string::npos)
-            {   // invalid sequence--no spaces allowed
+            {
                 header.clear();
                 dna_seq.clear();
             }
@@ -81,51 +81,88 @@ void EnDecrypto::encryptFA (int argc, char **argv, int v_flag,
         }
     }
     
+////    while (getline(input, line).good())
+////    {
+////        if (line[0] == '>')     // FASTA identifier
+////        {
+////            header = line.substr(1);
+////            dna_seq.clear();
+////        }
+////        else if (!header.empty())
+////        {   // invalid sequence--no spaces allowed
+////            if (line.find(' ') != string::npos)
+////            {
+////                header.clear();
+////                dna_seq.clear();
+////            }
+////            else    dna_seq += (line + "\n");
+////        }
+//////        else if (line.empty())
+//////        {
+//////            if (!header.empty())
+//////            {
+//////                header_and_dna_seq +=
+//////                        (">" + header + "\n" + PackIn3bDNASeq(dna_seq));
+//////                header.clear();
+//////            }
+//////        }
+////    }
+//
     input.close();
-    
-    header_and_dna_seq += '<';  // the rest is as it is
-    
+
+//    header_and_dna_seq += "<";  // the rest is as it is
+
     // last entry handling
     if (!header.empty())
     {
-        // cout << ">" header << '\n' << dna_seq << std::endl; //todo. debug
-        header_and_dna_seq += (">" + header + "\n" + line);
+//        // cout << ">" header << '\n' << dna_seq << std::endl; //todo. debug
+//        header_and_dna_seq += (">" + header + "\n" + line);
+        header_and_dna_seq +=
+                (">" + header + "\n" + PackIn3bDNASeq(dna_seq));
     }
-    
+
     // // do random shuffle
     // srand(0);
     // std::random_shuffle(header_and_dna_seq.begin(),header_and_dna_seq.end());
     // * need to know the reverse of shuffle, for decryption!
+
+    header_and_dna_seq += "<";  // specify the end for decryption
     
-    header_and_dna_seq += '<';  // know where is the end on decryption
     
-    string ciphertext;
-    AES::Encryption aesEncryption(key, (size_t) AES::DEFAULT_KEYLENGTH);
-    CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
-    StreamTransformationFilter stfEncryptor(cbcEncryption,
-                                          new CryptoPP::StringSink(ciphertext));
-    stfEncryptor.Put(reinterpret_cast<const unsigned char*>
-                 (header_and_dna_seq.c_str()), header_and_dna_seq.length() + 1);
-    stfEncryptor.MessageEnd();
     
-    if (v_flag)
-    {
-        cerr << "   sym size: " << header_and_dna_seq.size() << '\n';
-        cerr << "cipher size: " << ciphertext.size()         << '\n';
-        cerr << " block size: " << AES::BLOCKSIZE            << '\n';
-    }
+    //todo. test
+    cout << header_and_dna_seq;
     
-    // watermark for encrypted FASTA file
-    cout << "#cryfa v" << VERSION_CRYFA << "." << RELEASE_CRYFA << '\n';
     
-    // dump cyphertext for read
-    for (ULL i = 0; i < ciphertext.size(); ++i)
-        cout << (char) (0xFF & static_cast<byte>( ciphertext[i] ));
-    cout << '\n';
     
-    header_and_dna_seq.clear();
-    ciphertext.clear();
-    keyFileName.clear();
+
+//    string ciphertext;
+//    AES::Encryption aesEncryption(key, (size_t) AES::DEFAULT_KEYLENGTH);
+//    CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
+//    StreamTransformationFilter stfEncryptor(cbcEncryption,
+//                                          new CryptoPP::StringSink(ciphertext));
+//    stfEncryptor.Put(reinterpret_cast<const unsigned char*>
+//                 (header_and_dna_seq.c_str()), header_and_dna_seq.length() + 1);
+//    stfEncryptor.MessageEnd();
+//
+//    if (v_flag)
+//    {
+//        cerr << "   sym size: " << header_and_dna_seq.size() << '\n';
+//        cerr << "cipher size: " << ciphertext.size()         << '\n';
+//        cerr << " block size: " << AES::BLOCKSIZE            << '\n';
+//    }
+//
+//    // watermark for encrypted FASTA file
+//    cout << "#cryfa v" << VERSION_CRYFA << "." << RELEASE_CRYFA << '\n';
+//
+//    // dump cyphertext for read
+//    for (ULL i = 0; i < ciphertext.size(); ++i)
+//        cout << (char) (0xFF & static_cast<byte>( ciphertext[i] ));
+//    cout << '\n';
+//
+//    header_and_dna_seq.clear();
+//    ciphertext.clear();
+//    keyFileName.clear();
 }
 
 /*******************************************************************************
