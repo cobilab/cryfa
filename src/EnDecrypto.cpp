@@ -36,8 +36,8 @@ void EnDecrypto::encryptFA (int argc, char **argv, int v_flag,
     // bit). This key is secretly exchanged between two parties before
     // communication begins. DEFAULT_KEYLENGTH= 16 bytes
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
-    memset(key, 0x00, AES::DEFAULT_KEYLENGTH);  // AES key
-    memset(iv, 0x00, AES::BLOCKSIZE);           // Initialization Vector
+    memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
+    memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
     
     string password = getPasswordFromFile(keyFileName);
     buildKey(key, password);
@@ -51,13 +51,13 @@ void EnDecrypto::encryptFA (int argc, char **argv, int v_flag,
     
     if (!input.good())
     {
-        cerr << "Error opening '" << argv[ argc - 1 ] << "'.\n";
+        cerr << "Error opening '" << argv[argc-1] << "'.\n";
         exit(1);
     }
     
     while (std::getline(input, line).good())
     {
-        if (line.empty() || line[ 0 ] == '>')
+        if (line.empty() || line[0] == '>')
         {   // FASTA identifier
             if (!header.empty())
             {   // print out last entry
@@ -91,35 +91,35 @@ void EnDecrypto::encryptFA (int argc, char **argv, int v_flag,
         header_and_dna_seq += (">" + header + "\n" + line);
     }
     
-    // // DO RANDOM SHUFFLE:
+    // // do random shuffle
     // srand(0);
     // std::random_shuffle(header_and_dna_seq.begin(),header_and_dna_seq.end());
-    // * NEED TO KNOW THE REVERSE OF SHUFFLE, FOR DECRYPT!
+    // * need to know the reverse of shuffle, for decryption!
     
-    header_and_dna_seq += '<'; // KNOW WHERE IS END ON DECRYPTION
+    header_and_dna_seq += '<';  // know where is the end on decryption
     
     string ciphertext;
-    AES::Encryption aesEncryption(key, AES::DEFAULT_KEYLENGTH);
+    AES::Encryption aesEncryption(key, (size_t) AES::DEFAULT_KEYLENGTH);
     CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
     StreamTransformationFilter stfEncryptor(cbcEncryption,
-                                            new CryptoPP::StringSink(ciphertext));
-    stfEncryptor.Put(reinterpret_cast<const unsigned char *>
-                     (header_and_dna_seq.c_str()), header_and_dna_seq.length() + 1);
+                                          new CryptoPP::StringSink(ciphertext));
+    stfEncryptor.Put(reinterpret_cast<const unsigned char*>
+                 (header_and_dna_seq.c_str()), header_and_dna_seq.length() + 1);
     stfEncryptor.MessageEnd();
     
     if (v_flag)
     {
         cerr << "   sym size: " << header_and_dna_seq.size() << '\n';
-        cerr << "cipher size: " << ciphertext.size() << '\n';
-        cerr << " block size: " << AES::BLOCKSIZE << '\n';
+        cerr << "cipher size: " << ciphertext.size()         << '\n';
+        cerr << " block size: " << AES::BLOCKSIZE            << '\n';
     }
     
-    // WATERMAK FOR ENCRYPTED FASTA FILE
+    // watermark for encrypted FASTA file
     cout << "#cryfa v" << VERSION_CRYFA << "." << RELEASE_CRYFA << '\n';
     
-    // DUMP CYPHERTEXT FOR READ
+    // dump cyphertext for read
     for (ULL i = 0; i < ciphertext.size(); ++i)
-        cout << (char) (0xFF & static_cast<byte>(ciphertext[ i ]));
+        cout << (char) (0xFF & static_cast<byte>(ciphertext[i]));
     cout << '\n';
     
     header_and_dna_seq.clear();
@@ -130,11 +130,12 @@ void EnDecrypto::encryptFA (int argc, char **argv, int v_flag,
 /*******************************************************************************
     decrypt FASTA
 *******************************************************************************/
-void EnDecrypto::decryptFA (int argc, char **argv, int v_flag, string keyFileName)
+void EnDecrypto::decryptFA (int argc, char **argv, int v_flag,
+                            string keyFileName)
 {
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
-    memset(key, 0x00, AES::DEFAULT_KEYLENGTH); // AES KEY
-    memset(iv, 0x00, AES::BLOCKSIZE);     // INITIALLIZATION VECTOR
+    memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
+    memset(iv, 0x00,  (size_t) AES::BLOCKSIZE);         // Initialization Vector
     
     string password = getPasswordFromFile(keyFileName);
     buildKey(key, password);
@@ -144,30 +145,28 @@ void EnDecrypto::decryptFA (int argc, char **argv, int v_flag, string keyFileNam
     printKey(key);
     
     string line, decryptedtext;
-    ifstream input(argv[ argc - 1 ]);
+    ifstream input( argv[argc-1] );
     
     if (!input.good())
     {
-        cerr << "Error opening '" << argv[ argc - 1 ] << "'.\n";
+        cerr << "Error opening '" << argv[argc-1] << "'.\n";
         exit(1);
     }
     
-    string ciphertext((std::istreambuf_iterator< char >(input)),
-                      std::istreambuf_iterator< char >());
+    string ciphertext( (std::istreambuf_iterator< char >(input)),
+                        std::istreambuf_iterator< char >() );
     
     // string watermark = "#cryfa v1.1\n";
-    string watermark = "#cryfa v" + std::to_string(VERSION_CRYFA)
-                       + "." + std::to_string(RELEASE_CRYFA) + "\n";
+    string watermark = "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
+                                  + std::to_string(RELEASE_CRYFA) + "\n";
     
     string::size_type i = ciphertext.find(watermark);
-    
     if (i == string::npos)
     {
         cerr << "Error: invalid encrypted file!\n";
         exit(1);
     }
-    else
-        ciphertext.erase(i, watermark.length());
+    else    ciphertext.erase(i, watermark.length());
     
     if (v_flag)
     {
@@ -175,15 +174,15 @@ void EnDecrypto::decryptFA (int argc, char **argv, int v_flag, string keyFileNam
         cerr << " block size: " << AES::BLOCKSIZE << '\n';
     }
     
-    AES::Decryption aesDecryption(key, AES::DEFAULT_KEYLENGTH);
+    AES::Decryption aesDecryption(key, (size_t) AES::DEFAULT_KEYLENGTH);
     CBC_Mode_ExternalCipher::Decryption cbcDecryption(aesDecryption, iv);
     StreamTransformationFilter stfDecryptor(cbcDecryption,
-                                            new CryptoPP::StringSink(decryptedtext));
+                                       new CryptoPP::StringSink(decryptedtext));
     stfDecryptor.Put(reinterpret_cast<const unsigned char *>
                      (ciphertext.c_str()), ciphertext.size() - 1);
     stfDecryptor.MessageEnd();
     
-    // Dump Decrypted Text
+    // dump decrypted text
     cerr << "Decrypting... \n";
     
     bool header = true, first, second, third;
@@ -191,14 +190,13 @@ void EnDecrypto::decryptFA (int argc, char **argv, int v_flag, string keyFileNam
     string triplet;
     char trp0, trp1, trp2;
     
-    for (ULL i = 0; i < ciphertext.size(); ++i)
+    for (ULL j = 0; j < ciphertext.size(); ++j)
     {
-        s = decryptedtext[ i ];
+        s = decryptedtext[j];
         
         if (s == '<')
-        { // REACHED END
-            while ((s = decryptedtext[ ++i ]) != '<')
-                cout << s;
+        {   // reached the end
+            while ((s = decryptedtext[++j]) != '<')   cout << s;
             cout << '\n';
             return;
         }
@@ -206,8 +204,7 @@ void EnDecrypto::decryptFA (int argc, char **argv, int v_flag, string keyFileNam
         if (header)
         {
             cout << s;
-            if (s == '\n')
-                header = false;
+            if (s == '\n')  header = false;
             continue;
         }
         
@@ -222,54 +219,50 @@ void EnDecrypto::decryptFA (int argc, char **argv, int v_flag, string keyFileNam
             //cerr << (int) s << ":" << DNA_UNPACK[(int) s];
             
             if (s == 244)
-            { // EXTRA CHARS % SIZE
-                while ((s = decryptedtext[ i ]) != '>' && s != '<')
+            {   // extra chars % size
+                while ((s = decryptedtext[j]) != '>' && s != '<')
                 {
-                    if (s != 244)
-                        cout << s;
-                    ++i;
+                    if (s != 244)   cout << s;
+                    ++j;
                 }
-                --i;
+                --j;
                 continue;
             }
-            
-            triplet = DNA_UNPACK[ (int) s ];
+    
+            triplet = DNA_UNPACK[(int) s];
             //cout << triplet;
             
             first = false, second = false, third = false;
-            trp0 = triplet[ 0 ], trp1 = triplet[ 1 ], trp2 = triplet[ 2 ];
+            trp0 = triplet[0], trp1 = triplet[1], trp2 = triplet[2];
             
-            if (trp0 == 'X')
-                first = true;
-            if (trp1 == 'X')
-                second = true;
-            if (trp2 == 'X')
-                third = true;
+            if (trp0 == 'X')    first = true;
+            if (trp1 == 'X')    second = true;
+            if (trp2 == 'X')    third = true;
             
             if (!first && !second && !third)
                 cout << triplet;
             
             else if (first && !second && !third)
-                cout << decryptedtext[ ++i ] << trp1 << trp2;
+                cout << decryptedtext[++j] << trp1 << trp2;
             
             else if (!first && second && !third)
-                cout << trp0 << decryptedtext[ ++i ] << trp2;
+                cout << trp0 << decryptedtext[++j] << trp2;
             
             else if (!first && !second && third)
-                cout << trp0 << trp1 << decryptedtext[ ++i ];
+                cout << trp0 << trp1 << decryptedtext[++j];
             
             else if (first && second && !third)
-                cout << decryptedtext[ ++i ] << decryptedtext[ ++i ] << trp2;
-            
+                cout << decryptedtext[++j] << decryptedtext[++j] << trp2;
+
             else if (first && !second && third)
-                cout << decryptedtext[ ++i ] << trp1 << decryptedtext[ ++i ];
-            
+                cout << decryptedtext[++j] << trp1 << decryptedtext[++j];
+
             else if (!first && second && third)
-                cout << trp0 << decryptedtext[ ++i ] << decryptedtext[ ++i ];
-            
+                cout << trp0 << decryptedtext[++j] << decryptedtext[++j];
+
             else
-                cout << decryptedtext[ ++i ] << decryptedtext[ ++i ]
-                     << decryptedtext[ ++i ];
+                cout << decryptedtext[++j] << decryptedtext[++j]
+                     << decryptedtext[++j];
         }
     }
 }
@@ -284,18 +277,17 @@ inline void EnDecrypto::buildIV (byte *iv, string pwd)
     
     evaluatePasswordSize(pwd);
     
-    // USING OLD RAND TO GENERATE THE NEW RAND SEED
-    srand(7919 * (pwd[ 2 ] * pwd[ 5 ]) + 75653);
+    // using old rand to generate the new rand seed
+    srand((unsigned int) 7919 * (pwd[2] * pwd[5]) + 75653);
     ULL seed = 0;
     for (int i = 0; i < pwd.size(); ++i)
-        seed += ((ULL) pwd[ i ] * rand()) + rand();
+        seed += ((ULL) pwd[i] * rand()) + rand();
     seed %= 4294967295;
     
-    rng_type::result_type const seedval = seed;
+    const rng_type::result_type seedval = seed;
     rng.seed(seedval);
     
-    for (int i = 0; i < AES::BLOCKSIZE; ++i)
-        iv[ i ] = udist(rng) % 255;
+    for (int i = 0; i < AES::BLOCKSIZE; ++i)    iv[i] = udist(rng) % 255;
 }
 
 /*******************************************************************************
@@ -309,17 +301,16 @@ inline void EnDecrypto::buildKey (byte *key, string pwd)
     evaluatePasswordSize(pwd);
     
     // USING OLD RAND TO GENERATE THE NEW RAND SEED
-    srand(24593 * (pwd[ 0 ] * pwd[ 2 ]) + 49157);
+    srand((unsigned int) 24593 * (pwd[0] * pwd[2]) + 49157);
     ULL seed = 0;
     for (int i = 0; i < pwd.size(); ++i)
-        seed += ((ULL) pwd[ i ] * rand()) + rand();
+        seed += ((ULL) pwd[i] * rand()) + rand();
     seed %= 4294967295;
     
-    rng_type::result_type const seedval = seed;
+    const rng_type::result_type seedval = seed;
     rng.seed(seedval);
     
-    for (int i = 0; i < AES::DEFAULT_KEYLENGTH; ++i)
-        key[ i ] = udist(rng) % 255;
+    for (int i = 0; i < AES::DEFAULT_KEYLENGTH; ++i)  key[i] = udist(rng) % 255;
 }
 
 /*******************************************************************************
@@ -328,8 +319,7 @@ inline void EnDecrypto::buildKey (byte *key, string pwd)
 inline void EnDecrypto::printIV (byte *iv)
 {
     cerr << "IV : [";
-    for (int i = 0; i < AES::BLOCKSIZE; ++i)
-        cerr << (int) iv[ i ] << " ";
+    for (int i = 0; i < AES::BLOCKSIZE; ++i)    cerr << (int) iv[i] << " ";
     cerr << "]\n";
 }
 
@@ -339,8 +329,7 @@ inline void EnDecrypto::printIV (byte *iv)
 inline void EnDecrypto::printKey (byte *key)
 {
     cerr << "KEY: [";
-    for (int i = 0; i < AES::DEFAULT_KEYLENGTH; ++i)
-        cerr << (int) key[ i ] << " ";
+    for (int i = 0; i < AES::DEFAULT_KEYLENGTH; ++i) cerr<< (int) key[i] << " ";
     cerr << "]\n";
 }
 
