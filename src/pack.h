@@ -36,59 +36,59 @@ inline int DNA_PACK (const string &DNA)
 inline string PackIn3bDNASeq (string seq)
 {
     string packedSeq;
-    const  ULL rest = seq.length() % 3;             // 0
-    const  ULL seqSize = seq.length() - 3 - rest;   // 9
+//    const  ULL rem = seq.length() % 3;                  // 1
+//    const  ULL seqSize = seq.length() - rem - 3 + 1;    // 10
+    const ULL traverseSize  = seq.length() - 2;
     ULL    x;
-    bool   first, second, third;
-    char   firstSym, secondSym, thirdSym;
-    char   seq0, seq1, seq2;        /// to keep 3 symbols
+    bool   firstIsX, secondIsX, thirdIsX;
+    char   sym0, sym1, sym2;        /// to keep 3 symbols
     string triplet;
-    
-    for (x = 0; x < seqSize; x += 3)
+
+//    for (x = 0; x < seqSize; x += 3)
+    for (x = 0; x < traverseSize; x += 3)
     {
-        first = false, second = false, third = false;
-        seq0 = seq[x], seq1 = seq[x+1], seq2 = seq[x+2];
-        
-        if (seq0 != 'A' && seq0 != 'C' && seq0 != 'G'
-                        && seq0 != 'T' && seq0 != 'N')
+        firstIsX = false, secondIsX = false, thirdIsX = false;
+        sym0 = seq[x], sym1 = seq[x+1], sym2 = seq[x+2];
+    
+//        if (sym0!='A' && sym0!='C' && sym0!='G' && sym0!='T' && sym0!='N')
+        if ( !(sym0=='A' || sym0=='C' || sym0=='G' || sym0=='T' || sym0=='N') )
         {
-            first = true;
-            firstSym = seq0;
-            seq[x] = 'X';
+            firstIsX = true;
+            sym0 = 'X';
         }
-        if (seq1 != 'A' && seq1 != 'C' && seq1 != 'G'
-                        && seq1 != 'T' && seq1 != 'N')
+//        if (sym1!='A' && sym1!='C' && sym1!='G' && sym1!='T' && sym1!='N')
+        if ( !(sym1=='A' || sym1=='C' || sym1=='G' || sym1=='T' || sym1=='N') )
         {
-            second = true;
-            secondSym = seq1;
-            seq[x+1] = 'X';
+            secondIsX = true;
+            sym1 = 'X';
         }
-        if (seq2 != 'A' && seq2 != 'C' && seq2 != 'G'
-                        && seq2 != 'T' && seq2 != 'N')
+//        if (sym2!='A' && sym2!='C' && sym2!='G' && sym2!='T' && sym2!='N')
+        if ( !(sym2=='A' || sym2=='C' || sym2=='G' || sym2=='T' || sym2=='N') )
         {
-            third = true;
-            thirdSym = seq2;
-            seq[x+2] = 'X';
+            thirdIsX = true;
+            sym2 = 'X';
         }
         
         triplet = "";
-        triplet += seq[x];
-        triplet += seq[x+1];
-        triplet += seq[x+2];
+        triplet += sym0;
+        triplet += sym1;
+        triplet += sym2;
         //triplet += '\0';
         
         packedSeq += (char) DNA_PACK(triplet);
-        
-        /*
-        if (first)      packedSeq += firstSym;
-        if (second)     packedSeq += secondSym;
-        if (third)      packedSeq += thirdSym;
-        */
+        if (firstIsX)  packedSeq += seq[x];
+        if (secondIsX) packedSeq += seq[x+1];
+        if (thirdIsX)  packedSeq += seq[x+2];
     }
     
-    packedSeq += (int) 244;
-    x = seq.length() - 3 - rest;
-    while (x < seq.length())     packedSeq += seq[x++];
+//    packedSeq += (int) 244;
+//    x = seq.length() - 3 - rem;
+//    while (x < seq.length())     packedSeq += seq[x++];
+    
+    
+    //if seq len isn't multiplicant of 3, add 1 or 2 remaining syms to packedSeq
+    if      (seq.length() % 3 == 1) packedSeq += seq[x];
+    else if (seq.length() % 3 == 2){packedSeq += seq[x]; packedSeq += seq[x+1];}
     
     return packedSeq;
 }

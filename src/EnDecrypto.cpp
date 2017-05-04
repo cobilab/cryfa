@@ -33,8 +33,8 @@ EnDecrypto::EnDecrypto () {}
 void EnDecrypto::encryptFA (int argc, char **argv, int v_flag,
                             string keyFileName)
 {
-    // AES encryption uses a secret key of a variable length (128, 196 or 256
-    // bit). This key is secretly exchanged between two parties before
+    // AES encryption uses a secret key of a variable length (128, 196 or
+    // 256 bit). This key is secretly exchanged between two parties before
     // communication begins. DEFAULT_KEYLENGTH= 16 bytes
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
@@ -60,11 +60,11 @@ void EnDecrypto::encryptFA (int argc, char **argv, int v_flag,
     {
         if (line[0] == '>' || line.empty())     // FASTA identifier
         {
-            if (!header.empty())    // todo. 2nd header line onwards
+            if (!header.empty())    // 2nd header line onwards
             {   // print out last entry
                 //cout << ">" header << '\n' << dna_seq << '\n'; //todo. debug
                 header_and_dna_seq +=
-                        (">" + header + "\n" + PackIn3bDNASeq(dna_seq));
+                        ">" + header + "\n" + PackIn3bDNASeq(dna_seq);
                 header.clear();
             }
             if (!line.empty())  header = line.substr(1);
@@ -77,37 +77,10 @@ void EnDecrypto::encryptFA (int argc, char **argv, int v_flag,
                 header.clear();
                 dna_seq.clear();
             }
-            else    dna_seq += (line + "\n");
+            else    dna_seq += line + "\n";
         }
     }
     
-////    while (getline(input, line).good())
-////    {
-////        if (line[0] == '>')     // FASTA identifier
-////        {
-////            header = line.substr(1);
-////            dna_seq.clear();
-////        }
-////        else if (!header.empty())
-////        {   // invalid sequence--no spaces allowed
-////            if (line.find(' ') != string::npos)
-////            {
-////                header.clear();
-////                dna_seq.clear();
-////            }
-////            else    dna_seq += (line + "\n");
-////        }
-//////        else if (line.empty())
-//////        {
-//////            if (!header.empty())
-//////            {
-//////                header_and_dna_seq +=
-//////                        (">" + header + "\n" + PackIn3bDNASeq(dna_seq));
-//////                header.clear();
-//////            }
-//////        }
-////    }
-//
     input.close();
 
 //    header_and_dna_seq += "<";  // the rest is as it is
@@ -118,51 +91,48 @@ void EnDecrypto::encryptFA (int argc, char **argv, int v_flag,
 //        // cout << ">" header << '\n' << dna_seq << std::endl; //todo. debug
 //        header_and_dna_seq += (">" + header + "\n" + line);
         header_and_dna_seq +=
-                (">" + header + "\n" + PackIn3bDNASeq(dna_seq));
+                ">" + header + "\n" + PackIn3bDNASeq(dna_seq);
     }
-
+    
     // // do random shuffle
     // srand(0);
     // std::random_shuffle(header_and_dna_seq.begin(),header_and_dna_seq.end());
     // * need to know the reverse of shuffle, for decryption!
-
+    
     header_and_dna_seq += "<";  // specify the end for decryption
     
     
-    
     //todo. test
-    cout << header_and_dna_seq;
+//    cout << header_and_dna_seq;
     
     
+    string ciphertext;
+    AES::Encryption aesEncryption(key, (size_t) AES::DEFAULT_KEYLENGTH);
+    CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
+    StreamTransformationFilter stfEncryptor(cbcEncryption,
+                                          new CryptoPP::StringSink(ciphertext));
+    stfEncryptor.Put(reinterpret_cast<const unsigned char*>
+                 (header_and_dna_seq.c_str()), header_and_dna_seq.length() + 1);
+    stfEncryptor.MessageEnd();
     
-
-//    string ciphertext;
-//    AES::Encryption aesEncryption(key, (size_t) AES::DEFAULT_KEYLENGTH);
-//    CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
-//    StreamTransformationFilter stfEncryptor(cbcEncryption,
-//                                          new CryptoPP::StringSink(ciphertext));
-//    stfEncryptor.Put(reinterpret_cast<const unsigned char*>
-//                 (header_and_dna_seq.c_str()), header_and_dna_seq.length() + 1);
-//    stfEncryptor.MessageEnd();
-//
-//    if (v_flag)
-//    {
-//        cerr << "   sym size: " << header_and_dna_seq.size() << '\n';
-//        cerr << "cipher size: " << ciphertext.size()         << '\n';
-//        cerr << " block size: " << AES::BLOCKSIZE            << '\n';
-//    }
-//
-//    // watermark for encrypted FASTA file
-//    cout << "#cryfa v" << VERSION_CRYFA << "." << RELEASE_CRYFA << '\n';
-//
-//    // dump cyphertext for read
-//    for (ULL i = 0; i < ciphertext.size(); ++i)
-//        cout << (char) (0xFF & static_cast<byte>( ciphertext[i] ));
-//    cout << '\n';
-//
-//    header_and_dna_seq.clear();
-//    ciphertext.clear();
-//    keyFileName.clear();
+    if (v_flag)
+    {
+        cerr << "   sym size: " << header_and_dna_seq.size() << '\n';
+        cerr << "cipher size: " << ciphertext.size()         << '\n';
+        cerr << " block size: " << AES::BLOCKSIZE            << '\n';
+    }
+    
+    // watermark for encrypted FASTA file
+    cout << "#cryfa v" << VERSION_CRYFA << "." << RELEASE_CRYFA << '\n';
+    
+    // dump cyphertext for read
+    for (ULL i = 0; i < ciphertext.size(); ++i)
+        cout << (char) (0xFF & static_cast<byte>( ciphertext[i] ));
+    cout << '\n';
+    
+    header_and_dna_seq.clear();
+    ciphertext.clear();
+    keyFileName.clear();
 }
 
 /*******************************************************************************
@@ -190,8 +160,8 @@ void EnDecrypto::decryptFA (int argc, char **argv, int v_flag,
         exit(1);
     }
     
-    string ciphertext( (std::istreambuf_iterator< char >(input)),
-                        std::istreambuf_iterator< char >() );
+    string ciphertext( (std::istreambuf_iterator<char> (input)),
+                        std::istreambuf_iterator<char> () );
     
     // string watermark = "#cryfa v1.1\n";
     string watermark = "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
@@ -222,85 +192,92 @@ void EnDecrypto::decryptFA (int argc, char **argv, int v_flag,
     // dump decrypted text
     cerr << "Decrypting... \n";
     
+    
+    //todo. test
+//    cout << decryptedtext;
+//    cout << ciphertext;
+//    cerr<<decryptedtext.size()<<ciphertext.size();
+    
     bool header = true, first, second, third;
     unsigned char s;
     string triplet;
     char trp0, trp1, trp2;
     
-    for (ULL j = 0; j < ciphertext.size(); ++j)
+//    for (ULL j = 0; j < ciphertext.size(); ++j)
+    for (ULL j = 0; j < decryptedtext.size(); ++j)
     {
-        s = decryptedtext[j];
-        
-        if (s == '<')
-        {   // reached the end
-            while ((s = decryptedtext[++j]) != '<')   cout << s;
-            cout << '\n';
-            return;
-        }
-        
+        s = (unsigned char) decryptedtext[j];
+
+//        if (s == '<')
+//        {   // reached the end
+//            while ((s = decryptedtext[++j]) != '<')   cout << s;
+//            cout << '\n';
+//            return;
+//        }
+
         if (header)
         {
             cout << s;
             if (s == '\n')  header = false;
             continue;
         }
-        
+
         if (s == '>')
         {
             header = true;
             cout << s;
         }
-        
-        if (!header)
-        {
-            //cerr << (int) s << ":" << DNA_UNPACK[(int) s];
-            
-            if (s == 244)
-            {   // extra chars % size
-                while ((s = decryptedtext[j]) != '>' && s != '<')
-                {
-                    if (s != 244)   cout << s;
-                    ++j;
-                }
-                --j;
-                continue;
-            }
-    
-            triplet = DNA_UNPACK[(int) s];
-            //cout << triplet;
-            
-            first = false, second = false, third = false;
-            trp0 = triplet[0], trp1 = triplet[1], trp2 = triplet[2];
-            
-            if (trp0 == 'X')    first = true;
-            if (trp1 == 'X')    second = true;
-            if (trp2 == 'X')    third = true;
-            
-            if (!first && !second && !third)
-                cout << triplet;
-            
-            else if (first && !second && !third)
-                cout << decryptedtext[++j] << trp1 << trp2;
-            
-            else if (!first && second && !third)
-                cout << trp0 << decryptedtext[++j] << trp2;
-            
-            else if (!first && !second && third)
-                cout << trp0 << trp1 << decryptedtext[++j];
-            
-            else if (first && second && !third)
-                cout << decryptedtext[++j] << decryptedtext[++j] << trp2;
-
-            else if (first && !second && third)
-                cout << decryptedtext[++j] << trp1 << decryptedtext[++j];
-
-            else if (!first && second && third)
-                cout << trp0 << decryptedtext[++j] << decryptedtext[++j];
-
-            else
-                cout << decryptedtext[++j] << decryptedtext[++j]
-                     << decryptedtext[++j];
-        }
+//
+//        if (!header)
+//        {
+//            //cerr << (int) s << ":" << DNA_UNPACK[(int) s];
+//
+//            if (s == 244)
+//            {   // extra chars % size
+//                while ((s = decryptedtext[j]) != '>' && s != '<')
+//                {
+//                    if (s != 244)   cout << s;
+//                    ++j;
+//                }
+//                --j;
+//                continue;
+//            }
+//
+//            triplet = DNA_UNPACK[(int) s];
+//            //cout << triplet;
+//
+//            first = false, second = false, third = false;
+//            trp0 = triplet[0], trp1 = triplet[1], trp2 = triplet[2];
+//
+//            if (trp0 == 'X')    first = true;
+//            if (trp1 == 'X')    second = true;
+//            if (trp2 == 'X')    third = true;
+//
+//            if (!first && !second && !third)
+//                cout << triplet;
+//
+//            else if (first && !second && !third)
+//                cout << decryptedtext[++j] << trp1 << trp2;
+//
+//            else if (!first && second && !third)
+//                cout << trp0 << decryptedtext[++j] << trp2;
+//
+//            else if (!first && !second && third)
+//                cout << trp0 << trp1 << decryptedtext[++j];
+//
+//            else if (first && second && !third)
+//                cout << decryptedtext[++j] << decryptedtext[++j] << trp2;
+//
+//            else if (first && !second && third)
+//                cout << decryptedtext[++j] << trp1 << decryptedtext[++j];
+//
+//            else if (!first && second && third)
+//                cout << trp0 << decryptedtext[++j] << decryptedtext[++j];
+//
+//            else
+//                cout << decryptedtext[++j] << decryptedtext[++j]
+//                     << decryptedtext[++j];
+//        }
     }
 }
 
