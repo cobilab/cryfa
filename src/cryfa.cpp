@@ -92,7 +92,7 @@ int main (int argc, char* argv[])
                 break;
         }
     }
-
+    
     if (v_flag) cerr << "Verbose mode on.\n";
     if (d_flag)
     {
@@ -100,9 +100,9 @@ int main (int argc, char* argv[])
         crpt.decryptFA(argc, argv, v_flag, KeyFileName);
         return 0;
     }
-
+    
     cerr << "Encryption mode on.\n";
     crpt.encryptFA(argc, argv, v_flag, KeyFileName);
-
+    
     return 0;
 }
