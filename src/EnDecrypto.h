@@ -17,14 +17,17 @@ class EnDecrypto
 public:
     EnDecrypto();   // constructor
     
-    void encryptFA (int, char**, int, string);
-    void decryptFA (int, char**, int, string);
+    void encryptFA (int, char**, const int, const string&);
+    void decryptFA (int, char**, const int, const string&);
+
+private:
     inline void buildIV  (byte*, string);
     inline void buildKey (byte*, string);
     inline void printIV  (byte*) const;
     inline void printKey (byte*) const;
     inline void evaluatePasswordSize (const string&) const;
-    inline const string getPasswordFromFile (const string&) const;
+    inline string getPasswordFromFile (const string&) const;
+    inline char penaltySym ( string, const ULL) const;
 };
 
 #endif //CRYFA_ENDECRYPTO_H

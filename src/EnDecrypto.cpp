@@ -31,8 +31,8 @@ EnDecrypto::EnDecrypto () {}
 /*******************************************************************************
     encrypt fasta
 *******************************************************************************/
-void EnDecrypto::encryptFA (int argc, char **argv, int v_flag,
-                            string keyFileName)
+void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
+                            const string &keyFileName)
 {
     // AES encryption uses a secret key of a variable length (128, 196 or
     // 256 bit). This key is secretly exchanged between two parties before
@@ -45,15 +45,15 @@ void EnDecrypto::encryptFA (int argc, char **argv, int v_flag,
     buildKey(key, password);
     buildIV(iv, password);
     
-    printIV(iv);
-    printKey(key);
+//    printIV(iv);      // debug
+//    printKey(key);    // debug
     
-    ifstream input(argv[argc - 1]);
-    string line, header, dna_seq, header_and_dna_seq = "";
+    ifstream input(argv[argc-1]);
+    string line, header, dna_seq, header_and_dna_seq;
     
     if (!input.good())
     {
-        cerr << "Error opening '" << argv[argc - 1] << "'.\n";
+        cerr << "Error opening '" << argv[argc-1] << "'.\n";
         exit(1);
     }
 
@@ -84,34 +84,126 @@ void EnDecrypto::encryptFA (int argc, char **argv, int v_flag,
     
     
     //todo. write from scratch
+//    while (getline(input, line).good())
+//    {
+//        if (line[0] == '>' || line.empty())     // FASTA identifier
+//        {
+//            if (!header.empty())    // 2nd header line onwards
+//            {   // print out last entry
+//                //cout << ">" header << '\n' << dna_seq << '\n'; //todo. debug
+//                header_and_dna_seq += header + "\n" + PackIn3bDNASeq(dna_seq + (char) 252);
+//                header.clear();
+//            }
+//            if (!line.empty())  header = (char) 253 + line.substr(1);
+//            dna_seq.clear();
+//        }
+//        else if (!header.empty())
+//        {   // invalid sequence--no spaces allowed
+//            if (line.find(' ') != string::npos)
+//            {
+//                header.clear();
+//                dna_seq.clear();
+//            }
+//            else    dna_seq += line + (char) 254;
+//        }
+//    }
+    string empty_line;
+    int emptyLineNo = 0;
+    char posEmptyLine;
+    bool notFirstHeader = false;
+    bool firstEmptyLine = true;
     while (getline(input, line).good())
     {
         if (line[0] == '>')
         {
-            header_and_dna_seq += line + "\n";
+            if (notFirstHeader)
+            {
+                header_and_dna_seq += !dna_seq.empty()
+                                      ? (header + "\n" + PackIn3bDNASeq(dna_seq))
+                                      : (header + "\n");
+            }
+
+            header_and_dna_seq += empty_line;
+            
+            empty_line.clear();
+
+
+//            if (firstEmptyLine)
+//            {
+//                header_and_dna_seq += dna_seq;
+//            }
+    
+            header = (char) 253 + line.substr(1);
+            
+//            header_and_dna_seq += header + "\n";
+            
+            notFirstHeader = true;
+            dna_seq.clear();
         }
         else if (line.empty())
         {
-            header_and_dna_seq += "\n";
+//            dna_seq += (char) 252;
+//            firstEmptyLine = false;
+
+posEmptyLine = 'a'; // position of empty line = after seq
+++emptyLineNo;
+            empty_line += (char) 252;
+//            header_and_dna_seq += (char) 252;
         }
         else
         {
-            // invalid sequence--no spaces allowed
             if (line.find(' ') != string::npos)
             {
-//                header.clear();
-//                dna_seq.clear();
                 cerr << "Invalid sequence -- spaces not allowed.\n";
                 return;
             }
-            header_and_dna_seq += PackIn3bDNASeq(line + "\n");
+            dna_seq += line + (char) 254;
+            
+            emptyLineNo = 0;
         }
+    } // cmp: EOF on out.fa: yani 1 character e space az tahe file in hazf mishe
+    
+    if(!dna_seq.empty())
+    {
+        if(posEmptyLine == 'a')
+            header_and_dna_seq += header + "\n" + PackIn3bDNASeq(dna_seq) + empty_line;
+        else
+            header_and_dna_seq += header + "\n" + empty_line + PackIn3bDNASeq(dna_seq);
+    }
+    else
+    {
+        header_and_dna_seq += header + empty_line;
     }
     
+    
+//cerr<<header_and_dna_seq;
+
+//    while (getline(input, line).good())
+//    {
+//        if (line[0] == '>')
+//        {
+//            header_and_dna_seq += (char) 253 + line.substr(1) + "\n";
+//        }
+//        else if (line.empty())
+//        {
+//            header_and_dna_seq += (char) 252;
+////            dna_seq += (char) 252;
+//        }
+//        else
+//        {
+//            if (line.find(' ') != string::npos)
+//            {
+//                cerr << "Invalid sequence -- spaces not allowed.\n";
+//                return;
+//            }
+//            header_and_dna_seq += PackIn3bDNASeq(line + (char) 254);
+////            dna_seq += line + (char) 254;
+//        }
+//    } // cmp: EOF on out.fa: yani 1 character e space az tahe file in hazf mishe
+//
     input.close();
 
-////    header_and_dna_seq += "<";  // the rest is as it is
-//
+    
 //    // last entry handling
 //    if (!header.empty())
 //    {
@@ -121,23 +213,21 @@ void EnDecrypto::encryptFA (int argc, char **argv, int v_flag,
 //                ">" + header + "\n" + PackIn3bDNASeq(dna_seq);
 //    }
 //
-//    // // do random shuffle
-//    // srand(0);
-//    // std::random_shuffle(header_and_dna_seq.begin(),header_and_dna_seq.end());
-//    // * need to know the reverse of shuffle, for decryption!
+    // // do random shuffle
+    // srand(0);
+    // std::random_shuffle(header_and_dna_seq.begin(),header_and_dna_seq.end());
+    // * need to know the reverse of shuffle, for decryption!
 
     
-    header_and_dna_seq += "<";  // specify the end for decryption
-    
-//    cerr << header_and_dna_seq;   //todo. test
+//    header_and_dna_seq += "<";  // specify the end for decryption
     
     string ciphertext;
     AES::Encryption aesEncryption(key, (size_t) AES::DEFAULT_KEYLENGTH);
     CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
     StreamTransformationFilter stfEncryptor(cbcEncryption,
-                                            new CryptoPP::StringSink(ciphertext));
+                                          new CryptoPP::StringSink(ciphertext));
     stfEncryptor.Put(reinterpret_cast<const unsigned char *>
-                     (header_and_dna_seq.c_str()), header_and_dna_seq.length() + 1);
+                 (header_and_dna_seq.c_str()), header_and_dna_seq.length() + 1);
     stfEncryptor.MessageEnd();
     
     if (v_flag)
@@ -155,16 +245,16 @@ void EnDecrypto::encryptFA (int argc, char **argv, int v_flag,
         cout << (char) (0xFF & static_cast<byte>( ciphertext[i] ));
     cout << '\n';
     
-    header_and_dna_seq.clear();
-    ciphertext.clear();
-    keyFileName.clear();
+//    header_and_dna_seq.clear();
+//    ciphertext.clear();
+//    keyFileName.clear();
 }
 
 /*******************************************************************************
     decrypt FASTA
 *******************************************************************************/
-void EnDecrypto::decryptFA (int argc, char **argv, int v_flag,
-                            string keyFileName)
+void EnDecrypto::decryptFA (int argc, char **argv, const int v_flag,
+                            const string &keyFileName)
 {
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
@@ -173,11 +263,11 @@ void EnDecrypto::decryptFA (int argc, char **argv, int v_flag,
     const string password = getPasswordFromFile(keyFileName);
     buildKey(key, password);
     buildIV(iv, password);
+
+//    printIV(iv);      // debug
+//    printKey(key);    // debug
     
-    printIV(iv);
-    printKey(key);
-    
-    string line, decryptedText;
+    string line, decText;
     ifstream input(argv[argc - 1]);
     if (!input.good())
     {
@@ -185,12 +275,12 @@ void EnDecrypto::decryptFA (int argc, char **argv, int v_flag,
         exit(1);
     }
     
-    string ciphertext((std::istreambuf_iterator<char>(input)),
-                      std::istreambuf_iterator<char>());
+    string ciphertext( (std::istreambuf_iterator<char> (input)),
+                        std::istreambuf_iterator<char> () );
     
     // string watermark = "#cryfa v1.1\n";
     string watermark = "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
-                       + std::to_string(RELEASE_CRYFA) + "\n";
+                                  + std::to_string(RELEASE_CRYFA) + "\n";
     
     string::size_type i = ciphertext.find(watermark);
     if (i == string::npos)
@@ -198,8 +288,7 @@ void EnDecrypto::decryptFA (int argc, char **argv, int v_flag,
         cerr << "Error: invalid encrypted file!\n";
         exit(1);
     }
-    else
-        ciphertext.erase(i, watermark.length());
+    else  ciphertext.erase(i, watermark.length());
     
     if (v_flag)
     {
@@ -210,59 +299,67 @@ void EnDecrypto::decryptFA (int argc, char **argv, int v_flag,
     AES::Decryption aesDecryption(key, (size_t) AES::DEFAULT_KEYLENGTH);
     CBC_Mode_ExternalCipher::Decryption cbcDecryption(aesDecryption, iv);
     StreamTransformationFilter stfDecryptor(cbcDecryption,
-                                            new CryptoPP::StringSink(decryptedText));
+                                       new CryptoPP::StringSink(decText));
     stfDecryptor.Put(reinterpret_cast<const unsigned char *>
                      (ciphertext.c_str()), ciphertext.size() - 1);
     stfDecryptor.MessageEnd();
     
-    // dump decrypted text
-    cerr << "Decrypting... \n";
+//    // dump decrypted text
+//    cerr << "Decrypting... \n";
+
+
+
+//  cerr << decText;  //todo. test
     
-    //todo. test
-//    cerr << decryptedText;
+    
     
     bool isHeader = true, firstIsX, secondIsX, thirdIsX;
     unsigned char s;
     string triplet;
     char trp0, trp1, trp2;
-    const ULL decTxtSize = decryptedText.size() - 2;    //todo. check '-3'
+    const ULL decTxtSize = decText.size() - 1;    //todo. check '-1'
 
 //    for (ULL j = 0; j < ciphertext.size(); ++j)
     for (ULL j = 0; j < decTxtSize; ++j)
     {
-        s = (unsigned char) decryptedText[j];
-
+        s = (unsigned char) decText[j];
+        
 //        if (s == '<')
 //        {   // reached the end
-//            while ((s = decryptedText[++j]) != '<')   cout << s;
+//            while ((s = decText[++j]) != '<')   cout << s;
 //            cout << '\n';
 //            return;
 //        }
+    
+        if (s == 252)   // empty line
+        {
+            cout << '\n';
+            continue;
+        }
+        
+        if (s == 255)   // length of seq line not multiplicant of 3
+        {
+            cout << penaltySym( decText, ++j );
+            continue;
+        }
+        
+        if (s == 254 && !isHeader) // end of each sequence line
+        {
+            cout << '\n';
+            continue;
+        }
 
-        
-        if ((int) s == 255)
+        if (s == 253)   // header line
         {
-            cout << decryptedText[++j];
+            cout << '>';
+            isHeader = true;
             continue;
         }
-        
-        if (s == '\n' && !isHeader)
-        {
-            cout<<'\n';
-            continue;
-        }
-        
-        if (isHeader)
+        if (isHeader)   // header line
         {
             cout << s;
             if (s == '\n')  isHeader = false;
             continue;
-        }
-        
-        if (s == '>')
-        {
-            isHeader = true;
-            cout << s;
         }
         
         if (!isHeader)
@@ -271,7 +368,7 @@ void EnDecrypto::decryptFA (int argc, char **argv, int v_flag,
 
 //            if (s == 244)
 //            {   // extra chars % size
-//                while ((s = decryptedText[j]) != '>' && s != '<')
+//                while ((s = decText[j]) != '>' && s != '<')
 //                {
 //                    if (s != 244)   cout << s;
 //                    ++j;
@@ -281,7 +378,6 @@ void EnDecrypto::decryptFA (int argc, char **argv, int v_flag,
 //            }
 
             triplet = DNA_UNPACK[(int) s];
-            //cerr << triplet;  // test
 
             firstIsX = false, secondIsX = false, thirdIsX = false;
             trp0 = triplet[0], trp1 = triplet[1], trp2 = triplet[2];
@@ -291,49 +387,50 @@ void EnDecrypto::decryptFA (int argc, char **argv, int v_flag,
             if (trp2 == 'X')    thirdIsX  = true;
 
             if ( !(firstIsX || secondIsX || thirdIsX) )         // ...
+            {
                 cout << triplet;
-                
+            }
             else if ( !(!firstIsX || secondIsX || thirdIsX) )   // X..
             {
-                cout << decryptedText[++j];
+                cout << penaltySym( decText, ++j );
                 cout << trp1;
                 cout << trp2;
             }
             else if ( !(firstIsX || !secondIsX || thirdIsX) )   // .X.
             {
                 cout << trp0;
-                cout << decryptedText[++j];
+                cout << penaltySym( decText, ++j );
                 cout << trp2;
             }
             else if ( !(!firstIsX || !secondIsX || thirdIsX) )  // XX.
             {
-                cout << decryptedText[++j];
-                cout << decryptedText[++j];
+                cout << penaltySym( decText, ++j );
+                cout << penaltySym( decText, ++j );
                 cout << trp2;
             }
             else if ( !(firstIsX || secondIsX || !thirdIsX) )   // ..X
             {
                 cout << trp0;
                 cout << trp1;
-                cout << decryptedText[++j];
+                cout << penaltySym( decText, ++j );
             }
             else if ( !(!firstIsX || secondIsX || !thirdIsX) )  // X.X
             {
-                cout << decryptedText[++j];
+                cout << penaltySym( decText, ++j );
                 cout << trp1;
-                cout << decryptedText[++j];
+                cout << penaltySym( decText, ++j );
             }
             else if ( !(firstIsX || !secondIsX || !thirdIsX) )  // .XX
             {
                 cout << trp0;
-                cout << decryptedText[++j];
-                cout << decryptedText[++j];
+                cout << penaltySym( decText, ++j );
+                cout << penaltySym( decText, ++j );
             }
             else                                                // XXX
             {
-                cout << decryptedText[++j];
-                cout << decryptedText[++j];
-                cout << decryptedText[++j];
+                cout << penaltySym( decText, ++j );
+                cout << penaltySym( decText, ++j );
+                cout << penaltySym( decText, ++j );
             }
         }
     }
@@ -412,8 +509,7 @@ inline void EnDecrypto::printKey (byte *key) const
 /*******************************************************************************
     get password from a file
 *******************************************************************************/
-inline const string
-EnDecrypto::getPasswordFromFile (const string &keyFileName) const
+inline string EnDecrypto::getPasswordFromFile (const string &keyFileName) const
 {
     ifstream input(keyFileName);
     string line;
@@ -452,4 +548,15 @@ inline void EnDecrypto::evaluatePasswordSize (const string &pwd) const
         cerr << "Error: password is too short!\n";
         exit(1);
     }
+}
+
+/*******************************************************************************
+    end of each sequence line's character
+*******************************************************************************/
+inline char EnDecrypto::penaltySym ( string str,
+                                    const ULL idx)    const
+{
+    char c = str[idx];
+    if (c == (char) 254 || c == (char) 252)     return '\n';
+    else                                        return c;
 }

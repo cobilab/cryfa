@@ -26,7 +26,7 @@ inline int DNA_PACK (const string &DNA)
         cerr << "Error: key not found!\n";
         exit(1);
     }
-    else    return got->second;
+    else  return got->second;
     
     return -1;
 }
@@ -37,17 +37,18 @@ inline int DNA_PACK (const string &DNA)
 inline string PackIn3bDNASeq (string seq)
 {
     string packedSeq;
-    const ULL iterLen  = seq.length() - 2;
-    ULL    x;
+    const  LL iterLen  = seq.length() - 2;//cerr<<seq.length()<<' ';//todo. test
+//    cerr<<seq.length(); //todo. test
+    LL     x = 0;
     bool   firstIsX, secondIsX, thirdIsX;
     char   sym0, sym1, sym2;        /// to keep 3 symbols
     string triplet;
-
+    
     for (x = 0; x < iterLen; x += 3)
     {
         firstIsX = false, secondIsX = false, thirdIsX = false;
         sym0 = seq[x], sym1 = seq[x+1], sym2 = seq[x+2];
-        
+
         if ( !(sym0=='A' || sym0=='C' || sym0=='G' || sym0=='T' || sym0=='N') )
         {
             firstIsX = true;
@@ -63,37 +64,46 @@ inline string PackIn3bDNASeq (string seq)
             thirdIsX = true;
             sym2 = 'X';
         }
-        
+
         triplet = "";
         triplet += sym0;
         triplet += sym1;
         triplet += sym2;
-        //triplet += '\0';
-        
+
         packedSeq += (char) DNA_PACK(triplet);
         if (firstIsX)  packedSeq += seq[x];
         if (secondIsX) packedSeq += seq[x+1];
         if (thirdIsX)  packedSeq += seq[x+2];
     }
-    
+
 //    packedSeq += (int) 244;
 //    x = seq.length() - 3 - rem;
 //    while (x < seq.length())     packedSeq += seq[x++];
-    
-    
-    //if seq len isn't multiplicant of 3, add 1 or 2 remaining syms to packedSeq
+
+
+    // if seq len isn't multiplicant of 3, add (char) 254
+    // to packedSeq, before each sym
+//    if (seq.length() == 1)
+//    {
+//        packedSeq += 255;   packedSeq += seq[0];
+//    }
+//    else if (seq.length() == 2)
+//    {
+//        packedSeq += 255;   packedSeq += seq[0];
+//        packedSeq += 255;   packedSeq += seq[1];
+//    }
+//    else
     if (seq.length() % 3 == 1)
     {
-        packedSeq += 255;
-        packedSeq += seq[x];
+        packedSeq += 255;   packedSeq += seq[x];
     }
     else if (seq.length() % 3 == 2)
     {
-        packedSeq += 255;
-        packedSeq += seq[x];
-        packedSeq += 255;
-        packedSeq += seq[x+1];
+        packedSeq += 255;   packedSeq += seq[x];
+        packedSeq += 255;   packedSeq += seq[x+1];
     }
+    
+//    cerr<<packedSeq; //todo. test
     
     return packedSeq;
 }

@@ -27,6 +27,7 @@ using std::unordered_map;
 *******************************************************************************/
 typedef unsigned char byte;
 typedef unsigned long long ULL;
+typedef long long LL;
 typedef std::mt19937 rng_type;
 typedef std::unordered_map<string, int> htable_t;
 
