@@ -49,7 +49,7 @@ void EnDecrypto::encryptFA (int argc, char **argv, int v_flag,
     printKey(key);
     
     ifstream input(argv[argc - 1]);
-    string line, header, dna_seq, header_and_dna_seq;
+    string line, header, dna_seq, header_and_dna_seq = "";
     
     if (!input.good())
     {
@@ -84,38 +84,29 @@ void EnDecrypto::encryptFA (int argc, char **argv, int v_flag,
     
     
     //todo. write from scratch
-    bool isHeader, isSequence, isEmpty;
-    int numHeader = 0;
-    
     while (getline(input, line).good())
     {
         if (line[0] == '>')
         {
-//            isHeader = true;
-//            header = line.substr(1);
-//            ++numHeader;
-//            if(numHeader)   header_and_dna_seq += ">" + header + "\n";
-//            header_and_dna_seq += ">" + header + "\n";
             header_and_dna_seq += line + "\n";
         }
         else if (line.empty())
         {
-//            isEmpty = true;
             header_and_dna_seq += "\n";
-//            header_and_dna_seq += 255;
-//            header_and_dna_seq += 33;
         }
         else
         {
-//            isSequence = true;
-//            dna_seq += line + "\n";
-//            header_and_dna_seq += dna_seq;
+            // invalid sequence--no spaces allowed
+            if (line.find(' ') != string::npos)
+            {
+//                header.clear();
+//                dna_seq.clear();
+                cerr << "Invalid sequence -- spaces not allowed.\n";
+                return;
+            }
             header_and_dna_seq += PackIn3bDNASeq(line + "\n");
         }
     }
-    
-    
-    
     
     input.close();
 
@@ -134,13 +125,11 @@ void EnDecrypto::encryptFA (int argc, char **argv, int v_flag,
 //    // srand(0);
 //    // std::random_shuffle(header_and_dna_seq.begin(),header_and_dna_seq.end());
 //    // * need to know the reverse of shuffle, for decryption!
+
     
     header_and_dna_seq += "<";  // specify the end for decryption
     
-    
-    //todo. test
-//    cout << header_and_dna_seq;
-    
+//    cerr << header_and_dna_seq;   //todo. test
     
     string ciphertext;
     AES::Encryption aesEncryption(key, (size_t) AES::DEFAULT_KEYLENGTH);
@@ -229,20 +218,14 @@ void EnDecrypto::decryptFA (int argc, char **argv, int v_flag,
     // dump decrypted text
     cerr << "Decrypting... \n";
     
-    
     //todo. test
-//    cout << decryptedText;
-//    cout << ciphertext;
-//    cerr<<decryptedText.size()<<ciphertext.size();
+//    cerr << decryptedText;
     
     bool isHeader = true, firstIsX, secondIsX, thirdIsX;
     unsigned char s;
     string triplet;
     char trp0, trp1, trp2;
-//    const ULL decTxtSize = decryptedText.size() - 3;    //todo. check '-3'
-    const ULL decTxtSize = decryptedText.size()-2;    //todo. check '-3'
-    
-//    cout << decryptedText;    //todo. test
+    const ULL decTxtSize = decryptedText.size() - 2;    //todo. check '-3'
 
 //    for (ULL j = 0; j < ciphertext.size(); ++j)
     for (ULL j = 0; j < decTxtSize; ++j)
@@ -256,32 +239,34 @@ void EnDecrypto::decryptFA (int argc, char **argv, int v_flag,
 //            return;
 //        }
 
-
-//        cout<<' '<<(int)s<<"_";
-//        if ((int) s== 33)
+        
+        if ((int) s == 255)
+        {
+            cout << decryptedText[++j];
+            continue;
+        }
+        
         if (s == '\n' && !isHeader)
         {
             cout<<'\n';
             continue;
         }
-
+        
         if (isHeader)
         {
             cout << s;
             if (s == '\n')  isHeader = false;
             continue;
         }
-
+        
         if (s == '>')
         {
             isHeader = true;
             cout << s;
         }
-
+        
         if (!isHeader)
         {
-//            cerr<<'"'<<s;   //todo. test
-
             //cerr << (int) s << ":" << DNA_UNPACK[(int) s];
 
 //            if (s == 244)
@@ -305,30 +290,51 @@ void EnDecrypto::decryptFA (int argc, char **argv, int v_flag,
             if (trp1 == 'X')    secondIsX = true;
             if (trp2 == 'X')    thirdIsX  = true;
 
-            if ( !(firstIsX || secondIsX || thirdIsX) )             // ...
+            if ( !(firstIsX || secondIsX || thirdIsX) )         // ...
                 cout << triplet;
-
-            else if ( !(!firstIsX || secondIsX || thirdIsX) )       // X..
-                cout << decryptedText[++j] << trp1 << trp2;
-
-            else if ( !(firstIsX || !secondIsX || thirdIsX) )       // .X.
-                cout << trp0 << decryptedText[++j] << trp2;
-
-            else if ( !(!firstIsX || !secondIsX || thirdIsX) )      // XX.
-                cout << decryptedText[++j] << decryptedText[++j] << trp2;
-
-            else if ( !(firstIsX || secondIsX || !thirdIsX) )       // ..X
-                cout << trp0 << trp1 << decryptedText[++j];
-
-            else if ( !(!firstIsX || secondIsX || !thirdIsX) )      // X.X
-                cout << decryptedText[++j] << trp1 << decryptedText[++j];
-
-            else if ( !(firstIsX || !secondIsX || !thirdIsX) )      // .XX
-                cout << trp0 << decryptedText[++j] << decryptedText[++j];
-
-            else                                                    // XXX
-                cout << decryptedText[++j] << decryptedText[++j]
-                     << decryptedText[++j];
+                
+            else if ( !(!firstIsX || secondIsX || thirdIsX) )   // X..
+            {
+                cout << decryptedText[++j];
+                cout << trp1;
+                cout << trp2;
+            }
+            else if ( !(firstIsX || !secondIsX || thirdIsX) )   // .X.
+            {
+                cout << trp0;
+                cout << decryptedText[++j];
+                cout << trp2;
+            }
+            else if ( !(!firstIsX || !secondIsX || thirdIsX) )  // XX.
+            {
+                cout << decryptedText[++j];
+                cout << decryptedText[++j];
+                cout << trp2;
+            }
+            else if ( !(firstIsX || secondIsX || !thirdIsX) )   // ..X
+            {
+                cout << trp0;
+                cout << trp1;
+                cout << decryptedText[++j];
+            }
+            else if ( !(!firstIsX || secondIsX || !thirdIsX) )  // X.X
+            {
+                cout << decryptedText[++j];
+                cout << trp1;
+                cout << decryptedText[++j];
+            }
+            else if ( !(firstIsX || !secondIsX || !thirdIsX) )  // .XX
+            {
+                cout << trp0;
+                cout << decryptedText[++j];
+                cout << decryptedText[++j];
+            }
+            else                                                // XXX
+            {
+                cout << decryptedText[++j];
+                cout << decryptedText[++j];
+                cout << decryptedText[++j];
+            }
         }
     }
 }

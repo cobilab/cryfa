@@ -12,6 +12,7 @@
 #include <iostream>
 #include "def.h"
 using std::string;
+using std::cout;
 using std::cerr;
 
 /*******************************************************************************
@@ -36,33 +37,27 @@ inline int DNA_PACK (const string &DNA)
 inline string PackIn3bDNASeq (string seq)
 {
     string packedSeq;
-//    const  ULL rem = seq.length() % 3;                  // 1
-//    const  ULL seqSize = seq.length() - rem - 3 + 1;    // 10
-    const ULL traverseSize  = seq.length() - 2;
+    const ULL iterLen  = seq.length() - 2;
     ULL    x;
     bool   firstIsX, secondIsX, thirdIsX;
     char   sym0, sym1, sym2;        /// to keep 3 symbols
     string triplet;
 
-//    for (x = 0; x < seqSize; x += 3)
-    for (x = 0; x < traverseSize; x += 3)
+    for (x = 0; x < iterLen; x += 3)
     {
         firstIsX = false, secondIsX = false, thirdIsX = false;
         sym0 = seq[x], sym1 = seq[x+1], sym2 = seq[x+2];
-    
-//        if (sym0!='A' && sym0!='C' && sym0!='G' && sym0!='T' && sym0!='N')
+        
         if ( !(sym0=='A' || sym0=='C' || sym0=='G' || sym0=='T' || sym0=='N') )
         {
             firstIsX = true;
             sym0 = 'X';
         }
-//        if (sym1!='A' && sym1!='C' && sym1!='G' && sym1!='T' && sym1!='N')
         if ( !(sym1=='A' || sym1=='C' || sym1=='G' || sym1=='T' || sym1=='N') )
         {
             secondIsX = true;
             sym1 = 'X';
         }
-//        if (sym2!='A' && sym2!='C' && sym2!='G' && sym2!='T' && sym2!='N')
         if ( !(sym2=='A' || sym2=='C' || sym2=='G' || sym2=='T' || sym2=='N') )
         {
             thirdIsX = true;
@@ -87,8 +82,18 @@ inline string PackIn3bDNASeq (string seq)
     
     
     //if seq len isn't multiplicant of 3, add 1 or 2 remaining syms to packedSeq
-    if      (seq.length() % 3 == 1) packedSeq += seq[x];
-    else if (seq.length() % 3 == 2){packedSeq += seq[x]; packedSeq += seq[x+1];}
+    if (seq.length() % 3 == 1)
+    {
+        packedSeq += 255;
+        packedSeq += seq[x];
+    }
+    else if (seq.length() % 3 == 2)
+    {
+        packedSeq += 255;
+        packedSeq += seq[x];
+        packedSeq += 255;
+        packedSeq += seq[x+1];
+    }
     
     return packedSeq;
 }
