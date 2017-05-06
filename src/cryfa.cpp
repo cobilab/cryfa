@@ -17,19 +17,26 @@
 
 #include <iostream>
 #include <getopt.h>
+#include <chrono>   // time
+#include <iomanip>  // setw, setprecision
 #include "def.h"
 #include "EnDecrypto.h"
 using std::string;
 using std::cout;
 using std::cerr;
+using std::chrono::high_resolution_clock;
+using std::setprecision;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///////////////////                 M A I N                 ////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 int main (int argc, char* argv[])
 {
+    high_resolution_clock::time_point exeStartTime =
+            high_resolution_clock::now();   // Record start time
+    
     EnDecrypto crpt;
-
+    
     static int h_flag, a_flag, v_flag, d_flag;
     bool t_flag = false;        // target file name entered
     string KeyFileName = "";    // argument of option 'k'
@@ -96,13 +103,30 @@ int main (int argc, char* argv[])
     if (v_flag) cerr << "Verbose mode on.\n";
     if (d_flag)
     {
-        cerr << "Decryption mode on.\n";
+        cerr << "Decrypting...\n";
         crpt.decryptFA(argc, argv, v_flag, KeyFileName);
+    
+        high_resolution_clock::time_point exeFinishTime =
+                high_resolution_clock::now();   // Record end time
+        // calculate and show duration in seconds
+        std::chrono::duration<double> elapsed = exeFinishTime - exeStartTime;
+        cerr << "done in "
+             << std::fixed << setprecision(4) << elapsed.count()
+             << " seconds.\n";
+        
         return 0;
     }
     
-    cerr << "Encryption mode on.\n";
+    cerr << "Encrypting...\n";
     crpt.encryptFA(argc, argv, v_flag, KeyFileName);
+
+    high_resolution_clock::time_point exeFinishTime =
+            high_resolution_clock::now();   // Record end time
+    // calculate and show duration in seconds
+    std::chrono::duration<double> elapsed = exeFinishTime - exeStartTime;
+    cerr << "done in "
+         << std::fixed << setprecision(4) << elapsed.count()
+         << " seconds.\n";
     
     return 0;
 }

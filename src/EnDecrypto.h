@@ -27,7 +27,7 @@ private:
     inline void printKey (byte*) const;
     inline void evaluatePasswordSize (const string&) const;
     inline string getPasswordFromFile (const string&) const;
-    inline char penaltySym ( string, const ULL) const;
+    inline char penaltySym (const string&, const ULL) const;
 };
 
 #endif //CRYFA_ENDECRYPTO_H

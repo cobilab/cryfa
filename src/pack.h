@@ -37,8 +37,7 @@ inline int DNA_PACK (const string &DNA)
 inline string PackIn3bDNASeq (string seq)
 {
     string packedSeq;
-    const  LL iterLen  = seq.length() - 2;//cerr<<seq.length()<<' ';//todo. test
-//    cerr<<seq.length(); //todo. test
+    const  LL iterLen = seq.length() - 2;
     LL     x = 0;
     bool   firstIsX, secondIsX, thirdIsX;
     char   sym0, sym1, sym2;        /// to keep 3 symbols
@@ -83,16 +82,6 @@ inline string PackIn3bDNASeq (string seq)
 
     // if seq len isn't multiplicant of 3, add (char) 254
     // to packedSeq, before each sym
-//    if (seq.length() == 1)
-//    {
-//        packedSeq += 255;   packedSeq += seq[0];
-//    }
-//    else if (seq.length() == 2)
-//    {
-//        packedSeq += 255;   packedSeq += seq[0];
-//        packedSeq += 255;   packedSeq += seq[1];
-//    }
-//    else
     if (seq.length() % 3 == 1)
     {
         packedSeq += 255;   packedSeq += seq[x];
@@ -102,8 +91,6 @@ inline string PackIn3bDNASeq (string seq)
         packedSeq += 255;   packedSeq += seq[x];
         packedSeq += 255;   packedSeq += seq[x+1];
     }
-    
-//    cerr<<packedSeq; //todo. test
     
     return packedSeq;
 }

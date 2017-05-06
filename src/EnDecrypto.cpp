@@ -83,72 +83,17 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
 //    }
     
     
-    //todo. write from scratch
-//    while (getline(input, line).good())
-//    {
-//        if (line[0] == '>' || line.empty())     // FASTA identifier
-//        {
-//            if (!header.empty())    // 2nd header line onwards
-//            {   // print out last entry
-//                //cout << ">" header << '\n' << dna_seq << '\n'; //todo. debug
-//                header_and_dna_seq += header + "\n" + PackIn3bDNASeq(dna_seq + (char) 252);
-//                header.clear();
-//            }
-//            if (!line.empty())  header = (char) 253 + line.substr(1);
-//            dna_seq.clear();
-//        }
-//        else if (!header.empty())
-//        {   // invalid sequence--no spaces allowed
-//            if (line.find(' ') != string::npos)
-//            {
-//                header.clear();
-//                dna_seq.clear();
-//            }
-//            else    dna_seq += line + (char) 254;
-//        }
-//    }
-    string empty_line;
-    int emptyLineNo = 0;
-    char posEmptyLine;
-    bool notFirstHeader = false;
-    bool firstEmptyLine = true;
     while (getline(input, line).good())
     {
         if (line[0] == '>')
         {
-            if (notFirstHeader)
-            {
-                header_and_dna_seq += !dna_seq.empty()
-                                      ? (header + "\n" + PackIn3bDNASeq(dna_seq))
-                                      : (header + "\n");
-            }
-
-            header_and_dna_seq += empty_line;
-            
-            empty_line.clear();
-
-
-//            if (firstEmptyLine)
-//            {
-//                header_and_dna_seq += dna_seq;
-//            }
-    
-            header = (char) 253 + line.substr(1);
-            
-//            header_and_dna_seq += header + "\n";
-            
-            notFirstHeader = true;
+            if (!dna_seq.empty()) header_and_dna_seq += PackIn3bDNASeq(dna_seq);
+            header_and_dna_seq += (char) 253 + line.substr(1) + "\n";
             dna_seq.clear();
         }
         else if (line.empty())
         {
-//            dna_seq += (char) 252;
-//            firstEmptyLine = false;
-
-posEmptyLine = 'a'; // position of empty line = after seq
-++emptyLineNo;
-            empty_line += (char) 252;
-//            header_and_dna_seq += (char) 252;
+            dna_seq += (char) 252;
         }
         else
         {
@@ -158,49 +103,10 @@ posEmptyLine = 'a'; // position of empty line = after seq
                 return;
             }
             dna_seq += line + (char) 254;
-            
-            emptyLineNo = 0;
         }
-    } // cmp: EOF on out.fa: yani 1 character e space az tahe file in hazf mishe
-    
-    if(!dna_seq.empty())
-    {
-        if(posEmptyLine == 'a')
-            header_and_dna_seq += header + "\n" + PackIn3bDNASeq(dna_seq) + empty_line;
-        else
-            header_and_dna_seq += header + "\n" + empty_line + PackIn3bDNASeq(dna_seq);
     }
-    else
-    {
-        header_and_dna_seq += header + empty_line;
-    }
+    if (!dna_seq.empty())   header_and_dna_seq += PackIn3bDNASeq(dna_seq);
     
-    
-//cerr<<header_and_dna_seq;
-
-//    while (getline(input, line).good())
-//    {
-//        if (line[0] == '>')
-//        {
-//            header_and_dna_seq += (char) 253 + line.substr(1) + "\n";
-//        }
-//        else if (line.empty())
-//        {
-//            header_and_dna_seq += (char) 252;
-////            dna_seq += (char) 252;
-//        }
-//        else
-//        {
-//            if (line.find(' ') != string::npos)
-//            {
-//                cerr << "Invalid sequence -- spaces not allowed.\n";
-//                return;
-//            }
-//            header_and_dna_seq += PackIn3bDNASeq(line + (char) 254);
-////            dna_seq += line + (char) 254;
-//        }
-//    } // cmp: EOF on out.fa: yani 1 character e space az tahe file in hazf mishe
-//
     input.close();
 
     
@@ -306,12 +212,6 @@ void EnDecrypto::decryptFA (int argc, char **argv, const int v_flag,
     
 //    // dump decrypted text
 //    cerr << "Decrypting... \n";
-
-
-
-//  cerr << decText;  //todo. test
-    
-    
     
     bool isHeader = true, firstIsX, secondIsX, thirdIsX;
     unsigned char s;
@@ -553,7 +453,7 @@ inline void EnDecrypto::evaluatePasswordSize (const string &pwd) const
 /*******************************************************************************
     end of each sequence line's character
 *******************************************************************************/
-inline char EnDecrypto::penaltySym ( string str,
+inline char EnDecrypto::penaltySym (const string &str,
                                     const ULL idx)    const
 {
     char c = str[idx];
