@@ -17,8 +17,8 @@
 
 #include <iostream>
 #include <getopt.h>
-#include <chrono>   // time
-#include <iomanip>  // setw, setprecision
+#include <chrono>       // time
+#include <iomanip>      // setw, setprecision
 #include "def.h"
 #include "EnDecrypto.h"
 using std::string;
@@ -32,25 +32,24 @@ using std::setprecision;
 ////////////////////////////////////////////////////////////////////////////////
 int main (int argc, char* argv[])
 {
-    high_resolution_clock::time_point exeStartTime =
-            high_resolution_clock::now();   // Record start time
+    // start timer
+    high_resolution_clock::time_point startTime = high_resolution_clock::now();
     
     EnDecrypto crpt;
     
     static int h_flag, a_flag, v_flag, d_flag;
-    bool t_flag = false;        // target file name entered
-    string KeyFileName = "";    // argument of option 'k'
-    int c;                      // deal with getopt_long()
-    int option_index;           // option index stored by getopt_long()
+    string KeyFileName;     // argument of option 'k'
+    int c;                  // deal with getopt_long()
+    int option_index;       // option index stored by getopt_long()
     opterr = 0;  // force getopt_long() to remain silent when it finds a problem
-
+    
     static struct option long_options[] =
     {
-        {"help",          no_argument, &h_flag, (int) 'h'},   // help
-        {"about",         no_argument, &a_flag, (int) 'a'},   // about
-        {"verbose",       no_argument, &v_flag, (int) 'v'},   // verbose
-        {"decrypt",       no_argument, &d_flag, (int) 'd'},   // decrypt mode
-        {"key",     required_argument,       0,       'k'},   // key file
+        {"help",          no_argument, &h_flag, (int) 'h'},    // help
+        {"about",         no_argument, &a_flag, (int) 'a'},    // about
+        {"verbose",       no_argument, &v_flag, (int) 'v'},    // verbose
+        {"decrypt",       no_argument, &d_flag, (int) 'd'},    // decrypt mode
+        {"key",     required_argument,       0,       'k'},    // key file
         {0,                         0,       0,         0}
     };
 
@@ -72,13 +71,11 @@ int main (int argc, char* argv[])
             case 'h':   // show usage guide
                 h_flag = 1;
                 Help();
-                exit(1);
                 break;
                 
             case 'a':   // show about
                 a_flag = 1;
                 About();
-                exit(1);
                 break;
 
             case 'v':   // verbose mode
@@ -90,7 +87,6 @@ int main (int argc, char* argv[])
                 break;
 
             case 'k':   // needs key filename
-                t_flag = true;
                 KeyFileName = (string) optarg;
                 break;
 
@@ -106,12 +102,12 @@ int main (int argc, char* argv[])
         cerr << "Decrypting...\n";
         crpt.decryptFA(argc, argv, v_flag, KeyFileName);
     
-        high_resolution_clock::time_point exeFinishTime =
-                high_resolution_clock::now();   // Record end time
-        // calculate and show duration in seconds
-        std::chrono::duration<double> elapsed = exeFinishTime - exeStartTime;
-        cerr << "done in "
-             << std::fixed << setprecision(4) << elapsed.count()
+        // stop timer
+        high_resolution_clock::time_point finishTime =
+                high_resolution_clock::now();
+        // duration in seconds
+        std::chrono::duration<double> elapsed = finishTime - startTime;
+        cerr << "done in " << std::fixed << setprecision(4) << elapsed.count()
              << " seconds.\n";
         
         return 0;
@@ -119,13 +115,12 @@ int main (int argc, char* argv[])
     
     cerr << "Encrypting...\n";
     crpt.encryptFA(argc, argv, v_flag, KeyFileName);
-
-    high_resolution_clock::time_point exeFinishTime =
-            high_resolution_clock::now();   // Record end time
-    // calculate and show duration in seconds
-    std::chrono::duration<double> elapsed = exeFinishTime - exeStartTime;
-    cerr << "done in "
-         << std::fixed << setprecision(4) << elapsed.count()
+    
+    // stop timer
+    high_resolution_clock::time_point finishTime = high_resolution_clock::now();
+    // duration in seconds
+    std::chrono::duration<double> elapsed = finishTime - startTime;
+    cerr << "done in " << std::fixed << setprecision(4) << elapsed.count()
          << " seconds.\n";
     
     return 0;

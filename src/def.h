@@ -17,7 +17,7 @@ using std::string;
 using std::unordered_map;
 
 /*******************************************************************************
-    About cryfa
+    about cryfa
 *******************************************************************************/
 #define VERSION_CRYFA 1
 #define RELEASE_CRYFA 1
@@ -29,7 +29,7 @@ typedef unsigned char byte;
 typedef unsigned long long ULL;
 typedef long long LL;
 typedef std::mt19937 rng_type;
-typedef std::unordered_map<string, int> htable_t;
+typedef std::unordered_map<string, unsigned int> htable_t;
 
 /*******************************************************************************
     lookup tables
@@ -58,7 +58,7 @@ const string DNA_UNPACK[] =     // 216 elements
     "XNX", "XXA", "XXC", "XXG", "XXT", "XXN", "XXX"
 };
 
-const htable_t mymap =
+const htable_t DNA_MAP =
 {
     {"AAA",   0}, {"AAC",   1}, {"AAG",   2}, {"AAT",   3}, {"AAN",   4},
     {"AAX",   5}, {"ACA",   6}, {"ACC",   7}, {"ACG",   8}, {"ACT",   9},

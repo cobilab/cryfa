@@ -15,19 +15,19 @@ using std::string;
 class EnDecrypto
 {
 public:
-    EnDecrypto();   // constructor
+    EnDecrypto();                                             // constructor
     
-    void encryptFA (int, char**, const int, const string&);
-    void decryptFA (int, char**, const int, const string&);
+    void encryptFA (int, char**, const int, const string&);   // encrypt FASTA
+    void decryptFA (int, char**, const int, const string&);   // decrypt FASTA
 
 private:
-    inline void buildIV  (byte*, string);
-    inline void buildKey (byte*, string);
-    inline void printIV  (byte*) const;
-    inline void printKey (byte*) const;
-    inline void evaluatePasswordSize (const string&) const;
-    inline string getPasswordFromFile (const string&) const;
-    inline char penaltySym (const string&, const ULL) const;
+    inline void buildIV  (byte*, string);                     // build IV
+    inline void buildKey (byte*, string);                     // build key
+    inline void printIV  (byte*) const;                       // print IV
+    inline void printKey (byte*) const;                       // print key
+    inline void evalPassSize (const string&) const;           // eval. pass size
+    inline string getPassFromFile (const string &) const;     // get password
+    inline char penaltySym (char) const;                      // penalty symbol
 };
 
 #endif //CRYFA_ENDECRYPTO_H
