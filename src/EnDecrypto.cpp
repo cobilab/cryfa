@@ -27,7 +27,7 @@ using CryptoPP::StreamTransformationFilter;
 EnDecrypto::EnDecrypto () {}
 
 /*******************************************************************************
-    encrypt fasta.
+    encrypt FASTA.
     reserved symbols:
         (char) 255:  penalty if sequence length isn't multiple of 3
         (char) 254:  end of each sequence line
@@ -115,7 +115,12 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
 }
 
 /*******************************************************************************
-    decrypt FASTA
+    decrypt FASTA.
+    reserved symbols:
+        (char) 255:  penalty if sequence length isn't multiple of 3
+        (char) 254:  end of each sequence line
+        (char) 253:  instead of '>' in header
+        (char) 252:  instead of empty line
 *******************************************************************************/
 void EnDecrypto::decryptFA (int argc, char **argv, const int v_flag,
                             const string &keyFileName)
@@ -171,10 +176,10 @@ void EnDecrypto::decryptFA (int argc, char **argv, const int v_flag,
     {
         s = (byte) decText[j];
         
-        if      (s == 252) { cout << '\n'; }                    // empty line
-        else if (s == 255) { cout << penaltySym(decText[++j]); }// seq len != x3
-        else if (s == 254 && !isHeader) { cout<< '\n'; } // end of each seq line
-        else if (s == 253) { cout << '>'; isHeader = true; }    // header
+        // empty line OR end of each seq line
+        if      (s == 252 || (s == 254 && !isHeader)) { cout << '\n'; }
+        else if (s == 255) { cout << penaltySym(decText[++j]); } //seq len != x3
+        else if (s == 253) { cout << '>';            isHeader = true; }// header
         else if (isHeader) { cout<<s; if (s == '\n') isHeader=false; } // header
         else //if (!isHeader)     // seq lines
         {
@@ -318,8 +323,8 @@ inline string EnDecrypto::getPassFromFile (const string &keyFileName) const
         cerr << "Error opening '" << keyFileName << "'.\n";
         exit(1);
     }
-
-    while (std::getline(input, line).good())
+    
+    while (getline(input, line).good())
     {
         if (line.empty()) {cerr<<"Error: empty password line file!\n"; exit(1);}
         return line;
@@ -345,6 +350,5 @@ inline void EnDecrypto::evalPassSize (const string &pass) const
 *******************************************************************************/
 inline char EnDecrypto::penaltySym (char c) const
 {
-    if (c == (char) 254 || c == (char) 252)    return '\n';
-    else                                       return c;
+    return (c != (char) 254 && c != (char) 252) ? c : (char) 10; //(char)10='\n'
 }
