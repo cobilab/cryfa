@@ -20,7 +20,7 @@ using std::unordered_map;
     about cryfa
 *******************************************************************************/
 #define VERSION_CRYFA 1
-#define RELEASE_CRYFA 1
+#define RELEASE_CRYFA 17.05
 
 /*******************************************************************************
     typedefs

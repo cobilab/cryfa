@@ -38,35 +38,77 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
                             const string &keyFileName)
 {
     ifstream in(argv[argc-1]);
-    string line, header, seq, headerNSeq;
+    string line;            // each line of file
+    string header, seq;     // header and sequence (FASTA/FASTQ)
+    string qs;              // quality scores (FASTQ)
+    // FASTA: context = header + seq (+ empty lines)
+    // FASTQ: context = header + seq + plus + qs
+    string context;
     
-    if (!in.good()) { cerr<<"Error opening '"<< argv[argc-1] <<"'.\n"; return; }
-    
-    // process FASTA file
-    while (getline(in, line).good())
+    if (!in.good())
     {
-        if (line[0] == '>') // header
+        cerr << "Error: failed opening '" << argv[argc-1] << "'.\n";
+        return;
+    }
+    // FASTA
+    if (findFileType(in) == 'A')
+    {
+        while (getline(in, line).good())
         {
-            if (!seq.empty())   headerNSeq += pack3bases(seq);  // previous seq
-            seq.clear();
-            
-            // header line. replace '>' with (char) 253 in headerNSeq
-            headerNSeq += (char) 253 + line.substr(1) + "\n";
-        }
-        // empty line. replace line feed with (char) 252 in seq
-        else if (line.empty())  seq += (char) 252;
-        else    // sequence
-        {
-            if (line.find(' ') != string::npos)
+            // header
+            if (line[0] == '>')
             {
-                cerr << "Invalid sequence -- spaces not allowed.\n";
-                return;
+                if (!seq.empty())   // previous seq
+                    context += pack3bases(seq);
+                seq.clear();
+
+                // header line. (char) 253 instead of '>'
+                context += (char) 253 + line.substr(1) + "\n";
             }
-            // replace '\n' at end of each sequence line with (char) 254 in seq
-            seq += line + (char) 254;
+
+            // empty line. (char) 252 instead of line feed
+            else if (line.empty())  seq += (char) 252;
+
+            // sequence
+            else
+            {
+                if (line.find(' ') != string::npos)
+                {
+                    cerr << "Invalid sequence -- spaces not allowed.\n";
+                    return;
+                }
+                // (char) 254 instead of '\n' at the end of each seq line
+                seq += line + (char) 254;
+            }
+        }
+        if (!seq.empty())   context += pack3bases(seq);  // the last seq
+    }
+    
+    // FASTQ
+    else //if (findFileType(in) == 'Q')
+    {
+        ULL lineNo = 0;
+        while(!in.eof())    // process 4 lines by 4 lines
+        {
+            if (getline(in, line).good())    // header
+            {
+                ++lineNo;
+            }
+            if (getline(in, line).good())    // sequence
+            {
+                ++lineNo;
+                seq += pack3bases(line);
+            }
+            if (getline(in, line).good())    // +
+            {
+                ++lineNo;
+            }
+            if (getline(in, line).good())    // quality score
+            {
+                ++lineNo;
+            }
         }
     }
-    if (!seq.empty())   headerNSeq += pack3bases(seq);  // the last sequence
     
     in.close();
     
@@ -86,7 +128,7 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
 
 //     // do random shuffle
 //     srand(0);
-//     std::random_shuffle(headerNSeq.begin(),headerNSeq.end());
+//     std::random_shuffle(context.begin(),context.end());
 //     * need to know the reverse of shuffle, for decryption!
     
     string cipherText;
@@ -95,18 +137,20 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
     StreamTransformationFilter stfEncryptor(cbcEncryption,
                                           new CryptoPP::StringSink(cipherText));
     stfEncryptor.Put(reinterpret_cast<const byte*>
-                     (headerNSeq.c_str()), headerNSeq.length() + 1);
+                     (context.c_str()), context.length() + 1);
     stfEncryptor.MessageEnd();
     
     if (v_flag)
     {
-        cerr << "   sym size: " << headerNSeq.size() << '\n';
+        cerr << "   sym size: " << context.size() << '\n';
         cerr << "cipher size: " << cipherText.size() << '\n';
         cerr << " block size: " << AES::BLOCKSIZE    << '\n';
     }
     
-    // watermark for encrypted FASTA file
-    cout << "#cryfa v" << VERSION_CRYFA << "." << RELEASE_CRYFA << '\n';
+    // watermark for encrypted file
+    cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
+                       + std::to_string(RELEASE_CRYFA) + "\n";
+    
     
     // dump cyphertext for read
     for (ULL i = 0; i < cipherText.size(); ++i)
@@ -139,7 +183,11 @@ void EnDecrypto::decryptFA (int argc, char **argv, const int v_flag,
     string line, decText;
     ifstream in(argv[argc-1]);
     
-    if (!in.good()) { cerr<<"Error opening '"<< argv[argc-1] <<"'.\n"; return; }
+    if (!in.good())
+    {
+        cerr << "Error: failed opening '" << argv[argc-1] << "'.\n";
+        return;
+    }
     
     string cipherText( (std::istreambuf_iterator<char> (in)),
                         std::istreambuf_iterator<char> () );
@@ -303,6 +351,28 @@ inline void EnDecrypto::printKey (byte *key) const
     for (unsigned int i = 1; i != AES::DEFAULT_KEYLENGTH; ++i)
         cerr << " " << (int) key[i];
     cerr << "]\n";
+}
+
+/*******************************************************************************
+    find file type: FASTA or FASTQ
+*******************************************************************************/
+inline char EnDecrypto::findFileType (std::ifstream &in)
+{
+    string line;
+
+    // FASTQ
+    while (getline(in, line).good())
+    {
+        if (line[0] == '@')
+        {
+            in.clear();
+            in.seekg(0, std::ios::beg); // go to the beginning of file
+            return 'Q';
+        }
+    }
+
+    // FASTA
+    in.clear();  in.seekg(0, std::ios::beg);  return 'A';
 }
 
 /*******************************************************************************

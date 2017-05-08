@@ -1,15 +1,15 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-             ====================================================
-             | CRYFA :: A FASTA encryption and decryption tool  |
-             ----------------------------------------------------
-             | Diogo Pratas, Morteza Hosseini, Armando J. Pinho |
-             |          {pratas,seyedmorteza,ap}@ua.pt          |
-             |     Copyright (C) 2017, University of Aveiro     |
-             ====================================================
-
+             =========================================================
+             | CRYFA :: A FASTA/FASTQ encryption and decryption tool |
+             ---------------------------------------------------------
+             |   Diogo Pratas, Morteza Hosseini, Armando J. Pinho    |
+             |            {pratas,seyedmorteza,ap}@ua.pt             |
+             |       Copyright (C) 2017, University of Aveiro        |
+             =========================================================
+             
   COMPILE:  g++ -std=c++11 -I cryptopp -o cryfa cryfa.cpp defs.h libcryptopp.a
-
+  
   DEPENDENCIES: https://github.com/weidai11/cryptopp
   sudo apt-get install libcrypto++-dev libcrypto++-doc libcrypto++-utils
   
@@ -34,15 +34,15 @@ int main (int argc, char* argv[])
 {
     // start timer
     high_resolution_clock::time_point startTime = high_resolution_clock::now();
-    
+
     EnDecrypto crpt;
-    
+
     static int h_flag, a_flag, v_flag, d_flag;
     string KeyFileName;     // argument of option 'k'
     int c;                  // deal with getopt_long()
     int option_index;       // option index stored by getopt_long()
     opterr = 0;  // force getopt_long() to remain silent when it finds a problem
-    
+
     static struct option long_options[] =
     {
         {"help",          no_argument, &h_flag, (int) 'h'},    // help
@@ -58,7 +58,7 @@ int main (int argc, char* argv[])
         option_index = 0;
         if ((c = getopt_long(argc, argv, ":havdk:",
                              long_options, &option_index)) == -1)    break;
-        
+
         switch (c)
         {
             case 0:
@@ -67,12 +67,12 @@ int main (int argc, char* argv[])
                 cout << "option '" << long_options[option_index].name << "'\n";
                 if (optarg)     cout << " with arg " << optarg << '\n';
                 break;
-                
+
             case 'h':   // show usage guide
                 h_flag = 1;
                 Help();
                 break;
-                
+
             case 'a':   // show about
                 a_flag = 1;
                 About();
@@ -95,13 +95,13 @@ int main (int argc, char* argv[])
                 break;
         }
     }
-    
+
     if (v_flag) cerr << "Verbose mode on.\n";
     if (d_flag)
     {
         cerr << "Decrypting...\n";
         crpt.decryptFA(argc, argv, v_flag, KeyFileName);
-    
+
         // stop timer
         high_resolution_clock::time_point finishTime =
                 high_resolution_clock::now();
@@ -109,19 +109,19 @@ int main (int argc, char* argv[])
         std::chrono::duration<double> elapsed = finishTime - startTime;
         cerr << "done in " << std::fixed << setprecision(4) << elapsed.count()
              << " seconds.\n";
-        
+
         return 0;
     }
-    
+
     cerr << "Encrypting...\n";
     crpt.encryptFA(argc, argv, v_flag, KeyFileName);
-    
+
     // stop timer
     high_resolution_clock::time_point finishTime = high_resolution_clock::now();
     // duration in seconds
     std::chrono::duration<double> elapsed = finishTime - startTime;
     cerr << "done in " << std::fixed << setprecision(4) << elapsed.count()
          << " seconds.\n";
-    
+
     return 0;
 }
