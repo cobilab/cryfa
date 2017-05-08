@@ -84,6 +84,7 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
         if (!seq.empty())   context += pack3bases(seq);  // the last seq
     }
     
+    
     // FASTQ
     else //if (findFileType(in) == 'Q')
     {
