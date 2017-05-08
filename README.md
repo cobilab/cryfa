@@ -30,7 +30,7 @@ g++ -std=c++11 -I cryptopp -o cryfa cryfa.cpp defs.h libcryptopp.a
 or use
 <pre>
 ./scripts/execute.sh
-</pre>.
+</pre>
 
 ## PARAMETERS
 
