@@ -29,6 +29,7 @@ EnDecrypto::EnDecrypto () {}
 /*******************************************************************************
     encrypt FASTA.
     reserved symbols:
+    FASTA:
         (char) 255:  penalty if sequence length isn't multiple of 3
         (char) 254:  end of each sequence line
         (char) 253:  instead of '>' in header
@@ -50,6 +51,7 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
         cerr << "Error: failed opening '" << argv[argc-1] << "'.\n";
         return;
     }
+    
     // FASTA
     if (findFileType(in) == 'A')
     {
@@ -59,7 +61,7 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
             if (line[0] == '>')
             {
                 if (!seq.empty())   // previous seq
-                    context += pack3bases(seq);
+                    context += pack3seq(seq);
                 seq.clear();
 
                 // header line. (char) 253 instead of '>'
@@ -81,87 +83,119 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
                 seq += line + (char) 254;
             }
         }
-        if (!seq.empty())   context += pack3bases(seq);  // the last seq
+        if (!seq.empty())   context += pack3seq(seq);  // the last seq
     }
-    
     
     // FASTQ
     else //if (findFileType(in) == 'Q')
     {
+        
+        /* todo. find technology of sequencing, by reading all scores
+         * and detect different symbols inside it.
+         * intori dynamic mishe, dige 1 range sabet dar nazar nemigirim
+         */
+        string qsRange = "";
+        
+        
+        
+        //todo. nabas havijoori 'context+=' nevesht,
+        //todo. chon va3 file 10GB moshkel peida kard
+        
+        
         ULL lineNo = 0;
         while(!in.eof())    // process 4 lines by 4 lines
         {
             if (getline(in, line).good())    // header
             {
                 ++lineNo;
+//                context += line;
             }
             if (getline(in, line).good())    // sequence
             {
                 ++lineNo;
-                seq += pack3bases(line);
+//                seq += pack3seq(line);
+//                context += pack3seq(line);
+//                context += line;
             }
             if (getline(in, line).good())    // +
             {
                 ++lineNo;
+//                context += line;
             }
             if (getline(in, line).good())    // quality score
             {
                 ++lineNo;
+//                context += line;
+                
+                
+                
+                for (string::iterator i = line.begin(); i != line.end(); ++i)
+                    if (qsRange.find_first_of(*i) == string::npos)
+                        qsRange += *i;
+
+//                cerr<<qsRange;
+//                break;
+                
             }
         }
+    
+        
+        cerr<<qsRange << '\n'<<qsRange.length();
+        
+        
     }
     
     in.close();
     
-    // cryptography
-    // AES encryption uses a secret key of a variable length (128, 196 or
-    // 256 bit). This key is secretly exchanged between two parties before
-    // communication begins. DEFAULT_KEYLENGTH= 16 bytes
-    byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
-    memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
-    memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
-    
-    const string pass = getPassFromFile(keyFileName);
-    buildKey(key, pass);
-    buildIV(iv, pass);
-//    printIV(iv);      // debug
-//    printKey(key);    // debug
-
-//     // do random shuffle
-//     srand(0);
-//     std::random_shuffle(context.begin(),context.end());
-//     * need to know the reverse of shuffle, for decryption!
-    
-    string cipherText;
-    AES::Encryption aesEncryption(key, (size_t) AES::DEFAULT_KEYLENGTH);
-    CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
-    StreamTransformationFilter stfEncryptor(cbcEncryption,
-                                          new CryptoPP::StringSink(cipherText));
-    stfEncryptor.Put(reinterpret_cast<const byte*>
-                     (context.c_str()), context.length() + 1);
-    stfEncryptor.MessageEnd();
-    
-    if (v_flag)
-    {
-        cerr << "   sym size: " << context.size() << '\n';
-        cerr << "cipher size: " << cipherText.size() << '\n';
-        cerr << " block size: " << AES::BLOCKSIZE    << '\n';
-    }
-    
-    // watermark for encrypted file
-    cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
-                       + std::to_string(RELEASE_CRYFA) + "\n";
-    
-    
-    // dump cyphertext for read
-    for (ULL i = 0; i < cipherText.size(); ++i)
-        cout << (char) (0xFF & static_cast<byte> (cipherText[i]));
-    cout << '\n';
+//    // cryptography
+//    // AES encryption uses a secret key of a variable length (128, 196 or
+//    // 256 bit). This key is secretly exchanged between two parties before
+//    // communication begins. DEFAULT_KEYLENGTH= 16 bytes
+//    byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
+//    memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
+//    memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
+//
+//    const string pass = getPassFromFile(keyFileName);
+//    buildKey(key, pass);
+//    buildIV(iv, pass);
+////    printIV(iv);      // debug
+////    printKey(key);    // debug
+//
+////     // do random shuffle
+////     srand(0);
+////     std::random_shuffle(context.begin(),context.end());
+////     * need to know the reverse of shuffle, for decryption!
+//
+//    string cipherText;
+//    AES::Encryption aesEncryption(key, (size_t) AES::DEFAULT_KEYLENGTH);
+//    CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
+//    StreamTransformationFilter stfEncryptor(cbcEncryption,
+//                                          new CryptoPP::StringSink(cipherText));
+//    stfEncryptor.Put(reinterpret_cast<const byte*>
+//                     (context.c_str()), context.length() + 1);
+//    stfEncryptor.MessageEnd();
+//
+//    if (v_flag)
+//    {
+//        cerr << "   sym size: " << context.size() << '\n';
+//        cerr << "cipher size: " << cipherText.size() << '\n';
+//        cerr << " block size: " << AES::BLOCKSIZE    << '\n';
+//    }
+//
+//    // watermark for encrypted file
+//    cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
+//                       + std::to_string(RELEASE_CRYFA) + "\n";
+//
+//    // dump cyphertext for read
+//    for (ULL i = 0; i < cipherText.size(); ++i)
+//        cout << (char) (0xFF & static_cast<byte> (cipherText[i]));
+//    cout << '\n';
 }
 
 /*******************************************************************************
     decrypt FASTA.
     reserved symbols:
+    FASTA:
         (char) 255:  penalty if sequence length isn't multiple of 3
         (char) 254:  end of each sequence line
         (char) 253:  instead of '>' in header
@@ -221,6 +255,8 @@ void EnDecrypto::decryptFA (int argc, char **argv, const int v_flag,
     string trp;     // triplet
     const ULL decTxtSize = decText.size() - 1;
     
+    //todo. kind of watermark to detect fa/fq besed on Encrypted file
+    
     for (ULL j = 0; j < decTxtSize; ++j)
     {
         s = (byte) decText[j];
@@ -228,8 +264,8 @@ void EnDecrypto::decryptFA (int argc, char **argv, const int v_flag,
         // empty line OR end of each seq line
         if      (s == 252 || (s == 254 && !isHeader)) { cout << '\n'; }
         else if (s == 255) { cout << penaltySym(decText[++j]); } //seq len != x3
-        else if (s == 253) { cout << '>';            isHeader = true; }// header
-        else if (isHeader) { cout<<s; if (s == '\n') isHeader=false; } // header
+        else if (s == 253) { cout << '>';            isHeader=true;  } // header
+        else if (isHeader) { cout << s; if (s=='\n') isHeader=false; } // header
         else //if (!isHeader)     // seq lines
         {
             trp = DNA_UNPACK[s];

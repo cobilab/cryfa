@@ -32,6 +32,13 @@ typedef std::mt19937 rng_type;
 typedef std::unordered_map<string, unsigned int> htable_t;
 
 /*******************************************************************************
+    constants
+*******************************************************************************/
+const string QUALITY_SCORES =//excluding !\" abcdefghijklmnopqrstuvwxyz{|}~ (32)
+"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`";    // (No=62)
+// all permutations for QUALITY_SCORES + "~"
+
+/*******************************************************************************
     lookup tables
 *******************************************************************************/
 const string DNA_UNPACK[] =     // 216 elements
