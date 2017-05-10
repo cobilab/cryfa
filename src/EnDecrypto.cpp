@@ -61,7 +61,7 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
             if (line[0] == '>')
             {
                 if (!seq.empty())   // previous seq
-                    context += pack3seq(seq);
+                    context += packSeq_3to1(seq);
                 seq.clear();
 
                 // header line. (char) 253 instead of '>'
@@ -83,70 +83,68 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
                 seq += line + (char) 254;
             }
         }
-        if (!seq.empty())   context += pack3seq(seq);  // the last seq
+        if (!seq.empty())   context += packSeq_3to1(seq);  // the last seq
     }
     
     // FASTQ
     else //if (findFileType(in) == 'Q')
     {
+        string qsRange;
+        string QUALITY_SCORES;  // can have at most 40 values
         
-        /* todo. find technology of sequencing, by reading all scores
-         * and detect different symbols inside it.
-         * intori dynamic mishe, dige 1 range sabet dar nazar nemigirim
-         */
-        string qsRange = "";
-        
-        
-        
-        //todo. nabas havijoori 'context+=' nevesht,
-        //todo. chon va3 file 10GB moshkel peida kard
-#define LARGE_NUMBER std::numeric_limits<std::streamsize>::max()
-
-        while(!in.eof())    // process 4 lines by 4 lines
+        while(!in.eof())
         {
-            in.ignore(LARGE_NUMBER, '\n');
-            in.ignore(LARGE_NUMBER, '\n');
-            in.ignore(LARGE_NUMBER, '\n');
-            if (getline(in, line).good())    // qs
+            in.ignore(LARGE_NUMBER, '\n');  // ignore header lines
+            in.ignore(LARGE_NUMBER, '\n');  // ignore seq lines
+            in.ignore(LARGE_NUMBER, '\n');  // ignore + lines
+            if (getline(in, line).good())   // quality score line
+            {
                 for (string::iterator i = line.begin(); i != line.end(); ++i)
                     if (qsRange.find_first_of(*i) == string::npos)
                         qsRange += *i;
+            }
+            else;
         }
-        cerr<<qsRange << '\n'<<qsRange.length();
+        in.clear();  in.seekg(0, std::ios::beg);    // beginning of file
+        
+        std::sort(qsRange.begin(), qsRange.end());  // sort ASCII values
+        const byte qsRangeLen = (byte) qsRange.length();
     
-    
-        ULL lineNo = 0;
-        while(!in.eof())    // process 4 lines by 4 lines
-        {
-            if (getline(in, line).good())    // header
-            {
-                ++lineNo;
-//                context += line;
-            }
-            if (getline(in, line).good())    // sequence
-            {
-                ++lineNo;
-//                seq += pack3seq(line);
-//                context += pack3seq(line);
-//                context += line;
-            }
-            if (getline(in, line).good())    // +
-            {
-                ++lineNo;
-//                context += line;
-            }
-            if (getline(in, line).good())    // quality score
-            {
-                ++lineNo;
-//                context += line;
-                
-//                for (string::iterator i = line.begin(); i != line.end(); ++i)
-//                    if (qsRange.find_first_of(*i) == string::npos)
-//                        qsRange += *i;
-    
-            }
-        }
-//        cerr<<qsRange << '\n'<<qsRange.length();
+//        cerr << qsRange << '\n' << qsRange.length();
+        
+//        if (qsRangeLen == 32)
+//            cerr << 'y';
+        
+        
+        //todo. nabas havijoori 'context+=' nevesht,
+        //todo. chon va3 file 10GB mitereke
+        
+//        ULL lineNo = 0;
+//        while(!in.eof())    // process 4 lines by 4 lines
+//        {
+//            if (getline(in, line).good())    // header
+//            {
+////                ++lineNo;
+////                context += line;
+//            }
+//            if (getline(in, line).good())    // sequence
+//            {
+////                ++lineNo;
+////                seq += pack3seq(line);
+////                context += pack3seq(line);
+////                context += line;
+//            }
+//            if (getline(in, line).good())    // +
+//            {
+////                ++lineNo;
+////                context += line;
+//            }
+//            if (getline(in, line).good())    // quality score
+//            {
+////                ++lineNo;
+////                context += line;
+//            }
+//        }
     
     }
     

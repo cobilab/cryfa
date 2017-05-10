@@ -34,8 +34,10 @@ typedef std::unordered_map<string, unsigned int> htable_t;
 /*******************************************************************************
     constants
 *******************************************************************************/
-const string QUALITY_SCORES =//excluding !\" abcdefghijklmnopqrstuvwxyz{|}~ (32)
-"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`";    // (No=62)
+#define LARGE_NUMBER std::numeric_limits<std::streamsize>::max()
+
+//const string QUALITY_SCORES =//excluding !\" abcdefghijklmnopqrstuvwxyz{|}~ (32)
+//"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`";    // (No=62)
 // all permutations for QUALITY_SCORES + "~"
 
 /*******************************************************************************
