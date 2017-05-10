@@ -29,7 +29,19 @@ typedef unsigned char byte;
 typedef unsigned long long ULL;
 typedef long long LL;
 typedef std::mt19937 rng_type;
-typedef std::unordered_map<string, unsigned int> htable_t;
+typedef std::unordered_map<string, ULL> htable_t;
+
+/*******************************************************************************
+    macros
+*******************************************************************************/
+#define LOOP(v,N)            for(byte (v)=0; (v)!=(N); ++(v))
+#define LOOP2(i,j,N)         LOOP(i,N) LOOP(j,N)
+#define LOOP3(i,j,k,N)       LOOP(i,N) LOOP(j,N) LOOP(k,N)
+#define LOOP4(i,j,k,l,N)     LOOP(i,N) LOOP(j,N) LOOP(k,N) LOOP(l,N)
+#define LOOP5(i,j,k,l,m,N)   LOOP(i,N) LOOP(j,N) LOOP(k,N) LOOP(l,N) LOOP(m,N)
+#define LOOP8(i,j,k,l,m,n,\
+                    o,p,N)   LOOP(i,N) LOOP(j,N) LOOP(k,N) LOOP(l,N) LOOP(m,N) \
+                             LOOP(n,N) LOOP(o,N) LOOP(p,N)
 
 /*******************************************************************************
     constants
