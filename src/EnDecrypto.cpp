@@ -100,8 +100,21 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
         
         //todo. nabas havijoori 'context+=' nevesht,
         //todo. chon va3 file 10GB moshkel peida kard
-        
-        
+#define LARGE_NUMBER std::numeric_limits<std::streamsize>::max()
+
+        while(!in.eof())    // process 4 lines by 4 lines
+        {
+            in.ignore(LARGE_NUMBER, '\n');
+            in.ignore(LARGE_NUMBER, '\n');
+            in.ignore(LARGE_NUMBER, '\n');
+            if (getline(in, line).good())    // qs
+                for (string::iterator i = line.begin(); i != line.end(); ++i)
+                    if (qsRange.find_first_of(*i) == string::npos)
+                        qsRange += *i;
+        }
+        cerr<<qsRange << '\n'<<qsRange.length();
+    
+    
         ULL lineNo = 0;
         while(!in.eof())    // process 4 lines by 4 lines
         {
@@ -127,22 +140,14 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
                 ++lineNo;
 //                context += line;
                 
-                
-                
-                for (string::iterator i = line.begin(); i != line.end(); ++i)
-                    if (qsRange.find_first_of(*i) == string::npos)
-                        qsRange += *i;
-
-//                cerr<<qsRange;
-//                break;
-                
+//                for (string::iterator i = line.begin(); i != line.end(); ++i)
+//                    if (qsRange.find_first_of(*i) == string::npos)
+//                        qsRange += *i;
+    
             }
         }
+//        cerr<<qsRange << '\n'<<qsRange.length();
     
-        
-        cerr<<qsRange << '\n'<<qsRange.length();
-        
-        
     }
     
     in.close();
