@@ -27,53 +27,24 @@ using std::cerr;
 using std::chrono::high_resolution_clock;
 using std::setprecision;
 
-
-
-
-//#include <functional>
-//#include <utility>
-//
-////using namespace std;
-//
-//
-////Quick permutation function with callbacks
-//void permuteRef(string& str,int first,std::function<void(const string&)> callback){
-//    //if we have exhausted all possible swaps, this is a permutation
-//    if (first==str.size()){
-//        if (callback!=NULL){
-//            callback(str);
-//        }
-//    }
-//    else{
-//        //we have more characters to swap on this path
-//        for(int current = first; current < str.size(); current++){
-//            std::swap(str[first],str[current]);
-//            //branch our permutation to all sub permutations of this instance
-//            permuteRef(str,first+1,callback);
-//            std::swap(str[first],str[current]);
-//            //restore original value
-//        }
-//    }
-//}
-////helper function, makes it simple to permute static strings or standard strings
-//void permute(const string& str, std::function<void(const string&)> callback){
-//    string subject = str;
-//    permuteRef(subject,0,callback);
-//}
-//
-//int main(int argc, char* argv[]){
-//    //if you use a lambda, make sure you don't capture any variables
-//    permute("!\"",[](const string& str){cerr << str << "\n";});
-//
-//    return 0;
-//}
-
-
 ////////////////////////////////////////////////////////////////////////////////
 ///////////////////                 M A I N                 ////////////////////
 ////////////////////////////////////////////////////////////////////////////////
 int main (int argc, char* argv[])
 {
+    //todo. IMPORTANT
+//    unsigned short s = 4000;
+//    unsigned char c1 = s & 0xFF;
+//    unsigned char c2 = s >> 8;
+//    unsigned short m = c2<<8 | c1; // recover
+//
+////    cerr<<(short)c2<<' '<<(short)c1<<'\n';
+//    cerr << std::to_string(c2) << ' ' << std::to_string(c1);
+//    cerr << '\n' << m;
+    //todo. IMPORTANT
+
+
+
     // start timer
     high_resolution_clock::time_point startTime = high_resolution_clock::now();
 
@@ -137,7 +108,7 @@ int main (int argc, char* argv[])
                 break;
         }
     }
-    
+
     if (v_flag) cerr << "Verbose mode on.\n";
     if (d_flag)
     {
@@ -151,7 +122,7 @@ int main (int argc, char* argv[])
         std::chrono::duration<double> elapsed = finishTime - startTime;
         cerr << "done in " << std::fixed << setprecision(4) << elapsed.count()
              << " seconds.\n";
-        
+
         return 0;
     }
 

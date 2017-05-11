@@ -16,8 +16,10 @@ using std::cout;
 using std::cerr;
 using std::make_pair;
 
-htable_t QS_MAP;    // global
-string*  QS_UNPACK; // global
+htable_t QS_MAP;
+string*  QS_UNPACK;
+bool     QSLarge = false;
+string   QUALITY_SCORES;    // 40 values
 
 /*******************************************************************************
     build hash table for quality scores
@@ -178,9 +180,9 @@ inline void buildQsUnpack (const string &QUALITY_SCORES, short keyLen)
 
 //fqHeaderPack
 /*******************************************************************************
-    index of each 3 DNA bases pack
+    index of each DNA bases pack
 *******************************************************************************/
-inline unsigned int dnaPack (const string &dna)
+inline unsigned short dnaPack (const string &dna)
 {
     htable_t::const_iterator got = DNA_MAP.find(dna);
     if (got == DNA_MAP.end()) { cerr << "Error: key not found!\n"; return 0; }
@@ -188,9 +190,9 @@ inline unsigned int dnaPack (const string &dna)
 }
 
 /*******************************************************************************
-    index of each 4 quality scores pack
+    index of each quality scores pack
 *******************************************************************************/
-inline unsigned int qsPack (const string &qs)
+inline unsigned short qsPack (const string &qs)
 {
     htable_t::const_iterator got = QS_MAP.find(qs);
     if (got == QS_MAP.end()) { cerr << "Error: key not found!\n"; return 0; }
@@ -203,10 +205,10 @@ inline unsigned int qsPack (const string &qs)
 inline string packSeq_3to1 (string seq)
 {
     string packedSeq;
-    const  LL iterLen = seq.length() - 2;
-    LL     x = 0;
-    bool   firstNotIn, secondNotIn, thirdNotIn;
-    char   s0, s1, s2;
+    const LL iterLen = seq.length() - 2;
+    LL x = 0;
+    bool firstNotIn, secondNotIn, thirdNotIn;
+    char s0, s1, s2;
     string tuple;
     
     for (x = 0; x < iterLen; x += 3)
@@ -253,52 +255,65 @@ inline string packSeq_3to1 (string seq)
 *******************************************************************************/
 inline string packQS_3to2 (string qs)
 {
-    return "3to2";
+    string tuple, packedQs;
+    const LL iterLen = qs.length() - 2;
+    LL x = 0;
+    bool firstNotIn, secondNotIn, thirdNotIn;
+    char s0, s1, s2;
+    unsigned short shortTuple;
+    // ASCII char after the last char in QUALITY_SCORES string
+    const char XChar = (char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
     
+    if (!QSLarge)
+    {
+        for (x = 0; x < iterLen; x += 3)
+        {
+            tuple.clear();   tuple = qs[x];   tuple += qs[x+1];   tuple += qs[x+2];
+            shortTuple = qsPack(tuple);
+            packedQs += (unsigned char) (shortTuple >> 8);      // left byte
+            packedQs += (unsigned char) (shortTuple & 0xFF);    // right byte
+        }
+    }
+    else
+    {
+        for (x = 0; x < iterLen; x += 3)
+        {
+            s0 = qs[x], s1 = qs[x+1], s2 = qs[x+2];
+
+            tuple.clear();
+            tuple += (firstNotIn  = (QUALITY_SCORES.find(s0)==string::npos))
+                     ? XChar : s0;
+            tuple += (secondNotIn = (QUALITY_SCORES.find(s1)==string::npos))
+                     ? XChar : s1;
+            tuple += (thirdNotIn  = (QUALITY_SCORES.find(s2)==string::npos))
+                     ? XChar : s2;
     
-//    string packedQS;
-//    const  LL iterLen = qs.length() - 3;
-//    LL     x = 0;
-//    bool   firstNotIn, secondNotIn, thirdNotIn, fourthNotIn;
-//    char   s0, s1, s2, s3;
-//    string tuple;
-//
-//    for (x = 0; x < iterLen; x += 4)
-//    {
-//        s0 = qs[x], s1 = qs[x+1], s2 = qs[x+2], s3 = qs[x+3];
-//
-//        //todo. be jaye ~ ye char>126 bezar, masalan 127
-//        tuple.clear();
-////        tuple +=
-////           (firstNotIn  = (QUALITY_SCORES.find(s0)==string::npos)) ? '~' : s0;
-////        tuple +=
-////           (secondNotIn = (QUALITY_SCORES.find(s1)==string::npos)) ? '~' : s1;
-////        tuple +=
-////           (thirdNotIn  = (QUALITY_SCORES.find(s2)==string::npos)) ? '~' : s2;
-////        tuple +=
-////           (fourthNotIn = (QUALITY_SCORES.find(s3)==string::npos)) ? '~' : s3;
-//
-//       //todo. KOLLAN be jaye (char) bas function tabdile 'second' be 1 ya chand char benevisi
-////     packedQS += (char) dnaPack(tuple); function: hash index -> (c0)(c1)(c2)
-////                              function: hash index -> (c0)(c1) .unsigned short
-//        if (firstNotIn)   packedQS += s0;
-//        if (secondNotIn)  packedQS += s1;
-//        if (thirdNotIn)   packedQS += s2;
-//        if (fourthNotIn)  packedQS += s3;
-//    }
-//
-////    // if seq len isn't multiple of 3, add (char) 254 before each sym
-////    if (seq.length() % 3 == 1)
-////    {
-////        packedQS += 255;   packedQS += seq[x];
-////    }
-////    else if (seq.length() % 3 == 2)
-////    {
-////        packedQS += 255;   packedQS += seq[x];
-////        packedQS += 255;   packedQS += seq[x+1];
-////    }
-//
-//    return packedQS;
+            shortTuple = qsPack(tuple);
+            packedQs += (unsigned char) (shortTuple >> 8);      // left byte
+            packedQs += (unsigned char) (shortTuple & 0xFF);    // right byte
+
+            if (firstNotIn)   packedQs += s0;
+            if (secondNotIn)  packedQs += s1;
+            if (thirdNotIn)   packedQs += s2;
+        }
+    }
+    
+    // if seq len isn't multiple of 3, add (char) 255 before each sym
+    switch (qs.length() % 3)
+    {
+        case 1:
+            packedQs += 255;   packedQs += qs[x];
+            break;
+        
+        case 2:
+            packedQs += 255;   packedQs += qs[x];
+            packedQs += 255;   packedQs += qs[x+1];
+            break;
+        
+        default: break;
+    }
+
+    return packedQs;
 }
 
 /*******************************************************************************
@@ -306,10 +321,9 @@ inline string packQS_3to2 (string qs)
 *******************************************************************************/
 inline string packQS_2to1 (string qs)
 {
-    string packedQs;
-    const  LL iterLen = qs.length() - 1;
-    LL     x = 0;
-    string tuple;
+    string tuple, packedQs;
+    const LL iterLen = qs.length() - 1;
+    LL x = 0;
     
     for (x = 0; x < iterLen; x += 2)
     {
@@ -331,10 +345,9 @@ inline string packQS_2to1 (string qs)
 *******************************************************************************/
 inline string packQS_3to1 (string qs)
 {
-    string packedQs;
-    const  LL iterLen = qs.length() - 2;
-    LL     x = 0;
-    string tuple;
+    string tuple, packedQs;
+    const LL iterLen = qs.length() - 2;
+    LL x = 0;
     
     for (x = 0; x < iterLen; x += 3)
     {
@@ -365,10 +378,9 @@ inline string packQS_3to1 (string qs)
 *******************************************************************************/
 inline string packQS_5to1 (string qs)
 {
-    string packedQs;
-    const  LL iterLen = qs.length() - 4;
-    LL     x = 0;
-    string tuple;
+    string tuple, packedQs;
+    const LL iterLen = qs.length() - 4;
+    LL x = 0;
     
     for (x = 0; x < iterLen; x += 5)
     {
@@ -413,10 +425,9 @@ inline string packQS_5to1 (string qs)
 *******************************************************************************/
 inline string packQS_7to1 (string qs)
 {
-    string packedQs;
-    const  LL iterLen = qs.length() - 6;
-    LL     x = 0;
-    string tuple;
+    string tuple, packedQs;
+    const LL iterLen = qs.length() - 6;
+    LL x = 0;
     
     for (x = 0; x < iterLen; x += 7)
     {

@@ -90,9 +90,7 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
     // FASTQ
     else //if (findFileType(in) == 'Q')
     {
-        // what quality scores are in the file
-        string qsRange;
-        string QUALITY_SCORES;              // can have at most 40 values
+        string qsRange; // quality scores in the file
         
         while(!in.eof())
         {
@@ -113,14 +111,16 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
     
         const size_t qsRangeLen = qsRange.length();
         // if len > 40 filter the last 40 ones
-        QUALITY_SCORES = (qsRangeLen > 40) ? qsRange.substr(qsRangeLen - 40)
-                                           : qsRange;
+        if (qsRangeLen > 40)
+            { QUALITY_SCORES = qsRange.substr(qsRangeLen - 40);  QSLarge=true; }
+        else  QUALITY_SCORES = qsRange;
         
         std::function<string(string)> packQS;               // function wrapper
         if (qsRangeLen > 15)                                // 16 <= #QS <= 40
         {
-//            buildQsHashTable(QUALITY_SCORES, 3);
-//            packQS = packQS_3to2;
+            !QSLarge ? buildQsHashTable(QUALITY_SCORES, 3)
+                     : buildQsHashTable(qsRange, 3);
+            packQS = packQS_3to2;
         }
         else if (qsRangeLen > 6)                            // 7 <= #QS <= 15
         {
@@ -145,7 +145,7 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
         }
     
         // test
-//        cerr << qsRange << '\n' << qsRange.length() << '\n';
+        cerr << qsRange << '\n' << qsRange.length() << '\n';
 //        cerr << QUALITY_SCORES<<'\n';
     
         
@@ -183,7 +183,8 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
         }
         
         // test
-        cerr << context;
+//        cout << context;
+//        cerr << context;
         
     }
     
