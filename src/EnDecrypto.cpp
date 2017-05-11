@@ -117,37 +117,38 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
                                            : qsRange;
         
         std::function<string(string)> packQS;               // function wrapper
-        if (qsRangeLen > 16)                                // 17 <= #QS <= 40
+        if (qsRangeLen > 15)                                // 16 <= #QS <= 40
         {
-            packQS = packQS_3to2;
+//            buildQsHashTable(QUALITY_SCORES, 3);
+//            packQS = packQS_3to2;
         }
-        else if (qsRangeLen > 6)                            // 7 <= #QS <= 16
+        else if (qsRangeLen > 6)                            // 7 <= #QS <= 15
         {
             buildQsHashTable(QUALITY_SCORES, 2);
             packQS = packQS_2to1;
         }
-        else if (qsRangeLen == 6 || qsRangeLen == 5)        // #QS = 5 or 6
+        else if (qsRangeLen == 6 || qsRangeLen == 5
+                                 || qsRangeLen == 4)        // #QS = 4 or 5 or 6
         {
-//            buildQsHashTable(QUALITY_SCORES, 3);
+            buildQsHashTable(QUALITY_SCORES, 3);
             packQS = packQS_3to1;
         }
-        else if (qsRangeLen == 4)
+        else if (qsRangeLen == 3)                           // #QS = 3
         {
-            packQS = packQS_4to1;   // #QS = 4
+            buildQsHashTable(QUALITY_SCORES, 5);
+            packQS = packQS_5to1;
         }
-        else if (qsRangeLen == 3)
+        else if (qsRangeLen == 2)                           // #QS = 2
         {
-            packQS = packQS_5to1;   // #QS = 3
+            buildQsHashTable(QUALITY_SCORES, 7);
+            packQS = packQS_7to1;
         }
-        else if (qsRangeLen == 2)
-        {
-            packQS = packQS_8to1;   // #QS = 2
-        }
-        
-        
-//        cerr << qsRange << '\n' << qsRange.length();
+    
+        // test
+//        cerr << qsRange << '\n' << qsRange.length() << '\n';
 //        cerr << QUALITY_SCORES<<'\n';
     
+        
     
         //todo. nabas havijoori 'context+=' nevesht,
         //todo. chon va3 file 10GB mitereke
@@ -177,8 +178,13 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
             {
 //                ++lineNo;
                 context += packQS(line);
+//                context += line;
             }
         }
+        
+        // test
+        cerr << context;
+        
     }
     
     in.close();
@@ -221,6 +227,7 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
 //    // watermark for encrypted file
 //    cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
 //                       + std::to_string(RELEASE_CRYFA) + "\n";
+//   // todo. QUALITY_SCORES should be added to encrypted file, after watermark
 //
 //    // dump cyphertext for read
 //    for (ULL i = 0; i < cipherText.size(); ++i)
@@ -291,14 +298,15 @@ void EnDecrypto::decryptFA (int argc, char **argv, const int v_flag,
     string trp;     // triplet
     const ULL decTxtSize = decText.size() - 1;
     
-    //todo. kind of watermark to detect fa/fq besed on Encrypted file
+    //todo. watermark (QUALITY_SCORES) to detect fa/fq besed on Encrypted file
+    //todo. for FA just write 'FASTA', since there is no quality scores
     
     for (ULL j = 0; j < decTxtSize; ++j)
     {
         s = (byte) decText[j];
         
-        // empty line OR end of each seq line
-        if      (s == 252 || (s == 254 && !isHeader)) { cout << '\n'; }
+        if      (s == 252 || (s == 254 && !isHeader))
+                           { cout << '\n'; }//empty line OR end of each seq line
         else if (s == 255) { cout << penaltySym(decText[++j]); } //seq len != x3
         else if (s == 253) { cout << '>';            isHeader=true;  } // header
         else if (isHeader) { cout << s; if (s=='\n') isHeader=false; } // header
