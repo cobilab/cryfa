@@ -94,9 +94,14 @@ inline void buildQsHashTable (const string &QUALITY_SCORES, short keyLen)
         default: break;
     }
     
-    // test
+    // todo. test
+//    htable_t::const_iterator got = QS_MAP.find("II!");
+//    if (got == QS_MAP.end()) cerr << "Error: key not found!\n";
+//    else  cerr << got->second;
+    
 //    for (htable_t::iterator i = QS_MAP.begin(); i != QS_MAP.end(); ++i)
 //        cerr << i->first << "\t" << i->second << '\n';
+//    cerr << elementNo << '\n';
 }
 
 /*******************************************************************************
@@ -287,7 +292,7 @@ inline string packQS_3to2 (string qs)
                      ? XChar : s1;
             tuple += (thirdNotIn  = (QUALITY_SCORES.find(s2)==string::npos))
                      ? XChar : s2;
-    
+
             shortTuple = qsPack(tuple);
             packedQs += (unsigned char) (shortTuple >> 8);      // left byte
             packedQs += (unsigned char) (shortTuple & 0xFF);    // right byte
@@ -304,15 +309,15 @@ inline string packQS_3to2 (string qs)
         case 1:
             packedQs += 255;   packedQs += qs[x];
             break;
-        
+
         case 2:
             packedQs += 255;   packedQs += qs[x];
             packedQs += 255;   packedQs += qs[x+1];
             break;
-        
+
         default: break;
     }
-
+    
     return packedQs;
 }
 

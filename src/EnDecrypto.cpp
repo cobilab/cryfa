@@ -40,12 +40,16 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
                             const string &keyFileName)
 {
     ifstream in(argv[argc-1]);
-    string line;            // each line of file
-    string header, seq;     // header and sequence (FASTA/FASTQ)
-    string qs;              // quality scores (FASTQ)
+    const bool FASTA = (findFileType(in) == 'A');
+    const bool FASTQ = !FASTA;  // const bool FASTQ = (findFileType(in) == 'Q');
+    string line;                // each line of file
+//    string header;              // header (FASTA/FASTQ)
+    string seq;                 // sequence (FASTA/FASTQ)
+//    string qs;                  // quality scores (FASTQ)
     // FASTA: context = header + seq (+ empty lines)
     // FASTQ: context = header + seq + plus + qs
     string context;
+    string qsRange;             // quality scores presented in FASTQ file
     
     if (!in.good())
     {
@@ -54,8 +58,10 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
     }
     
     // FASTA
-    if (findFileType(in) == 'A')
+    if (FASTA)
     {
+        // to tell decryptor this isn't FASTQ
+        context += (char) 127;//      context += "\n";
         while (getline(in, line).good())
         {
             // header
@@ -88,9 +94,9 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
     }
     
     // FASTQ
-    else //if (findFileType(in) == 'Q')
+    else //if (FASTQ)
     {
-        string qsRange; // quality scores in the file
+        string QUALITY_SCORES_X;    // extended QUALITY_SCORES
         
         while(!in.eof())
         {
@@ -103,7 +109,7 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
                     if (qsRange.find_first_of(*i) == string::npos)
                         qsRange += *i;
             }
-            else;
+//            else;
         }
         in.clear();  in.seekg(0, std::ios::beg);            // beginning of file
         
@@ -112,14 +118,24 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
         const size_t qsRangeLen = qsRange.length();
         // if len > 40 filter the last 40 ones
         if (qsRangeLen > 40)
-            { QUALITY_SCORES = qsRange.substr(qsRangeLen - 40);  QSLarge=true; }
-        else  QUALITY_SCORES = qsRange;
+        {
+            QSLarge = true;
+            QUALITY_SCORES   = qsRange.substr(qsRangeLen - 40);
+            QUALITY_SCORES_X = QUALITY_SCORES;
+            QUALITY_SCORES_X +=  // ASCII char after last char in QUALITY_SCORES
+                    (char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
+        }
+        else { QUALITY_SCORES = qsRange; }
         
+        // todo. test
+        cerr << qsRange << '\n' << qsRange.length() << '\n';
+//        cerr << QUALITY_SCORES<<'\n';
+    
         std::function<string(string)> packQS;               // function wrapper
         if (qsRangeLen > 15)                                // 16 <= #QS <= 40
         {
-            !QSLarge ? buildQsHashTable(QUALITY_SCORES, 3)
-                     : buildQsHashTable(qsRange, 3);
+            !QSLarge ? buildQsHashTable(QUALITY_SCORES,   3)
+                     : buildQsHashTable(QUALITY_SCORES_X, 3);
             packQS = packQS_3to2;
         }
         else if (qsRangeLen > 6)                            // 7 <= #QS <= 15
@@ -144,96 +160,98 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
             packQS = packQS_7to1;
         }
     
-        // test
-        cerr << qsRange << '\n' << qsRange.length() << '\n';
-//        cerr << QUALITY_SCORES<<'\n';
-    
-        
     
         //todo. nabas havijoori 'context+=' nevesht,
         //todo. chon va3 file 10GB mitereke
         //todo. bas hame kara ro block by block anjam dad
         
-        ULL lineNo = 0;
+//        ULL lineNo = 0;
+        
+        // (char) 254 instead of '\n' at the end
+        context += qsRange;  context += "\n";    // to send qsRange to decryptor
         while(!in.eof())    // process 4 lines by 4 lines
         {
             if (getline(in, line).good())    // header
             {
 //                ++lineNo;
-//                context += line;
+                
+                // header line. //(char) 253 instead of '@'
+                // (char) 254 instead of '\n' at the end
+//                context += (char) 253 + ..PACK(line) + (char) 254;
+                context += line + (char) 254;
             }
             if (getline(in, line).good())    // sequence
             {
 //                ++lineNo;
-//                seq += pack3seq(line);
-//                context += pack3seq(line);
-//                context += line;
+                
+                // (char) 254 instead of '\n' at the end
+                context += packSeq_3to1(line) + (char) 254;
             }
             if (getline(in, line).good())    // +
             {
 //                ++lineNo;
+                // todo. shayad beshe in khato ignore kard
 //                context += line;
+                context += line + (char) 254;
             }
             if (getline(in, line).good())    // quality score
             {
 //                ++lineNo;
-                context += packQS(line);
-//                context += line;
+                
+                context += packQS(line) + (char) 254;
             }
         }
         
-        // test
+        // todo. test
 //        cout << context;
 //        cerr << context;
-        
     }
     
     in.close();
     
-//    // cryptography
-//    // AES encryption uses a secret key of a variable length (128, 196 or
-//    // 256 bit). This key is secretly exchanged between two parties before
-//    // communication begins. DEFAULT_KEYLENGTH= 16 bytes
-//    byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
-//    memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
-//    memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
-//
-//    const string pass = getPassFromFile(keyFileName);
-//    buildKey(key, pass);
-//    buildIV(iv, pass);
-////    printIV(iv);      // debug
-////    printKey(key);    // debug
-//
-////     // do random shuffle
-////     srand(0);
-////     std::random_shuffle(context.begin(),context.end());
-////     * need to know the reverse of shuffle, for decryption!
-//
-//    string cipherText;
-//    AES::Encryption aesEncryption(key, (size_t) AES::DEFAULT_KEYLENGTH);
-//    CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
-//    StreamTransformationFilter stfEncryptor(cbcEncryption,
-//                                          new CryptoPP::StringSink(cipherText));
-//    stfEncryptor.Put(reinterpret_cast<const byte*>
-//                     (context.c_str()), context.length() + 1);
-//    stfEncryptor.MessageEnd();
-//
-//    if (v_flag)
-//    {
-//        cerr << "   sym size: " << context.size() << '\n';
-//        cerr << "cipher size: " << cipherText.size() << '\n';
-//        cerr << " block size: " << AES::BLOCKSIZE    << '\n';
-//    }
-//
-//    // watermark for encrypted file
-//    cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
-//                       + std::to_string(RELEASE_CRYFA) + "\n";
-//   // todo. QUALITY_SCORES should be added to encrypted file, after watermark
-//
-//    // dump cyphertext for read
-//    for (ULL i = 0; i < cipherText.size(); ++i)
-//        cout << (char) (0xFF & static_cast<byte> (cipherText[i]));
-//    cout << '\n';
+    // cryptography
+    // AES encryption uses a secret key of a variable length (128, 196 or
+    // 256 bit). This key is secretly exchanged between two parties before
+    // communication begins. DEFAULT_KEYLENGTH= 16 bytes
+    byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
+    memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
+    memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
+
+    const string pass = getPassFromFile(keyFileName);
+    buildKey(key, pass);
+    buildIV(iv, pass);
+//    printIV(iv);      // debug
+//    printKey(key);    // debug
+
+//     // do random shuffle
+//     srand(0);
+//     std::random_shuffle(context.begin(),context.end());
+//     * need to know the reverse of shuffle, for decryption!
+
+    string cipherText;
+    AES::Encryption aesEncryption(key, (size_t) AES::DEFAULT_KEYLENGTH);
+    CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
+    StreamTransformationFilter stfEncryptor(cbcEncryption,
+                                          new CryptoPP::StringSink(cipherText));
+    stfEncryptor.Put(reinterpret_cast<const byte*>
+                     (context.c_str()), context.length() + 1);
+    stfEncryptor.MessageEnd();
+
+    if (v_flag)
+    {
+        cerr << "   sym size: " << context.size()    << '\n';
+        cerr << "cipher size: " << cipherText.size() << '\n';
+        cerr << " block size: " << AES::BLOCKSIZE    << '\n';
+    }
+    
+    // watermark for encrypted file
+    cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
+                       + std::to_string(RELEASE_CRYFA) + "\n";
+    
+    // dump cyphertext for read
+    for (ULL i = 0; i < cipherText.size(); ++i)
+        cout << (char) (0xFF & static_cast<byte> (cipherText[i]));
+    cout << '\n';
 }
 
 /*******************************************************************************
@@ -298,70 +316,176 @@ void EnDecrypto::decryptFA (int argc, char **argv, const int v_flag,
     byte s;
     string trp;     // triplet
     const ULL decTxtSize = decText.size() - 1;
+    const bool FASTA = (decText[0] == (char) 127);
+    const bool FASTQ = !FASTA; // const bool FASTQ = (decText[0] != (char) 127);
     
-    //todo. watermark (QUALITY_SCORES) to detect fa/fq besed on Encrypted file
-    //todo. for FA just write 'FASTA', since there is no quality scores
     
-    for (ULL j = 0; j < decTxtSize; ++j)
+    //todo. + va +... khate 3 ba global variable maloom shavad
+    
+    
+    // FASTA
+    if (FASTA)
     {
-        s = (byte) decText[j];
-        
-        if      (s == 252 || (s == 254 && !isHeader))
-                           { cout << '\n'; }//empty line OR end of each seq line
-        else if (s == 255) { cout << penaltySym(decText[++j]); } //seq len != x3
-        else if (s == 253) { cout << '>';            isHeader=true;  } // header
-        else if (isHeader) { cout << s; if (s=='\n') isHeader=false; } // header
-        else //if (!isHeader)     // seq lines
+//        for (ULL j = 0; j < decTxtSize; ++j)
+        for (ULL j = 1; j < decTxtSize; ++j)    // decText[0] already used
         {
-            trp = DNA_UNPACK[s];
+            s = (byte) decText[j];
+            //empty line OR end of each seq line
+            if (s == 252 || (s == 254 && !isHeader)) { cout << '\n'; }
+            //seq len not multiple of 3
+            else if (s == 255) { cout << penaltySym(decText[++j]); }
+            // header
+            else if (s == 253) { cout << '>';  isHeader = true; }
+            else if (isHeader) { cout << s; if (s == '\n') isHeader = false; }
+            // seq lines
+            else //if (!isHeader)
+            {
+                trp = DNA_UNPACK[s];
             
-            if (trp[0] != 'X' && trp[1] != 'X' && trp[2] != 'X')        // ...
-            {
-                cout << trp;
-            }
-            else if (trp[0] == 'X' && trp[1] != 'X' && trp[2] != 'X')   // X..
-            {
-                cout << penaltySym( decText[++j] );
-                cout << trp[1];
-                cout << trp[2];
-            }
-            else if (trp[0] != 'X' && trp[1] == 'X' && trp[2] != 'X')   // .X.
-            {
-                cout << trp[0];
-                cout << penaltySym( decText[++j] );
-                cout << trp[2];
-            }
-            else if (trp[0] == 'X' && trp[1] == 'X' && trp[2] != 'X')   // XX.
-            {
-                cout << penaltySym( decText[++j] );
-                cout << penaltySym( decText[++j] );
-                cout << trp[2];
-            }
-            else if (trp[0] != 'X' && trp[1] != 'X' && trp[2] == 'X')   // ..X
-            {
-                cout << trp[0];
-                cout << trp[1];
-                cout << penaltySym( decText[++j] );
-            }
-            else if (trp[0] == 'X' && trp[1] != 'X' && trp[2] == 'X')   // X.X
-            {
-                cout << penaltySym( decText[++j] );
-                cout << trp[1];
-                cout << penaltySym( decText[++j] );
-            }
-            else if (trp[0] != 'X' && trp[1] == 'X' && trp[2] == 'X')   // .XX
-            {
-                cout << trp[0];
-                cout << penaltySym( decText[++j] );
-                cout << penaltySym( decText[++j] );
-            }
-            else                                                        // XXX
-            {
-                cout << penaltySym( decText[++j] );
-                cout << penaltySym( decText[++j] );
-                cout << penaltySym( decText[++j] );
+                if (trp[0] != 'X' && trp[1] != 'X' && trp[2] != 'X')      // ...
+                {
+                    cout << trp;
+                }
+                else if (trp[0] == 'X' && trp[1] != 'X' && trp[2] != 'X') // X..
+                {
+                    cout << penaltySym(decText[++j]);
+                    cout << trp[1];
+                    cout << trp[2];
+                }
+                else if (trp[0] != 'X' && trp[1] == 'X' && trp[2] != 'X') // .X.
+                {
+                    cout << trp[0];
+                    cout << penaltySym(decText[++j]);
+                    cout << trp[2];
+                }
+                else if (trp[0] == 'X' && trp[1] == 'X' && trp[2] != 'X') // XX.
+                {
+                    cout << penaltySym(decText[++j]);
+                    cout << penaltySym(decText[++j]);
+                    cout << trp[2];
+                }
+                else if (trp[0] != 'X' && trp[1] != 'X' && trp[2] == 'X') // ..X
+                {
+                    cout << trp[0];
+                    cout << trp[1];
+                    cout << penaltySym(decText[++j]);
+                }
+                else if (trp[0] == 'X' && trp[1] != 'X' && trp[2] == 'X') // X.X
+                {
+                    cout << penaltySym(decText[++j]);
+                    cout << trp[1];
+                    cout << penaltySym(decText[++j]);
+                }
+                else if (trp[0] != 'X' && trp[1] == 'X' && trp[2] == 'X') // .XX
+                {
+                    cout << trp[0];
+                    cout << penaltySym(decText[++j]);
+                    cout << penaltySym(decText[++j]);
+                }
+                else                                                      // XXX
+                {
+                    cout << penaltySym(decText[++j]);
+                    cout << penaltySym(decText[++j]);
+                    cout << penaltySym(decText[++j]);
+                }
             }
         }
+    }
+    
+    // FASTQ
+    else // if (FASTQ)
+    {
+        string qsRange;
+        byte b;
+        for (b = 0; decText[b] != '\n'; ++b)   qsRange += decText[b];
+    
+        ULL j;
+        for (j = b+1; decText[j] != (char) 254; ++j)  // header
+        {
+            s = (byte) decText[j];
+            //...
+        }
+        for (j = j+1; decText[j] != (char) 254; ++j)  // sequence
+        {
+            s = (byte) decText[j];
+            //...
+        }
+        for (j = j+1; decText[j] != (char) 254; ++j)  // +
+        {
+            s = (byte) decText[j];
+            //...
+        }
+        for (j = j+1; decText[j] != (char) 254; ++j)  // quality score
+        {
+            s = (byte) decText[j];
+            //...
+        }
+    
+//        for (ULL j = b+1; j < decTxtSize; ++j)    // decText[0] already used
+//        {
+//            s = (byte) decText[j];
+//            //empty line OR end of each seq line
+//            if (s == 252 || (s == 254 && !isHeader)) { cout << '\n'; }
+//                //seq len not multiple of 3
+//            else if (s == 255) { cout << penaltySym(decText[++j]); }
+//                // header
+//            else if (s == 253) { cout << '>';  isHeader = true; }
+//            else if (isHeader) { cout << s; if (s == '\n') isHeader = false; }
+//                // seq lines
+//            else //if (!isHeader)
+//            {
+//                trp = DNA_UNPACK[s];
+//
+//                if (trp[0] != 'X' && trp[1] != 'X' && trp[2] != 'X')      // ...
+//                {
+//                    cout << trp;
+//                }
+//                else if (trp[0] == 'X' && trp[1] != 'X' && trp[2] != 'X') // X..
+//                {
+//                    cout << penaltySym(decText[++j]);
+//                    cout << trp[1];
+//                    cout << trp[2];
+//                }
+//                else if (trp[0] != 'X' && trp[1] == 'X' && trp[2] != 'X') // .X.
+//                {
+//                    cout << trp[0];
+//                    cout << penaltySym(decText[++j]);
+//                    cout << trp[2];
+//                }
+//                else if (trp[0] == 'X' && trp[1] == 'X' && trp[2] != 'X') // XX.
+//                {
+//                    cout << penaltySym(decText[++j]);
+//                    cout << penaltySym(decText[++j]);
+//                    cout << trp[2];
+//                }
+//                else if (trp[0] != 'X' && trp[1] != 'X' && trp[2] == 'X') // ..X
+//                {
+//                    cout << trp[0];
+//                    cout << trp[1];
+//                    cout << penaltySym(decText[++j]);
+//                }
+//                else if (trp[0] == 'X' && trp[1] != 'X' && trp[2] == 'X') // X.X
+//                {
+//                    cout << penaltySym(decText[++j]);
+//                    cout << trp[1];
+//                    cout << penaltySym(decText[++j]);
+//                }
+//                else if (trp[0] != 'X' && trp[1] == 'X' && trp[2] == 'X') // .XX
+//                {
+//                    cout << trp[0];
+//                    cout << penaltySym(decText[++j]);
+//                    cout << penaltySym(decText[++j]);
+//                }
+//                else                                                      // XXX
+//                {
+//                    cout << penaltySym(decText[++j]);
+//                    cout << penaltySym(decText[++j]);
+//                    cout << penaltySym(decText[++j]);
+//                }
+//            }
+//        }
+
+
     }
 }
 
