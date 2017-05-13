@@ -18,7 +18,7 @@ using std::make_pair;
 
 htable_t QS_MAP;
 string*  QS_UNPACK;
-bool     QSLarge = false;
+//bool     QSLarge = false;
 string   QUALITY_SCORES;    // 40 values
 
 /*******************************************************************************
@@ -54,7 +54,7 @@ inline void buildQsHashTable (const string &QUALITY_SCORES, short keyLen)
                 ++elementNo;
             }
             break;
-
+            
         case 5:
             LOOP5(i, j, k, l, m, QSLen)
             {
@@ -66,7 +66,7 @@ inline void buildQsHashTable (const string &QUALITY_SCORES, short keyLen)
                 ++elementNo;
             }
             break;
-
+            
         case 7:
             LOOP7(i, j, k, l, m, n, o, QSLen)
             {
@@ -74,6 +74,42 @@ inline void buildQsHashTable (const string &QUALITY_SCORES, short keyLen)
                 element += QUALITY_SCORES[k];   element += QUALITY_SCORES[l];
                 element += QUALITY_SCORES[m];   element += QUALITY_SCORES[n];
                 element += QUALITY_SCORES[o];
+                
+                QS_MAP.insert(make_pair(element, elementNo));
+                ++elementNo;
+            }
+            break;
+            
+        case 4:
+            LOOP4(i, j, k, l, QSLen)
+            {
+                element  = QUALITY_SCORES[i];   element += QUALITY_SCORES[j];
+                element += QUALITY_SCORES[k];   element += QUALITY_SCORES[l];
+            
+                QS_MAP.insert(make_pair(element, elementNo));
+                ++elementNo;
+            }
+            break;
+            
+        case 6:
+            LOOP6(i, j, k, l, m, n, QSLen)
+            {
+                element  = QUALITY_SCORES[i];   element += QUALITY_SCORES[j];
+                element += QUALITY_SCORES[k];   element += QUALITY_SCORES[l];
+                element += QUALITY_SCORES[m];   element += QUALITY_SCORES[n];
+            
+                QS_MAP.insert(make_pair(element, elementNo));
+                ++elementNo;
+            }
+            break;
+            
+        case 8:
+            LOOP8(i, j, k, l, m, n, o, p, QSLen)
+            {
+                element  = QUALITY_SCORES[i];   element += QUALITY_SCORES[j];
+                element += QUALITY_SCORES[k];   element += QUALITY_SCORES[l];
+                element += QUALITY_SCORES[m];   element += QUALITY_SCORES[n];
+                element += QUALITY_SCORES[o];   element += QUALITY_SCORES[p];
                 
                 QS_MAP.insert(make_pair(element, elementNo));
                 ++elementNo;
@@ -151,7 +187,43 @@ inline void buildQsUnpack (const string &QUALITY_SCORES, short keyLen)
                 ++elementNo;
             }
             break;
-        
+            
+        case 4:
+            LOOP4(i, j, k, l, QSLen)
+            {
+                element  = QUALITY_SCORES[i];   element += QUALITY_SCORES[j];
+                element += QUALITY_SCORES[k];   element += QUALITY_SCORES[l];
+    
+                QS_UNPACK[elementNo] = element;
+                ++elementNo;
+            }
+            break;
+            
+        case 6:
+            LOOP6(i, j, k, l, m, n, QSLen)
+            {
+                element  = QUALITY_SCORES[i];   element += QUALITY_SCORES[j];
+                element += QUALITY_SCORES[k];   element += QUALITY_SCORES[l];
+                element += QUALITY_SCORES[m];   element += QUALITY_SCORES[n];
+    
+                QS_UNPACK[elementNo] = element;
+                ++elementNo;
+            }
+            break;
+            
+        case 8:
+            LOOP8(i, j, k, l, m, n, o, p, QSLen)
+            {
+                element  = QUALITY_SCORES[i];   element += QUALITY_SCORES[j];
+                element += QUALITY_SCORES[k];   element += QUALITY_SCORES[l];
+                element += QUALITY_SCORES[m];   element += QUALITY_SCORES[n];
+                element += QUALITY_SCORES[o];   element += QUALITY_SCORES[p];
+    
+                QS_UNPACK[elementNo] = element;
+                ++elementNo;
+            }
+            break;
+            
         default: break;
     }
     
@@ -173,13 +245,21 @@ inline unsigned short dnaPack (const string &dna)
 }
 
 /*******************************************************************************
-    index of each quality scores pack
+    index of each quality scores pack, when #QS > 40
 *******************************************************************************/
-inline unsigned short qsPack (const string &qs)
+inline unsigned short qsLargePack (const string &qs)
 {
     htable_t::const_iterator got = QS_MAP.find(qs);
     if (got == QS_MAP.end()) { cerr << "Error: key not found!\n"; return 0; }
     else  return got->second;
+}
+
+/*******************************************************************************
+    index of each quality scores pack
+*******************************************************************************/
+inline unsigned short qsPack (const string &qs)
+{
+    return QS_MAP.find(qs)->second;
 }
 
 /*******************************************************************************
@@ -234,9 +314,9 @@ inline string packSeq_3to1 (string seq)
 }
 
 /*******************************************************************************
-    encapsulate 3 quality scores in 2 bytes -- reduction ~1/3. 16 <= No.QS <= 40
+    encapsulate 3 quality scores in 2 bytes -- reduction ~1/3.       41 <= No.QS
 *******************************************************************************/
-inline string packQS_3to2 (string qs)
+inline string packQSLarge_3to2 (string qs)
 {
     string tuple, packedQs;
     const LL iterLen = qs.length() - 2;
@@ -247,38 +327,61 @@ inline string packQS_3to2 (string qs)
     // ASCII char after the last char in QUALITY_SCORES string
     const char XChar = (char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
     
-    if (!QSLarge)
+    for (x = 0; x < iterLen; x += 3)
     {
-        for (x = 0; x < iterLen; x += 3)
-        {
-            tuple.clear();   tuple = qs[x];   tuple += qs[x+1];   tuple += qs[x+2];
-            shortTuple = qsPack(tuple);
-            packedQs += (unsigned char) (shortTuple >> 8);      // left byte
-            packedQs += (unsigned char) (shortTuple & 0xFF);    // right byte
-        }
+        s0 = qs[x], s1 = qs[x+1], s2 = qs[x+2];
+        
+        tuple.clear();
+        tuple += (firstNotIn  = (QUALITY_SCORES.find(s0)==string::npos))
+                 ? XChar : s0;
+        tuple += (secondNotIn = (QUALITY_SCORES.find(s1)==string::npos))
+                 ? XChar : s1;
+        tuple += (thirdNotIn  = (QUALITY_SCORES.find(s2)==string::npos))
+                 ? XChar : s2;
+        
+        shortTuple = qsLargePack(tuple);
+        packedQs += (unsigned char) (shortTuple >> 8);      // left byte
+        packedQs += (unsigned char) (shortTuple & 0xFF);    // right byte
+        
+        if (firstNotIn)   packedQs += s0;
+        if (secondNotIn)  packedQs += s1;
+        if (thirdNotIn)   packedQs += s2;
     }
-    else
+    
+    // if seq len isn't multiple of 3, add (char) 255 before each sym
+    switch (qs.length() % 3)
     {
-        for (x = 0; x < iterLen; x += 3)
-        {
-            s0 = qs[x], s1 = qs[x+1], s2 = qs[x+2];
+        case 1:
+            packedQs += 255;   packedQs += qs[x];
+            break;
+        
+        case 2:
+            packedQs += 255;   packedQs += qs[x];
+            packedQs += 255;   packedQs += qs[x+1];
+            break;
+        
+        default: break;
+    }
+    
+    return packedQs;
+}
 
-            tuple.clear();
-            tuple += (firstNotIn  = (QUALITY_SCORES.find(s0)==string::npos))
-                     ? XChar : s0;
-            tuple += (secondNotIn = (QUALITY_SCORES.find(s1)==string::npos))
-                     ? XChar : s1;
-            tuple += (thirdNotIn  = (QUALITY_SCORES.find(s2)==string::npos))
-                     ? XChar : s2;
-
-            shortTuple = qsPack(tuple);
-            packedQs += (unsigned char) (shortTuple >> 8);      // left byte
-            packedQs += (unsigned char) (shortTuple & 0xFF);    // right byte
-
-            if (firstNotIn)   packedQs += s0;
-            if (secondNotIn)  packedQs += s1;
-            if (thirdNotIn)   packedQs += s2;
-        }
+/*******************************************************************************
+    encapsulate 3 quality scores in 2 bytes -- reduction ~1/3. 16 <= No.QS <= 40
+*******************************************************************************/
+inline string packQS_3to2 (string qs)
+{
+    string tuple, packedQs;
+    const LL iterLen = qs.length() - 2;
+    LL x = 0;
+    unsigned short shortTuple;
+    
+    for (x = 0; x < iterLen; x += 3)
+    {
+        tuple.clear();   tuple = qs[x];   tuple += qs[x+1];   tuple += qs[x+2];
+        shortTuple = qsPack(tuple);
+        packedQs += (byte) (shortTuple >> 8);      // left byte
+        packedQs += (byte) (shortTuple & 0xFF);    // right byte
     }
     
     // if seq len isn't multiple of 3, add (char) 255 before each sym
@@ -465,6 +568,209 @@ inline string packQS_7to1 (string qs)
     }
     
     return packedQs;
+}
+
+/*******************************************************************************
+    penalty symbol
+*******************************************************************************/
+inline char penaltySym (char c)
+{
+    return (c != (char) 254 && c != (char) 252) ? c : (char) 10; //(char)10='\n'
+}
+
+/*******************************************************************************
+    unpack
+    header
+    -- FASTQ
+*******************************************************************************/
+inline void unpackHdrFQ (string::iterator &i, string &plusMore)
+{
+    plusMore.clear();
+    for (; *i != (char) 254; ++i)
+    {
+        cout << *i;
+        plusMore += *i;
+    }
+    cout << '\n';
+}
+
+/*******************************************************************************
+    unpack 1 byte to 3 DNA bases -- FASTQ
+*******************************************************************************/
+inline void unpackSeqFQ_3to1 (string::iterator &i)
+{
+    string tpl;
+    
+    for (; *i != (char) 254; ++i)
+    {
+        //seq len not multiple of 3
+        if (*i == (char) 255) { cout << penaltySym(*(++i));  continue; }
+        
+        tpl = DNA_UNPACK[(byte) *i];
+        
+        if (tpl[0] != 'X' && tpl[1] != 'X' && tpl[2] != 'X')         // ...
+        {
+            cout << tpl;
+        }
+        else if (tpl[0] == 'X' && tpl[1] != 'X' && tpl[2] != 'X')    // X..
+        {
+            cout << penaltySym(*(++i));
+            cout << tpl[1];
+            cout << tpl[2];
+        }
+        else if (tpl[0] != 'X' && tpl[1] == 'X' && tpl[2] != 'X')    // .X.
+        {
+            cout << tpl[0];
+            cout << penaltySym(*(++i));
+            cout << tpl[2];
+        }
+        else if (tpl[0] == 'X' && tpl[1] == 'X' && tpl[2] != 'X')    // XX.
+        {
+            cout << penaltySym(*(++i));
+            cout << penaltySym(*(++i));
+            cout << tpl[2];
+        }
+        else if (tpl[0] != 'X' && tpl[1] != 'X' && tpl[2] == 'X')    // ..X
+        {
+            cout << tpl[0];
+            cout << tpl[1];
+            cout << penaltySym(*(++i));
+        }
+        else if (tpl[0] == 'X' && tpl[1] != 'X' && tpl[2] == 'X')    // X.X
+        {
+            cout << penaltySym(*(++i));
+            cout << tpl[1];
+            cout << penaltySym(*(++i));
+        }
+        else if (tpl[0] != 'X' && tpl[1] == 'X' && tpl[2] == 'X')    // .XX
+        {
+            cout << tpl[0];
+            cout << penaltySym(*(++i));
+            cout << penaltySym(*(++i));
+        }
+        else                                                         // XXX
+        {
+            cout << penaltySym(*(++i));
+            cout << penaltySym(*(++i));
+            cout << penaltySym(*(++i));
+        }
+    }
+    cout << '\n';
+}
+
+/*******************************************************************************
+    unpack quality scores by reading 2 byte by 2 byte, when #QS > 40
+*******************************************************************************/
+inline void unpackQSLarge_read2B (string::iterator &i)
+{
+    byte leftB, rightB;     // left and right bytes
+    unsigned short doubleB; // double byte
+    string tpl;             // tuplet
+    // ASCII char after the last char in QUALITY_SCORES string
+    const char XChar = (char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
+    //todo. test
+    cout<<(short)XChar;
+    cerr<<QUALITY_SCORES;
+    cerr<<"hi";
+    
+    
+    
+//    for (; *i != (char) 254; i += 2)
+//    {
+//        //seq len not multiple of keyLen
+//        if (*i == (char) 255) { cout << penaltySym(*(i+1));  continue; }
+//
+//        leftB   = *i;
+//        rightB  = *(i+1);
+//        doubleB = leftB<<8 | rightB;    // join two bytes
+//
+////        cout << QS_UNPACK[doubleB];
+//
+//        tpl = QS_UNPACK[doubleB];
+//
+//        if (tpl[0] != XChar && tpl[1] != XChar && tpl[2] != XChar)      // ...
+//        {
+//            cout << tpl;
+//        }
+////        else if (tpl[0] == 'X' && tpl[1] != 'X' && tpl[2] != 'X') // X..
+////        {
+////            cout << penaltySym(decText[++i]);
+////            cout << tpl[1];
+////            cout << tpl[2];
+////        }
+////        else if (tpl[0] != 'X' && tpl[1] == 'X' && tpl[2] != 'X') // .X.
+////        {
+////            cout << tpl[0];
+////            cout << penaltySym(decText[++i]);
+////            cout << tpl[2];
+////        }
+////        else if (tpl[0] == 'X' && tpl[1] == 'X' && tpl[2] != 'X') // XX.
+////        {
+////            cout << penaltySym(decText[++i]);
+////            cout << penaltySym(decText[++i]);
+////            cout << tpl[2];
+////        }
+////        else if (tpl[0] != 'X' && tpl[1] != 'X' && tpl[2] == 'X') // ..X
+////        {
+////            cout << tpl[0];
+////            cout << tpl[1];
+////            cout << penaltySym(decText[++i]);
+////        }
+////        else if (tpl[0] == 'X' && tpl[1] != 'X' && tpl[2] == 'X') // X.X
+////        {
+////            cout << penaltySym(decText[++i]);
+////            cout << tpl[1];
+////            cout << penaltySym(decText[++i]);
+////        }
+////        else if (tpl[0] != 'X' && tpl[1] == 'X' && tpl[2] == 'X') // .XX
+////        {
+////            cout << tpl[0];
+////            cout << penaltySym(decText[++i]);
+////            cout << penaltySym(decText[++i]);
+////        }
+////        else                                                      // XXX
+////        {
+////            cout << penaltySym(decText[++i]);
+////            cout << penaltySym(decText[++i]);
+////            cout << penaltySym(decText[++i]);
+////        }
+//
+//    }
+}
+
+/*******************************************************************************
+    unpack quality scores by reading 2 byte by 2 byte
+*******************************************************************************/
+inline void unpackQS_read2B (string::iterator &i)
+{
+    byte leftB, rightB;     // left and right bytes
+    unsigned short doubleB; // double byte
+    
+    for (; *i != (char) 254; i += 2)
+    {
+        //seq len not multiple of keyLen
+        if (*i == (char) 255) { cout << penaltySym(*(i+1));  continue; }
+        
+        leftB   = *i;
+        rightB  = *(i+1);
+        doubleB = leftB<<8 | rightB;    // join two bytes
+        
+        cout << QS_UNPACK[doubleB];
+    }
+}
+
+/*******************************************************************************
+    unpack quality scores by reading 1 byte by 1 byte
+*******************************************************************************/
+inline void unpackQS_read1B (string::iterator &i)
+{
+    for (; *i != (char) 254; ++i)
+    {
+        //seq len not multiple of keyLen
+        if (*i == (char) 255) { cout << penaltySym(*(++i));  continue; }
+        
+        cout << QS_UNPACK[(byte) *i];
+    }
 }
 
 #endif //CRYFA_PACK_H

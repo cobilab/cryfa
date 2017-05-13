@@ -28,7 +28,7 @@ private:
     inline char findFileType (std::ifstream&);                // FASTA or FASTQ?
     inline string getPassFromFile (const string&) const;      // get password
     inline void evalPassSize (const string&) const;           // eval. pass size
-    inline char penaltySym (char) const;                      // penalty symbol
+//    inline char penaltySym (char) const;                      // penalty symbol
 };
 
 #endif //CRYFA_ENDECRYPTO_H
