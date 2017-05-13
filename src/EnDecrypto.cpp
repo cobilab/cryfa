@@ -205,8 +205,6 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
             if (getline(in, line).good())
             {
                 context += packQS(line) + (char) 254;
-//                //todo. test
-//                context += line + (char) 254;
             }
         }
         context += (char) 252;  // end of file
@@ -416,35 +414,20 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
         ++i;   // jump over '\n' or (char) 253
     
         const size_t qsRangeLen = qsRange.length();
-//        short keyLen;
+        short keyLen = 0;
         if (qsRangeLen > 15)                                // 16 <= #QS <= 40
         {
 //            !QSLarge ? buildQsHashTable(QUALITY_SCORES,   3)
 //                     : buildQsHashTable(QUALITY_SCORES_X, 3);
 //            packQS = packQS_3to2;
         }
-        else if (qsRangeLen > 6)                            // 7 <= #QS <= 15
-        {
-//            buildQsHashTable(QUALITY_SCORES, 2);
-//            packQS = packQS_2to1;
-        }
-        else if (qsRangeLen == 6 || qsRangeLen == 5
-                                 || qsRangeLen == 4)        // #QS = 4 or 5 or 6
-        {
-            buildQsUnpack(qsRange, 3);
-    
-//            packQS = packQS_3to1;
-        }
-        else if (qsRangeLen == 3)                           // #QS = 3
-        {
-//            buildQsHashTable(QUALITY_SCORES, 5);
-//            packQS = packQS_5to1;
-        }
-        else if (qsRangeLen == 2)                           // #QS = 2
-        {
-//            buildQsHashTable(QUALITY_SCORES, 7);
-//            packQS = packQS_7to1;
-        }
+        else if (qsRangeLen > 6)     keyLen = 2;            // 7 <= #QS <= 15 //todo. works
+        else if (qsRangeLen==6 || qsRangeLen==5 || qsRangeLen==4)    keyLen = 3;//todo. works
+        else if (qsRangeLen == 3)    keyLen = 5;            // #QS = 3
+        else if (qsRangeLen == 2)    keyLen = 7;            // #QS = 2
+        
+        // build table for unpacking
+        buildQsUnpack(qsRange, keyLen);
         
         while (i != decText.end())
         {
@@ -525,17 +508,10 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
                 //seq len not multiple of keyLen
                 if (*i == (char) 255) { cout << penaltySym(*(++i));  continue; }
                 
-                tpl = QS_UNPACK[(ULL) *i];
-    
-                cout << *i;
+//                tpl = QS_UNPACK[(ULL) *i];
+//                cout << tpl;
                 
-                
-                
-                
-                
-                
-                
-                
+                cout << QS_UNPACK[(byte) *i];
             }
             
             // check if reached the end of file

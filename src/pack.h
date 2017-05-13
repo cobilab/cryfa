@@ -55,17 +55,6 @@ inline void buildQsHashTable (const string &QUALITY_SCORES, short keyLen)
             }
             break;
 
-        case 4:
-            LOOP4(i, j, k, l, QSLen)
-            {
-                element  = QUALITY_SCORES[i];   element += QUALITY_SCORES[j];
-                element += QUALITY_SCORES[k];   element += QUALITY_SCORES[l];
-                
-                QS_MAP.insert(make_pair(element, elementNo));
-                ++elementNo;
-            }
-            break;
-
         case 5:
             LOOP5(i, j, k, l, m, QSLen)
             {
@@ -78,13 +67,13 @@ inline void buildQsHashTable (const string &QUALITY_SCORES, short keyLen)
             }
             break;
 
-        case 8:
-            LOOP8(i, j, k, l, m, n, o, p, QSLen)
+        case 7:
+            LOOP7(i, j, k, l, m, n, o, QSLen)
             {
                 element  = QUALITY_SCORES[i];   element += QUALITY_SCORES[j];
                 element += QUALITY_SCORES[k];   element += QUALITY_SCORES[l];
                 element += QUALITY_SCORES[m];   element += QUALITY_SCORES[n];
-                element += QUALITY_SCORES[o];   element += QUALITY_SCORES[p];
+                element += QUALITY_SCORES[o];
                 
                 QS_MAP.insert(make_pair(element, elementNo));
                 ++elementNo;
@@ -137,17 +126,6 @@ inline void buildQsUnpack (const string &QUALITY_SCORES, short keyLen)
                 ++elementNo;
             }
             break;
-
-        case 4:
-            LOOP4(i, j, k, l, QSLen)
-            {
-                element  = QUALITY_SCORES[i];   element += QUALITY_SCORES[j];
-                element += QUALITY_SCORES[k];   element += QUALITY_SCORES[l];
-    
-                QS_UNPACK[elementNo] = element;
-                ++elementNo;
-            }
-            break;
             
         case 5:
             LOOP5(i, j, k, l, m, QSLen)
@@ -161,13 +139,13 @@ inline void buildQsUnpack (const string &QUALITY_SCORES, short keyLen)
             }
             break;
             
-        case 8:
-            LOOP8(i, j, k, l, m, n, o, p, QSLen)
+        case 7:
+            LOOP7(i, j, k, l, m, n, o, QSLen)
             {
                 element  = QUALITY_SCORES[i];   element += QUALITY_SCORES[j];
                 element += QUALITY_SCORES[k];   element += QUALITY_SCORES[l];
                 element += QUALITY_SCORES[m];   element += QUALITY_SCORES[n];
-                element += QUALITY_SCORES[o];   element += QUALITY_SCORES[p];
+                element += QUALITY_SCORES[o];
     
                 QS_UNPACK[elementNo] = element;
                 ++elementNo;

@@ -39,6 +39,11 @@ typedef std::unordered_map<string, ULL> htable_t;
 #define LOOP3(i,j,k,N)       LOOP(i,N) LOOP(j,N) LOOP(k,N)
 #define LOOP4(i,j,k,l,N)     LOOP(i,N) LOOP(j,N) LOOP(k,N) LOOP(l,N)
 #define LOOP5(i,j,k,l,m,N)   LOOP(i,N) LOOP(j,N) LOOP(k,N) LOOP(l,N) LOOP(m,N)
+#define LOOP6(i,j,k,l,m,n,N) LOOP(i,N) LOOP(j,N) LOOP(k,N) LOOP(l,N) LOOP(m,N) \
+                             LOOP(n,N)
+#define LOOP7(i,j,k,l,m,n,\
+                    o,N)     LOOP(i,N) LOOP(j,N) LOOP(k,N) LOOP(l,N) LOOP(m,N) \
+                             LOOP(n,N) LOOP(o,N)
 #define LOOP8(i,j,k,l,m,n,\
                     o,p,N)   LOOP(i,N) LOOP(j,N) LOOP(k,N) LOOP(l,N) LOOP(m,N) \
                              LOOP(n,N) LOOP(o,N) LOOP(p,N)
