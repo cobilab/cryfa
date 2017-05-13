@@ -28,16 +28,20 @@ using CryptoPP::StreamTransformationFilter;
 EnDecrypto::EnDecrypto () {}
 
 /*******************************************************************************
-    encrypt FASTA.
+    encrypt.
     reserved symbols:
     FASTA:
         (char) 255:  penalty if sequence length isn't multiple of 3
         (char) 254:  end of each sequence line
         (char) 253:  instead of '>' in header
         (char) 252:  instead of empty line
+    FASTQ:
+        (char) 255:  penalty if sequence length isn't multiple of 3
+        (char) 254:  end of each line
+        (char) 253:  if third line contains only +
 *******************************************************************************/
-void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
-                            const string &keyFileName)
+void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
+                          const string &keyFileName)
 {
     ifstream in(argv[argc-1]);
     const bool FASTA = (findFileType(in) == 'A');
@@ -97,19 +101,27 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
     else //if (FASTQ)
     {
         string QUALITY_SCORES_X;    // extended QUALITY_SCORES
+        bool justPlus = true;       // if third line is just + or not
         
+        // check if the third line contains only +
+        in.ignore(LARGE_NUMBER, '\n');  // ignore header
+        in.ignore(LARGE_NUMBER, '\n');  // ignore seq
+        if (getline(in, line).good()) { if (line.length() > 1) justPlus=false; }
+        else { cerr << "Error: file corrupted.\n";    return; }
+        
+        // gather all quality scores
         while(!in.eof())
         {
-            in.ignore(LARGE_NUMBER, '\n');  // ignore header
-            in.ignore(LARGE_NUMBER, '\n');  // ignore seq
-            in.ignore(LARGE_NUMBER, '\n');  // ignore +
             if (getline(in, line).good())   // quality score
             {
                 for (string::iterator i = line.begin(); i != line.end(); ++i)
                     if (qsRange.find_first_of(*i) == string::npos)
                         qsRange += *i;
             }
-//            else;
+            else { cerr << "Error: file corrupted.\n";    return; }
+            in.ignore(LARGE_NUMBER, '\n');  // ignore header
+            in.ignore(LARGE_NUMBER, '\n');  // ignore seq
+            in.ignore(LARGE_NUMBER, '\n');  // ignore +
         }
         in.clear();  in.seekg(0, std::ios::beg);            // beginning of file
         
@@ -159,7 +171,7 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
             buildQsHashTable(QUALITY_SCORES, 7);
             packQS = packQS_7to1;
         }
-    
+        
     
         //todo. nabas havijoori 'context+=' nevesht,
         //todo. chon va3 file 10GB mitereke
@@ -168,10 +180,13 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
 //        ULL lineNo = 0;
         
         // (char) 254 instead of '\n' at the end
-        context += qsRange;  context += "\n";    // to send qsRange to decryptor
+//        context += qsRange;  context += "\n";    // to send qsRange to decryptor
+        context += qsRange;  // send qsRange to decryptor
+        context += (justPlus ? (char) 253 : '\n'); //'+ or not just +' condition
         while(!in.eof())    // process 4 lines by 4 lines
         {
-            if (getline(in, line).good())    // header
+            // header
+            if (getline(in, line).good())
             {
 //                ++lineNo;
                 
@@ -180,25 +195,35 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
 //                context += (char) 253 + ..PACK(line) + (char) 254;
                 context += line + (char) 254;
             }
-            if (getline(in, line).good())    // sequence
+            
+            // sequence
+            if (getline(in, line).good())
             {
 //                ++lineNo;
                 
                 // (char) 254 instead of '\n' at the end
                 context += packSeq_3to1(line) + (char) 254;
             }
-            if (getline(in, line).good())    // +
-            {
-//                ++lineNo;
-                // todo. shayad beshe in khato ignore kard
-//                context += line;
-                context += line + (char) 254;
-            }
-            if (getline(in, line).good())    // quality score
+    
+            // +
+            in.ignore(LARGE_NUMBER, '\n');  // ignore +
+
+//            if (getline(in, line).good())
+//            {
+////                ++lineNo;
+//                // todo. shayad beshe in khato ignore kard
+////                context += line;
+//                context += line + (char) 254;
+//            }
+            
+            // quality score
+            if (getline(in, line).good())
             {
 //                ++lineNo;
                 
-                context += packQS(line) + (char) 254;
+//                context += packQS(line) + (char) 254;
+                //todo. test
+                context += line + (char) 254;
             }
         }
         
@@ -255,16 +280,20 @@ void EnDecrypto::encryptFA (int argc, char **argv, const int v_flag,
 }
 
 /*******************************************************************************
-    decrypt FASTA.
+    decrypt.
     reserved symbols:
     FASTA:
         (char) 255:  penalty if sequence length isn't multiple of 3
         (char) 254:  end of each sequence line
         (char) 253:  instead of '>' in header
         (char) 252:  instead of empty line
+    FASTQ:
+        (char) 255:  penalty if sequence length isn't multiple of 3
+        (char) 254:  end of each line
+        (char) 253:  if third line contains only +
 *******************************************************************************/
-void EnDecrypto::decryptFA (int argc, char **argv, const int v_flag,
-                            const string &keyFileName)
+void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
+                          const string &keyFileName)
 {
     // cryptography
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
@@ -293,9 +322,10 @@ void EnDecrypto::decryptFA (int argc, char **argv, const int v_flag,
     string watermark = "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
                                   + std::to_string(RELEASE_CRYFA) + "\n";
     
-    string::size_type i = cipherText.find(watermark);
-    if (i==string::npos) { cerr << "Error: invalid encrypted file!\n"; return; }
-    else  cipherText.erase(i, watermark.length());
+    string::size_type watermarkIdx = cipherText.find(watermark);
+    if (watermarkIdx == string::npos)
+    { cerr << "Error: invalid encrypted file!\n";    return; }
+    else  cipherText.erase(watermarkIdx, watermark.length());
     
     if (v_flag)
     {
@@ -314,7 +344,7 @@ void EnDecrypto::decryptFA (int argc, char **argv, const int v_flag,
     // process decrypted text
     bool isHeader = true;
     byte s;
-    string trp;     // triplet
+    string tuplet;     // triplet
     const ULL decTxtSize = decText.size() - 1;
     const bool FASTA = (decText[0] == (char) 127);
     const bool FASTQ = !FASTA; // const bool FASTQ = (decText[0] != (char) 127);
@@ -327,66 +357,66 @@ void EnDecrypto::decryptFA (int argc, char **argv, const int v_flag,
     if (FASTA)
     {
 //        for (ULL j = 0; j < decTxtSize; ++j)
-        for (ULL j = 1; j < decTxtSize; ++j)    // decText[0] already used
+        for (ULL i = 1; i < decTxtSize; ++i)    // decText[0] already used
         {
-            s = (byte) decText[j];
+            s = (byte) decText[i];
             //empty line OR end of each seq line
             if (s == 252 || (s == 254 && !isHeader)) { cout << '\n'; }
             //seq len not multiple of 3
-            else if (s == 255) { cout << penaltySym(decText[++j]); }
+            else if (s == 255) { cout << penaltySym(decText[++i]); }
             // header
             else if (s == 253) { cout << '>';  isHeader = true; }
             else if (isHeader) { cout << s; if (s == '\n') isHeader = false; }
             // seq lines
             else //if (!isHeader)
             {
-                trp = DNA_UNPACK[s];
+                tuplet = DNA_UNPACK[s];
             
-                if (trp[0] != 'X' && trp[1] != 'X' && trp[2] != 'X')      // ...
+                if (tuplet[0] != 'X' && tuplet[1] != 'X' && tuplet[2] != 'X')      // ...
                 {
-                    cout << trp;
+                    cout << tuplet;
                 }
-                else if (trp[0] == 'X' && trp[1] != 'X' && trp[2] != 'X') // X..
+                else if (tuplet[0] == 'X' && tuplet[1] != 'X' && tuplet[2] != 'X') // X..
                 {
-                    cout << penaltySym(decText[++j]);
-                    cout << trp[1];
-                    cout << trp[2];
+                    cout << penaltySym(decText[++i]);
+                    cout << tuplet[1];
+                    cout << tuplet[2];
                 }
-                else if (trp[0] != 'X' && trp[1] == 'X' && trp[2] != 'X') // .X.
+                else if (tuplet[0] != 'X' && tuplet[1] == 'X' && tuplet[2] != 'X') // .X.
                 {
-                    cout << trp[0];
-                    cout << penaltySym(decText[++j]);
-                    cout << trp[2];
+                    cout << tuplet[0];
+                    cout << penaltySym(decText[++i]);
+                    cout << tuplet[2];
                 }
-                else if (trp[0] == 'X' && trp[1] == 'X' && trp[2] != 'X') // XX.
+                else if (tuplet[0] == 'X' && tuplet[1] == 'X' && tuplet[2] != 'X') // XX.
                 {
-                    cout << penaltySym(decText[++j]);
-                    cout << penaltySym(decText[++j]);
-                    cout << trp[2];
+                    cout << penaltySym(decText[++i]);
+                    cout << penaltySym(decText[++i]);
+                    cout << tuplet[2];
                 }
-                else if (trp[0] != 'X' && trp[1] != 'X' && trp[2] == 'X') // ..X
+                else if (tuplet[0] != 'X' && tuplet[1] != 'X' && tuplet[2] == 'X') // ..X
                 {
-                    cout << trp[0];
-                    cout << trp[1];
-                    cout << penaltySym(decText[++j]);
+                    cout << tuplet[0];
+                    cout << tuplet[1];
+                    cout << penaltySym(decText[++i]);
                 }
-                else if (trp[0] == 'X' && trp[1] != 'X' && trp[2] == 'X') // X.X
+                else if (tuplet[0] == 'X' && tuplet[1] != 'X' && tuplet[2] == 'X') // X.X
                 {
-                    cout << penaltySym(decText[++j]);
-                    cout << trp[1];
-                    cout << penaltySym(decText[++j]);
+                    cout << penaltySym(decText[++i]);
+                    cout << tuplet[1];
+                    cout << penaltySym(decText[++i]);
                 }
-                else if (trp[0] != 'X' && trp[1] == 'X' && trp[2] == 'X') // .XX
+                else if (tuplet[0] != 'X' && tuplet[1] == 'X' && tuplet[2] == 'X') // .XX
                 {
-                    cout << trp[0];
-                    cout << penaltySym(decText[++j]);
-                    cout << penaltySym(decText[++j]);
+                    cout << tuplet[0];
+                    cout << penaltySym(decText[++i]);
+                    cout << penaltySym(decText[++i]);
                 }
                 else                                                      // XXX
                 {
-                    cout << penaltySym(decText[++j]);
-                    cout << penaltySym(decText[++j]);
-                    cout << penaltySym(decText[++j]);
+                    cout << penaltySym(decText[++i]);
+                    cout << penaltySym(decText[++i]);
+                    cout << penaltySym(decText[++i]);
                 }
             }
         }
@@ -396,97 +426,107 @@ void EnDecrypto::decryptFA (int argc, char **argv, const int v_flag,
     else // if (FASTQ)
     {
         string qsRange;
-        byte b;
-        for (b = 0; decText[b] != '\n'; ++b)   qsRange += decText[b];
-    
-        ULL j;
-        for (j = b+1; decText[j] != (char) 254; ++j)  // header
+        bool justPlus = true;
+        string plusMore;
+        string tpl;     // tuplet
+        string::iterator i = decText.begin();
+        
+        // collection of all quality scores
+        for (; *i != '\n' && *i != (char) 253; ++i)     qsRange += *i;
+        if (*i == '\n')  justPlus = false;
+        ++i;   // jump over '\n' or (char) 253
+        while (i != decText.end())
         {
-            s = (byte) decText[j];
-            //...
-        }
-        for (j = j+1; decText[j] != (char) 254; ++j)  // sequence
-        {
-            s = (byte) decText[j];
-            //...
-        }
-        for (j = j+1; decText[j] != (char) 254; ++j)  // +
-        {
-            s = (byte) decText[j];
-            //...
-        }
-        for (j = j+1; decText[j] != (char) 254; ++j)  // quality score
-        {
-            s = (byte) decText[j];
-            //...
-        }
-    
-//        for (ULL j = b+1; j < decTxtSize; ++j)    // decText[0] already used
-//        {
-//            s = (byte) decText[j];
-//            //empty line OR end of each seq line
-//            if (s == 252 || (s == 254 && !isHeader)) { cout << '\n'; }
-//                //seq len not multiple of 3
-//            else if (s == 255) { cout << penaltySym(decText[++j]); }
-//                // header
-//            else if (s == 253) { cout << '>';  isHeader = true; }
-//            else if (isHeader) { cout << s; if (s == '\n') isHeader = false; }
-//                // seq lines
-//            else //if (!isHeader)
+            // header
+            for (; *i != (char) 254; ++i)
+            {
+//                cout << *i;
+                cout << (plusMore += *i);
+            }
+            cout << '\n';
+            ++i;   // jump over '(char) 254'
+            
+            // sequence
+            for (; *i != (char) 254; ++i)
+            {
+                //seq len not multiple of 3
+                if (*i == (char) 255) { cout << penaltySym(*(++i));  continue; }
+                
+                tpl = DNA_UNPACK[(byte) *i];
+
+                if (tpl[0] != 'X' && tpl[1] != 'X' && tpl[2] != 'X')      // ...
+                {
+                    cout << tpl;
+                }
+                else if (tpl[0] == 'X' && tpl[1] != 'X' && tpl[2] != 'X') // X..
+                {
+                    cout << penaltySym(*(++i));
+                    cout << tpl[1];
+                    cout << tpl[2];
+                }
+                else if (tpl[0] != 'X' && tpl[1] == 'X' && tpl[2] != 'X') // .X.
+                {
+                    cout << tpl[0];
+                    cout << penaltySym(*(++i));
+                    cout << tpl[2];
+                }
+                else if (tpl[0] == 'X' && tpl[1] == 'X' && tpl[2] != 'X') // XX.
+                {
+                    cout << penaltySym(*(++i));
+                    cout << penaltySym(*(++i));
+                    cout << tpl[2];
+                }
+                else if (tpl[0] != 'X' && tpl[1] != 'X' && tpl[2] == 'X') // ..X
+                {
+                    cout << tpl[0];
+                    cout << tpl[1];
+                    cout << penaltySym(*(++i));
+                }
+                else if (tpl[0] == 'X' && tpl[1] != 'X' && tpl[2] == 'X') // X.X
+                {
+                    cout << penaltySym(*(++i));
+                    cout << tpl[1];
+                    cout << penaltySym(*(++i));
+                }
+                else if (tpl[0] != 'X' && tpl[1] == 'X' && tpl[2] == 'X') // .XX
+                {
+                    cout << tpl[0];
+                    cout << penaltySym(*(++i));
+                    cout << penaltySym(*(++i));
+                }
+                else                                                      // XXX
+                {
+                    cout << penaltySym(*(++i));
+                    cout << penaltySym(*(++i));
+                    cout << penaltySym(*(++i));
+                }
+            }
+            cout << '\n';
+            ++i;   // jump over '(char) 254'
+
+            // +
+            //todo. aval chek kon faghat + e ya na.
+            //todo. tu encode jash (char) 254 bezar. tu decode tebghe hamooni ke
+            //todo. chek karde boodi, jaygozin kon
+            cout << (justPlus ?  : plusMore);
+//            for (; *i != (char) 254; ++i)
 //            {
-//                trp = DNA_UNPACK[s];
-//
-//                if (trp[0] != 'X' && trp[1] != 'X' && trp[2] != 'X')      // ...
-//                {
-//                    cout << trp;
-//                }
-//                else if (trp[0] == 'X' && trp[1] != 'X' && trp[2] != 'X') // X..
-//                {
-//                    cout << penaltySym(decText[++j]);
-//                    cout << trp[1];
-//                    cout << trp[2];
-//                }
-//                else if (trp[0] != 'X' && trp[1] == 'X' && trp[2] != 'X') // .X.
-//                {
-//                    cout << trp[0];
-//                    cout << penaltySym(decText[++j]);
-//                    cout << trp[2];
-//                }
-//                else if (trp[0] == 'X' && trp[1] == 'X' && trp[2] != 'X') // XX.
-//                {
-//                    cout << penaltySym(decText[++j]);
-//                    cout << penaltySym(decText[++j]);
-//                    cout << trp[2];
-//                }
-//                else if (trp[0] != 'X' && trp[1] != 'X' && trp[2] == 'X') // ..X
-//                {
-//                    cout << trp[0];
-//                    cout << trp[1];
-//                    cout << penaltySym(decText[++j]);
-//                }
-//                else if (trp[0] == 'X' && trp[1] != 'X' && trp[2] == 'X') // X.X
-//                {
-//                    cout << penaltySym(decText[++j]);
-//                    cout << trp[1];
-//                    cout << penaltySym(decText[++j]);
-//                }
-//                else if (trp[0] != 'X' && trp[1] == 'X' && trp[2] == 'X') // .XX
-//                {
-//                    cout << trp[0];
-//                    cout << penaltySym(decText[++j]);
-//                    cout << penaltySym(decText[++j]);
-//                }
-//                else                                                      // XXX
-//                {
-//                    cout << penaltySym(decText[++j]);
-//                    cout << penaltySym(decText[++j]);
-//                    cout << penaltySym(decText[++j]);
-//                }
+//                cout << *i;
 //            }
-//        }
+//            cout<<;//plus
+            cout << '\n';
+            ++i;   // jump over '(char) 254'
+            break;
 
-
-    }
+            // quality scores
+            for (; *i != (char) 254; ++i)
+            {
+//                cout << *i;
+            }
+            cout << '\n';
+            ++i;   // jump over '(char) 254'
+        }
+    }   // end - FASTQ
 }
 
 /*******************************************************************************

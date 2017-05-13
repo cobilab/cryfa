@@ -113,7 +113,7 @@ int main (int argc, char* argv[])
     if (d_flag)
     {
         cerr << "Decrypting...\n";
-        crpt.decryptFA(argc, argv, v_flag, KeyFileName);
+        crpt.decrypt(argc, argv, v_flag, KeyFileName);
 
         // stop timer
         high_resolution_clock::time_point finishTime =
@@ -127,7 +127,7 @@ int main (int argc, char* argv[])
     }
 
     cerr << "Encrypting...\n";
-    crpt.encryptFA(argc, argv, v_flag, KeyFileName);
+    crpt.encrypt(argc, argv, v_flag, KeyFileName);
 
     // stop timer
     high_resolution_clock::time_point finishTime = high_resolution_clock::now();
