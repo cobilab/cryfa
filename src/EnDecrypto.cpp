@@ -130,14 +130,16 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
         
         std::function<string(string)> packQS;               // function wrapper
         const size_t qsRangeLen = qsRange.length();
-        if (qsRangeLen > 40)              // if len > 40 filter the last 40 ones
+//        if (qsRangeLen > 40)              // if len > 40 filter the last 40 ones
+        if (qsRangeLen > 39)              // if len > 39 filter the last 39 ones
         {
 //            QSLarge = true;
-            QUALITY_SCORES   = qsRange.substr(qsRangeLen - 40);
+//            QUALITY_SCORES   = qsRange.substr(qsRangeLen - 40);
+            QUALITY_SCORES   = qsRange.substr(qsRangeLen - 39);
             QUALITY_SCORES_X = QUALITY_SCORES;
             QUALITY_SCORES_X +=  // ASCII char after last char in QUALITY_SCORES
                     (char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
-    
+
             buildQsHashTable(QUALITY_SCORES_X, 3);
             packQS = packQSLarge_3to2;
         }
@@ -145,7 +147,8 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
         {
             QUALITY_SCORES = qsRange;
             
-            if (qsRangeLen > 15)                            // 16 <= #QS <= 40
+//            if (qsRangeLen > 15)                            // 16 <= #QS <= 40
+            if (qsRangeLen > 15)                            // 16 <= #QS <= 39
             {
                 buildQsHashTable(QUALITY_SCORES, 3);
                 packQS = packQS_3to2;
@@ -174,7 +177,6 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
         
         // todo. test
         cerr << qsRange << '\n' << qsRange.length() << '\n';
-//        cerr << QUALITY_SCORES<<'\n';
         
     
         //todo. nabas havijoori 'context+=' nevesht,
@@ -211,10 +213,6 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
             }
         }
         context += (char) 252;  // end of file
-        
-        // todo. test
-//        cout << context;
-//        cerr << context;
     }
     
     in.close();
@@ -415,51 +413,78 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
         for (; *i != '\n' && *i != (char) 253; ++i)     qsRange += *i; // all qs
         if (*i == '\n')  justPlus = false;              // if 3rd line is just +
         ++i;   // jump over '\n' or (char) 253
-    
+        
         const size_t qsRangeLen = qsRange.length();
         short keyLen = 0;
-        if      (qsRangeLen > 40)    keyLen = 3;            // 41 <= #QS
-        else if (qsRangeLen > 15)    keyLen = 3;            // 16 <= #QS <= 40//todo. works
-        else if (qsRangeLen > 6)     keyLen = 2;            // 7 <= #QS <= 15 //todo. works
-        else if (qsRangeLen==6 || qsRangeLen==5 || qsRangeLen==4)    keyLen = 3;//todo. works
-        else if (qsRangeLen == 3)    keyLen = 5;            // #QS = 3//todo. works
-        else if (qsRangeLen == 2)    keyLen = 7;            // #QS = 2//todo. works
+        if      (qsRangeLen > 39)    keyLen = 3;              // 40 <= #QS
+        else if (qsRangeLen > 15)    keyLen = 3;              // 16 <= #QS <= 39
+        else if (qsRangeLen > 6)     keyLen = 2;              // 7 <= #QS <= 15
+        else if (qsRangeLen==6 || qsRangeLen==5 || qsRangeLen==4)    keyLen = 3;
+        else if (qsRangeLen == 3)    keyLen = 5;              // #QS = 3
+        else if (qsRangeLen == 2)    keyLen = 7;              // #QS = 2
         
-        // build table for unpacking
-        buildQsUnpack(qsRange, keyLen);
-        
-        if (qsRangeLen > 40)
+        if (qsRangeLen > 39)
         {
+            const string quality_scores = qsRange.substr(qsRangeLen - 39);
+            // ASCII char after the last char in quality_scores string
+            const char XChar =
+                    (char) (quality_scores[quality_scores.size()-1] + 1);
+            string quality_scores_X = quality_scores;   quality_scores_X+=XChar;
+            
+            buildQsUnpack(quality_scores_X, keyLen); //build table for unpacking
+            
             while (i != decText.end())
             {
-                unpackHdrFQ(i, plusMore);    ++i;                  // header
-                unpackSeqFQ_3to1(i);                               // sequence
-                cout<< (justPlus ? "+" : "+"+plusMore.substr(1)) << '\n';  ++i; // +
-                unpackQSLarge_read2B(i);                           // quality scores
-                break;
-//                if (*(++i) == (char) 252) break;   else cout << '\n'; // end of file
-            }
-        }
-        else if (qsRangeLen > 15)
-        {
-            while (i != decText.end())
-            {
-                unpackHdrFQ(i, plusMore);    ++i;                  // header
-                unpackSeqFQ_3to1(i);                               // sequence
-                cout<< (justPlus ? "+" : "+"+plusMore.substr(1)) << '\n';  ++i; // +
-                unpackQS_read2B(i);                                // quality scores
-                if (*(++i) == (char) 252) break;   else cout << '\n'; // end of file
+                // header
+                unpackHdrFQ(i, plusMore);    ++i;
+                // sequence
+                unpackSeqFQ_3to1(i);
+                // +
+                cout << (justPlus ? "+" : "+"+plusMore.substr(1)) << '\n';  ++i;
+                // quality scores
+                unpackQSLarge_read2B(i, XChar);
+                //end of file
+                if (*(++i) == (char) 252) break;    else cout << '\n';
             }
         }
         else
         {
-            while (i != decText.end())
+            buildQsUnpack(qsRange, keyLen);     // build table for unpacking
+    
+            if (qsRangeLen > 15)
             {
-                unpackHdrFQ(i, plusMore);    ++i;                  // header
-                unpackSeqFQ_3to1(i);                               // sequence
-                cout<< (justPlus ? "+" : "+"+plusMore.substr(1)) << '\n';  ++i; // +
-                unpackQS_read1B(i);                                // quality scores
-                if (*(++i) == (char) 252) break;   else cout << '\n'; // end of file
+                while (i != decText.end())
+                {
+                    // header
+                    unpackHdrFQ(i, plusMore);    ++i;
+                    // sequence
+                    unpackSeqFQ_3to1(i);
+                    // +
+                    cout<<(justPlus ? "+" : "+"+plusMore.substr(1)) <<'\n'; ++i;
+                    // quality scores
+                    //todo. function wrapper:
+                    //todo. unpackQS_read2B(i) and unpackQS_read1B
+                    //todo. this and next else
+                    unpackQS_read2B(i);
+                    // end of file
+                    if (*(++i) == (char) 252) break;    else cout << '\n';
+                }
+            }
+            else
+            {
+                while (i != decText.end())
+                {
+                    // header
+                    unpackHdrFQ(i, plusMore);    ++i;
+                    // sequence
+                    unpackSeqFQ_3to1(i);
+                    // +
+                    cout<<(justPlus ? "+" : "+"+plusMore.substr(1)) <<'\n'; ++i;
+                    // quality scores
+                    unpackQS_read1B(i);
+                    // end of file
+                    if (*(++i) == (char) 252) break;    else cout << '\n';
+                }
             }
         }
     }   // end--FASTQ

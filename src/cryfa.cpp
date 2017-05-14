@@ -108,7 +108,7 @@ int main (int argc, char* argv[])
                 break;
         }
     }
-
+    
     if (v_flag) cerr << "Verbose mode on.\n";
     if (d_flag)
     {
