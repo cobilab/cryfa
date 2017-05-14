@@ -464,7 +464,7 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
                     // quality scores
                     //todo. function wrapper:
                     //todo. unpackQS_read2B(i) and unpackQS_read1B
-                    //todo. this and next else
+                    //todo. this & next else
                     unpackQS_read2B(i);
                     // end of file
                     if (*(++i) == (char) 252) break;    else cout << '\n';
