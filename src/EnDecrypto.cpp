@@ -130,11 +130,8 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
         
         std::function<string(string)> packQS;               // function wrapper
         const size_t qsRangeLen = qsRange.length();
-//        if (qsRangeLen > 40)              // if len > 40 filter the last 40 ones
         if (qsRangeLen > 39)              // if len > 39 filter the last 39 ones
         {
-//            QSLarge = true;
-//            QUALITY_SCORES   = qsRange.substr(qsRangeLen - 40);
             QUALITY_SCORES   = qsRange.substr(qsRangeLen - 39);
             QUALITY_SCORES_X = QUALITY_SCORES;
             QUALITY_SCORES_X +=  // ASCII char after last char in QUALITY_SCORES
@@ -147,32 +144,20 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
         {
             QUALITY_SCORES = qsRange;
             
-//            if (qsRangeLen > 15)                            // 16 <= #QS <= 40
             if (qsRangeLen > 15)                            // 16 <= #QS <= 39
-            {
-                buildQsHashTable(QUALITY_SCORES, 3);
-                packQS = packQS_3to2;
-            }
+            { buildQsHashTable(QUALITY_SCORES, 3);    packQS = packQS_3to2; }
+            
             else if (qsRangeLen > 6)                        // 7 <= #QS <= 15
-            {
-                buildQsHashTable(QUALITY_SCORES, 2);
-                packQS = packQS_2to1;
-            }
+            { buildQsHashTable(QUALITY_SCORES, 2);    packQS = packQS_2to1; }
+            // #QS = 4 or 5 or 6
             else if (qsRangeLen == 6 || qsRangeLen == 5 || qsRangeLen == 4)
-            {                                               // #QS = 4 or 5 or 6
-                buildQsHashTable(QUALITY_SCORES, 3);
-                packQS = packQS_3to1;
-            }
+            { buildQsHashTable(QUALITY_SCORES, 3);    packQS = packQS_3to1; }
+            
             else if (qsRangeLen == 3)                       // #QS = 3
-            {
-                buildQsHashTable(QUALITY_SCORES, 5);
-                packQS = packQS_5to1;
-            }
+            { buildQsHashTable(QUALITY_SCORES, 5);    packQS = packQS_5to1; }
+            
             else if (qsRangeLen == 2)                       // #QS = 2
-            {
-                buildQsHashTable(QUALITY_SCORES, 7);
-                packQS = packQS_7to1;
-            }
+            { buildQsHashTable(QUALITY_SCORES, 7);    packQS = packQS_7to1; }
         }
         
         // todo. test
@@ -330,6 +315,7 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
     const ULL decTxtSize = decText.size() - 1;
     const bool FASTA = (decText[0] == (char) 127);
     const bool FASTQ = !FASTA; // const bool FASTQ = (decText[0] != (char) 127);
+    string::iterator i = decText.begin();
     
     // FASTA
     if (FASTA)
@@ -337,69 +323,112 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
         bool isHeader = true;
         byte s;
         
-        for (ULL i = 1; i < decTxtSize; ++i)    // decText[0] already used
+        ++i;    // jump over decText[0]
+        for (; i != decText.end(); ++i)
         {
-            s = (byte) decText[i];
+            s = (byte) *i;
             //empty line OR end of each seq line
             if (s == 252 || (s == 254 && !isHeader)) { cout << '\n'; }
-            //seq len not multiple of 3
-            else if (s == 255) { cout << penaltySym(decText[++i]); }
-            // header
+                //seq len not multiple of 3
+            else if (s == 255) { cout << penaltySym(*(++i)); }
+                // header
             else if (s == 253) { cout << '>';  isHeader = true; }
             else if (isHeader) { cout << s; if (s == '\n') isHeader = false; }
-            // seq lines
+                // seq lines
             else //if (!isHeader)
             {
                 tpl = DNA_UNPACK[s];
-            
+    
                 if (tpl[0] != 'X' && tpl[1] != 'X' && tpl[2] != 'X')      // ...
-                {
-                    cout << tpl;
-                }
+                { cout << tpl; }
+                
                 else if (tpl[0] == 'X' && tpl[1] != 'X' && tpl[2] != 'X') // X..
-                {
-                    cout << penaltySym(decText[++i]);
-                    cout << tpl[1];
-                    cout << tpl[2];
-                }
+                { cout << penaltySym(*(++i)) << tpl[1] << tpl[2]; }
+                
                 else if (tpl[0] != 'X' && tpl[1] == 'X' && tpl[2] != 'X') // .X.
-                {
-                    cout << tpl[0];
-                    cout << penaltySym(decText[++i]);
-                    cout << tpl[2];
-                }
+                { cout << tpl[0] << penaltySym(*(++i)) << tpl[2]; }
+                
                 else if (tpl[0] == 'X' && tpl[1] == 'X' && tpl[2] != 'X') // XX.
-                {
-                    cout << penaltySym(decText[++i]);
-                    cout << penaltySym(decText[++i]);
-                    cout << tpl[2];
-                }
+                { cout << penaltySym(*(++i)) << penaltySym(*(++i)) << tpl[2]; }
+                
                 else if (tpl[0] != 'X' && tpl[1] != 'X' && tpl[2] == 'X') // ..X
-                {
-                    cout << tpl[0];
-                    cout << tpl[1];
-                    cout << penaltySym(decText[++i]);
-                }
+                { cout << tpl[0] << tpl[1] << penaltySym(*(++i)); }
+                
                 else if (tpl[0] == 'X' && tpl[1] != 'X' && tpl[2] == 'X') // X.X
-                {
-                    cout << penaltySym(decText[++i]);
-                    cout << tpl[1];
-                    cout << penaltySym(decText[++i]);
-                }
+                { cout << penaltySym(*(++i)) << tpl[1] << penaltySym(*(++i)); }
+                
                 else if (tpl[0] != 'X' && tpl[1] == 'X' && tpl[2] == 'X') // .XX
-                {
-                    cout << tpl[0];
-                    cout << penaltySym(decText[++i]);
-                    cout << penaltySym(decText[++i]);
-                }
-                else                                                      // XXX
-                {
-                    cout << penaltySym(decText[++i]);
-                    cout << penaltySym(decText[++i]);
-                    cout << penaltySym(decText[++i]);
-                }
+                { cout << tpl[0] << penaltySym(*(++i)) << penaltySym(*(++i)); }
+                
+                else { cout << penaltySym(*(++i)) << penaltySym(*(++i))   // XXX
+                            << penaltySym(*(++i)); }
             }
         }
+
+        // OLD
+//        for (ULL i = 1; i < decTxtSize; ++i)    // decText[0] already used
+//        {
+//            s = (byte) decText[i];
+//            //empty line OR end of each seq line
+//            if (s == 252 || (s == 254 && !isHeader)) { cout << '\n'; }
+//            //seq len not multiple of 3
+//            else if (s == 255) { cout << penaltySym(decText[++i]); }
+//            // header
+//            else if (s == 253) { cout << '>';  isHeader = true; }
+//            else if (isHeader) { cout << s; if (s == '\n') isHeader = false; }
+//            // seq lines
+//            else //if (!isHeader)
+//            {
+//                tpl = DNA_UNPACK[s];
+//
+//                if (tpl[0] != 'X' && tpl[1] != 'X' && tpl[2] != 'X')      // ...
+//                {
+//                    cout << tpl;
+//                }
+//                else if (tpl[0] == 'X' && tpl[1] != 'X' && tpl[2] != 'X') // X..
+//                {
+//                    cout << penaltySym(decText[++i]);
+//                    cout << tpl[1];
+//                    cout << tpl[2];
+//                }
+//                else if (tpl[0] != 'X' && tpl[1] == 'X' && tpl[2] != 'X') // .X.
+//                {
+//                    cout << tpl[0];
+//                    cout << penaltySym(decText[++i]);
+//                    cout << tpl[2];
+//                }
+//                else if (tpl[0] == 'X' && tpl[1] == 'X' && tpl[2] != 'X') // XX.
+//                {
+//                    cout << penaltySym(decText[++i]);
+//                    cout << penaltySym(decText[++i]);
+//                    cout << tpl[2];
+//                }
+//                else if (tpl[0] != 'X' && tpl[1] != 'X' && tpl[2] == 'X') // ..X
+//                {
+//                    cout << tpl[0];
+//                    cout << tpl[1];
+//                    cout << penaltySym(decText[++i]);
+//                }
+//                else if (tpl[0] == 'X' && tpl[1] != 'X' && tpl[2] == 'X') // X.X
+//                {
+//                    cout << penaltySym(decText[++i]);
+//                    cout << tpl[1];
+//                    cout << penaltySym(decText[++i]);
+//                }
+//                else if (tpl[0] != 'X' && tpl[1] == 'X' && tpl[2] == 'X') // .XX
+//                {
+//                    cout << tpl[0];
+//                    cout << penaltySym(decText[++i]);
+//                    cout << penaltySym(decText[++i]);
+//                }
+//                else                                                      // XXX
+//                {
+//                    cout << penaltySym(decText[++i]);
+//                    cout << penaltySym(decText[++i]);
+//                    cout << penaltySym(decText[++i]);
+//                }
+//            }
+//        }
     }
     
     // FASTQ
@@ -408,7 +437,6 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
         string qsRange;
         bool justPlus = true;
         string plusMore;
-        string::iterator i = decText.begin();
         
         for (; *i != '\n' && *i != (char) 253; ++i)     qsRange += *i; // all qs
         if (*i == '\n')  justPlus = false;              // if 3rd line is just +
@@ -416,12 +444,21 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
         
         const size_t qsRangeLen = qsRange.length();
         short keyLen = 0;
+//        std::function<string(string::iterator&)> unpackQS;               // function wrapper
+    
         if      (qsRangeLen > 39)    keyLen = 3;              // 40 <= #QS
         else if (qsRangeLen > 15)    keyLen = 3;              // 16 <= #QS <= 39
         else if (qsRangeLen > 6)     keyLen = 2;              // 7 <= #QS <= 15
         else if (qsRangeLen==6 || qsRangeLen==5 || qsRangeLen==4)    keyLen = 3;
         else if (qsRangeLen == 3)    keyLen = 5;              // #QS = 3
         else if (qsRangeLen == 2)    keyLen = 7;              // #QS = 2
+
+//        if      (qsRangeLen > 39)    keyLen = 3;              // 40 <= #QS
+//        else if (qsRangeLen > 15)    keyLen = 3;              // 16 <= #QS <= 39
+//        else if (qsRangeLen > 6)     keyLen = 2;              // 7 <= #QS <= 15
+//        else if (qsRangeLen==6 || qsRangeLen==5 || qsRangeLen==4)    keyLen = 3;
+//        else if (qsRangeLen == 3)    keyLen = 5;              // #QS = 3
+//        else if (qsRangeLen == 2)    keyLen = 7;              // #QS = 2
         
         if (qsRangeLen > 39)
         {
@@ -435,14 +472,11 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
             
             while (i != decText.end())
             {
-                // header
-                unpackHdrFQ(i, plusMore);    ++i;
-                // sequence
-                unpackSeqFQ_3to1(i);
+                unpackHdrFQ(i, plusMore);    ++i;   // header
+                unpackSeqFQ_3to1(i);                // sequence
                 // +
                 cout << (justPlus ? "+" : "+"+plusMore.substr(1)) << '\n';  ++i;
-                // quality scores
-                unpackQSLarge_read2B(i, XChar);
+                unpackQSLarge_read2B(i, XChar);     // quality scores
                 //end of file
                 if (*(++i) == (char) 252) break;    else cout << '\n';
             }
@@ -455,17 +489,14 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
             {
                 while (i != decText.end())
                 {
-                    // header
-                    unpackHdrFQ(i, plusMore);    ++i;
-                    // sequence
-                    unpackSeqFQ_3to1(i);
+                    unpackHdrFQ(i, plusMore);    ++i;   // header
+                    unpackSeqFQ_3to1(i);                // sequence
                     // +
                     cout<<(justPlus ? "+" : "+"+plusMore.substr(1)) <<'\n'; ++i;
-                    // quality scores
                     //todo. function wrapper:
                     //todo. unpackQS_read2B(i) and unpackQS_read1B
                     //todo. this & next else
-                    unpackQS_read2B(i);
+                    unpackQS_read2B(i);                 // quality scores
                     // end of file
                     if (*(++i) == (char) 252) break;    else cout << '\n';
                 }
@@ -474,14 +505,11 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
             {
                 while (i != decText.end())
                 {
-                    // header
-                    unpackHdrFQ(i, plusMore);    ++i;
-                    // sequence
-                    unpackSeqFQ_3to1(i);
+                    unpackHdrFQ(i, plusMore);    ++i;   // header
+                    unpackSeqFQ_3to1(i);                // sequence
                     // +
                     cout<<(justPlus ? "+" : "+"+plusMore.substr(1)) <<'\n'; ++i;
-                    // quality scores
-                    unpackQS_read1B(i);
+                    unpackQS_read1B(i);                 // quality scores
                     // end of file
                     if (*(++i) == (char) 252) break;    else cout << '\n';
                 }
@@ -621,11 +649,3 @@ inline void EnDecrypto::evalPassSize (const string &pass) const
         exit(1);
     }
 }
-//
-///*******************************************************************************
-//    penalty symbol
-//*******************************************************************************/
-//inline char EnDecrypto::penaltySym (char c) const
-//{
-//    return (c != (char) 254 && c != (char) 252) ? c : (char) 10; //(char)10='\n'
-//}

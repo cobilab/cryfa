@@ -245,7 +245,7 @@ inline unsigned short dnaPack (const string &dna)
 }
 
 /*******************************************************************************
-    index of each quality scores pack, when #QS > 40
+    index of each quality scores pack, when #QS > 39
 *******************************************************************************/
 inline unsigned short qsLargePack (const string &qs)
 {
@@ -314,7 +314,7 @@ inline string packSeq_3to1 (string seq)
 }
 
 /*******************************************************************************
-    encapsulate 3 quality scores in 2 bytes -- reduction ~1/3.       41 <= No.QS
+    encapsulate 3 quality scores in 2 bytes -- reduction ~1/3.         40 <= #QS
 *******************************************************************************/
 inline string packQSLarge_3to2 (string qs)
 {
@@ -367,7 +367,7 @@ inline string packQSLarge_3to2 (string qs)
 }
 
 /*******************************************************************************
-    encapsulate 3 quality scores in 2 bytes -- reduction ~1/3. 16 <= No.QS <= 40
+    encapsulate 3 quality scores in 2 bytes -- reduction ~1/3.   16 <= #QS <= 39
 *******************************************************************************/
 inline string packQS_3to2 (string qs)
 {
@@ -403,7 +403,7 @@ inline string packQS_3to2 (string qs)
 }
 
 /*******************************************************************************
-    encapsulate 2 quality scores in 1 bytes -- reduction ~1/2.  7 <= No.QS <= 15
+    encapsulate 2 quality scores in 1 bytes -- reduction ~1/2.    7 <= #QS <= 15
 *******************************************************************************/
 inline string packQS_2to1 (string qs)
 {
@@ -427,7 +427,7 @@ inline string packQS_2to1 (string qs)
 }
 
 /*******************************************************************************
-    encapsulate 3 quality scores in 1 bytes -- reduction ~2/3.   No.QS = 4, 5, 6
+    encapsulate 3 quality scores in 1 bytes -- reduction ~2/3.     #QS = 4, 5, 6
 *******************************************************************************/
 inline string packQS_3to1 (string qs)
 {
@@ -460,7 +460,7 @@ inline string packQS_3to1 (string qs)
 }
 
 /*******************************************************************************
-    encapsulate 5 quality scores in 1 bytes -- reduction ~4/5.         No.QS = 3
+    encapsulate 5 quality scores in 1 bytes -- reduction ~4/5.           #QS = 3
 *******************************************************************************/
 inline string packQS_5to1 (string qs)
 {
@@ -507,7 +507,7 @@ inline string packQS_5to1 (string qs)
 }
 
 /*******************************************************************************
-    encapsulate 7 quality scores in 1 bytes -- reduction ~6/7.         No.QS = 2
+    encapsulate 7 quality scores in 1 bytes -- reduction ~6/7.           #QS = 2
 *******************************************************************************/
 inline string packQS_7to1 (string qs)
 {
@@ -607,59 +607,36 @@ inline void unpackSeqFQ_3to1 (string::iterator &i)
         if (*i == (char) 255) { cout << penaltySym(*(++i));  continue; }
         
         tpl = DNA_UNPACK[(byte) *i];
-        
+    
         if (tpl[0] != 'X' && tpl[1] != 'X' && tpl[2] != 'X')         // ...
-        {
             cout << tpl;
-        }
+            
         else if (tpl[0] == 'X' && tpl[1] != 'X' && tpl[2] != 'X')    // X..
-        {
-            cout << penaltySym(*(++i));
-            cout << tpl[1];
-            cout << tpl[2];
-        }
+            cout << penaltySym(*(++i)) << tpl[1] << tpl[2];
+            
         else if (tpl[0] != 'X' && tpl[1] == 'X' && tpl[2] != 'X')    // .X.
-        {
-            cout << tpl[0];
-            cout << penaltySym(*(++i));
-            cout << tpl[2];
-        }
+            cout << tpl[0] << penaltySym(*(++i)) << tpl[2];
+            
         else if (tpl[0] == 'X' && tpl[1] == 'X' && tpl[2] != 'X')    // XX.
-        {
-            cout << penaltySym(*(++i));
-            cout << penaltySym(*(++i));
-            cout << tpl[2];
-        }
+            cout << penaltySym(*(++i)) << penaltySym(*(++i)) << tpl[2];
+            
         else if (tpl[0] != 'X' && tpl[1] != 'X' && tpl[2] == 'X')    // ..X
-        {
-            cout << tpl[0];
-            cout << tpl[1];
-            cout << penaltySym(*(++i));
-        }
+            cout << tpl[0] << tpl[1] << penaltySym(*(++i));
+            
         else if (tpl[0] == 'X' && tpl[1] != 'X' && tpl[2] == 'X')    // X.X
-        {
-            cout << penaltySym(*(++i));
-            cout << tpl[1];
-            cout << penaltySym(*(++i));
-        }
+            cout << penaltySym(*(++i)) << tpl[1] << penaltySym(*(++i));
+            
         else if (tpl[0] != 'X' && tpl[1] == 'X' && tpl[2] == 'X')    // .XX
-        {
-            cout << tpl[0];
-            cout << penaltySym(*(++i));
-            cout << penaltySym(*(++i));
-        }
-        else                                                         // XXX
-        {
-            cout << penaltySym(*(++i));
-            cout << penaltySym(*(++i));
-            cout << penaltySym(*(++i));
-        }
+            cout << tpl[0] << penaltySym(*(++i)) << penaltySym(*(++i));
+            
+        else  cout << penaltySym(*(++i)) << penaltySym(*(++i))       // XXX
+                   << penaltySym(*(++i));
     }
     cout << '\n';
 }
 
 /*******************************************************************************
-    unpack quality scores by reading 2 byte by 2 byte, when #QS > 40
+    unpack quality scores by reading 2 byte by 2 byte, when #QS > 39
 *******************************************************************************/
 inline void unpackQSLarge_read2B (string::iterator &i, const char XChar)
 {
@@ -670,76 +647,37 @@ inline void unpackQSLarge_read2B (string::iterator &i, const char XChar)
     while (*i != (char) 254)
     {
         //seq len not multiple of keyLen
-        if (*i == (char) 255) { cout << penaltySym(*(i+1));  i+=2;  continue; }
+        if (*i == (char) 255) { cout << penaltySym(*(i+1));   i+=2;  continue; }
 
         leftB   = *i;
         rightB  = *(i+1);
         doubleB = leftB<<8 | rightB;    // join two bytes
-
+        
         tpl = QS_UNPACK[doubleB];
         
-        if (tpl[0] != XChar && tpl[1] != XChar && tpl[2] != XChar)      // ...
-        {
-            cout << tpl;
-            i += 2;
-        }
-        else if (tpl[0] == XChar && tpl[1] != XChar && tpl[2] != XChar) // X..
-        {
-//            cout << penaltySym(*(i+2));
-//            cout << tpl[1];
-//            cout << tpl[2];
-            cout << penaltySym(*(i+2)) << tpl[1] << tpl[2];
-            i += 3;
-        }
-        else if (tpl[0] != XChar && tpl[1] == XChar && tpl[2] != XChar) // .X.
-        {
-//            cout << tpl[0];
-//            cout << penaltySym(*(i+2));
-//            cout << tpl[2];
-            cout << tpl[0] << penaltySym(*(i+2)) << tpl[2];
-            i += 3;
-        }
-        else if (tpl[0] == XChar && tpl[1] == XChar && tpl[2] != XChar) // XX.
-        {
-//            cout << penaltySym(*(i+2));
-//            cout << penaltySym(*(i+3));
-//            cout << tpl[2];
-            cout << penaltySym(*(i+2)) << penaltySym(*(i+3)) << tpl[2];
-            i += 4;
-        }
-        else if (tpl[0] != XChar && tpl[1] != XChar && tpl[2] == XChar) // ..X
-        {
-//            cout << tpl[0];
-//            cout << tpl[1];
-//            cout << penaltySym(*(i+2));
-            cout << tpl[0] << tpl[1] << penaltySym(*(i+2));
-            i += 3;
-        }
-        else if (tpl[0] == XChar && tpl[1] != XChar && tpl[2] == XChar) // X.X
-        {
-//            cout << penaltySym(*(i+2));
-//            cout << tpl[1];
-//            cout << penaltySym(*(i+3));
-            cout << penaltySym(*(i+2)) << tpl[1] << penaltySym(*(i+3));
-            i += 4;
-        }
-        else if (tpl[0] != XChar && tpl[1] == XChar && tpl[2] == XChar) // .XX
-        {
-//            cout << tpl[0];
-//            cout << penaltySym(*(i+2));
-//            cout << penaltySym(*(i+3));
-            cout << tpl[0] << penaltySym(*(i+2)) << penaltySym(*(i+3));
-            i += 4;
-        }
-        else                                                            // XXX
-        {
-//            cout << penaltySym(*(i+2));
-//            cout << penaltySym(*(i+3));
-//            cout << penaltySym(*(i+4));
-            cout << penaltySym(*(i+2)) << penaltySym(*(i+3))
-                 << penaltySym(*(i+4));
-            i += 5;
-        }
+        if (tpl[0] != XChar && tpl[1] != XChar && tpl[2] != XChar)        // ...
+        { cout << tpl;                                                   i+=2; }
+        
+        else if (tpl[0] == XChar && tpl[1] != XChar && tpl[2] != XChar)   // X..
+        { cout << penaltySym(*(i+2)) << tpl[1] << tpl[2];                i+=3; }
+        
+        else if (tpl[0] != XChar && tpl[1] == XChar && tpl[2] != XChar)   // .X.
+        { cout << tpl[0] << penaltySym(*(i+2)) << tpl[2];                i+=3; }
+        
+        else if (tpl[0] == XChar && tpl[1] == XChar && tpl[2] != XChar)   // XX.
+        { cout << penaltySym(*(i+2)) << penaltySym(*(i+3)) << tpl[2];    i+=4; }
+        
+        else if (tpl[0] != XChar && tpl[1] != XChar && tpl[2] == XChar)   // ..X
+        { cout << tpl[0] << tpl[1] << penaltySym(*(i+2));                i+=3; }
+        
+        else if (tpl[0] == XChar && tpl[1] != XChar && tpl[2] == XChar)   // X.X
+        { cout << penaltySym(*(i+2)) << tpl[1] << penaltySym(*(i+3));    i+=4; }
+        
+        else if (tpl[0] != XChar && tpl[1] == XChar && tpl[2] == XChar)   // .XX
+        { cout << tpl[0] << penaltySym(*(i+2)) << penaltySym(*(i+3));    i+=4; }
+        
+        else { cout << penaltySym(*(i+2)) << penaltySym(*(i+3))           // XXX
+                    << penaltySym(*(i+4));                               i+=5; }
     }
 }
 
@@ -754,7 +692,7 @@ inline void unpackQS_read2B (string::iterator &i)
     for (; *i != (char) 254; i += 2)
     {
         //seq len not multiple of keyLen
-        if (*i == (char) 255) { cout << penaltySym(*(i+1));  continue; }
+        if (*i == (char) 255) { cout << penaltySym(*(i+1));    continue; }
         
         leftB   = *i;
         rightB  = *(i+1);
@@ -772,7 +710,7 @@ inline void unpackQS_read1B (string::iterator &i)
     for (; *i != (char) 254; ++i)
     {
         //seq len not multiple of keyLen
-        if (*i == (char) 255) { cout << penaltySym(*(++i));  continue; }
+        if (*i == (char) 255) { cout << penaltySym(*(++i));    continue; }
         
         cout << QS_UNPACK[(byte) *i];
     }

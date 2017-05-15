@@ -32,19 +32,6 @@ using std::setprecision;
 ////////////////////////////////////////////////////////////////////////////////
 int main (int argc, char* argv[])
 {
-    //todo. IMPORTANT
-//    unsigned short s = 4000;
-//    unsigned char c1 = s & 0xFF;
-//    unsigned char c2 = s >> 8;
-//    unsigned short m = c2<<8 | c1; // recover
-//
-////    cerr<<(short)c2<<' '<<(short)c1<<'\n';
-//    cerr << std::to_string(c2) << ' ' << std::to_string(c1);
-//    cerr << '\n' << m;
-    //todo. IMPORTANT
-
-
-
     // start timer
     high_resolution_clock::time_point startTime = high_resolution_clock::now();
 
