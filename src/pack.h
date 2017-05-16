@@ -132,211 +132,107 @@ inline void buildHashTable (htable_t &map, const string &strIn, short keyLen)
 }
 
 /*******************************************************************************
-    build table for unpacking headers
+    build table for unpacking
 *******************************************************************************/
-inline void buildHdrUnpack (const string &headers, short keyLen)
+inline void buildUnpack (const string &strIn, short keyLen, string* &unpack)
 {
-    const byte HdrLen = headers.length();
+    const byte strLen = strIn.length();
     ULL elementNo = 0;
     string element;
-    ULL arrSize = pow(HdrLen, keyLen);   // size of HDR_UNPACK
-    HDR_UNPACK = new string[arrSize];
-
-    switch (keyLen)
-    {
-        case 2:
-            LOOP2(i, j, HdrLen)
-            {
-                element = headers[i];   element += headers[j];
-
-                HDR_UNPACK[elementNo] = element;
-                ++elementNo;
-            }
-            break;
-
-        case 3:
-            LOOP3(i, j, k, HdrLen)
-            {
-                element  = headers[i];   element += headers[j];
-                element += headers[k];
-
-                HDR_UNPACK[elementNo] = element;
-                ++elementNo;
-            }
-            break;
-
-        case 5:
-            LOOP5(i, j, k, l, m, HdrLen)
-            {
-                element  = headers[i];   element += headers[j];
-                element += headers[k];   element += headers[l];
-                element += headers[m];
-
-                HDR_UNPACK[elementNo] = element;
-                ++elementNo;
-            }
-            break;
-
-        case 7:
-            LOOP7(i, j, k, l, m, n, o, HdrLen)
-            {
-                element  = headers[i];   element += headers[j];
-                element += headers[k];   element += headers[l];
-                element += headers[m];   element += headers[n];
-                element += headers[o];
-
-                HDR_UNPACK[elementNo] = element;
-                ++elementNo;
-            }
-            break;
-
-        case 4:
-            LOOP4(i, j, k, l, HdrLen)
-            {
-                element  = headers[i];   element += headers[j];
-                element += headers[k];   element += headers[l];
-
-                HDR_UNPACK[elementNo] = element;
-                ++elementNo;
-            }
-            break;
-
-        case 6:
-            LOOP6(i, j, k, l, m, n, HdrLen)
-            {
-                element  = headers[i];   element += headers[j];
-                element += headers[k];   element += headers[l];
-                element += headers[m];   element += headers[n];
-
-                HDR_UNPACK[elementNo] = element;
-                ++elementNo;
-            }
-            break;
-
-        case 8:
-            LOOP8(i, j, k, l, m, n, o, p, HdrLen)
-            {
-                element  = headers[i];   element += headers[j];
-                element += headers[k];   element += headers[l];
-                element += headers[m];   element += headers[n];
-                element += headers[o];   element += headers[p];
-
-                HDR_UNPACK[elementNo] = element;
-                ++elementNo;
-            }
-            break;
-
-        default: break;
-    }
-
-    // test
-//    for (int i = 0; i != arrSize; ++i)
-//        cerr << HDR_UNPACK[i] << '\n';
-}
-
-/*******************************************************************************
-    build table for unpacking quality scores
-*******************************************************************************/
-inline void buildQsUnpack (const string &quality_scores, short keyLen)
-{
-    const byte QSLen = quality_scores.length();
-    ULL elementNo = 0;
-    string element;
-    ULL arrSize = pow(QSLen, keyLen);   // size of QS_UNPACK
-    QS_UNPACK = new string[arrSize];
+    ULL arrSize = pow(strLen, keyLen);   // size of HDR_UNPACK
+    unpack = new string[arrSize];
     
     switch (keyLen)
     {
         case 2:
-            LOOP2(i, j, QSLen)
+            LOOP2(i, j, strLen)
             {
-                element = quality_scores[i];   element += quality_scores[j];
-                
-                QS_UNPACK[elementNo] = element;
+                element = strIn[i];   element += strIn[j];
+    
+                unpack[elementNo] = element;
                 ++elementNo;
             }
             break;
-            
+        
         case 3:
-            LOOP3(i, j, k, QSLen)
+            LOOP3(i, j, k, strLen)
             {
-                element  = quality_scores[i];   element += quality_scores[j];
-                element += quality_scores[k];
+                element  = strIn[i];   element += strIn[j];
+                element += strIn[k];
     
-                QS_UNPACK[elementNo] = element;
+                unpack[elementNo] = element;
                 ++elementNo;
             }
             break;
-            
+        
         case 5:
-            LOOP5(i, j, k, l, m, QSLen)
+            LOOP5(i, j, k, l, m, strLen)
             {
-                element  = quality_scores[i];   element += quality_scores[j];
-                element += quality_scores[k];   element += quality_scores[l];
-                element += quality_scores[m];
+                element  = strIn[i];   element += strIn[j];
+                element += strIn[k];   element += strIn[l];
+                element += strIn[m];
     
-                QS_UNPACK[elementNo] = element;
+                unpack[elementNo] = element;
                 ++elementNo;
             }
             break;
-            
+        
         case 7:
-            LOOP7(i, j, k, l, m, n, o, QSLen)
+            LOOP7(i, j, k, l, m, n, o, strLen)
             {
-                element  = quality_scores[i];   element += quality_scores[j];
-                element += quality_scores[k];   element += quality_scores[l];
-                element += quality_scores[m];   element += quality_scores[n];
-                element += quality_scores[o];
+                element  = strIn[i];   element += strIn[j];
+                element += strIn[k];   element += strIn[l];
+                element += strIn[m];   element += strIn[n];
+                element += strIn[o];
     
-                QS_UNPACK[elementNo] = element;
+                unpack[elementNo] = element;
                 ++elementNo;
             }
             break;
-            
+        
         case 4:
-            LOOP4(i, j, k, l, QSLen)
+            LOOP4(i, j, k, l, strLen)
             {
-                element  = quality_scores[i];   element += quality_scores[j];
-                element += quality_scores[k];   element += quality_scores[l];
+                element  = strIn[i];   element += strIn[j];
+                element += strIn[k];   element += strIn[l];
     
-                QS_UNPACK[elementNo] = element;
+                unpack[elementNo] = element;
                 ++elementNo;
             }
             break;
-            
+        
         case 6:
-            LOOP6(i, j, k, l, m, n, QSLen)
+            LOOP6(i, j, k, l, m, n, strLen)
             {
-                element  = quality_scores[i];   element += quality_scores[j];
-                element += quality_scores[k];   element += quality_scores[l];
-                element += quality_scores[m];   element += quality_scores[n];
+                element  = strIn[i];   element += strIn[j];
+                element += strIn[k];   element += strIn[l];
+                element += strIn[m];   element += strIn[n];
     
-                QS_UNPACK[elementNo] = element;
+                unpack[elementNo] = element;
                 ++elementNo;
             }
             break;
-            
+        
         case 8:
-            LOOP8(i, j, k, l, m, n, o, p, QSLen)
+            LOOP8(i, j, k, l, m, n, o, p, strLen)
             {
-                element  = quality_scores[i];   element += quality_scores[j];
-                element += quality_scores[k];   element += quality_scores[l];
-                element += quality_scores[m];   element += quality_scores[n];
-                element += quality_scores[o];   element += quality_scores[p];
+                element  = strIn[i];   element += strIn[j];
+                element += strIn[k];   element += strIn[l];
+                element += strIn[m];   element += strIn[n];
+                element += strIn[o];   element += strIn[p];
     
-                QS_UNPACK[elementNo] = element;
+                unpack[elementNo] = element;
                 ++elementNo;
             }
             break;
-            
+        
         default: break;
     }
     
     // test
 //    for (int i = 0; i != arrSize; ++i)
-//        cerr << QS_UNPACK[i] << '\n';
+//        cerr << unpack[i] << '\n';
 }
-
 
 //fqHeaderPack
 /*******************************************************************************
@@ -719,11 +615,6 @@ inline void unpackSeqFQ_3to1 (string::iterator &i)
 
 
 
-
-
-
-
-
 /*******************************************************************************
     unpack headers by reading 2 byte by 2 byte, when #hdr > 39
 *******************************************************************************/
@@ -818,6 +709,207 @@ inline void unpackHdrLarge_read2B (string::iterator &i, const char XChar,
     }
     cout << '\n';
 }
+
+
+
+
+
+
+
+
+
+
+/*******************************************************************************
+    unpack by reading 2 byte by 2 byte, when # > 39
+*******************************************************************************/
+inline string unpackLarge_read2B (string::iterator &i, const char XChar,
+                                  string* &unpack)
+{
+    byte leftB, rightB;     // left and right bytes
+    unsigned short doubleB; // double byte
+    string tpl;             // tuplet
+    string out;
+    
+//    plusMore.clear();
+    while (*i != (char) 254)
+    {
+        // hdr len not multiple of keyLen
+        if (*i == (char) 255)
+        {
+//            cout << penaltySym(*(i+1));
+            out += penaltySym(*(i+1));
+//            plusMore += penaltySym(*(i+1));
+            i += 2;
+            continue;
+        }
+        
+        leftB   = *i;
+        rightB  = *(i+1);
+        doubleB = leftB<<8 | rightB;    // join two bytes
+        
+        tpl = unpack[doubleB];
+        
+        if (tpl[0] != XChar && tpl[1] != XChar && tpl[2] != XChar)        // ...
+        {
+//            cout << tpl;
+            out += tpl;
+//            plusMore += tpl;
+            i += 2;
+        }
+        else if (tpl[0] == XChar && tpl[1] != XChar && tpl[2] != XChar)   // X..
+        {
+//            cout << penaltySym(*(i+2)) << tpl[1] << tpl[2];
+            out += penaltySym(*(i+2));
+            out += tpl[1];
+            out += tpl[2];
+//            plusMore += penaltySym(*(i+2));
+//            plusMore += tpl[1];
+//            plusMore += tpl[2];
+            i += 3;
+        }
+        else if (tpl[0] != XChar && tpl[1] == XChar && tpl[2] != XChar)   // .X.
+        {
+//            cout << tpl[0] << penaltySym(*(i+2)) << tpl[2];
+            out += tpl[0];
+            out += penaltySym(*(i+2));
+            out += tpl[2];
+//            plusMore += tpl[0];
+//            plusMore += penaltySym(*(i+2));
+//            plusMore += tpl[2];
+            i += 3;
+        }
+        else if (tpl[0] == XChar && tpl[1] == XChar && tpl[2] != XChar)   // XX.
+        {
+//            cout << penaltySym(*(i+2)) << penaltySym(*(i+3)) << tpl[2];
+            out += penaltySym(*(i+2));
+            out += penaltySym(*(i+3));
+            out += tpl[2];
+//            plusMore += penaltySym(*(i+2));
+//            plusMore += penaltySym(*(i+3));
+//            plusMore += tpl[2];
+            i += 4;
+        }
+        else if (tpl[0] != XChar && tpl[1] != XChar && tpl[2] == XChar)   // ..X
+        {
+//            cout << tpl[0] << tpl[1] << penaltySym(*(i+2));
+            out += tpl[0];
+            out += tpl[1];
+            out += penaltySym(*(i+2));
+//            plusMore += tpl[0];
+//            plusMore += tpl[1];
+//            plusMore += penaltySym(*(i+2));
+            i += 3;
+        }
+        else if (tpl[0] == XChar && tpl[1] != XChar && tpl[2] == XChar)   // X.X
+        {
+//            cout << penaltySym(*(i+2)) << tpl[1] << penaltySym(*(i+3));
+            out += penaltySym(*(i+2));
+            out += tpl[1];
+            out += penaltySym(*(i+3));
+//            plusMore += penaltySym(*(i+2));
+//            plusMore += tpl[1];
+//            plusMore += penaltySym(*(i+3));
+            i += 4;
+        }
+        else if (tpl[0] != XChar && tpl[1] == XChar && tpl[2] == XChar)   // .XX
+        {
+//            cout << tpl[0] << penaltySym(*(i+2)) << penaltySym(*(i+3));
+            out += tpl[0];
+            out += penaltySym(*(i+2));
+            out += penaltySym(*(i+3));
+//            plusMore += tpl[0];
+//            plusMore += penaltySym(*(i+2));
+//            plusMore += penaltySym(*(i+3));
+            i += 4;
+        }
+        else                                                              // XXX
+        {
+//            cout << penaltySym(*(i+2)) << penaltySym(*(i+3))
+//                 << penaltySym(*(i+4));
+            out += penaltySym(*(i+2));
+            out += penaltySym(*(i+3));
+            out += penaltySym(*(i+4));
+//            plusMore += penaltySym(*(i+2));
+//            plusMore += penaltySym(*(i+3));
+//            plusMore += penaltySym(*(i+4));
+            i += 5;
+        }
+    }
+//    cout << '\n';
+    out += '\n';
+    
+    return out;
+}
+
+/*******************************************************************************
+    unpack by reading 2 byte by 2 byte
+*******************************************************************************/
+inline string unpack_read2B (string::iterator &i, string* &unpack)
+{
+    byte leftB, rightB;     // left and right bytes
+    unsigned short doubleB; // double byte
+    string out;
+    
+//    plusMore.clear();
+    for (; *i != (char) 254; i += 2)
+    {
+        // hdr len not multiple of keyLen
+        if (*i == (char) 255)
+        {
+//            cout << penaltySym(*(i+1));
+            out += penaltySym(*(i+1));
+//            plusMore += penaltySym(*(i+1));
+            continue;
+        }
+        
+        leftB   = *i;
+        rightB  = *(i+1);
+        doubleB = leftB<<8 | rightB;    // join two bytes
+        
+//        cout << unpack[doubleB];
+        out += unpack[doubleB];
+//        plusMore += HDR_UNPACK[doubleB];
+    }
+//    cout << '\n';
+//    out += '\n';
+    
+    return out;
+}
+
+/*******************************************************************************
+    unpack by reading 1 byte by 1 byte
+*******************************************************************************/
+inline string unpack_read1B (string::iterator &i, string* &unpack)
+{
+    string out;
+//    plusMore.clear();
+    for (; *i != (char) 254; ++i)
+    {
+        // hdr len not multiple of keyLen
+        if (*i == (char) 255)
+        {
+//            cout << penaltySym(*(i+1));
+            out += penaltySym(*(i+1));
+//            plusMore += penaltySym(*(i+1));
+            continue;
+        }
+        
+//        cout << HDR_UNPACK[(byte) *i];
+        out += unpack[(byte) *i];
+//        plusMore += HDR_UNPACK[(byte) *i];
+    }
+//    cout << '\n';
+    out += '\n';
+    
+    return out;
+}
+
+
+
+
+
+
+
 
 /*******************************************************************************
     unpack headers by reading 2 byte by 2 byte

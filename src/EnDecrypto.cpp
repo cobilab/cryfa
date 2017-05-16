@@ -141,7 +141,7 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
         
         std::sort(qsRange.begin(),  qsRange.end());     // sort ASCII values
         std::sort(hdrRange.begin(), hdrRange.end());    // sort values
-    
+        
         using packHdrPointer = string (*)(string, string, htable_t&);  // function pointer
         packHdrPointer packHdr;
         using packQSPointer  = string (*)(string, string, htable_t&);  // function pointer
@@ -158,14 +158,14 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
             HEADERS_X = HEADERS;
             // ASCII char after last char in HEADERS
             HEADERS_X += (char) (HEADERS[HEADERS.size()-1] + 1);
-            
+
             buildHashTable(HDR_MAP, HEADERS_X, KEYLEN_CAT_5);
             packHdr = &packLarge_3to2;
         }
         else
         {
             HEADERS = hdrRange;
-            
+
             if (hrdRangeLen > MAX_CAT_4)            // cat 5
             {
                 buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_5);
@@ -235,12 +235,12 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
                 packQS = &pack_7to1;
             }
         }
-        
-        
+
+
         //todo. nabas havijoori 'context+=' nevesht,
         //todo. chon va3 file 10GB mitereke
         //todo. bas hame kara ro block by block anjam dad
-        
+
         string header_range, sequence_range;
         if (hrdRangeLen > MAX_CAT_5 && qsRangeLen > MAX_CAT_5)
         { header_range = HEADERS_X;    sequence_range = QUALITY_SCORES_X; }
@@ -250,7 +250,7 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
         { header_range = HEADERS;    sequence_range = QUALITY_SCORES_X; }
         else if (hrdRangeLen <= MAX_CAT_5 && qsRangeLen <= MAX_CAT_5)
         { header_range = HEADERS;    sequence_range = QUALITY_SCORES; }
-        
+
         context += hdrRange;                       // send hdrRange to decryptor
         context += (char) 254;                     // to detect hdrRange in dec.
         context += qsRange;                        // send qsRange to decryptor
@@ -260,18 +260,18 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
             if (getline(in, line).good())   // header
                 context += packHdr(line.substr(1), header_range, HDR_MAP)
                            + (char) 254;   // ignore '@'
-        
+
             if (getline(in, line).good())   // sequence
                 context += packSeq_3to1(line) + (char) 254;
-        
+
             in.ignore(LARGE_NUMBER, '\n');  // +. ignore
-        
+
             if (getline(in, line).good())   // quality score
                 context += packQS(line, sequence_range, QS_MAP) + (char) 254;
         }
         context += (char) 252;  // end of file
     }
-    
+
     in.close();
     
     // cryptography
@@ -450,10 +450,10 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
         string qsRange;
         string hdrRange;
         bool justPlus = true;
-
-        for (; *i != (char) 254; ++i)                  hdrRange += *i; // all hd
+        
+        for (; *i != (char) 254; ++i)    hdrRange += *i;              // all hdr
         ++i;    // jump over (char) 254
-        for (; *i != '\n' && *i != (char) 253; ++i)    qsRange  += *i; // all qs
+        for (; *i != '\n' && *i != (char) 253; ++i)    qsRange += *i; // all qs
         if (*i == '\n')  justPlus = false;              // if 3rd line is just +
         ++i;   // jump over '\n' or (char) 253
 
@@ -466,37 +466,47 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
         cerr << qsRange << '\n' << qsRange.length() << '\n';
         cerr << hdrRange << '\n' << hdrRange.length() << '\n';
     
+        using unpackHdrPointer = string (*)(string::iterator&, string* &); //function pointer
+        unpackHdrPointer unpackHdr;
+//        using unpackQSPointer  = string (*)(string::iterator&, string* &); //function pointer
+//        unpackQSPointer unpackQS;
+//        using unpackHdrPointer = void (*)(string::iterator&, string&); //function pointer
+//        unpackHdrPointer unpackHdr;
         using unpackQSPointer  = void (*)(string::iterator&); //function pointer
         unpackQSPointer unpackQS;
-        using unpackHdrPointer = void (*)(string::iterator&, string&); //function pointer
-        unpackHdrPointer unpackHdr;
+    
         // header
         if (hdrRangeLen > MAX_CAT_5)    keyLen_hdr = KEYLEN_CAT_5;
         else if (hdrRangeLen > MAX_CAT_4)       // cat 5
         {
             keyLen_hdr = KEYLEN_CAT_5;
-            unpackHdr = &unpackHdr_read2B;
+            unpackHdr = &unpack_read2B;
+//            unpackHdr = &unpackHdr_read2B;
         }
         else if (hdrRangeLen > MAX_CAT_3)       // cat 4
         {
             keyLen_hdr = KEYLEN_CAT_4;
-            unpackHdr = &unpackHdr_read1B;
+            unpackHdr = &unpack_read1B;
+//            unpackHdr = &unpackHdr_read1B;
         }
         else if (hdrRangeLen == MAX_CAT_3 || hdrRangeLen == MID_CAT_3
                   || hdrRangeLen == MIN_CAT_3)  // cat 3
         {
             keyLen_hdr = KEYLEN_CAT_3;
-            unpackHdr = &unpackHdr_read1B;
+            unpackHdr = &unpack_read1B;
+//            unpackHdr = &unpackHdr_read1B;
         }
         else if (hdrRangeLen == CAT_2)          // cat 2
         {
             keyLen_hdr = KEYLEN_CAT_2;
-            unpackHdr = &unpackHdr_read1B;
+            unpackHdr = &unpack_read1B;
+//            unpackHdr = &unpackHdr_read1B;
         }
         else if (hdrRangeLen == CAT_1)          // cat 1
         {
             keyLen_hdr = KEYLEN_CAT_1;
-            unpackHdr = &unpackHdr_read1B;
+            unpackHdr = &unpack_read1B;
+//            unpackHdr = &unpackHdr_read1B;
         }
         
         // quality score
@@ -504,30 +514,35 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
         else if (qsRangeLen > MAX_CAT_4)        // cat 5
         {
             keyLen_qs = KEYLEN_CAT_5;
+//            unpackQS = &unpack_read2B;
             unpackQS = &unpackQS_read2B;
         }
         else if (qsRangeLen > MAX_CAT_3)        // cat 4
         {
             keyLen_qs = KEYLEN_CAT_4;
+//            unpackQS = &unpack_read1B;
             unpackQS = &unpackQS_read1B;
         }
         else if (qsRangeLen == MAX_CAT_3 || qsRangeLen == MID_CAT_3
                   || qsRangeLen == MIN_CAT_3)   // cat 3
         {
             keyLen_qs = KEYLEN_CAT_3;
+//            unpackQS = &unpack_read1B;
             unpackQS = &unpackQS_read1B;
         }
         else if (qsRangeLen == CAT_2)           // cat 2
         {
             keyLen_qs = KEYLEN_CAT_2;
+//            unpackQS = &unpack_read1B;
             unpackQS = &unpackQS_read1B;
         }
         else if (qsRangeLen == CAT_1)           // cat 1
         {
             keyLen_qs = KEYLEN_CAT_1;
+//            unpackQS = &unpack_read1B;
             unpackQS = &unpackQS_read1B;
         }
-
+        
         string plusMore;
         if (hdrRangeLen > MAX_CAT_5 && qsRangeLen > MAX_CAT_5)
         {
@@ -542,16 +557,18 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
             headers_X += XChar_hdr;
             string quality_scores_X = quality_scores;
             quality_scores_X += XChar_qs;
-    
-            buildHdrUnpack(headers_X, keyLen_hdr);      // table for unpacking
-            buildQsUnpack(quality_scores_X, keyLen_qs); // table for unpacking
-
+            
+            buildUnpack(headers_X, keyLen_hdr, HDR_UNPACK);      // table for unpacking
+            buildUnpack(quality_scores_X, keyLen_qs, QS_UNPACK);      // table for unpacking
+            
             while (i != decText.end())
             {
                 cout << '@';
-                unpackHdrLarge_read2B(i, XChar_hdr, plusMore);  ++i; // header
+                cout << (plusMore = unpackLarge_read2B(i, XChar_hdr, HDR_UNPACK));  ++i; // header
+//                unpackHdrLarge_read2B(i, XChar_hdr, plusMore);  ++i; // header
                 unpackSeqFQ_3to1(i);                                 // sequence
                 cout << (justPlus ? "+" : "+" + plusMore) << '\n';   ++i;  // +
+//                cout << unpackLarge_read2B(i, XChar_qs, QS_UNPACK);     // quality scores
                 unpackQSLarge_read2B(i, XChar_qs);     // quality scores
                 //end of file
                 if (*(++i) == (char) 252) break;    else cout << '\n';
@@ -564,17 +581,19 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
             const char XChar_hdr = (char) (headers[headers.size() - 1] + 1);
             string headers_X = headers;
             headers_X += XChar_hdr;
-    
-            buildHdrUnpack(headers_X, keyLen_hdr);      // table for unpacking
-            buildQsUnpack(qsRange, keyLen_qs);          // table for unpacking
+            
+            buildUnpack(headers_X, keyLen_hdr, HDR_UNPACK);      // table for unpacking
+            buildUnpack(qsRange, keyLen_qs, QS_UNPACK);      // table for unpacking
 
             while (i != decText.end())
             {
                 cout << '@';
-                unpackHdrLarge_read2B(i, XChar_hdr, plusMore);  ++i;   // header
+                cout << (plusMore = unpackLarge_read2B(i, XChar_hdr, HDR_UNPACK));  ++i;   // header
+//                unpackHdrLarge_read2B(i, XChar_hdr, plusMore);  ++i;   // header
                 unpackSeqFQ_3to1(i);                // sequence
                 cout << (justPlus ? "+" : "+" + plusMore) << '\n'; ++i; // +
                 unpackQS(i);                        // quality scores
+//                cout << unpackQS(i, QS_UNPACK);                        // quality scores
                 // end of file
                 if (*(++i) == (char) 252) break;    else cout << '\n';
             }
@@ -587,33 +606,37 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
                     (char) (quality_scores[quality_scores.size() - 1] + 1);
             string quality_scores_X = quality_scores;
             quality_scores_X += XChar_qs;
-            
-            buildHdrUnpack(hdrRange, keyLen_hdr);       // table for unpacking
-            buildQsUnpack(quality_scores_X, keyLen_qs); // table for unpacking
+    
+            buildUnpack(hdrRange, keyLen_hdr, HDR_UNPACK);      // table for unpacking
+            buildUnpack(quality_scores_X, keyLen_qs, QS_UNPACK);      // table for unpacking
             
             while (i != decText.end())
             {
                 cout << '@';
-                unpackHdr(i, plusMore);    ++i;   // header
+                cout << (plusMore = unpackHdr(i, HDR_UNPACK));    ++i;   // header
+//                unpackHdr(i, plusMore);    ++i;   // header
                 unpackSeqFQ_3to1(i);                // sequence
                 cout << (justPlus ? "+" : "+" + plusMore) << '\n'; ++i;// +
                 unpackQSLarge_read2B(i, XChar_qs);     // quality scores
+//                cout << unpackLarge_read2B(i, XChar_qs, QS_UNPACK);     // quality scores
                 //end of file
                 if (*(++i) == (char) 252) break;    else cout << '\n';
             }
         }
         else if (hdrRangeLen <= MAX_CAT_5 && qsRangeLen <= MAX_CAT_5)
         {
-            buildHdrUnpack(hdrRange, keyLen_hdr);       // table for unpacking
-            buildQsUnpack(qsRange, keyLen_qs);          // table for unpacking
+            buildUnpack(hdrRange, keyLen_hdr, HDR_UNPACK);      // table for unpacking
+            buildUnpack(qsRange, keyLen_qs, QS_UNPACK);      // table for unpacking
             
             while (i != decText.end())
             {
                 cout << '@';
-                unpackHdr(i, plusMore);    ++i;     // header
+                cout << (plusMore = unpackHdr(i, HDR_UNPACK)) << '\n';    ++i;  // header
+//                unpackHdr(i, plusMore);    ++i;     // header
                 unpackSeqFQ_3to1(i);                // sequence
                 cout << (justPlus ? "+" : "+" + plusMore) << '\n';  ++i;  // +
                 unpackQS(i);                        // quality scores
+//                cout << unpackQS(i, QS_UNPACK);                        // quality scores
                 // end of file
                 if (*(++i) == (char) 252) break;    else cout << '\n';
             }

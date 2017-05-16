@@ -61,11 +61,11 @@ typedef std::unordered_map<string, ULL> htable_t;
 #define MAX_CAT_4 15
 #define MIN_CAT_5 16    // 16 <= cat 5 <= 39
 #define MAX_CAT_5 39
-#define KEYLEN_CAT_1 7  // for building hash table
-#define KEYLEN_CAT_2 5
-#define KEYLEN_CAT_3 3
-#define KEYLEN_CAT_4 2
-#define KEYLEN_CAT_5 3
+#define KEYLEN_CAT_1 7  // 7 to 1 byte. for building hash table
+#define KEYLEN_CAT_2 5  // 5 to 1 byte
+#define KEYLEN_CAT_3 3  // 3 to 1 byte
+#define KEYLEN_CAT_4 2  // 2 to 1 byte
+#define KEYLEN_CAT_5 3  // 3 to 2 byte
 
 //const string QUALITY_SCORES =//excluding !\" abcdefghijklmnopqrstuvwxyz{|}~ (32)
 //"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`";    // (No=62)
