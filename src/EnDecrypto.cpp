@@ -106,29 +106,28 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
     // FASTQ
     else //if (FASTQ)
     {
-        bool justPlus = true;       // if third line is just + or not
-        
         // check if the third line contains only +
-        in.ignore(LARGE_NUMBER, '\n');  // ignore header
-        in.ignore(LARGE_NUMBER, '\n');  // ignore seq
+        bool justPlus = true;
+        in.ignore(LARGE_NUMBER, '\n');                  // ignore header
+        in.ignore(LARGE_NUMBER, '\n');                  // ignore seq
         if (getline(in, line).good()) { if (line.length() > 1) justPlus=false; }
 //        else { cerr << "Error: file corrupted.\n";    return; }
-        in.ignore(LARGE_NUMBER, '\n');  // ignore seq
-        in.clear();  in.seekg(0, std::ios::beg);            // beginning of file
+        in.ignore(LARGE_NUMBER, '\n');                  // ignore seq
+        in.clear();  in.seekg(0, std::ios::beg);        // beginning of file
         
         // gather all headers and quality scores
         while(!in.eof())
         {
-            if (getline(in, line).good())   // header
+            if (getline(in, line).good())               // header
             {
                 for (string::iterator i = line.begin(); i != line.end(); ++i)
                     if (hdrRange.find_first_of(*i) == string::npos)
                         hdrRange += *i;
             }
 //            else { cerr << "Error: file corrupted.\n";    return; }
-            in.ignore(LARGE_NUMBER, '\n');  // ignore seq
-            in.ignore(LARGE_NUMBER, '\n');  // ignore +
-            if (getline(in, line).good())   // quality score
+            in.ignore(LARGE_NUMBER, '\n');              // ignore seq
+            in.ignore(LARGE_NUMBER, '\n');              // ignore +
+            if (getline(in, line).good())               // quality score
             {
                 for (string::iterator i = line.begin(); i != line.end(); ++i)
                     if (qsRange.find_first_of(*i) == string::npos)
@@ -136,30 +135,32 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
             }
 //            else { cerr << "Error: file corrupted.\n";    return; }
         }
-        in.clear();  in.seekg(0, std::ios::beg);            // beginning of file
+        in.clear();  in.seekg(0, std::ios::beg);        // beginning of file
         
-        //todo. not needed
-        std::sort(qsRange.begin(),  qsRange.end());         // sort ASCII values
-        std::sort(hdrRange.begin(), hdrRange.end());        // sort values
-
-        using packQSPointer  = string (*)(string);          // function pointer
-        packQSPointer packQS;
-        using packHdrPointer = string (*)(string);          // function pointer
-        packHdrPointer packHdr;
+        hdrRange.erase(hdrRange.begin());               // remove '@'
+        
+        std::sort(qsRange.begin(),  qsRange.end());     // sort ASCII values
+        std::sort(hdrRange.begin(), hdrRange.end());    // sort values
     
+        using packHdrPointer = string (*)(string, string, htable_t&);  // function pointer
+        packHdrPointer packHdr;
+        using packQSPointer  = string (*)(string, string, htable_t&);  // function pointer
+        packQSPointer packQS;
+        
         string HEADERS_X;           // extended HEADERS
         string QUALITY_SCORES_X;    // extended QUALITY_SCORES
         const size_t qsRangeLen  = qsRange.length();
         const size_t hrdRangeLen = hdrRange.length();
+        // header
         if (hrdRangeLen > MAX_CAT_5)      // if len > 39 filter the last 39 ones
         {
             HEADERS   = hdrRange.substr(hrdRangeLen - MAX_CAT_5);
             HEADERS_X = HEADERS;
             // ASCII char after last char in HEADERS
             HEADERS_X += (char) (HEADERS[HEADERS.size()-1] + 1);
-
-            buildHdrHashTable(HEADERS_X, KEYLEN_CAT_5);
-            packHdr = &packHdrLarge_3to2;
+            
+            buildHashTable(HDR_MAP, HEADERS_X, KEYLEN_CAT_5);
+            packHdr = &packLarge_3to2;
         }
         else
         {
@@ -167,32 +168,32 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
             
             if (hrdRangeLen > MAX_CAT_4)            // cat 5
             {
-                buildHdrHashTable(HEADERS, KEYLEN_CAT_5);
-                packHdr = &packHdr_3to2;
+                buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_5);
+                packHdr = &pack_3to2;
             }
             else if (hrdRangeLen > MAX_CAT_3)       // cat 4
             {
-                buildHdrHashTable(HEADERS, KEYLEN_CAT_4);
-                packHdr = &packHdr_2to1;
+                buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_4);
+                packHdr = &pack_2to1;
             }
             else if (hrdRangeLen == MAX_CAT_3 || hrdRangeLen == MID_CAT_3
                       || hrdRangeLen == MIN_CAT_3)  // cat 3
             {
-                buildHdrHashTable(HEADERS, KEYLEN_CAT_3);
-                packHdr = &packHdr_3to1;
+                buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_3);
+                packHdr = &pack_3to1;
             }
             else if (hrdRangeLen == CAT_2)          // cat 2
             {
-                buildHdrHashTable(HEADERS, KEYLEN_CAT_2);
-                packHdr = &packHdr_5to1;
+                buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_2);
+                packHdr = &pack_5to1;
             }
             else if (hrdRangeLen == CAT_1)          // cat 1
             {
-                buildHdrHashTable(HEADERS, KEYLEN_CAT_1);
-                packHdr = &packHdr_7to1;
+                buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_1);
+                packHdr = &pack_7to1;
             }
         }
-        
+        // quality score
         if (qsRangeLen > MAX_CAT_5)       // if len > 39 filter the last 39 ones
         {
             QUALITY_SCORES   = qsRange.substr(qsRangeLen - MAX_CAT_5);
@@ -200,8 +201,8 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
             QUALITY_SCORES_X +=  // ASCII char after last char in QUALITY_SCORES
                     (char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
 
-            buildQsHashTable(QUALITY_SCORES_X, KEYLEN_CAT_5);
-            packQS = &packQSLarge_3to2;
+            buildHashTable(QS_MAP, QUALITY_SCORES_X, KEYLEN_CAT_5);
+            packQS = &packLarge_3to2;
         }
         else
         {
@@ -209,64 +210,64 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
 
             if (qsRangeLen > MAX_CAT_4)             // cat 5
             {
-                buildQsHashTable(QUALITY_SCORES, KEYLEN_CAT_5);
-                packQS = &packQS_3to2;
+                buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_5);
+                packQS = &pack_3to2;
             }
             else if (qsRangeLen > MAX_CAT_3)        // cat 4
             {
-                buildQsHashTable(QUALITY_SCORES, KEYLEN_CAT_4);
-                packQS = &packQS_2to1;
+                buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_4);
+                packQS = &pack_2to1;
             }
             else if (qsRangeLen == MAX_CAT_3 || qsRangeLen == MID_CAT_3
                       || qsRangeLen == MIN_CAT_3)   // cat 3
             {
-                buildQsHashTable(QUALITY_SCORES, KEYLEN_CAT_3);
-                packQS = &packQS_3to1;
+                buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_3);
+                packQS = &pack_3to1;
             }
             else if (qsRangeLen == CAT_2)           // cat 2
             {
-                buildQsHashTable(QUALITY_SCORES, KEYLEN_CAT_2);
-                packQS = &packQS_5to1;
+                buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_2);
+                packQS = &pack_5to1;
             }
             else if (qsRangeLen == CAT_1)           // cat 1
             {
-                buildQsHashTable(QUALITY_SCORES, KEYLEN_CAT_1);
-                packQS = &packQS_7to1;
+                buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_1);
+                packQS = &pack_7to1;
             }
         }
         
-//        // TEST
-//        cerr << qsRange << '\n' << qsRange.length() << '\n';
-//        cerr << hdrRange << '\n' << hdrRange.length() << '\n';
-
-
+        
         //todo. nabas havijoori 'context+=' nevesht,
         //todo. chon va3 file 10GB mitereke
         //todo. bas hame kara ro block by block anjam dad
+        
+        string header_range, sequence_range;
+        if (hrdRangeLen > MAX_CAT_5 && qsRangeLen > MAX_CAT_5)
+        { header_range = HEADERS_X;    sequence_range = QUALITY_SCORES_X; }
+        else if (hrdRangeLen > MAX_CAT_5 && qsRangeLen <= MAX_CAT_5)
+        { header_range = HEADERS_X;    sequence_range = QUALITY_SCORES; }
+        else if (hrdRangeLen <= MAX_CAT_5 && qsRangeLen > MAX_CAT_5)
+        { header_range = HEADERS;    sequence_range = QUALITY_SCORES_X; }
+        else if (hrdRangeLen <= MAX_CAT_5 && qsRangeLen <= MAX_CAT_5)
+        { header_range = HEADERS;    sequence_range = QUALITY_SCORES; }
         
         context += hdrRange;                       // send hdrRange to decryptor
         context += (char) 254;                     // to detect hdrRange in dec.
         context += qsRange;                        // send qsRange to decryptor
         context += (justPlus ? (char) 253 : '\n'); //'+ or not just +' condition
-        // (char) 254 instead of '\n' at the end of each line
         while(!in.eof())    // process 4 lines by 4 lines
         {
-            
             if (getline(in, line).good())   // header
-            {
-                // header line. //(char) 253 instead of '@'
-                context += packHdr(line) + (char) 254;
-//                context += line + (char) 254;
-            }
+                context += packHdr(line.substr(1), header_range, HDR_MAP)
+                           + (char) 254;   // ignore '@'
+        
             if (getline(in, line).good())   // sequence
-            {
                 context += packSeq_3to1(line) + (char) 254;
-            }
+        
             in.ignore(LARGE_NUMBER, '\n');  // +. ignore
+        
             if (getline(in, line).good())   // quality score
-            {
-                context += packQS(line) + (char) 254;
-            }
+                context += packQS(line, sequence_range, QS_MAP) + (char) 254;
         }
         context += (char) 252;  // end of file
     }
@@ -462,7 +463,6 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
         short keyLen_qs = 0;
     
         // TEST
-        
         cerr << qsRange << '\n' << qsRange.length() << '\n';
         cerr << hdrRange << '\n' << hdrRange.length() << '\n';
     
@@ -539,8 +539,8 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
             const char XChar_qs =
                     (char) (quality_scores[quality_scores.size() - 1] + 1);
             string headers_X = headers;
-            string quality_scores_X = quality_scores;
             headers_X += XChar_hdr;
+            string quality_scores_X = quality_scores;
             quality_scores_X += XChar_qs;
     
             buildHdrUnpack(headers_X, keyLen_hdr);      // table for unpacking
@@ -548,12 +548,10 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
 
             while (i != decText.end())
             {
-                unpackHdrLarge_read2B(i, XChar_hdr, plusMore);
-                ++i;   // header
-                unpackSeqFQ_3to1(i);                // sequence
-                // +
-                cout << (justPlus ? "+" : "+" + plusMore.substr(1)) << '\n';
-                ++i;
+                cout << '@';
+                unpackHdrLarge_read2B(i, XChar_hdr, plusMore);  ++i; // header
+                unpackSeqFQ_3to1(i);                                 // sequence
+                cout << (justPlus ? "+" : "+" + plusMore) << '\n';   ++i;  // +
                 unpackQSLarge_read2B(i, XChar_qs);     // quality scores
                 //end of file
                 if (*(++i) == (char) 252) break;    else cout << '\n';
@@ -568,15 +566,14 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
             headers_X += XChar_hdr;
     
             buildHdrUnpack(headers_X, keyLen_hdr);      // table for unpacking
-            buildQsUnpack(qsRange, keyLen_qs); // table for unpacking
+            buildQsUnpack(qsRange, keyLen_qs);          // table for unpacking
 
             while (i != decText.end())
             {
-                unpackHdrLarge_read2B(i, XChar_hdr, plusMore);
-                ++i;   // header
+                cout << '@';
+                unpackHdrLarge_read2B(i, XChar_hdr, plusMore);  ++i;   // header
                 unpackSeqFQ_3to1(i);                // sequence
-                // +
-                cout<<(justPlus ? "+" : "+"+plusMore.substr(1)) <<'\n'; ++i;
+                cout << (justPlus ? "+" : "+" + plusMore) << '\n'; ++i; // +
                 unpackQS(i);                        // quality scores
                 // end of file
                 if (*(++i) == (char) 252) break;    else cout << '\n';
@@ -596,10 +593,10 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
             
             while (i != decText.end())
             {
+                cout << '@';
                 unpackHdr(i, plusMore);    ++i;   // header
                 unpackSeqFQ_3to1(i);                // sequence
-                // +
-                cout << (justPlus ? "+" : "+"+plusMore.substr(1)) << '\n';  ++i;
+                cout << (justPlus ? "+" : "+" + plusMore) << '\n'; ++i;// +
                 unpackQSLarge_read2B(i, XChar_qs);     // quality scores
                 //end of file
                 if (*(++i) == (char) 252) break;    else cout << '\n';
@@ -607,15 +604,15 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
         }
         else if (hdrRangeLen <= MAX_CAT_5 && qsRangeLen <= MAX_CAT_5)
         {
-            buildHdrUnpack(hdrRange, keyLen_hdr);      // table for unpacking
-            buildQsUnpack(qsRange, keyLen_qs); // table for unpacking
-
+            buildHdrUnpack(hdrRange, keyLen_hdr);       // table for unpacking
+            buildQsUnpack(qsRange, keyLen_qs);          // table for unpacking
+            
             while (i != decText.end())
             {
-                unpackHdr(i, plusMore);    ++i;   // header
+                cout << '@';
+                unpackHdr(i, plusMore);    ++i;     // header
                 unpackSeqFQ_3to1(i);                // sequence
-                // +
-                cout<<(justPlus ? "+" : "+"+plusMore.substr(1)) <<'\n'; ++i;
+                cout << (justPlus ? "+" : "+" + plusMore) << '\n';  ++i;  // +
                 unpackQS(i);                        // quality scores
                 // end of file
                 if (*(++i) == (char) 252) break;    else cout << '\n';
