@@ -54,9 +54,7 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
     const bool FASTA = (findFileType(in) == 'A');
     const bool FASTQ = !FASTA;  // const bool FASTQ = (findFileType(in) == 'Q');
     string line;                // each line of file
-//    string header;              // header (FASTA/FASTQ)
     string seq;                 // sequence (FASTA/FASTQ)
-//    string qs;                  // quality scores (FASTQ)
     // FASTA: context = header + seq (+ empty lines)
     // FASTQ: context = header + seq + plus + qs
     string context;
@@ -108,8 +106,6 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
     // FASTQ
     else //if (FASTQ)
     {
-        string HEADERS_X;           // extended HEADERS
-        string QUALITY_SCORES_X;    // extended QUALITY_SCORES
         bool justPlus = true;       // if third line is just + or not
         
         // check if the third line contains only +
@@ -150,7 +146,9 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
         packQSPointer packQS;
         using packHdrPointer = string (*)(string);          // function pointer
         packHdrPointer packHdr;
-        
+    
+        string HEADERS_X;           // extended HEADERS
+        string QUALITY_SCORES_X;    // extended QUALITY_SCORES
         const size_t qsRangeLen  = qsRange.length();
         const size_t hrdRangeLen = hdrRange.length();
         if (hrdRangeLen > MAX_CAT_5)      // if len > 39 filter the last 39 ones
