@@ -31,44 +31,44 @@ inline void buildHdrHashTable (const string &headers, short keyLen)
     const byte HdrLen = headers.length();
     ULL elementNo = 0;
     string element;
-    
+
     switch (keyLen)
     {
         case 2:
             LOOP2(i, j, HdrLen)
             {
                 element = headers[i];   element += headers[j];
-    
+
                 HDR_MAP.insert(make_pair(element, elementNo));
 ////            HDR_MAP.insert({element, elementNo});
 ////            HDR_MAP[element] = elementNo;
                 ++elementNo;
             }
             break;
-        
+
         case 3:
             LOOP3(i, j, k, HdrLen)
             {
                 element  = headers[i];   element += headers[j];
                 element += headers[k];
-    
+
                 HDR_MAP.insert(make_pair(element, elementNo));
                 ++elementNo;
             }
             break;
-        
+
         case 5:
             LOOP5(i, j, k, l, m, HdrLen)
             {
                 element  = headers[i];   element += headers[j];
                 element += headers[k];   element += headers[l];
                 element += headers[m];
-    
+
                 HDR_MAP.insert(make_pair(element, elementNo));
                 ++elementNo;
             }
             break;
-        
+
         case 7:
             LOOP7(i, j, k, l, m, n, o, HdrLen)
             {
@@ -76,35 +76,35 @@ inline void buildHdrHashTable (const string &headers, short keyLen)
                 element += headers[k];   element += headers[l];
                 element += headers[m];   element += headers[n];
                 element += headers[o];
-    
+
                 HDR_MAP.insert(make_pair(element, elementNo));
                 ++elementNo;
             }
             break;
-        
+
         case 4:
             LOOP4(i, j, k, l, HdrLen)
             {
                 element  = headers[i];   element += headers[j];
                 element += headers[k];   element += headers[l];
-    
+
                 HDR_MAP.insert(make_pair(element, elementNo));
                 ++elementNo;
             }
             break;
-        
+
         case 6:
             LOOP6(i, j, k, l, m, n, HdrLen)
             {
                 element  = headers[i];   element += headers[j];
                 element += headers[k];   element += headers[l];
                 element += headers[m];   element += headers[n];
-    
+
                 HDR_MAP.insert(make_pair(element, elementNo));
                 ++elementNo;
             }
             break;
-        
+
         case 8:
             LOOP8(i, j, k, l, m, n, o, p, HdrLen)
             {
@@ -112,15 +112,15 @@ inline void buildHdrHashTable (const string &headers, short keyLen)
                 element += headers[k];   element += headers[l];
                 element += headers[m];   element += headers[n];
                 element += headers[o];   element += headers[p];
-    
+
                 HDR_MAP.insert(make_pair(element, elementNo));
                 ++elementNo;
             }
             break;
-        
+
         default: break;
     }
-    
+
     // TEST
 //    htable_t::const_iterator got = HDR_MAP.find("II!");
 //    if (got == HDR_MAP.end()) cerr << "Error: key not found!\n";
@@ -249,42 +249,42 @@ inline void buildHdrUnpack (const string &headers, short keyLen)
     string element;
     ULL arrSize = pow(HdrLen, keyLen);   // size of HDR_UNPACK
     HDR_UNPACK = new string[arrSize];
-    
+
     switch (keyLen)
     {
         case 2:
             LOOP2(i, j, HdrLen)
             {
                 element = headers[i];   element += headers[j];
-                
+
                 HDR_UNPACK[elementNo] = element;
                 ++elementNo;
             }
             break;
-            
+
         case 3:
             LOOP3(i, j, k, HdrLen)
             {
                 element  = headers[i];   element += headers[j];
                 element += headers[k];
-    
+
                 HDR_UNPACK[elementNo] = element;
                 ++elementNo;
             }
             break;
-            
+
         case 5:
             LOOP5(i, j, k, l, m, HdrLen)
             {
                 element  = headers[i];   element += headers[j];
                 element += headers[k];   element += headers[l];
                 element += headers[m];
-    
+
                 HDR_UNPACK[elementNo] = element;
                 ++elementNo;
             }
             break;
-            
+
         case 7:
             LOOP7(i, j, k, l, m, n, o, HdrLen)
             {
@@ -292,35 +292,35 @@ inline void buildHdrUnpack (const string &headers, short keyLen)
                 element += headers[k];   element += headers[l];
                 element += headers[m];   element += headers[n];
                 element += headers[o];
-    
+
                 HDR_UNPACK[elementNo] = element;
                 ++elementNo;
             }
             break;
-            
+
         case 4:
             LOOP4(i, j, k, l, HdrLen)
             {
                 element  = headers[i];   element += headers[j];
                 element += headers[k];   element += headers[l];
-    
+
                 HDR_UNPACK[elementNo] = element;
                 ++elementNo;
             }
             break;
-            
+
         case 6:
             LOOP6(i, j, k, l, m, n, HdrLen)
             {
                 element  = headers[i];   element += headers[j];
                 element += headers[k];   element += headers[l];
                 element += headers[m];   element += headers[n];
-    
+
                 HDR_UNPACK[elementNo] = element;
                 ++elementNo;
             }
             break;
-            
+
         case 8:
             LOOP8(i, j, k, l, m, n, o, p, HdrLen)
             {
@@ -328,15 +328,15 @@ inline void buildHdrUnpack (const string &headers, short keyLen)
                 element += headers[k];   element += headers[l];
                 element += headers[m];   element += headers[n];
                 element += headers[o];   element += headers[p];
-    
+
                 HDR_UNPACK[elementNo] = element;
                 ++elementNo;
             }
             break;
-            
+
         default: break;
     }
-    
+
     // test
 //    for (int i = 0; i != arrSize; ++i)
 //        cerr << HDR_UNPACK[i] << '\n';
@@ -541,11 +541,11 @@ inline string packHdrLarge_3to2 (string hdr)
     unsigned short shortTuple;
     // ASCII char after the last char in QUALITY_SCORES string
     const char XChar = (char) (HEADERS[HEADERS.size()-1] + 1);
-    
+
     for (x = 0; x < iterLen; x += 3)
     {
         s0 = hdr[x], s1 = hdr[x+1], s2 = hdr[x+2];
-        
+
         tuple.clear();
         tuple  = (firstNotIn  = (HEADERS.find(s0)==string::npos))
                  ? XChar : s0;
@@ -553,31 +553,31 @@ inline string packHdrLarge_3to2 (string hdr)
                  ? XChar : s1;
         tuple += (thirdNotIn  = (HEADERS.find(s2)==string::npos))
                  ? XChar : s2;
-        
+
         shortTuple = hdrLargePack(tuple);
         packedHdr += (unsigned char) (shortTuple >> 8);      // left byte
         packedHdr += (unsigned char) (shortTuple & 0xFF);    // right byte
-        
+
         if (firstNotIn)   packedHdr += s0;
         if (secondNotIn)  packedHdr += s1;
         if (thirdNotIn)   packedHdr += s2;
     }
-    
+
     // if hdr len isn't multiple of 3, add (char) 255 before each sym
     switch (hdr.length() % 3)
     {
         case 1:
             packedHdr += 255;   packedHdr += hdr[x];
             break;
-        
+
         case 2:
             packedHdr += 255;   packedHdr += hdr[x];
             packedHdr += 255;   packedHdr += hdr[x+1];
             break;
-        
+
         default: break;
     }
-    
+
     return packedHdr;
 }
 
@@ -590,7 +590,7 @@ inline string packHdr_3to2 (string hdr)
     const LL iterLen = hdr.length() - 2;
     LL x = 0;
     unsigned short shortTuple;
-    
+
     for (x = 0; x < iterLen; x += 3)
     {
         tuple.clear();   tuple = hdr[x];   tuple += hdr[x+1];   tuple += hdr[x+2];
@@ -598,22 +598,22 @@ inline string packHdr_3to2 (string hdr)
         packedHdr += (byte) (shortTuple >> 8);      // left byte
         packedHdr += (byte) (shortTuple & 0xFF);    // right byte
     }
-    
+
     // if header len isn't multiple of 3, add (char) 255 before each sym
     switch (hdr.length() % 3)
     {
         case 1:
             packedHdr += 255;   packedHdr += hdr[x];
             break;
-        
+
         case 2:
             packedHdr += 255;   packedHdr += hdr[x];
             packedHdr += 255;   packedHdr += hdr[x+1];
             break;
-        
+
         default: break;
     }
-    
+
     return packedHdr;
 }
 
@@ -625,19 +625,19 @@ inline string packHdr_2to1 (string hdr)
     string tuple, packedHdr;
     const LL iterLen = hdr.length() - 1;
     LL x = 0;
-    
+
     for (x = 0; x < iterLen; x += 2)
     {
         tuple.clear();   tuple = hdr[x];   tuple += hdr[x+1];
         packedHdr += (char) HDR_MAP.find(tuple)->second;
     }
-    
+
     // if hdr len isn't multiple of 2 (it's odd), add (char) 255 before each sym
     if (hdr.length() & 1)
     {
         packedHdr += 255;   packedHdr += hdr[x];
     }
-    
+
     return packedHdr;
 }
 
@@ -649,28 +649,28 @@ inline string packHdr_3to1 (string hdr)
     string tuple, packedHdr;
     const LL iterLen = hdr.length() - 2;
     LL x = 0;
-    
+
     for (x = 0; x < iterLen; x += 3)
     {
         tuple.clear();  tuple = hdr[x];  tuple += hdr[x+1];  tuple += hdr[x+2];
         packedHdr += (char) HDR_MAP.find(tuple)->second;
     }
-    
+
     // if hdr len isn't multiple of 3, add (char) 255 before each sym
     switch (hdr.length() % 3)
     {
         case 1:
             packedHdr += 255;   packedHdr += hdr[x];
             break;
-        
+
         case 2:
             packedHdr += 255;   packedHdr += hdr[x];
             packedHdr += 255;   packedHdr += hdr[x+1];
             break;
-        
+
         default: break;
     }
-    
+
     return packedHdr;
 }
 
@@ -682,42 +682,42 @@ inline string packHdr_5to1 (string hdr)
     string tuple, packedHdr;
     const LL iterLen = hdr.length() - 4;
     LL x = 0;
-    
+
     for (x = 0; x < iterLen; x += 5)
     {
         tuple.clear();      tuple  = hdr[x];    tuple += hdr[x+1];
         tuple += hdr[x+2];  tuple += hdr[x+3];  tuple += hdr[x+4];
         packedHdr += (char) HDR_MAP.find(tuple)->second;
     }
-    
+
     // if hdr len isn't multiple of 5, add (char) 255 before each sym
     switch (hdr.length() % 5)
     {
         case 1:
             packedHdr += 255;   packedHdr += hdr[x];
             break;
-        
+
         case 2:
             packedHdr += 255;   packedHdr += hdr[x];
             packedHdr += 255;   packedHdr += hdr[x+1];
             break;
-        
+
         case 3:
             packedHdr += 255;   packedHdr += hdr[x];
             packedHdr += 255;   packedHdr += hdr[x+1];
             packedHdr += 255;   packedHdr += hdr[x+2];
             break;
-        
+
         case 4:
             packedHdr += 255;   packedHdr += hdr[x];
             packedHdr += 255;   packedHdr += hdr[x+1];
             packedHdr += 255;   packedHdr += hdr[x+2];
             packedHdr += 255;   packedHdr += hdr[x+3];
             break;
-        
+
         default: break;
     }
-    
+
     return packedHdr;
 }
 
@@ -729,39 +729,39 @@ inline string packHdr_7to1 (string hdr)
     string tuple, packedHdr;
     const LL iterLen = hdr.length() - 6;
     LL x = 0;
-    
+
     for (x = 0; x < iterLen; x += 7)
     {
         tuple.clear();     tuple  = hdr[x];   tuple += hdr[x+1]; tuple += hdr[x+2];
         tuple += hdr[x+3]; tuple += hdr[x+4]; tuple += hdr[x+5]; tuple += hdr[x+6];
         packedHdr += (char) HDR_MAP.find(tuple)->second;
     }
-    
+
     // if hdr len isn't multiple of 7, add (char) 255 before each sym
     switch (hdr.length() % 7)
     {
         case 1:
             packedHdr += 255;   packedHdr += hdr[x];
             break;
-        
+
         case 2:
             packedHdr += 255;   packedHdr += hdr[x];
             packedHdr += 255;   packedHdr += hdr[x+1];
             break;
-        
+
         case 3:
             packedHdr += 255;   packedHdr += hdr[x];
             packedHdr += 255;   packedHdr += hdr[x+1];
             packedHdr += 255;   packedHdr += hdr[x+2];
             break;
-        
+
         case 4:
             packedHdr += 255;   packedHdr += hdr[x];
             packedHdr += 255;   packedHdr += hdr[x+1];
             packedHdr += 255;   packedHdr += hdr[x+2];
             packedHdr += 255;   packedHdr += hdr[x+3];
             break;
-        
+
         case 5:
             packedHdr += 255;   packedHdr += hdr[x];
             packedHdr += 255;   packedHdr += hdr[x+1];
@@ -769,7 +769,7 @@ inline string packHdr_7to1 (string hdr)
             packedHdr += 255;   packedHdr += hdr[x+3];
             packedHdr += 255;   packedHdr += hdr[x+4];
             break;
-        
+
         case 6:
             packedHdr += 255;   packedHdr += hdr[x];
             packedHdr += 255;   packedHdr += hdr[x+1];
@@ -778,10 +778,10 @@ inline string packHdr_7to1 (string hdr)
             packedHdr += 255;   packedHdr += hdr[x+4];
             packedHdr += 255;   packedHdr += hdr[x+5];
             break;
-        
+
         default: break;
     }
-    
+
     return packedHdr;
 }
 
@@ -798,11 +798,11 @@ inline string packQSLarge_3to2 (string qs)
     unsigned short shortTuple;
     // ASCII char after the last char in QUALITY_SCORES string
     const char XChar = (char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
-    
+
     for (x = 0; x < iterLen; x += 3)
     {
         s0 = qs[x], s1 = qs[x+1], s2 = qs[x+2];
-        
+
         tuple.clear();
         tuple  = (firstNotIn  = (QUALITY_SCORES.find(s0)==string::npos))
                  ? XChar : s0;
@@ -810,28 +810,28 @@ inline string packQSLarge_3to2 (string qs)
                  ? XChar : s1;
         tuple += (thirdNotIn  = (QUALITY_SCORES.find(s2)==string::npos))
                  ? XChar : s2;
-        
+
         shortTuple = qsLargePack(tuple);
         packedQs += (unsigned char) (shortTuple >> 8);      // left byte
         packedQs += (unsigned char) (shortTuple & 0xFF);    // right byte
-        
+
         if (firstNotIn)   packedQs += s0;
         if (secondNotIn)  packedQs += s1;
         if (thirdNotIn)   packedQs += s2;
     }
-    
+
     // if seq len isn't multiple of 3, add (char) 255 before each sym
     switch (qs.length() % 3)
     {
         case 1:
             packedQs += 255;   packedQs += qs[x];
             break;
-        
+
         case 2:
             packedQs += 255;   packedQs += qs[x];
             packedQs += 255;   packedQs += qs[x+1];
             break;
-        
+
         default: break;
     }
 
@@ -847,7 +847,7 @@ inline string packQS_3to2 (string qs)
     const LL iterLen = qs.length() - 2;
     LL x = 0;
     unsigned short shortTuple;
-    
+
     for (x = 0; x < iterLen; x += 3)
     {
         tuple.clear();   tuple = qs[x];   tuple += qs[x+1];   tuple += qs[x+2];
@@ -855,7 +855,7 @@ inline string packQS_3to2 (string qs)
         packedQs += (byte) (shortTuple >> 8);      // left byte
         packedQs += (byte) (shortTuple & 0xFF);    // right byte
     }
-    
+
     // if seq len isn't multiple of 3, add (char) 255 before each sym
     switch (qs.length() % 3)
     {
@@ -870,7 +870,7 @@ inline string packQS_3to2 (string qs)
 
         default: break;
     }
-    
+
     return packedQs;
 }
 
@@ -1050,22 +1050,6 @@ inline char penaltySym (char c)
     return (c != (char) 254 && c != (char) 252) ? c : (char) 10; //(char)10='\n'
 }
 
-///*******************************************************************************
-//    unpack
-//    header
-//    -- FASTQ
-//*******************************************************************************/
-//inline void unpackHdrFQ (string::iterator &i, string &plusMore)
-//{
-//    plusMore.clear();
-//    for (; *i != (char) 254; ++i)
-//    {
-//        cout << *i;
-//        plusMore += *i;
-//    }
-//    cout << '\n';
-//}
-
 /*******************************************************************************
     unpack 1 byte to 3 DNA bases -- FASTQ
 *******************************************************************************/
@@ -1110,82 +1094,148 @@ inline void unpackSeqFQ_3to1 (string::iterator &i)
 /*******************************************************************************
     unpack headers by reading 2 byte by 2 byte, when #hdr > 39
 *******************************************************************************/
-inline void unpackHdrLarge_read2B (string::iterator &i, const char XChar)
+inline void unpackHdrLarge_read2B (string::iterator &i, const char XChar,
+                                   string &plusMore)
 {
     byte leftB, rightB;     // left and right bytes
     unsigned short doubleB; // double byte
     string tpl;             // tuplet
     
+    plusMore.clear();
     while (*i != (char) 254)
     {
         // hdr len not multiple of keyLen
-        if (*i == (char) 255) { cout << penaltySym(*(i+1));   i+=2;  continue; }
-        
+//        if (*i == (char) 255) { cout << penaltySym(*(i+1));   i+=2;  continue; }
+        if (*i == (char) 255)
+        {
+            cout << penaltySym(*(i+1));
+            plusMore += penaltySym(*(i+1));
+            i += 2;
+            continue;
+        }
+
         leftB   = *i;
         rightB  = *(i+1);
         doubleB = leftB<<8 | rightB;    // join two bytes
-        
+
         tpl = HDR_UNPACK[doubleB];
-        
+
         if (tpl[0] != XChar && tpl[1] != XChar && tpl[2] != XChar)        // ...
-        { cout << tpl;                                                   i+=2; }
-        
+        {
+            cout << tpl;
+            plusMore += tpl;
+            i += 2;
+        }
         else if (tpl[0] == XChar && tpl[1] != XChar && tpl[2] != XChar)   // X..
-        { cout << penaltySym(*(i+2)) << tpl[1] << tpl[2];                i+=3; }
-        
+        {
+            cout << penaltySym(*(i+2)) << tpl[1] << tpl[2];
+            plusMore += penaltySym(*(i+2));
+            plusMore += tpl[1];
+            plusMore += tpl[2];
+            i += 3;
+        }
         else if (tpl[0] != XChar && tpl[1] == XChar && tpl[2] != XChar)   // .X.
-        { cout << tpl[0] << penaltySym(*(i+2)) << tpl[2];                i+=3; }
-        
+        {
+            cout << tpl[0] << penaltySym(*(i+2)) << tpl[2];
+            plusMore += tpl[0];
+            plusMore += penaltySym(*(i+2));
+            plusMore += tpl[2];
+            i += 3;
+        }
         else if (tpl[0] == XChar && tpl[1] == XChar && tpl[2] != XChar)   // XX.
-        { cout << penaltySym(*(i+2)) << penaltySym(*(i+3)) << tpl[2];    i+=4; }
-        
+        {
+            cout << penaltySym(*(i+2)) << penaltySym(*(i+3)) << tpl[2];
+            plusMore += penaltySym(*(i+2));
+            plusMore += penaltySym(*(i+3));
+            plusMore += tpl[2];
+            i += 4;
+        }
         else if (tpl[0] != XChar && tpl[1] != XChar && tpl[2] == XChar)   // ..X
-        { cout << tpl[0] << tpl[1] << penaltySym(*(i+2));                i+=3; }
-        
+        {
+            cout << tpl[0] << tpl[1] << penaltySym(*(i+2));
+            plusMore += tpl[0];
+            plusMore += tpl[1];
+            plusMore += penaltySym(*(i+2));
+            i += 3;
+        }
         else if (tpl[0] == XChar && tpl[1] != XChar && tpl[2] == XChar)   // X.X
-        { cout << penaltySym(*(i+2)) << tpl[1] << penaltySym(*(i+3));    i+=4; }
-        
+        {
+            cout << penaltySym(*(i+2)) << tpl[1] << penaltySym(*(i+3));
+            plusMore += penaltySym(*(i+2));
+            plusMore += tpl[1];
+            plusMore += penaltySym(*(i+3));
+            i += 4;
+        }
         else if (tpl[0] != XChar && tpl[1] == XChar && tpl[2] == XChar)   // .XX
-        { cout << tpl[0] << penaltySym(*(i+2)) << penaltySym(*(i+3));    i+=4; }
-        
-        else { cout << penaltySym(*(i+2)) << penaltySym(*(i+3))           // XXX
-                    << penaltySym(*(i+4));                               i+=5; }
+        {
+            cout << tpl[0] << penaltySym(*(i+2)) << penaltySym(*(i+3));
+            plusMore += tpl[0];
+            plusMore += penaltySym(*(i+2));
+            plusMore += penaltySym(*(i+3));
+            i += 4;
+        }
+        else                                                              // XXX
+        {
+            cout << penaltySym(*(i+2)) << penaltySym(*(i+3))
+                 << penaltySym(*(i+4));
+            plusMore += penaltySym(*(i+2));
+            plusMore += penaltySym(*(i+3));
+            plusMore += penaltySym(*(i+4));
+            i += 5;
+        }
     }
+    cout << '\n';
 }
 
 /*******************************************************************************
     unpack headers by reading 2 byte by 2 byte
 *******************************************************************************/
-inline void unpackHdr_read2B (string::iterator &i)
+inline void unpackHdr_read2B (string::iterator &i, string &plusMore)
 {
     byte leftB, rightB;     // left and right bytes
     unsigned short doubleB; // double byte
     
+    plusMore.clear();
     for (; *i != (char) 254; i += 2)
     {
         // hdr len not multiple of keyLen
-        if (*i == (char) 255) { cout << penaltySym(*(i+1));    continue; }
-        
+        if (*i == (char) 255)
+        {
+            cout << penaltySym(*(i+1));
+            plusMore += penaltySym(*(i+1));
+            continue;
+        }
+
         leftB   = *i;
         rightB  = *(i+1);
         doubleB = leftB<<8 | rightB;    // join two bytes
-        
+
         cout << HDR_UNPACK[doubleB];
+        plusMore += HDR_UNPACK[doubleB];
     }
+    cout << '\n';
 }
 
 /*******************************************************************************
     unpack headers by reading 1 byte by 1 byte
 *******************************************************************************/
-inline void unpackHdr_read1B (string::iterator &i)
+inline void unpackHdr_read1B (string::iterator &i, string &plusMore)
 {
+    plusMore.clear();
     for (; *i != (char) 254; ++i)
     {
         // hdr len not multiple of keyLen
-        if (*i == (char) 255) { cout << penaltySym(*(++i));    continue; }
-        
+        if (*i == (char) 255)
+        {
+            cout << penaltySym(*(i+1));
+            plusMore += penaltySym(*(i+1));
+            continue;
+        }
+
         cout << HDR_UNPACK[(byte) *i];
+        plusMore += HDR_UNPACK[(byte) *i];
     }
+    cout << '\n';
 }
 
 /*******************************************************************************

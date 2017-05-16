@@ -17,7 +17,7 @@ using std::string;
 using std::unordered_map;
 
 /*******************************************************************************
-    about cryfa
+    version and release
 *******************************************************************************/
 #define VERSION_CRYFA 1
 #define RELEASE_CRYFA 17.05
@@ -52,6 +52,20 @@ typedef std::unordered_map<string, ULL> htable_t;
     constants
 *******************************************************************************/
 #define LARGE_NUMBER std::numeric_limits<std::streamsize>::max()
+#define CAT_1 2         //       cat 1  = 2
+#define CAT_2 3         //       cat 2  = 3
+#define MIN_CAT_3 4     //  4 <= cat 3 <=  6
+#define MID_CAT_3 5
+#define MAX_CAT_3 6
+#define MIN_CAT_4 7     //  7 <= cat 4 <= 15
+#define MAX_CAT_4 15
+#define MIN_CAT_5 16    // 16 <= cat 5 <= 39
+#define MAX_CAT_5 39
+#define KEYLEN_CAT_1 7  // for building hash table
+#define KEYLEN_CAT_2 5
+#define KEYLEN_CAT_3 3
+#define KEYLEN_CAT_4 2
+#define KEYLEN_CAT_5 3
 
 //const string QUALITY_SCORES =//excluding !\" abcdefghijklmnopqrstuvwxyz{|}~ (32)
 //"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`";    // (No=62)
