@@ -393,7 +393,7 @@ inline string pack_2to1 (string strIn, string SYM_RANGE, htable_t &map)
     string tuple, packed;
     const LL iterLen = strIn.length() - 1;
     LL x = 0;
-    
+
     for (x = 0; x < iterLen; x += 2)
     {
         tuple.clear();   tuple = strIn[x];   tuple += strIn[x+1];
@@ -592,20 +592,19 @@ inline string unpackSeqFQ_3to1 (string::iterator &i)
         
         tpl = DNA_UNPACK[(byte) *i];
         
-        if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]!='X')                    // ...
-            out += tpl;
+        if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]!='X')    out+=tpl;       // ...
         
         else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]!='X')               // X..
-        { out += penaltySym(*(++i)); out += tpl[1]; out += tpl[2]; }
+        { out+=penaltySym(*(++i));    out+=tpl[1];    out+=tpl[2]; }
         
         else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]!='X')               // .X.
-        {out += tpl[0]; out += penaltySym(*(++i)); out += tpl[2]; }
+        {out+=tpl[0];    out+=penaltySym(*(++i));    out+=tpl[2]; }
         
         else if (tpl[0]=='X' && tpl[1]=='X' && tpl[2]!='X')               // XX.
-        {out += penaltySym(*(++i)); out += penaltySym(*(++i)); out += tpl[2]; }
+        {out+=penaltySym(*(++i));    out+=penaltySym(*(++i));    out+=tpl[2]; }
         
         else if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]=='X')               // ..X
-        { out += tpl[0]; out += tpl[1]; out += penaltySym(*(++i)); }
+        { out+=tpl[0];    out+=tpl[1];    out+=penaltySym(*(++i)); }
         
         else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]=='X')               // X.X
         { out+=penaltySym(*(++i));    out+=tpl[1];    out+=penaltySym(*(++i)); }
@@ -613,8 +612,8 @@ inline string unpackSeqFQ_3to1 (string::iterator &i)
         else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]=='X')               // .XX
         { out+=tpl[0];    out+=penaltySym(*(++i));    out+=penaltySym(*(++i)); }
         
-        else { out += penaltySym(*(++i));    out += penaltySym(*(++i));   // XXX
-               out += penaltySym(*(++i)); }
+        else { out+=penaltySym(*(++i));    out+=penaltySym(*(++i));       // XXX
+               out+=penaltySym(*(++i)); }
     }
     
     return out;
@@ -643,19 +642,19 @@ inline string unpackLarge_read2B (string::iterator &i, const char XChar,
         tpl = unpack[doubleB];
         
         if (tpl[0]!=XChar && tpl[1]!=XChar && tpl[2]!=XChar)              // ...
-        { out += tpl;                                                    i+=2; }
+        { out+=tpl;                                                      i+=2; }
         
         else if (tpl[0]==XChar && tpl[1]!=XChar && tpl[2]!=XChar)         // X..
-        { out += penaltySym(*(i+2));   out += tpl[1];   out += tpl[2];   i+=3; }
+        { out+=penaltySym(*(i+2));    out+=tpl[1];    out+=tpl[2];       i+=3; }
         
         else if (tpl[0]!=XChar && tpl[1]==XChar && tpl[2]!=XChar)         // .X.
-        { out += tpl[0];   out += penaltySym(*(i+2));   out += tpl[2];   i+=3; }
+        { out+=tpl[0];    out+=penaltySym(*(i+2));    out+=tpl[2];       i+=3; }
         
         else if (tpl[0]==XChar && tpl[1]==XChar && tpl[2]!=XChar)         // XX.
         { out+=penaltySym(*(i+2)); out+=penaltySym(*(i+3)); out+=tpl[2]; i+=4; }
         
         else if (tpl[0]!=XChar && tpl[1]!=XChar && tpl[2]==XChar)         // ..X
-        { out += tpl[0];   out += tpl[1];   out += penaltySym(*(i+2));   i+=3; }
+        { out+=tpl[0];    out+=tpl[1];    out+=penaltySym(*(i+2));       i+=3; }
         
         else if (tpl[0]==XChar && tpl[1]!=XChar && tpl[2]==XChar)         // X.X
         { out+=penaltySym(*(i+2)); out+=tpl[1]; out+=penaltySym(*(i+3)); i+=4; }
@@ -663,8 +662,8 @@ inline string unpackLarge_read2B (string::iterator &i, const char XChar,
         else if (tpl[0]!=XChar && tpl[1]==XChar && tpl[2]==XChar)         // .XX
         { out+=tpl[0]; out+=penaltySym(*(i+2)); out+=penaltySym(*(i+3)); i+=4; }
         
-        else { out += penaltySym(*(i+2));    out += penaltySym(*(i+3));   // XXX
-               out += penaltySym(*(i+4));                                i+=5; }
+        else { out+=penaltySym(*(i+2));    out+=penaltySym(*(i+3));       // XXX
+               out+=penaltySym(*(i+4));                                  i+=5; }
     }
     
     return out;

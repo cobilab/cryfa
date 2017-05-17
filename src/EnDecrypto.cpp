@@ -84,10 +84,10 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
                 // header line. (char) 253 instead of '>'
                 context += (char) 253 + line.substr(1) + "\n";
             }
-
+            
             // empty line. (char) 252 instead of line feed
-            else if (line.empty())  seq += (char) 252;
-
+            else if (line.empty())    seq += (char) 252;
+            
             // sequence
             else
             {
@@ -403,9 +403,9 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
     {
         bool isHeader = true;
         byte s;
-
+        
         ++i;    // jump over decText[0]
-        for (; i != decText.end(); ++i)
+        for (; i != decText.end()-1; ++i)   // exclude last symbol of decText
         {
             s = (byte) *i;
             //empty line OR end of each seq line
@@ -420,29 +420,32 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
             {
                 tpl = DNA_UNPACK[s];
 
-                if (tpl[0] != 'X' && tpl[1] != 'X' && tpl[2] != 'X')      // ...
-                { cout << tpl; }
+                if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]!='X')            // ...
+                { cout<<tpl; }
+                // using just one 'cout' makes trouble
+                else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]!='X')       // X..
+                { cout<<penaltySym(*(++i));    cout<<tpl[1];    cout<<tpl[2]; }
 
-                else if (tpl[0] == 'X' && tpl[1] != 'X' && tpl[2] != 'X') // X..
-                { cout << penaltySym(*(++i)) << tpl[1] << tpl[2]; }
+                else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]!='X')       // .X.
+                { cout<<tpl[0];    cout<<penaltySym(*(++i));    cout<<tpl[2]; }
 
-                else if (tpl[0] != 'X' && tpl[1] == 'X' && tpl[2] != 'X') // .X.
-                { cout << tpl[0] << penaltySym(*(++i)) << tpl[2]; }
+                else if (tpl[0]=='X' && tpl[1]=='X' && tpl[2]!='X')       // XX.
+                { cout<<penaltySym(*(++i));    cout<<penaltySym(*(++i));
+                  cout<<tpl[2]; }
 
-                else if (tpl[0] == 'X' && tpl[1] == 'X' && tpl[2] != 'X') // XX.
-                { cout << penaltySym(*(++i)) << penaltySym(*(++i)) << tpl[2]; }
-                
-                else if (tpl[0] != 'X' && tpl[1] != 'X' && tpl[2] == 'X') // ..X
-                { cout << tpl[0] << tpl[1] << penaltySym(*(++i)); }
+                else if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]=='X')       // ..X
+                { cout<<tpl[0];    cout<<tpl[1];    cout<<penaltySym(*(++i)); }
 
-                else if (tpl[0] == 'X' && tpl[1] != 'X' && tpl[2] == 'X') // X.X
-                { cout << penaltySym(*(++i)) << tpl[1] << penaltySym(*(++i)); }
+                else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]=='X')       // X.X
+                { cout<<penaltySym(*(++i));    cout<<tpl[1];
+                  cout<<penaltySym(*(++i)); }
 
-                else if (tpl[0] != 'X' && tpl[1] == 'X' && tpl[2] == 'X') // .XX
-                { cout << tpl[0] << penaltySym(*(++i)) << penaltySym(*(++i)); }
+                else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]=='X')       // .XX
+                { cout<<tpl[0];    cout<<penaltySym(*(++i));
+                  cout<<penaltySym(*(++i)); }
 
-                else { cout << penaltySym(*(++i)) << penaltySym(*(++i))   // XXX
-                            << penaltySym(*(++i)); }
+                else { cout<<penaltySym(*(++i));                          // XXX
+                       cout<<penaltySym(*(++i));    cout<<penaltySym(*(++i)); }
             }
         }
     }
@@ -536,12 +539,12 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
             {
                 cout << '@';
                 cout << (plusMore = unpackLarge_read2B(i,XChar_hdr,HDR_UNPACK))
-                     << '\n';   ++i;                                 // header
-                cout << unpackSeqFQ_3to1(i) << '\n';                 // sequence
-                cout << (justPlus ? "+" : "+" + plusMore) << '\n';   ++i;   // +
-                cout << unpackLarge_read2B(i, XChar_qs, QS_UNPACK);  // q scores
-                //end of file
-                if (*(++i) == (char) 252) break;    else cout << '\n';
+                                                              << '\n'; ++i;//hdr
+                cout << unpackSeqFQ_3to1(i)                   << '\n';     //seq
+                cout << (justPlus ? "+" : "+" + plusMore)     << '\n'; ++i;// +
+                cout << unpackLarge_read2B(i, XChar_qs, QS_UNPACK) << '\n';//qs
+                // end of file
+                if (*(++i) == (char) 252)   break;
             }
         }
         else if (hdrRangeLen > MAX_CAT_5 && qsRangeLen <= MAX_CAT_5)
@@ -554,17 +557,17 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
             // tables for unpacking
             buildUnpack(headers_X, keyLen_hdr, HDR_UNPACK);
             buildUnpack(qsRange,   keyLen_qs,  QS_UNPACK);
-
+            
             while (i != decText.end())
             {
                 cout << '@';
                 cout << (plusMore = unpackLarge_read2B(i,XChar_hdr,HDR_UNPACK))
-                     << '\n';   ++i;                                // header
-                cout << unpackSeqFQ_3to1(i) << '\n';                // sequence
-                cout << (justPlus ? "+" : "+" + plusMore) << '\n'; ++i;    // +
-                cout << unpackQS(i, QS_UNPACK);                     // q scores
+                                                              << '\n'; ++i;//hdr
+                cout << unpackSeqFQ_3to1(i)                   << '\n';     //seq
+                cout << (justPlus ? "+" : "+" + plusMore)     << '\n'; ++i;// +
+                cout << unpackQS(i, QS_UNPACK)                << '\n';     //qs
                 // end of file
-                if (*(++i) == (char) 252) break;    else cout << '\n';
+                if (*(++i) == (char) 252)   break;
             }
         }
         else if (hdrRangeLen <= MAX_CAT_5 && qsRangeLen > MAX_CAT_5)
@@ -583,11 +586,11 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
             {
                 cout << '@';
                 cout << (plusMore = unpackHdr(i, HDR_UNPACK)) << '\n'; ++i;//hdr
-                cout << unpackSeqFQ_3to1(i) << '\n';                 // sequence
-                cout << (justPlus ? "+" : "+" + plusMore) << '\n';  ++i;   // +
-                cout << unpackLarge_read2B(i, XChar_qs, QS_UNPACK);  // q scores
-                //end of file
-                if (*(++i) == (char) 252) break;    else cout << '\n';
+                cout << unpackSeqFQ_3to1(i)                   << '\n';     //seq
+                cout << (justPlus ? "+" : "+" + plusMore)     << '\n'; ++i;// +
+                cout << unpackLarge_read2B(i, XChar_qs, QS_UNPACK) << '\n';//qs
+                // end of file
+                if (*(++i) == (char) 252)   break;
             }
         }
         else if (hdrRangeLen <= MAX_CAT_5 && qsRangeLen <= MAX_CAT_5)
@@ -595,21 +598,19 @@ void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
             // tables for unpacking
             buildUnpack(hdrRange, keyLen_hdr, HDR_UNPACK);
             buildUnpack(qsRange,  keyLen_qs,  QS_UNPACK);
-
+            
             while (i != decText.end())
             {
                 cout << '@';
                 cout << (plusMore = unpackHdr(i, HDR_UNPACK)) << '\n'; ++i;//hdr
-                cout << unpackSeqFQ_3to1(i) << '\n';                 // sequence
-                cout << (justPlus ? "+" : "+" + plusMore) << '\n';  ++i;    // +
-                cout << unpackQS(i, QS_UNPACK);                      // q scores
+                cout << unpackSeqFQ_3to1(i)                   << '\n';     //seq
+                cout << (justPlus ? "+" : "+" + plusMore)     << '\n'; ++i;// +
+                cout << unpackQS(i, QS_UNPACK)                << '\n';     //qs
                 // end of file
-                if (*(++i) == (char) 252) break;    else cout << '\n';
+                if (*(++i) == (char) 252)   break;
             }
         }
     }   // end--FASTQ
-    
-//    cout << '\n'; // end of file
 }
 
 /*******************************************************************************
