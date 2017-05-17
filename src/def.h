@@ -51,6 +51,7 @@ typedef std::unordered_map<string, ULL> htable_t;
 /*******************************************************************************
     constants
 *******************************************************************************/
+#define BUFFER 10       // buffer size for separating file for multithreading
 #define LARGE_NUMBER std::numeric_limits<std::streamsize>::max()
 #define CAT_1 2         //       cat 1  =  2
 #define CAT_2 3         //       cat 2  =  3
