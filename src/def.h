@@ -52,8 +52,8 @@ typedef std::unordered_map<string, ULL> htable_t;
     constants
 *******************************************************************************/
 #define LARGE_NUMBER std::numeric_limits<std::streamsize>::max()
-#define CAT_1 2         //       cat 1  = 2
-#define CAT_2 3         //       cat 2  = 3
+#define CAT_1 2         //       cat 1  =  2
+#define CAT_2 3         //       cat 2  =  3
 #define MIN_CAT_3 4     //  4 <= cat 3 <=  6
 #define MID_CAT_3 5
 #define MAX_CAT_3 6
@@ -61,15 +61,11 @@ typedef std::unordered_map<string, ULL> htable_t;
 #define MAX_CAT_4 15
 #define MIN_CAT_5 16    // 16 <= cat 5 <= 39
 #define MAX_CAT_5 39
-#define KEYLEN_CAT_1 7  // 7 to 1 byte. for building hash table
+#define KEYLEN_CAT_1 7  // 7 to 1 byte.  for building hash table
 #define KEYLEN_CAT_2 5  // 5 to 1 byte
 #define KEYLEN_CAT_3 3  // 3 to 1 byte
 #define KEYLEN_CAT_4 2  // 2 to 1 byte
 #define KEYLEN_CAT_5 3  // 3 to 2 byte
-
-//const string QUALITY_SCORES =//excluding !\" abcdefghijklmnopqrstuvwxyz{|}~ (32)
-//"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`";    // (No=62)
-// all permutations for QUALITY_SCORES + "~"
 
 /*******************************************************************************
     lookup tables

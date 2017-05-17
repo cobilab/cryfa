@@ -31,93 +31,90 @@ inline void buildHashTable (htable_t &map, const string &strIn, short keyLen)
     const byte strInLen = strIn.length();
     ULL elementNo = 0;
     string element;
-    
+
     switch (keyLen)
     {
+        case 1:
+            LOOP(i, strInLen)
+            {
+                element = strIn[i];
+                map.insert(make_pair(element, elementNo));
+                ++elementNo;
+            }
+            break;
+
         case 2:
             LOOP2(i, j, strInLen)
             {
                 element = strIn[i];   element += strIn[j];
-    
                 map.insert(make_pair(element, elementNo));
 ////                map.insert({element, elementNo});
 ////                map[element] = elementNo;
                 ++elementNo;
             }
             break;
-        
+
         case 3:
             LOOP3(i, j, k, strInLen)
             {
-                element  = strIn[i];   element += strIn[j];
-                element += strIn[k];
-                
+                element  = strIn[i];  element += strIn[j];  element += strIn[k];
                 map.insert(make_pair(element, elementNo));
                 ++elementNo;
             }
             break;
-        
+
         case 5:
             LOOP5(i, j, k, l, m, strInLen)
             {
-                element  = strIn[i];   element += strIn[j];
-                element += strIn[k];   element += strIn[l];
-                element += strIn[m];
-                
+                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+                element += strIn[l];  element += strIn[m];
                 map.insert(make_pair(element, elementNo));
                 ++elementNo;
             }
             break;
-        
+
         case 7:
             LOOP7(i, j, k, l, m, n, o, strInLen)
             {
-                element  = strIn[i];   element += strIn[j];
-                element += strIn[k];   element += strIn[l];
-                element += strIn[m];   element += strIn[n];
+                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+                element += strIn[l];  element += strIn[m];  element += strIn[n];
                 element += strIn[o];
-                
                 map.insert(make_pair(element, elementNo));
                 ++elementNo;
             }
             break;
-        
+
         case 4:
             LOOP4(i, j, k, l, strInLen)
             {
-                element  = strIn[i];   element += strIn[j];
-                element += strIn[k];   element += strIn[l];
-                
+                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+                element += strIn[l];
                 map.insert(make_pair(element, elementNo));
                 ++elementNo;
             }
             break;
-        
+
         case 6:
             LOOP6(i, j, k, l, m, n, strInLen)
             {
-                element  = strIn[i];   element += strIn[j];
-                element += strIn[k];   element += strIn[l];
-                element += strIn[m];   element += strIn[n];
-                
+                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+                element += strIn[l];  element += strIn[m];  element += strIn[n];
                 map.insert(make_pair(element, elementNo));
                 ++elementNo;
             }
             break;
-        
+
         case 8:
             LOOP8(i, j, k, l, m, n, o, p, strInLen)
             {
-                element  = strIn[i];   element += strIn[j];
-                element += strIn[k];   element += strIn[l];
-                element += strIn[m];   element += strIn[n];
-                element += strIn[o];   element += strIn[p];
-                
+                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+                element += strIn[l];  element += strIn[m];  element += strIn[n];
+                element += strIn[o];  element += strIn[p];
                 map.insert(make_pair(element, elementNo));
                 ++elementNo;
             }
             break;
-            
+
         default: break;
     }
     
@@ -139,16 +136,24 @@ inline void buildUnpack (const string &strIn, short keyLen, string* &unpack)
     const byte strLen = strIn.length();
     ULL elementNo = 0;
     string element;
-    ULL arrSize = pow(strLen, keyLen);   // size of HDR_UNPACK
+    const ULL arrSize = pow(strLen, keyLen);
     unpack = new string[arrSize];
     
     switch (keyLen)
     {
+        case 1:
+            LOOP(i, strLen)
+            {
+                element = strIn[i];
+                unpack[elementNo] = element;
+                ++elementNo;
+            }
+            break;
+            
         case 2:
             LOOP2(i, j, strLen)
             {
                 element = strIn[i];   element += strIn[j];
-    
                 unpack[elementNo] = element;
                 ++elementNo;
             }
@@ -157,9 +162,7 @@ inline void buildUnpack (const string &strIn, short keyLen, string* &unpack)
         case 3:
             LOOP3(i, j, k, strLen)
             {
-                element  = strIn[i];   element += strIn[j];
-                element += strIn[k];
-    
+                element  = strIn[i];  element += strIn[j];  element += strIn[k];
                 unpack[elementNo] = element;
                 ++elementNo;
             }
@@ -168,10 +171,8 @@ inline void buildUnpack (const string &strIn, short keyLen, string* &unpack)
         case 5:
             LOOP5(i, j, k, l, m, strLen)
             {
-                element  = strIn[i];   element += strIn[j];
-                element += strIn[k];   element += strIn[l];
-                element += strIn[m];
-    
+                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+                element += strIn[l];  element += strIn[m];
                 unpack[elementNo] = element;
                 ++elementNo;
             }
@@ -180,11 +181,9 @@ inline void buildUnpack (const string &strIn, short keyLen, string* &unpack)
         case 7:
             LOOP7(i, j, k, l, m, n, o, strLen)
             {
-                element  = strIn[i];   element += strIn[j];
-                element += strIn[k];   element += strIn[l];
-                element += strIn[m];   element += strIn[n];
+                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+                element += strIn[l];  element += strIn[m];  element += strIn[n];
                 element += strIn[o];
-    
                 unpack[elementNo] = element;
                 ++elementNo;
             }
@@ -193,9 +192,8 @@ inline void buildUnpack (const string &strIn, short keyLen, string* &unpack)
         case 4:
             LOOP4(i, j, k, l, strLen)
             {
-                element  = strIn[i];   element += strIn[j];
-                element += strIn[k];   element += strIn[l];
-    
+                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+                element += strIn[l];
                 unpack[elementNo] = element;
                 ++elementNo;
             }
@@ -204,10 +202,8 @@ inline void buildUnpack (const string &strIn, short keyLen, string* &unpack)
         case 6:
             LOOP6(i, j, k, l, m, n, strLen)
             {
-                element  = strIn[i];   element += strIn[j];
-                element += strIn[k];   element += strIn[l];
-                element += strIn[m];   element += strIn[n];
-    
+                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+                element += strIn[l];  element += strIn[m];  element += strIn[n];
                 unpack[elementNo] = element;
                 ++elementNo;
             }
@@ -216,11 +212,9 @@ inline void buildUnpack (const string &strIn, short keyLen, string* &unpack)
         case 8:
             LOOP8(i, j, k, l, m, n, o, p, strLen)
             {
-                element  = strIn[i];   element += strIn[j];
-                element += strIn[k];   element += strIn[l];
-                element += strIn[m];   element += strIn[n];
-                element += strIn[o];   element += strIn[p];
-    
+                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+                element += strIn[l];  element += strIn[m];  element += strIn[n];
+                element += strIn[o];  element += strIn[p];
                 unpack[elementNo] = element;
                 ++elementNo;
             }
@@ -234,7 +228,6 @@ inline void buildUnpack (const string &strIn, short keyLen, string* &unpack)
 //        cerr << unpack[i] << '\n';
 }
 
-//fqHeaderPack
 /*******************************************************************************
     index of each DNA bases pack
 *******************************************************************************/
@@ -281,7 +274,7 @@ inline string packSeq_3to1 (string seq)
         tuple +=
            (thirdNotIn = (s2!='A' && s2!='C' && s2!='G' && s2!='T' && s2!='N'))
            ? 'X' : s2;
-        
+    
         packedSeq += (char) dnaPack(tuple);
         if (firstNotIn)  packedSeq += s0;
         if (secondNotIn) packedSeq += s1;
@@ -329,7 +322,6 @@ inline string packLarge_3to2 (string strIn, string SYM_RANGE, htable_t &map)
         tuple +=(secondNotIn = (SYM_RANGE.find(s1)==string::npos)) ? XChar : s1;
         tuple +=(thirdNotIn  = (SYM_RANGE.find(s2)==string::npos)) ? XChar : s2;
     
-//        shortTuple = hdrLargePack(tuple);
         shortTuple = largePack(tuple, map);
         packed += (unsigned char) (shortTuple >> 8);      // left byte
         packed += (unsigned char) (shortTuple & 0xFF);    // right byte
@@ -369,7 +361,7 @@ inline string pack_3to2 (string strIn, string SYM_RANGE, htable_t &map)
     
     for (x = 0; x < iterLen; x += 3)
     {
-        tuple.clear();   tuple = strIn[x];   tuple += strIn[x+1];   tuple += strIn[x+2];
+        tuple.clear();   tuple=strIn[x];  tuple+=strIn[x+1];  tuple+=strIn[x+2];
         shortTuple = map.find(tuple)->second;
         packed += (byte) (shortTuple >> 8);      // left byte
         packed += (byte) (shortTuple & 0xFF);    // right byte
@@ -409,10 +401,7 @@ inline string pack_2to1 (string strIn, string SYM_RANGE, htable_t &map)
     }
     
     // if len isn't multiple of 2 (it's odd), add (char) 255 before each sym
-    if (strIn.length() & 1)
-    {
-        packed += 255;   packed += strIn[x];
-    }
+    if (strIn.length() & 1) { packed += 255;    packed += strIn[x]; }
     
     return packed;
 }
@@ -428,7 +417,7 @@ inline string pack_3to1 (string strIn, string SYM_RANGE, htable_t &map)
     
     for (x = 0; x < iterLen; x += 3)
     {
-        tuple.clear();  tuple = strIn[x];  tuple += strIn[x+1];  tuple += strIn[x+2];
+        tuple.clear();   tuple=strIn[x];  tuple+=strIn[x+1];  tuple+=strIn[x+2];
         packed += (char) map.find(tuple)->second;
     }
     
@@ -508,8 +497,9 @@ inline string pack_7to1 (string strIn, string SYM_RANGE, htable_t &map)
     
     for (x = 0; x < iterLen; x += 7)
     {
-        tuple.clear();       tuple  = strIn[x];   tuple += strIn[x+1]; tuple += strIn[x+2];
-        tuple += strIn[x+3]; tuple += strIn[x+4]; tuple += strIn[x+5]; tuple += strIn[x+6];
+        tuple.clear();          tuple  = strIn[x];      tuple += strIn[x+1];
+        tuple += strIn[x+2];    tuple += strIn[x+3];    tuple += strIn[x+4];
+        tuple += strIn[x+5];    tuple += strIn[x+6];
         packed += (char) map.find(tuple)->second;
     }
     
@@ -562,6 +552,25 @@ inline string pack_7to1 (string strIn, string SYM_RANGE, htable_t &map)
 }
 
 /*******************************************************************************
+    show 1 symbol in 1 byte.                                               # = 1
+*******************************************************************************/
+inline string pack_1to1 (string strIn, string SYM_RANGE, htable_t &map)
+{
+    string single;
+    string packed;
+    const LL iterLen = strIn.length();
+    LL x = 0;
+    
+    for (x = 0; x < iterLen; ++x)
+    {
+        single.clear();   single = strIn[x];
+        packed += (char) map.find(single)->second;
+    }
+    
+    return packed;
+}
+
+/*******************************************************************************
     penalty symbol
 *******************************************************************************/
 inline char penaltySym (char c)
@@ -572,152 +581,44 @@ inline char penaltySym (char c)
 /*******************************************************************************
     unpack 1 byte to 3 DNA bases -- FASTQ
 *******************************************************************************/
-inline void unpackSeqFQ_3to1 (string::iterator &i)
+inline string unpackSeqFQ_3to1 (string::iterator &i)
 {
-    string tpl;
+    string tpl, out;
     
     for (; *i != (char) 254; ++i)
     {
         //seq len not multiple of 3
-        if (*i == (char) 255) { cout << penaltySym(*(++i));  continue; }
+        if (*i == (char) 255) { out += penaltySym(*(++i));  continue; }
         
         tpl = DNA_UNPACK[(byte) *i];
-    
-        if (tpl[0] != 'X' && tpl[1] != 'X' && tpl[2] != 'X')         // ...
-            cout << tpl;
-            
-        else if (tpl[0] == 'X' && tpl[1] != 'X' && tpl[2] != 'X')    // X..
-            cout << penaltySym(*(++i)) << tpl[1] << tpl[2];
-            
-        else if (tpl[0] != 'X' && tpl[1] == 'X' && tpl[2] != 'X')    // .X.
-            cout << tpl[0] << penaltySym(*(++i)) << tpl[2];
-            
-        else if (tpl[0] == 'X' && tpl[1] == 'X' && tpl[2] != 'X')    // XX.
-            cout << penaltySym(*(++i)) << penaltySym(*(++i)) << tpl[2];
-            
-        else if (tpl[0] != 'X' && tpl[1] != 'X' && tpl[2] == 'X')    // ..X
-            cout << tpl[0] << tpl[1] << penaltySym(*(++i));
-            
-        else if (tpl[0] == 'X' && tpl[1] != 'X' && tpl[2] == 'X')    // X.X
-            cout << penaltySym(*(++i)) << tpl[1] << penaltySym(*(++i));
-            
-        else if (tpl[0] != 'X' && tpl[1] == 'X' && tpl[2] == 'X')    // .XX
-            cout << tpl[0] << penaltySym(*(++i)) << penaltySym(*(++i));
-            
-        else  cout << penaltySym(*(++i)) << penaltySym(*(++i))       // XXX
-                   << penaltySym(*(++i));
+        
+        if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]!='X')                    // ...
+            out += tpl;
+        
+        else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]!='X')               // X..
+        { out += penaltySym(*(++i)); out += tpl[1]; out += tpl[2]; }
+        
+        else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]!='X')               // .X.
+        {out += tpl[0]; out += penaltySym(*(++i)); out += tpl[2]; }
+        
+        else if (tpl[0]=='X' && tpl[1]=='X' && tpl[2]!='X')               // XX.
+        {out += penaltySym(*(++i)); out += penaltySym(*(++i)); out += tpl[2]; }
+        
+        else if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]=='X')               // ..X
+        { out += tpl[0]; out += tpl[1]; out += penaltySym(*(++i)); }
+        
+        else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]=='X')               // X.X
+        { out+=penaltySym(*(++i));    out+=tpl[1];    out+=penaltySym(*(++i)); }
+        
+        else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]=='X')               // .XX
+        { out+=tpl[0];    out+=penaltySym(*(++i));    out+=penaltySym(*(++i)); }
+        
+        else { out += penaltySym(*(++i));    out += penaltySym(*(++i));   // XXX
+               out += penaltySym(*(++i)); }
     }
-    cout << '\n';
-}
-
-
-
-
-
-
-/*******************************************************************************
-    unpack headers by reading 2 byte by 2 byte, when #hdr > 39
-*******************************************************************************/
-inline void unpackHdrLarge_read2B (string::iterator &i, const char XChar,
-                                   string &plusMore)
-{
-    byte leftB, rightB;     // left and right bytes
-    unsigned short doubleB; // double byte
-    string tpl;             // tuplet
     
-    plusMore.clear();
-    while (*i != (char) 254)
-    {
-        // hdr len not multiple of keyLen
-        if (*i == (char) 255)
-        {
-            cout << penaltySym(*(i+1));
-            plusMore += penaltySym(*(i+1));
-            i += 2;
-            continue;
-        }
-
-        leftB   = *i;
-        rightB  = *(i+1);
-        doubleB = leftB<<8 | rightB;    // join two bytes
-
-        tpl = HDR_UNPACK[doubleB];
-
-        if (tpl[0] != XChar && tpl[1] != XChar && tpl[2] != XChar)        // ...
-        {
-            cout << tpl;
-            plusMore += tpl;
-            i += 2;
-        }
-        else if (tpl[0] == XChar && tpl[1] != XChar && tpl[2] != XChar)   // X..
-        {
-            cout << penaltySym(*(i+2)) << tpl[1] << tpl[2];
-            plusMore += penaltySym(*(i+2));
-            plusMore += tpl[1];
-            plusMore += tpl[2];
-            i += 3;
-        }
-        else if (tpl[0] != XChar && tpl[1] == XChar && tpl[2] != XChar)   // .X.
-        {
-            cout << tpl[0] << penaltySym(*(i+2)) << tpl[2];
-            plusMore += tpl[0];
-            plusMore += penaltySym(*(i+2));
-            plusMore += tpl[2];
-            i += 3;
-        }
-        else if (tpl[0] == XChar && tpl[1] == XChar && tpl[2] != XChar)   // XX.
-        {
-            cout << penaltySym(*(i+2)) << penaltySym(*(i+3)) << tpl[2];
-            plusMore += penaltySym(*(i+2));
-            plusMore += penaltySym(*(i+3));
-            plusMore += tpl[2];
-            i += 4;
-        }
-        else if (tpl[0] != XChar && tpl[1] != XChar && tpl[2] == XChar)   // ..X
-        {
-            cout << tpl[0] << tpl[1] << penaltySym(*(i+2));
-            plusMore += tpl[0];
-            plusMore += tpl[1];
-            plusMore += penaltySym(*(i+2));
-            i += 3;
-        }
-        else if (tpl[0] == XChar && tpl[1] != XChar && tpl[2] == XChar)   // X.X
-        {
-            cout << penaltySym(*(i+2)) << tpl[1] << penaltySym(*(i+3));
-            plusMore += penaltySym(*(i+2));
-            plusMore += tpl[1];
-            plusMore += penaltySym(*(i+3));
-            i += 4;
-        }
-        else if (tpl[0] != XChar && tpl[1] == XChar && tpl[2] == XChar)   // .XX
-        {
-            cout << tpl[0] << penaltySym(*(i+2)) << penaltySym(*(i+3));
-            plusMore += tpl[0];
-            plusMore += penaltySym(*(i+2));
-            plusMore += penaltySym(*(i+3));
-            i += 4;
-        }
-        else                                                              // XXX
-        {
-            cout << penaltySym(*(i+2)) << penaltySym(*(i+3))
-                 << penaltySym(*(i+4));
-            plusMore += penaltySym(*(i+2));
-            plusMore += penaltySym(*(i+3));
-            plusMore += penaltySym(*(i+4));
-            i += 5;
-        }
-    }
-    cout << '\n';
+    return out;
 }
-
-
-
-
-
-
-
-
-
 
 /*******************************************************************************
     unpack by reading 2 byte by 2 byte, when # > 39
@@ -730,18 +631,10 @@ inline string unpackLarge_read2B (string::iterator &i, const char XChar,
     string tpl;             // tuplet
     string out;
     
-//    plusMore.clear();
     while (*i != (char) 254)
     {
         // hdr len not multiple of keyLen
-        if (*i == (char) 255)
-        {
-//            cout << penaltySym(*(i+1));
-            out += penaltySym(*(i+1));
-//            plusMore += penaltySym(*(i+1));
-            i += 2;
-            continue;
-        }
+        if (*i == (char) 255) { out += penaltySym(*(i+1));   i+=2;   continue; }
         
         leftB   = *i;
         rightB  = *(i+1);
@@ -749,94 +642,30 @@ inline string unpackLarge_read2B (string::iterator &i, const char XChar,
         
         tpl = unpack[doubleB];
         
-        if (tpl[0] != XChar && tpl[1] != XChar && tpl[2] != XChar)        // ...
-        {
-//            cout << tpl;
-            out += tpl;
-//            plusMore += tpl;
-            i += 2;
-        }
-        else if (tpl[0] == XChar && tpl[1] != XChar && tpl[2] != XChar)   // X..
-        {
-//            cout << penaltySym(*(i+2)) << tpl[1] << tpl[2];
-            out += penaltySym(*(i+2));
-            out += tpl[1];
-            out += tpl[2];
-//            plusMore += penaltySym(*(i+2));
-//            plusMore += tpl[1];
-//            plusMore += tpl[2];
-            i += 3;
-        }
-        else if (tpl[0] != XChar && tpl[1] == XChar && tpl[2] != XChar)   // .X.
-        {
-//            cout << tpl[0] << penaltySym(*(i+2)) << tpl[2];
-            out += tpl[0];
-            out += penaltySym(*(i+2));
-            out += tpl[2];
-//            plusMore += tpl[0];
-//            plusMore += penaltySym(*(i+2));
-//            plusMore += tpl[2];
-            i += 3;
-        }
-        else if (tpl[0] == XChar && tpl[1] == XChar && tpl[2] != XChar)   // XX.
-        {
-//            cout << penaltySym(*(i+2)) << penaltySym(*(i+3)) << tpl[2];
-            out += penaltySym(*(i+2));
-            out += penaltySym(*(i+3));
-            out += tpl[2];
-//            plusMore += penaltySym(*(i+2));
-//            plusMore += penaltySym(*(i+3));
-//            plusMore += tpl[2];
-            i += 4;
-        }
-        else if (tpl[0] != XChar && tpl[1] != XChar && tpl[2] == XChar)   // ..X
-        {
-//            cout << tpl[0] << tpl[1] << penaltySym(*(i+2));
-            out += tpl[0];
-            out += tpl[1];
-            out += penaltySym(*(i+2));
-//            plusMore += tpl[0];
-//            plusMore += tpl[1];
-//            plusMore += penaltySym(*(i+2));
-            i += 3;
-        }
-        else if (tpl[0] == XChar && tpl[1] != XChar && tpl[2] == XChar)   // X.X
-        {
-//            cout << penaltySym(*(i+2)) << tpl[1] << penaltySym(*(i+3));
-            out += penaltySym(*(i+2));
-            out += tpl[1];
-            out += penaltySym(*(i+3));
-//            plusMore += penaltySym(*(i+2));
-//            plusMore += tpl[1];
-//            plusMore += penaltySym(*(i+3));
-            i += 4;
-        }
-        else if (tpl[0] != XChar && tpl[1] == XChar && tpl[2] == XChar)   // .XX
-        {
-//            cout << tpl[0] << penaltySym(*(i+2)) << penaltySym(*(i+3));
-            out += tpl[0];
-            out += penaltySym(*(i+2));
-            out += penaltySym(*(i+3));
-//            plusMore += tpl[0];
-//            plusMore += penaltySym(*(i+2));
-//            plusMore += penaltySym(*(i+3));
-            i += 4;
-        }
-        else                                                              // XXX
-        {
-//            cout << penaltySym(*(i+2)) << penaltySym(*(i+3))
-//                 << penaltySym(*(i+4));
-            out += penaltySym(*(i+2));
-            out += penaltySym(*(i+3));
-            out += penaltySym(*(i+4));
-//            plusMore += penaltySym(*(i+2));
-//            plusMore += penaltySym(*(i+3));
-//            plusMore += penaltySym(*(i+4));
-            i += 5;
-        }
+        if (tpl[0]!=XChar && tpl[1]!=XChar && tpl[2]!=XChar)              // ...
+        { out += tpl;                                                    i+=2; }
+        
+        else if (tpl[0]==XChar && tpl[1]!=XChar && tpl[2]!=XChar)         // X..
+        { out += penaltySym(*(i+2));   out += tpl[1];   out += tpl[2];   i+=3; }
+        
+        else if (tpl[0]!=XChar && tpl[1]==XChar && tpl[2]!=XChar)         // .X.
+        { out += tpl[0];   out += penaltySym(*(i+2));   out += tpl[2];   i+=3; }
+        
+        else if (tpl[0]==XChar && tpl[1]==XChar && tpl[2]!=XChar)         // XX.
+        { out+=penaltySym(*(i+2)); out+=penaltySym(*(i+3)); out+=tpl[2]; i+=4; }
+        
+        else if (tpl[0]!=XChar && tpl[1]!=XChar && tpl[2]==XChar)         // ..X
+        { out += tpl[0];   out += tpl[1];   out += penaltySym(*(i+2));   i+=3; }
+        
+        else if (tpl[0]==XChar && tpl[1]!=XChar && tpl[2]==XChar)         // X.X
+        { out+=penaltySym(*(i+2)); out+=tpl[1]; out+=penaltySym(*(i+3)); i+=4; }
+        
+        else if (tpl[0]!=XChar && tpl[1]==XChar && tpl[2]==XChar)         // .XX
+        { out+=tpl[0]; out+=penaltySym(*(i+2)); out+=penaltySym(*(i+3)); i+=4; }
+        
+        else { out += penaltySym(*(i+2));    out += penaltySym(*(i+3));   // XXX
+               out += penaltySym(*(i+4));                                i+=5; }
     }
-//    cout << '\n';
-    out += '\n';
     
     return out;
 }
@@ -850,28 +679,17 @@ inline string unpack_read2B (string::iterator &i, string* &unpack)
     unsigned short doubleB; // double byte
     string out;
     
-//    plusMore.clear();
     for (; *i != (char) 254; i += 2)
     {
         // hdr len not multiple of keyLen
-        if (*i == (char) 255)
-        {
-//            cout << penaltySym(*(i+1));
-            out += penaltySym(*(i+1));
-//            plusMore += penaltySym(*(i+1));
-            continue;
-        }
+        if (*i == (char) 255) { out += penaltySym(*(i+1));    continue; }
         
         leftB   = *i;
         rightB  = *(i+1);
         doubleB = leftB<<8 | rightB;    // join two bytes
         
-//        cout << unpack[doubleB];
         out += unpack[doubleB];
-//        plusMore += HDR_UNPACK[doubleB];
     }
-//    cout << '\n';
-//    out += '\n';
     
     return out;
 }
@@ -882,165 +700,15 @@ inline string unpack_read2B (string::iterator &i, string* &unpack)
 inline string unpack_read1B (string::iterator &i, string* &unpack)
 {
     string out;
-//    plusMore.clear();
+    
     for (; *i != (char) 254; ++i)
     {
         // hdr len not multiple of keyLen
-        if (*i == (char) 255)
-        {
-//            cout << penaltySym(*(i+1));
-            out += penaltySym(*(i+1));
-//            plusMore += penaltySym(*(i+1));
-            continue;
-        }
-        
-//        cout << HDR_UNPACK[(byte) *i];
+        if (*i == (char) 255) { out += penaltySym(*(++i));    continue; }
         out += unpack[(byte) *i];
-//        plusMore += HDR_UNPACK[(byte) *i];
     }
-//    cout << '\n';
-    out += '\n';
-    
+
     return out;
-}
-
-
-
-
-
-
-
-
-/*******************************************************************************
-    unpack headers by reading 2 byte by 2 byte
-*******************************************************************************/
-inline void unpackHdr_read2B (string::iterator &i, string &plusMore)
-{
-    byte leftB, rightB;     // left and right bytes
-    unsigned short doubleB; // double byte
-    
-    plusMore.clear();
-    for (; *i != (char) 254; i += 2)
-    {
-        // hdr len not multiple of keyLen
-        if (*i == (char) 255)
-        {
-            cout << penaltySym(*(i+1));
-            plusMore += penaltySym(*(i+1));
-            continue;
-        }
-
-        leftB   = *i;
-        rightB  = *(i+1);
-        doubleB = leftB<<8 | rightB;    // join two bytes
-
-        cout << HDR_UNPACK[doubleB];
-        plusMore += HDR_UNPACK[doubleB];
-    }
-    cout << '\n';
-}
-
-/*******************************************************************************
-    unpack headers by reading 1 byte by 1 byte
-*******************************************************************************/
-inline void unpackHdr_read1B (string::iterator &i, string &plusMore)
-{
-    plusMore.clear();
-    for (; *i != (char) 254; ++i)
-    {
-        // hdr len not multiple of keyLen
-        if (*i == (char) 255)
-        {
-            cout << penaltySym(*(i+1));
-            plusMore += penaltySym(*(i+1));
-            continue;
-        }
-
-        cout << HDR_UNPACK[(byte) *i];
-        plusMore += HDR_UNPACK[(byte) *i];
-    }
-    cout << '\n';
-}
-
-/*******************************************************************************
-    unpack quality scores by reading 2 byte by 2 byte, when #QS > 39
-*******************************************************************************/
-inline void unpackQSLarge_read2B (string::iterator &i, const char XChar)
-{
-    byte leftB, rightB;     // left and right bytes
-    unsigned short doubleB; // double byte
-    string tpl;             // tuplet
-    
-    while (*i != (char) 254)
-    {
-        //seq len not multiple of keyLen
-        if (*i == (char) 255) { cout << penaltySym(*(i+1));   i+=2;  continue; }
-
-        leftB   = *i;
-        rightB  = *(i+1);
-        doubleB = leftB<<8 | rightB;    // join two bytes
-        
-        tpl = QS_UNPACK[doubleB];
-        
-        if (tpl[0] != XChar && tpl[1] != XChar && tpl[2] != XChar)        // ...
-        { cout << tpl;                                                   i+=2; }
-        
-        else if (tpl[0] == XChar && tpl[1] != XChar && tpl[2] != XChar)   // X..
-        { cout << penaltySym(*(i+2)) << tpl[1] << tpl[2];                i+=3; }
-        
-        else if (tpl[0] != XChar && tpl[1] == XChar && tpl[2] != XChar)   // .X.
-        { cout << tpl[0] << penaltySym(*(i+2)) << tpl[2];                i+=3; }
-        
-        else if (tpl[0] == XChar && tpl[1] == XChar && tpl[2] != XChar)   // XX.
-        { cout << penaltySym(*(i+2)) << penaltySym(*(i+3)) << tpl[2];    i+=4; }
-        
-        else if (tpl[0] != XChar && tpl[1] != XChar && tpl[2] == XChar)   // ..X
-        { cout << tpl[0] << tpl[1] << penaltySym(*(i+2));                i+=3; }
-        
-        else if (tpl[0] == XChar && tpl[1] != XChar && tpl[2] == XChar)   // X.X
-        { cout << penaltySym(*(i+2)) << tpl[1] << penaltySym(*(i+3));    i+=4; }
-        
-        else if (tpl[0] != XChar && tpl[1] == XChar && tpl[2] == XChar)   // .XX
-        { cout << tpl[0] << penaltySym(*(i+2)) << penaltySym(*(i+3));    i+=4; }
-        
-        else { cout << penaltySym(*(i+2)) << penaltySym(*(i+3))           // XXX
-                    << penaltySym(*(i+4));                               i+=5; }
-    }
-}
-
-/*******************************************************************************
-    unpack quality scores by reading 2 byte by 2 byte
-*******************************************************************************/
-inline void unpackQS_read2B (string::iterator &i)
-{
-    byte leftB, rightB;     // left and right bytes
-    unsigned short doubleB; // double byte
-    
-    for (; *i != (char) 254; i += 2)
-    {
-        //seq len not multiple of keyLen
-        if (*i == (char) 255) { cout << penaltySym(*(i+1));    continue; }
-        
-        leftB   = *i;
-        rightB  = *(i+1);
-        doubleB = leftB<<8 | rightB;    // join two bytes
-        
-        cout << QS_UNPACK[doubleB];
-    }
-}
-
-/*******************************************************************************
-    unpack quality scores by reading 1 byte by 1 byte
-*******************************************************************************/
-inline void unpackQS_read1B (string::iterator &i)
-{
-    for (; *i != (char) 254; ++i)
-    {
-        //seq len not multiple of keyLen
-        if (*i == (char) 255) { cout << penaltySym(*(++i));    continue; }
-        
-        cout << QS_UNPACK[(byte) *i];
-    }
 }
 
 #endif //CRYFA_PACK_H
