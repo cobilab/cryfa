@@ -573,7 +573,9 @@ inline string pack_1to1 (string strIn, string SYM_RANGE, htable_t &map)
 /*******************************************************************************
     penalty symbol
 *******************************************************************************/
-inline char penaltySym (char c)
+//inline
+constexpr
+char penaltySym (char c)
 {
     return (c != (char) 254 && c != (char) 252) ? c : (char) 10; //(char)10='\n'
 }

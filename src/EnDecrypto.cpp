@@ -47,8 +47,8 @@ EnDecrypto::EnDecrypto () {}
            7 <= cat 4 <= 15
           16 <= cat 5 <= 39
 *******************************************************************************/
-void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
-                          const string &keyFileName)
+void EnDecrypto::encrypt (int argc, char **argv, const string &keyFileName,
+                          const int v_flag)
 {
     ifstream in(argv[argc-1]);
     const bool FASTA = (findFileType(in) == 'A');
@@ -62,10 +62,7 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
     string qsRange;             // quality scores presented in FASTQ file
     
     if (!in.good())
-    {
-        cerr << "Error: failed opening '" << argv[argc-1] << "'.\n";
-        return;
-    }
+    { cerr << "Error: failed opening '" << argv[argc-1] << "'.\n";    exit(1); }
     
     // FASTA
     if (FASTA)
@@ -92,10 +89,7 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
             else
             {
                 if (line.find(' ') != string::npos)
-                {
-                    cerr << "Invalid sequence -- spaces not allowed.\n";
-                    return;
-                }
+                { cerr << "Invalid sequence -- spaces not allowed.\n"; exit(1);}
                 // (char) 254 instead of '\n' at the end of each seq line
                 seq += line + (char) 254;
             }
@@ -199,7 +193,7 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
                 packHdr = &pack_1to1;
             }
         }
-
+        
         // quality score
         if (qsRangeLen > MAX_CAT_5)       // if len > 39 filter the last 39 ones
         {
@@ -311,11 +305,11 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
         cerr << "cipher size: " << cipherText.size() << '\n';
         cerr << " block size: " << AES::BLOCKSIZE    << '\n';
     }
-    
+
     // watermark for encrypted file
     cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
                        + std::to_string(RELEASE_CRYFA) + "\n";
-    
+
     // dump cyphertext for read
     for (string::iterator i = cipherText.begin(); i != cipherText.end(); ++i)
         cout << (char) (0xFF & static_cast<byte> (*i));
@@ -342,8 +336,8 @@ void EnDecrypto::encrypt (int argc, char **argv, const int v_flag,
            7 <= cat 4 <= 15
           16 <= cat 5 <= 39
 *******************************************************************************/
-void EnDecrypto::decrypt (int argc, char **argv, const int v_flag,
-                          const string &keyFileName)
+void EnDecrypto::decrypt (int argc, char **argv, const string &keyFileName,
+                          const int v_flag)
 {
     // cryptography
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
@@ -693,7 +687,7 @@ inline void EnDecrypto::printKey (byte *key) const
 inline char EnDecrypto::findFileType (std::ifstream &in)
 {
     string line;
-
+    
     // FASTQ
     while (getline(in, line).good())
     {
@@ -704,7 +698,7 @@ inline char EnDecrypto::findFileType (std::ifstream &in)
             return 'Q';
         }
     }
-
+    
     // FASTA
     in.clear();  in.seekg(0, std::ios::beg);  return 'A';
 }

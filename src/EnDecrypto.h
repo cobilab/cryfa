@@ -17,9 +17,9 @@ class EnDecrypto
 public:
     EnDecrypto();                                             // constructor
     
-    void encrypt (int, char**, const int, const string&);     // encrypt
-    void decrypt (int, char**, const int, const string&);     // decrypt
-
+    void encrypt (int, char**, const string&, const int);     // encrypt
+    void decrypt (int, char**, const string&, const int);     // decrypt
+    
 private:
     inline void buildIV  (byte*, string);                     // build IV
     inline void buildKey (byte*, string);                     // build key

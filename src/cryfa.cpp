@@ -38,7 +38,7 @@ int main (int argc, char* argv[])
     EnDecrypto crpt;
 
     static int h_flag, a_flag, v_flag, d_flag;
-    string KeyFileName;     // argument of option 'k'
+    string keyFileName;     // argument of option 'k'
     int c;                  // deal with getopt_long()
     int option_index;       // option index stored by getopt_long()
     opterr = 0;  // force getopt_long() to remain silent when it finds a problem
@@ -87,7 +87,7 @@ int main (int argc, char* argv[])
                 break;
 
             case 'k':   // needs key filename
-                KeyFileName = (string) optarg;
+                keyFileName = (string) optarg;
                 break;
 
             default:
@@ -100,8 +100,8 @@ int main (int argc, char* argv[])
     if (d_flag)
     {
         cerr << "Decrypting...\n";
-        crpt.decrypt(argc, argv, v_flag, KeyFileName);
-
+        crpt.decrypt(argc, argv, keyFileName, v_flag);//todo.
+        
         // stop timer
         high_resolution_clock::time_point finishTime =
                 high_resolution_clock::now();
@@ -109,13 +109,29 @@ int main (int argc, char* argv[])
         std::chrono::duration<double> elapsed = finishTime - startTime;
         cerr << "done in " << std::fixed << setprecision(4) << elapsed.count()
              << " seconds.\n";
-
+        
         return 0;
     }
-
+    
     cerr << "Encrypting...\n";
-    crpt.encrypt(argc, argv, v_flag, KeyFileName);
-
+    crpt.encrypt(argc, argv, keyFileName, v_flag);
+    
+    //todo. khoondane file
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     // stop timer
     high_resolution_clock::time_point finishTime = high_resolution_clock::now();
     // duration in seconds

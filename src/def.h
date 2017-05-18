@@ -16,6 +16,10 @@ using std::cout;
 using std::string;
 using std::unordered_map;
 
+//#define _XOPEN_SOURCE 500
+//#include <unistd.h>
+//pread();
+
 /*******************************************************************************
     version and release
 *******************************************************************************/
@@ -51,7 +55,8 @@ typedef std::unordered_map<string, ULL> htable_t;
 /*******************************************************************************
     constants
 *******************************************************************************/
-#define BUFFER 10       // buffer size for separating file for multithreading
+#define DEFAULT_N_THREADS 2     /// default number of threads
+#define BUFFER 10       // buffer size (lines) for separating file for multithreading
 #define LARGE_NUMBER std::numeric_limits<std::streamsize>::max()
 #define CAT_1 2         //       cat 1  =  2
 #define CAT_2 3         //       cat 2  =  3
@@ -94,7 +99,7 @@ const string DNA_UNPACK[] =     // 216 elements
     "XTA", "XTC", "XTG", "XTT", "XTN", "XTX", "XNA", "XNC", "XNG", "XNT", "XNN",
     "XNX", "XXA", "XXC", "XXG", "XXT", "XXN", "XXX"
 };
-
+// . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 const htable_t DNA_MAP =
 {
     {"AAA",   0}, {"AAC",   1}, {"AAG",   2}, {"AAT",   3}, {"AAN",   4},
@@ -169,7 +174,7 @@ inline void Help ()    // usage guide
       << "         key filename"                                      << '\n'
                                                                       << '\n';
 }
-
+// . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
 inline void About ()   // About cryfa
 {
     cout                                                              << '\n'
