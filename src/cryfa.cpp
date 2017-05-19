@@ -27,6 +27,12 @@ using std::cerr;
 using std::chrono::high_resolution_clock;
 using std::setprecision;
 
+
+
+
+#include <fstream>
+#include <istream>
+#include <ostream>
 ////////////////////////////////////////////////////////////////////////////////
 ///////////////////                 M A I N                 ////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -34,13 +40,14 @@ int main (int argc, char* argv[])
 {
     // start timer
     high_resolution_clock::time_point startTime = high_resolution_clock::now();
-
+    
     EnDecrypto crpt;
-
+    
     static int h_flag, a_flag, v_flag, d_flag;
-    string keyFileName;     // argument of option 'k'
-    int c;                  // deal with getopt_long()
-    int option_index;       // option index stored by getopt_long()
+    string keyFileName;                  // argument of option 'k'
+    byte n_threads = DEFAULT_N_THREADS;  // number of threads
+    int c;                               // deal with getopt_long()
+    int option_index;                    // option index stored by getopt_long()
     opterr = 0;  // force getopt_long() to remain silent when it finds a problem
 
     static struct option long_options[] =
@@ -50,13 +57,14 @@ int main (int argc, char* argv[])
         {"verbose",       no_argument, &v_flag, (int) 'v'},    // verbose
         {"decrypt",       no_argument, &d_flag, (int) 'd'},    // decrypt mode
         {"key",     required_argument,       0,       'k'},    // key file
+        {"threads", required_argument,       0,       't'},    // #threads >= 1
         {0,                         0,       0,         0}
     };
-
+    
     while (1)
     {
         option_index = 0;
-        if ((c = getopt_long(argc, argv, ":havdk:",
+        if ((c = getopt_long(argc, argv, ":havdk:t:",
                              long_options, &option_index)) == -1)    break;
 
         switch (c)
@@ -85,11 +93,15 @@ int main (int argc, char* argv[])
             case 'd':   // decrypt mode
                 d_flag = 1;
                 break;
-
+                
             case 'k':   // needs key filename
                 keyFileName = (string) optarg;
                 break;
-
+            
+            case 't':   // number of threads
+                n_threads = (byte) stoi((string) optarg);
+                break;
+                
             default:
                 cerr << "Option '" << (char) optopt << "' is invalid.\n";
                 break;
@@ -109,19 +121,63 @@ int main (int argc, char* argv[])
         std::chrono::duration<double> elapsed = finishTime - startTime;
         cerr << "done in " << std::fixed << setprecision(4) << elapsed.count()
              << " seconds.\n";
-        
+    
         return 0;
     }
     
     cerr << "Encrypting...\n";
-    crpt.encrypt(argc, argv, keyFileName, v_flag);
+    crpt.encrypt(argc, argv, keyFileName, v_flag);//todo.
+    
+    
     
     //todo. khoondane file
     
-    
-    
-    
-    
+//    std::ifstream infile(argv[argc-1]);
+//    std::ofstream outfile("outFile");
+//
+//    // get size of file
+//    infile.seekg(0, infile.end);
+//    long size = 10000000;//infile.tellg();
+//    infile.seekg(0);
+//
+//    // allocate memory for file content
+//    char *buffer = new char[size];
+//
+//    // read content of infile
+//    infile.read(buffer, size);
+//
+//    // write to outfile
+//    outfile.write(buffer, size);
+//
+//    // release dynamically-allocated memory
+//    delete[] buffer;
+//
+//    outfile.close();
+//    infile.close();
+
+
+
+
+//    string *strIn = new string[n_threads];
+//    string line;
+//    string out;
+//    std::ifstream in("temp.fq");
+//    const bool FASTA = (crpt.findFileType(in) == 'A');cerr<<FASTA;
+//    while (getline(in, line))
+//    {
+//        out += line + "\n";
+////        out+='\n';
+//    }
+//    out.pop_back();
+//
+//    cerr << out;
+
+
+//    for (byte t = 0; t < n_threads; ++t)
+//    {
+//        for(unsigned short lineNo = 0; getline(, line))
+////    strIn[t]+=;
+//    }
     
     
     

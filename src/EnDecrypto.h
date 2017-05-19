@@ -20,12 +20,13 @@ public:
     void encrypt (int, char**, const string&, const int);     // encrypt
     void decrypt (int, char**, const string&, const int);     // decrypt
     
+    
+    inline char findFileType (std::ifstream&);                // FASTA or FASTQ?
 private:
     inline void buildIV  (byte*, string);                     // build IV
     inline void buildKey (byte*, string);                     // build key
     inline void printIV  (byte*) const;                       // print IV
     inline void printKey (byte*) const;                       // print key
-    inline char findFileType (std::ifstream&);                // FASTA or FASTQ?
     inline string getPassFromFile (const string&) const;      // get password
     inline void evalPassSize (const string&) const;           // eval. pass size
 };

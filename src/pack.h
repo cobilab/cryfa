@@ -158,7 +158,7 @@ inline void buildUnpack (const string &strIn, short keyLen, string* &unpack)
                 ++elementNo;
             }
             break;
-        
+            
         case 3:
             LOOP3(i, j, k, strLen)
             {

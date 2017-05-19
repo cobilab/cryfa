@@ -106,8 +106,7 @@ void EnDecrypto::encrypt (int argc, char **argv, const string &keyFileName,
         in.ignore(LARGE_NUMBER, '\n');                  // ignore seq
         if (getline(in, line).good()) { if (line.length() > 1) justPlus=false; }
 //        else { cerr << "Error: file corrupted.\n";    return; }
-        in.ignore(LARGE_NUMBER, '\n');                  // ignore seq
-        in.clear();  in.seekg(0, std::ios::beg);        // beginning of file
+        in.clear();  in.seekg(0, in.beg);        // beginning of file
 
         // gather all headers and quality scores
         while(!in.eof())
@@ -298,18 +297,18 @@ void EnDecrypto::encrypt (int argc, char **argv, const string &keyFileName,
     stfEncryptor.Put(reinterpret_cast<const byte*>
                      (context.c_str()), context.length() + 1);
     stfEncryptor.MessageEnd();
-
+    
     if (v_flag)
     {
         cerr << "   sym size: " << context.size()    << '\n';
         cerr << "cipher size: " << cipherText.size() << '\n';
         cerr << " block size: " << AES::BLOCKSIZE    << '\n';
     }
-
+    
     // watermark for encrypted file
     cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
                        + std::to_string(RELEASE_CRYFA) + "\n";
-
+    
     // dump cyphertext for read
     for (string::iterator i = cipherText.begin(); i != cipherText.end(); ++i)
         cout << (char) (0xFF & static_cast<byte> (*i));

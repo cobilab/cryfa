@@ -55,23 +55,23 @@ typedef std::unordered_map<string, ULL> htable_t;
 /*******************************************************************************
     constants
 *******************************************************************************/
-#define DEFAULT_N_THREADS 2     /// default number of threads
-#define BUFFER 10       // buffer size (lines) for separating file for multithreading
+#define DEFAULT_N_THREADS 1 // default number of threads
+#define LINE_BUFFER 1000    // buff. size (lines). separate file. multithreading
 #define LARGE_NUMBER std::numeric_limits<std::streamsize>::max()
-#define CAT_1 2         //       cat 1  =  2
-#define CAT_2 3         //       cat 2  =  3
-#define MIN_CAT_3 4     //  4 <= cat 3 <=  6
+#define CAT_1 2             //       cat 1  =  2
+#define CAT_2 3             //       cat 2  =  3
+#define MIN_CAT_3 4         //  4 <= cat 3 <=  6
 #define MID_CAT_3 5
 #define MAX_CAT_3 6
-#define MIN_CAT_4 7     //  7 <= cat 4 <= 15
+#define MIN_CAT_4 7         //  7 <= cat 4 <= 15
 #define MAX_CAT_4 15
-#define MIN_CAT_5 16    // 16 <= cat 5 <= 39
+#define MIN_CAT_5 16        // 16 <= cat 5 <= 39
 #define MAX_CAT_5 39
-#define KEYLEN_CAT_1 7  // 7 to 1 byte.  for building hash table
-#define KEYLEN_CAT_2 5  // 5 to 1 byte
-#define KEYLEN_CAT_3 3  // 3 to 1 byte
-#define KEYLEN_CAT_4 2  // 2 to 1 byte
-#define KEYLEN_CAT_5 3  // 3 to 2 byte
+#define KEYLEN_CAT_1 7      // 7 to 1 byte.  for building hash table
+#define KEYLEN_CAT_2 5      // 5 to 1 byte
+#define KEYLEN_CAT_3 3      // 3 to 1 byte
+#define KEYLEN_CAT_4 2      // 2 to 1 byte
+#define KEYLEN_CAT_5 3      // 3 to 2 byte
 
 /*******************************************************************************
     lookup tables
@@ -99,7 +99,7 @@ const string DNA_UNPACK[] =     // 216 elements
     "XTA", "XTC", "XTG", "XTT", "XTN", "XTX", "XNA", "XNC", "XNG", "XNT", "XNN",
     "XNX", "XXA", "XXC", "XXG", "XXT", "XXN", "XXX"
 };
-// . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+//..............................................................................
 const htable_t DNA_MAP =
 {
     {"AAA",   0}, {"AAC",   1}, {"AAG",   2}, {"AAT",   3}, {"AAN",   4},
@@ -172,9 +172,12 @@ inline void Help ()    // usage guide
                                                                       << '\n'
       << "    -k [KEYFILE],  --key [KEYFILE]"                         << '\n'
       << "         key filename"                                      << '\n'
+                                                                      << '\n'
+      << "    -t [NUMBER],  --threads [NUMBER]"                       << '\n'
+      << "         number of threads"                                 << '\n'
                                                                       << '\n';
 }
-// . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+//..............................................................................
 inline void About ()   // About cryfa
 {
     cout                                                              << '\n'
