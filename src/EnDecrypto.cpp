@@ -106,8 +106,8 @@ void EnDecrypto::encrypt (int argc, char **argv, const string &keyFileName,
         in.ignore(LARGE_NUMBER, '\n');                  // ignore seq
         if (getline(in, line).good()) { if (line.length() > 1) justPlus=false; }
 //        else { cerr << "Error: file corrupted.\n";    return; }
-        in.clear();  in.seekg(0, in.beg);        // beginning of file
-
+        in.clear();  in.seekg(0, in.beg);               // beginning of file
+        
         // gather all headers and quality scores
         while(!in.eof())
         {
@@ -267,7 +267,7 @@ void EnDecrypto::encrypt (int argc, char **argv, const string &keyFileName,
         }
         context += (char) 252;  // end of file
     }
-
+    
     in.close();
     
     // cryptography
@@ -311,7 +311,8 @@ void EnDecrypto::encrypt (int argc, char **argv, const string &keyFileName,
     
     // dump cyphertext for read
     for (string::iterator i = cipherText.begin(); i != cipherText.end(); ++i)
-        cout << (char) (0xFF & static_cast<byte> (*i));
+        cout << (char) (*i & 0xFF);
+//        cout << (char) (0xFF & static_cast<byte> (*i));
     cout << '\n';
 }
 

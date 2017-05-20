@@ -17,6 +17,13 @@ class EnDecrypto
 public:
     EnDecrypto();                                             // constructor
     
+//    void compressFA();
+//    void compressFQ();
+//    void encrypt();
+//    void decompressFA();
+//    void decompressFQ();
+//    void decrypt();
+    
     void encrypt (int, char**, const string&, const int);     // encrypt
     void decrypt (int, char**, const string&, const int);     // decrypt
     

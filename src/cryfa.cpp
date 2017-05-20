@@ -21,6 +21,7 @@
 #include <iomanip>      // setw, setprecision
 #include "def.h"
 #include "EnDecrypto.h"
+#include "fcn.h"
 using std::string;
 using std::cout;
 using std::cerr;
@@ -30,9 +31,9 @@ using std::setprecision;
 
 
 
-#include <fstream>
-#include <istream>
-#include <ostream>
+//#include <fstream>
+//#include <istream>
+//#include <ostream>
 ////////////////////////////////////////////////////////////////////////////////
 ///////////////////                 M A I N                 ////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -121,7 +122,7 @@ int main (int argc, char* argv[])
         std::chrono::duration<double> elapsed = finishTime - startTime;
         cerr << "done in " << std::fixed << setprecision(4) << elapsed.count()
              << " seconds.\n";
-    
+        
         return 0;
     }
     
@@ -132,12 +133,25 @@ int main (int argc, char* argv[])
     
     //todo. khoondane file
     
-//    std::ifstream infile(argv[argc-1]);
+    
+    
+//    std::ifstream inFile(argv[argc-1]);
+//    splitFile(inFile);
+//    inFile.close();
+
 //    std::ofstream outfile("outFile");
-//
+    
+//    string line;
+//    int i = 0;
+//    for (int i = 0; i < LINE_BUFFER && getline(infile, line).good(); ++i)
+//    {
+//        outfile << line << '\n';
+//    }
+    
+
 //    // get size of file
 //    infile.seekg(0, infile.end);
-//    long size = 10000000;//infile.tellg();
+//    long size = 1000000;//infile.tellg();
 //    infile.seekg(0);
 //
 //    // allocate memory for file content
@@ -151,7 +165,7 @@ int main (int argc, char* argv[])
 //
 //    // release dynamically-allocated memory
 //    delete[] buffer;
-//
+
 //    outfile.close();
 //    infile.close();
 
