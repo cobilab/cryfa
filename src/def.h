@@ -56,7 +56,8 @@ typedef std::unordered_map<string, ULL> htable_t;
     constants
 *******************************************************************************/
 #define DEFAULT_N_THREADS 1 // default number of threads
-#define LINE_BUFFER 100000  // buffer size (lines) to separate files for
+//#define LINE_BUFFER 100000  // buffer size (lines) to separate files for
+#define LINE_BUFFER 8       // buffer size (lines) to separate files for
                             // multithreading. MUST be multiple of 4
 #define LARGE_NUMBER std::numeric_limits<std::streamsize>::max()
 #define CAT_1 2             //       cat 1  =  2
@@ -174,7 +175,7 @@ inline void Help ()    // usage guide
       << "    -k [KEYFILE],  --key [KEYFILE]"                         << '\n'
       << "         key filename"                                      << '\n'
                                                                       << '\n'
-      << "    -t [NUMBER],  --thread [NUMBER]"                       << '\n'
+      << "    -t [NUMBER],  --thread [NUMBER]"                        << '\n'
       << "         number of threads"                                 << '\n'
                                                                       << '\n';
 }

@@ -22,6 +22,11 @@ using CryptoPP::AES;
 using CryptoPP::CBC_Mode_ExternalCipher;
 using CryptoPP::StreamTransformationFilter;
 
+
+
+
+#include <mutex>
+std::mutex mut;
 /*******************************************************************************
     constructor
 *******************************************************************************/
@@ -75,7 +80,7 @@ void EnDecrypto::compressFA (const string &inFileName,
     in.close();
     
     // encryption
-    encrypt(context, keyFileName, v_flag);
+//    encrypt(context, keyFileName, v_flag);
 }
 
 /*******************************************************************************
@@ -93,60 +98,65 @@ void EnDecrypto::compressFA (const string &inFileName,
           16 <= cat 5 <= 39
 *******************************************************************************/
 void EnDecrypto::compressFQ (const string &inFileName,
-                             const string &keyFileName, const int v_flag)
+                             const string &keyFileName, const int v_flag,
+                             string hdrRange, string qsRange,
+                             byte threadID)
 {
     ifstream in(inFileName);
     string line, seq, context;  // FASTQ: context = header + seq + plus + qs
-    string hdrRange, qsRange;   // header & qs symbols presented in FASTQ file
+//    string hdrRange, qsRange;   // header & qs symbols presented in FASTQ file
 
+    mut.lock();
     if (!in.good())
     { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
-    
+    mut.unlock();
+
     // check if the third line contains only +
     bool justPlus = true;
     in.ignore(LARGE_NUMBER, '\n');                          // ignore header
     in.ignore(LARGE_NUMBER, '\n');                          // ignore seq
-    if (getline(in, line).good()) { if (line.length() > 1)    justPlus = false; }
+    if (getline(in, line).good()) { if (line.length() > 1)   justPlus = false; }
 //    else { cerr << "Error: file corrupted.\n";    return; }
     in.clear();  in.seekg(0, in.beg);                       // beginning of file
-    
-    // gather all headers and quality scores
-    while(!in.eof())
-    {
-        if (getline(in, line).good())                       // header
-        {
-            for (string::iterator i = line.begin(); i != line.end(); ++i)
-                if (hdrRange.find_first_of(*i) == string::npos)
-                    hdrRange += *i;
-        }
-//        else { cerr << "Error: file corrupted.\n";    return; }
-        in.ignore(LARGE_NUMBER, '\n');                      // ignore seq
-        in.ignore(LARGE_NUMBER, '\n');                      // ignore +
-        if (getline(in, line).good())                       // quality score
-        {
-            for (string::iterator i = line.begin(); i != line.end(); ++i)
-                if (qsRange.find_first_of(*i) == string::npos)
-                    qsRange += *i;
-        }
-//        else { cerr << "Error: file corrupted.\n";    return; }
-    }
-    in.clear();  in.seekg(0, std::ios::beg);                // beginning of file
+
+//    // gather all headers and quality scores
+//    while(!in.eof())
+//    {
+//        if (getline(in, line).good())                       // header
+//        {
+//            for (const char &c : line)
+//                if (hdrRange.find_first_of(c) == string::npos)
+//                    hdrRange += c;
+//        }
+////        else { cerr << "Error: file corrupted.\n";    return; }
+//        in.ignore(LARGE_NUMBER, '\n');                      // ignore seq
+//        in.ignore(LARGE_NUMBER, '\n');                      // ignore +
+//        if (getline(in, line).good())                       // quality score
+//        {
+//            for (const char &c : line)
+//                if (qsRange.find_first_of(c) == string::npos)
+//                    qsRange += c;
+//        }
+////        else { cerr << "Error: file corrupted.\n";    return; }
+//    }
+//    in.clear();  in.seekg(0, std::ios::beg);                // beginning of file
 
     hdrRange.erase(hdrRange.begin());                       // remove '@'
 
     std::sort(hdrRange.begin(), hdrRange.end());            // sort values
     std::sort(qsRange.begin(),  qsRange.end());             // sort ASCII values
-    
+
     using packHdrPointer = string (*)(string, string, htable_t&);
     packHdrPointer packHdr;                                 // function pointer
     using packQSPointer  = string (*)(string, string, htable_t&);
     packQSPointer packQS;                                   // function pointer
-    
+
     string HEADERS_X;                                 // extended HEADERS
     string QUALITY_SCORES_X;                          // extended QUALITY_SCORES
     const size_t qsRangeLen  = qsRange.length();
     const size_t hdrRangeLen = hdrRange.length();
 
+    mut.lock();
     // header
     if (hdrRangeLen > MAX_CAT_5)          // if len > 39 filter the last 39 ones
     {
@@ -242,7 +252,7 @@ void EnDecrypto::compressFQ (const string &inFileName,
             packQS = &pack_1to1;
         }
     }
-
+    mut.unlock();
 
 
     //todo. nabas havijoori 'context+=' nevesht,
@@ -272,7 +282,8 @@ void EnDecrypto::compressFQ (const string &inFileName,
     in.close();
 
     // encryption
-    encrypt(context, keyFileName, v_flag);
+    encrypt(context, keyFileName, v_flag,
+            threadID);
 }
 
 /*******************************************************************************
@@ -282,7 +293,8 @@ void EnDecrypto::compressFQ (const string &inFileName,
     begins. DEFAULT_KEYLENGTH = 16 bytes.
 *******************************************************************************/
 void EnDecrypto::encrypt (const string &context, const string &keyFileName,
-                          const int v_flag)
+                          const int v_flag,
+                          byte threadID)
 {
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
@@ -315,15 +327,30 @@ void EnDecrypto::encrypt (const string &context, const string &keyFileName,
         cerr << " block size: " << AES::BLOCKSIZE    << '\n';
     }
     
+    
+    
+    
+    
+    std::ofstream outfile;
+    string outName;
+    outName = "CRYFA_OUT" + std::to_string(threadID);
+    
+    outfile.open(outName);
+    
+//    mut.lock();
     // watermark for encrypted file
-    cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
-            + std::to_string(RELEASE_CRYFA) + "\n";
+    outfile << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
+                          + std::to_string(RELEASE_CRYFA) + "\n";
+//    cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
+//                       + std::to_string(RELEASE_CRYFA) + "\n";
     
     // dump cyphertext for read
-    for (string::iterator i = cipherText.begin(); i != cipherText.end(); ++i)
-        cout << (char) (*i & 0xFF);
-//        cout << (char) (0xFF & static_cast<byte> (*i));
-    cout << '\n';
+//    for (const char& c : cipherText)    cout << (char) (c & 0xFF);
+    for (const char& c : cipherText)    outfile << (char) (c & 0xFF);
+////        cout << (char) (0xFF & static_cast<byte> (*i));
+    outfile << '\n';
+//    cout << '\n';
+//    mut.unlock();
 }
 
 /*******************************************************************************

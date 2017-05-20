@@ -18,14 +18,17 @@ public:
     EnDecrypto();                                               // constructor
     
     void compressFA (const string&, const string&, const int);  // compress FA
-    void compressFQ (const string&, const string&, const int);  // compress FQ
-    void encrypt    (const string&, const string&, const int);  // encrypt
+//    void compressFQ (const string&, const string&, const int);  // compress FQ
+    void compressFQ (const string&, const string&, const int,
+                     string, string, byte);  // compress FQ
+    void encrypt    (const string&, const string&, const int,
+                     byte);  // encrypt
     string decrypt  (const string&, const string&, const int);  // decrypt
     void decompress (const string&, const string&, const int);  // decompress
-    void decompFA   (string, const string&);                    // decomp. FA
-    void decompFQ   (string, const string&);                    // decomp. FQ
 
 private:
+    void decompFA   (string, const string&);                  // decomp. FA
+    void decompFQ   (string, const string&);                  // decomp. FQ
     inline void buildIV  (byte*, string);                     // build IV
     inline void buildKey (byte*, string);                     // build key
     inline void printIV  (byte*) const;                       // print IV

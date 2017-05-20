@@ -627,7 +627,7 @@ inline string unpackSeqFQ_3to1 (string::iterator &i)
 inline string unpackLarge_read2B (string::iterator &i, const char XChar,
                                   string* &unpack)
 {
-    byte leftB, rightB;     // left and right bytes
+    byte MSB, LSB;
     unsigned short doubleB; // double byte
     string tpl;             // tuplet
     string out;
@@ -637,9 +637,9 @@ inline string unpackLarge_read2B (string::iterator &i, const char XChar,
         // hdr len not multiple of keyLen
         if (*i == (char) 255) { out += penaltySym(*(i+1));   i+=2;   continue; }
         
-        leftB   = *i;
-        rightB  = *(i+1);
-        doubleB = leftB<<8 | rightB;    // join two bytes
+        MSB     = *i;
+        LSB     = *(i+1);
+        doubleB = MSB<<8 | LSB;    // join two bytes
         
         tpl = unpack[doubleB];
         
@@ -676,7 +676,7 @@ inline string unpackLarge_read2B (string::iterator &i, const char XChar,
 *******************************************************************************/
 inline string unpack_read2B (string::iterator &i, string* &unpack)
 {
-    byte leftB, rightB;     // left and right bytes
+    byte MSB, LSB;
     unsigned short doubleB; // double byte
     string out;
     
@@ -685,9 +685,9 @@ inline string unpack_read2B (string::iterator &i, string* &unpack)
         // hdr len not multiple of keyLen
         if (*i == (char) 255) { out += penaltySym(*(i+1));    continue; }
         
-        leftB   = *i;
-        rightB  = *(i+1);
-        doubleB = leftB<<8 | rightB;    // join two bytes
+        MSB     = *i;
+        LSB     = *(i+1);
+        doubleB = MSB<<8 | LSB;    // join two bytes
         
         out += unpack[doubleB];
     }

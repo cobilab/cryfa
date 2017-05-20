@@ -43,7 +43,7 @@ inline char fileType (const string &inFileName)
 /*******************************************************************************
 
 *******************************************************************************/
-//inline void splitFile(const std::ifstream &in)
+//inline void splitNFingRange(const std::ifstream &in)
 //{
 // std::cerr<<"hi";
 //}
