@@ -10,12 +10,42 @@
 #define CRYFA_FCN_H
 
 #include <fstream>
-#include <istream>
-#include <ostream>
+using std::ifstream;
+using std::cerr;
 
-inline void splitFile(const std::ifstream &in)
+/*******************************************************************************
+    find file type: FASTA (A) or FASTQ (Q)
+*******************************************************************************/
+inline char fileType (const string &inFileName)
 {
- std::cerr<<"hi";
+    ifstream in(inFileName);
+    if (!in.good())
+    { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
+    
+    string line;
+    
+    // FASTQ
+    while (getline(in, line).good())
+    {
+        if (line[0] == '@')
+        {
+            in.clear();
+            in.seekg(0, std::ios::beg);     // go to the beginning of file
+            return 'Q';
+        }
+    }
+    
+    // FASTA
+    in.clear();  in.seekg(0, std::ios::beg);
+    return 'A';
 }
+
+/*******************************************************************************
+
+*******************************************************************************/
+//inline void splitFile(const std::ifstream &in)
+//{
+// std::cerr<<"hi";
+//}
 
 #endif //CRYFA_FCN_H

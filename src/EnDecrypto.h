@@ -15,20 +15,16 @@ using std::string;
 class EnDecrypto
 {
 public:
-    EnDecrypto();                                             // constructor
+    EnDecrypto();                                               // constructor
     
-//    void compressFA();
-//    void compressFQ();
-//    void encrypt();
-//    void decompressFA();
-//    void decompressFQ();
-//    void decrypt();
-    
-    void encrypt (int, char**, const string&, const int);     // encrypt
-    void decrypt (int, char**, const string&, const int);     // decrypt
-    
-    
-    inline char findFileType (std::ifstream&);                // FASTA or FASTQ?
+    void compressFA (const string&, const string&, const int);  // compress FA
+    void compressFQ (const string&, const string&, const int);  // compress FQ
+    void encrypt    (const string&, const string&, const int);  // encrypt
+    string decrypt  (const string&, const string&, const int);  // decrypt
+    void decompress (const string&, const string&, const int);  // decompress
+    void decompFA   (string, const string&);                    // decomp. FA
+    void decompFQ   (string, const string&);                    // decomp. FQ
+
 private:
     inline void buildIV  (byte*, string);                     // build IV
     inline void buildKey (byte*, string);                     // build key

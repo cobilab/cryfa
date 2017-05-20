@@ -28,12 +28,6 @@ using std::cerr;
 using std::chrono::high_resolution_clock;
 using std::setprecision;
 
-
-
-
-//#include <fstream>
-//#include <istream>
-//#include <ostream>
 ////////////////////////////////////////////////////////////////////////////////
 ///////////////////                 M A I N                 ////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -44,6 +38,7 @@ int main (int argc, char* argv[])
     
     EnDecrypto crpt;
     
+    const string inFileName = argv[argc-1];
     static int h_flag, a_flag, v_flag, d_flag;
     string keyFileName;                  // argument of option 'k'
     byte n_threads = DEFAULT_N_THREADS;  // number of threads
@@ -53,12 +48,12 @@ int main (int argc, char* argv[])
 
     static struct option long_options[] =
     {
-        {"help",          no_argument, &h_flag, (int) 'h'},    // help
-        {"about",         no_argument, &a_flag, (int) 'a'},    // about
-        {"verbose",       no_argument, &v_flag, (int) 'v'},    // verbose
-        {"decrypt",       no_argument, &d_flag, (int) 'd'},    // decrypt mode
-        {"key",     required_argument,       0,       'k'},    // key file
-        {"threads", required_argument,       0,       't'},    // #threads >= 1
+        {"help",          no_argument, &h_flag, (int) 'h'},   // help
+        {"about",         no_argument, &a_flag, (int) 'a'},   // about
+        {"verbose",       no_argument, &v_flag, (int) 'v'},   // verbose
+        {"decrypt",       no_argument, &d_flag, (int) 'd'},   // decryption mode
+        {"key",     required_argument,       0,       'k'},   // key file
+        {"thread",  required_argument,       0,       't'},   // #threads >= 1
         {0,                         0,       0,         0}
     };
     
@@ -91,7 +86,7 @@ int main (int argc, char* argv[])
                 v_flag = 1;
                 break;
 
-            case 'd':   // decrypt mode
+            case 'd':   // decompress mode
                 d_flag = 1;
                 break;
                 
@@ -113,7 +108,7 @@ int main (int argc, char* argv[])
     if (d_flag)
     {
         cerr << "Decrypting...\n";
-        crpt.decrypt(argc, argv, keyFileName, v_flag);//todo.
+        crpt.decompress(inFileName, keyFileName, v_flag);
         
         // stop timer
         high_resolution_clock::time_point finishTime =
@@ -127,7 +122,10 @@ int main (int argc, char* argv[])
     }
     
     cerr << "Encrypting...\n";
-    crpt.encrypt(argc, argv, keyFileName, v_flag);//todo.
+    (fileType(inFileName) == 'A')   // compress and encrypt
+            ? crpt.compressFA(inFileName, keyFileName, v_flag)
+            : crpt.compressFQ(inFileName, keyFileName, v_flag);
+    
     
     
     
@@ -176,7 +174,7 @@ int main (int argc, char* argv[])
 //    string line;
 //    string out;
 //    std::ifstream in("temp.fq");
-//    const bool FASTA = (crpt.findFileType(in) == 'A');cerr<<FASTA;
+//    const bool FASTA = (crpt.fileType(in) == 'A');cerr<<FASTA;
 //    while (getline(in, line))
 //    {
 //        out += line + "\n";

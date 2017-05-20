@@ -9,39 +9,35 @@ Cryfa compacts 3 DNA bases into 1 char, using a fixed block size packing. When c
 </p>
 
 ## INSTALLATION
-
 First you need to get cryfa using:
-<pre>
+```bash
 git clone https://github.com/pratas/cryfa.git
 cd cryfa/src/
-</pre>
+```
 Then, you need to install CryptoPP using:
-<pre>
+```bash
 git clone https://github.com/weidai11/cryptopp
 cd cryptopp/
 make
 cp libcryptopp.a ..
 cd ..
-</pre>
+```
 Finally, compile with:
-<pre>
+```bash
 g++ -std=c++11 -I cryptopp -o cryfa cryfa.cpp defs.h libcryptopp.a
-</pre>
+```
 or use
-<pre>
+```bash
 ./scripts/execute.sh
-</pre>
+```
 
 ## PARAMETERS
-
 To see the possible options type
-<pre>
+```bash
 ./cryfa -h
-</pre>
+```
 These will print the following options:
-<pre>
-<p>
-
+```bash
 Synopsis:
     cryfa [OPTION]... -k [KEYFILENAME] [FILENAME]
 
@@ -56,17 +52,19 @@ Options:
          verbose mode (more information)
 
     -d,  --decrypt
-         decrypt mode
+         decryption mode
 
     -k [KEYFILE],  --key [KEYFILE]
          key filename
-</p>
-</pre>
+         
+    -t [NUMBER],  --thread [NUMBER]
+         number of threads
+```
 Cryfa uses stdin and stdout and, hence, can be directly integrated on pipelines.
 
 ## CITATION
 Please cite the followings, if you use <i>cryfa</i>:
-* D. Pratas, M. Hosseini and A.J. Pinho, "Cryfa: a tool to compact and encrypt FASTA files," 11'th International Conference on Practical Applications of Computational Biology & Bioinformatics (PACBB), Springer, June 2017.
+* D. Pratas, M. Hosseini and A.J. Pinho, "Cryfa: a tool to compact and compress FASTA files," 11'th International Conference on Practical Applications of Computational Biology & Bioinformatics (PACBB), Springer, June 2017.
 
 ## RELEASES
 https://github.com/pratas/cryfa/releases:

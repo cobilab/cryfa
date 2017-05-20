@@ -174,7 +174,7 @@ inline void Help ()    // usage guide
       << "    -k [KEYFILE],  --key [KEYFILE]"                         << '\n'
       << "         key filename"                                      << '\n'
                                                                       << '\n'
-      << "    -t [NUMBER],  --threads [NUMBER]"                       << '\n'
+      << "    -t [NUMBER],  --thread [NUMBER]"                       << '\n'
       << "         number of threads"                                 << '\n'
                                                                       << '\n';
 }
