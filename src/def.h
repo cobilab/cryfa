@@ -29,11 +29,26 @@ using std::unordered_map;
 /*******************************************************************************
     typedefs
 *******************************************************************************/
-typedef unsigned char byte;
-typedef unsigned long long ULL;
-typedef long long LL;
-typedef std::mt19937 rng_type;
+typedef unsigned char       byte;
+typedef unsigned long long  ULL;
+typedef long long           LL;
+typedef unsigned int        UI;
+typedef std::mt19937        rng_type;
 typedef std::unordered_map<string, ULL> htable_t;
+
+/*******************************************************************************
+    metaprograms
+*******************************************************************************/
+// power (B^E) -- base (B) and exponent (E) MUST be known at compile time
+// usage: "cerr << POWER<3,2>::val;" which yields 9
+template<UI B, UI E>
+struct POWER
+{ static const ULL val = B * POWER<B, E-1>::val; };
+
+template<UI B>
+struct POWER<B, 0>
+{ static const ULL val = 1; };
+//..............................................................................
 
 /*******************************************************************************
     macros

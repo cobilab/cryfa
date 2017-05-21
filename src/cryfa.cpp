@@ -122,84 +122,70 @@ int main (int argc, char* argv[])
         
         return 0;
     }
-    
+
     cerr << "Encrypting...\n";
-//    (fileType(inFileName) == 'A')   // compress and encrypt
-//            ? crpt.compressFA(inFileName, keyFileName, v_flag)
-//            : crpt.compressFQ(inFileName, keyFileName, v_flag);
-    
-    
-    
     //todo. at the moment, multithreading for fastq
-    
-    
-    
-    //todo. split file
-    std::ifstream inFile(inFileName);
+    if (fileType(inFileName) == 'A')
+    { crpt.compressFA(inFileName, keyFileName, v_flag); }
+    else
+    {
+        //todo. split file
+        std::ifstream inFile(inFileName);
 //    splitFile(inFile);
     
-    std::ofstream outfile;
-    string outName;
+        std::ofstream outfile;
+        string outName;
     
-    string line, hdrRange, qsRange;
-    for (byte i = 1; i <= n_threads; ++i)
-    {
-        outName = "CRYFA_IN" + std::to_string(i-1);
-        outfile.open(outName);
-        
-        for (int j = (i-1) * LINE_BUFFER; j < i * LINE_BUFFER; j += 4)
+        string line, hdrRange, qsRange;
+        for (byte i = 1; i <= n_threads; ++i)
         {
-            if (getline(inFile, line).good())                       // header
-            {
-                for (const char &c : line)
-                    if (hdrRange.find_first_of(c) == string::npos)
-                        hdrRange += c;
-                outfile << line << '\n';
-            }
-            if (getline(inFile, line).good())   outfile << line << '\n';
-            if (getline(inFile, line).good())   outfile << line << '\n';
-            if (getline(inFile, line).good())                       // quality score
-            {
-                for (const char &c : line)
-                    if (qsRange.find_first_of(c) == string::npos)
-                        qsRange += c;
-                outfile << line << '\n';
-            }
-        }
+            outName = "CRYFA_IN" + std::to_string(i-1);
+            outfile.open(outName);
         
-        outfile.close();    // is a MUST
+            for (int j = (i-1) * LINE_BUFFER; j < i * LINE_BUFFER; j += 4)
+            {
+                if (getline(inFile, line).good())                       // header
+                {
+                    for (const char &c : line)
+                        if (hdrRange.find_first_of(c) == string::npos)
+                            hdrRange += c;
+                    outfile << line << '\n';
+                }
+                if (getline(inFile, line).good())   outfile << line << '\n';
+                if (getline(inFile, line).good())   outfile << line << '\n';
+                if (getline(inFile, line).good())                       // quality score
+                {
+                    for (const char &c : line)
+                        if (qsRange.find_first_of(c) == string::npos)
+                            qsRange += c;
+                    outfile << line << '\n';
+                }
+            }
+        
+            outfile.close();    // is a MUST
+        }
+    
+        inFile.close();
+    
+    
+        thread *arrThread;
+        arrThread = new thread[n_threads];
+        for (byte t = 0; t < n_threads; ++t)
+        {
+            arrThread[t] = thread(&EnDecrypto::compressFQ, &crpt,
+                                  ("CRYFA_IN" + std::to_string(t)),
+                                  keyFileName,
+                                  v_flag,
+                                  hdrRange,
+                                  qsRange,
+                                  t
+            );
+        }
+        for (byte t = 0; t < n_threads; ++t)    arrThread[t].join();
+        delete[] arrThread;
     }
-
-    inFile.close();
     
     
-    thread *arrThread;
-    arrThread = new thread[n_threads];
-    for (byte t = 0; t < n_threads; ++t)
-    {
-        arrThread[t] = thread(&EnDecrypto::compressFQ, &crpt,
-                              ("CRYFA_IN" + std::to_string(t)),
-                              keyFileName,
-                              v_flag,
-                              hdrRange,
-                              qsRange,
-                              t
-        );
-    }
-    for (byte t = 0; t < n_threads; ++t)    arrThread[t].join();
-    delete[] arrThread;
-    
-    
-    
-    
-    
-    
-
-
-
-
-
-
 
 //    // get size of file
 //    infile.seekg(0, infile.end);

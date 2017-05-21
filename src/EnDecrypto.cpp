@@ -668,7 +668,7 @@ inline void EnDecrypto::buildIV (byte *iv, string pass)
     evalPassSize(pass);  // pass size must be >= 8
     
     // using old rand to generate the new rand seed
-    srand((unsigned int) 7919 * pass[2] * pass[5] + 75653);
+    srand((UI) 7919 * pass[2] * pass[5] + 75653);
     ULL seed = 0;
 //    for (byte i = 0; i != pass.size(); ++i)
     for (byte i = (byte) pass.size(); i--;)
@@ -678,8 +678,8 @@ inline void EnDecrypto::buildIV (byte *iv, string pass)
     const rng_type::result_type seedval = seed;
     rng.seed(seedval);
     
-//    for (unsigned int i = 0; i != AES::BLOCKSIZE; ++i)
-    for (unsigned int i = (unsigned int) AES::BLOCKSIZE; i--;)
+//    for (UI i = 0; i != AES::BLOCKSIZE; ++i)
+    for (UI i = (UI) AES::BLOCKSIZE; i--;)
         iv[i] = (byte) (udist(rng) % 255);
 }
 
@@ -694,7 +694,7 @@ inline void EnDecrypto::buildKey (byte *key, string pwd)
     evalPassSize(pwd);  // pass size must be >= 8
     
     // using old rand to generate the new rand seed
-    srand((unsigned int) 24593 * (pwd[0] * pwd[2]) + 49157);
+    srand((UI) 24593 * (pwd[0] * pwd[2]) + 49157);
     ULL seed = 0;
 //    for (byte i = 0; i != pwd.size(); ++i)
     for (byte i = (byte) pwd.size(); i--;)
@@ -704,8 +704,8 @@ inline void EnDecrypto::buildKey (byte *key, string pwd)
     const rng_type::result_type seedval = seed;
     rng.seed(seedval);
 
-//    for (unsigned int i = 0; i != AES::DEFAULT_KEYLENGTH; ++i)
-    for (unsigned int i = (unsigned int) AES::DEFAULT_KEYLENGTH; i--;)
+//    for (UI i = 0; i != AES::DEFAULT_KEYLENGTH; ++i)
+    for (UI i = (UI) AES::DEFAULT_KEYLENGTH; i--;)
         key[i] = (byte) (udist(rng) % 255);
 }
 
@@ -715,7 +715,7 @@ inline void EnDecrypto::buildKey (byte *key, string pwd)
 inline void EnDecrypto::printIV (byte *iv) const
 {
     cerr << "IV = [" << (int) iv[0];
-    for (unsigned int i = 1; i != AES::BLOCKSIZE; ++i)
+    for (UI i = 1; i != AES::BLOCKSIZE; ++i)
         cerr << " " << (int) iv[i];
     cerr << "]\n";
 }
@@ -726,7 +726,7 @@ inline void EnDecrypto::printIV (byte *iv) const
 inline void EnDecrypto::printKey (byte *key) const
 {
     cerr << "KEY: [" << (int) key[0];
-    for (unsigned int i = 1; i != AES::DEFAULT_KEYLENGTH; ++i)
+    for (UI i = 1; i != AES::DEFAULT_KEYLENGTH; ++i)
         cerr << " " << (int) key[i];
     cerr << "]\n";
 }
