@@ -258,7 +258,7 @@ void EnDecrypto::compressFQ (const string &inFileName,
     //todo. nabas havijoori 'context+=' nevesht,
     //todo. chon va3 file 10GB mitereke
     //todo. bas hame kara ro block by block anjam dad
-
+    
     context += hdrRange;                       // send hdrRange to decryptor
     context += (char) 254;                     // to detect hdrRange in dec.
     context += qsRange;                        // send qsRange to decryptor
@@ -292,7 +292,7 @@ void EnDecrypto::compressFQ (const string &inFileName,
     This key is secretly exchanged between two parties before communication
     begins. DEFAULT_KEYLENGTH = 16 bytes.
 *******************************************************************************/
-void EnDecrypto::encrypt (const string &context, const string &keyFileName,
+inline void EnDecrypto::encrypt (const string &context, const string &keyFileName,
                           const int v_flag,
                           byte threadID)
 {
@@ -320,36 +320,35 @@ void EnDecrypto::encrypt (const string &context, const string &keyFileName,
                      (context.c_str()), context.length() + 1);
     stfEncryptor.MessageEnd();
     
-    if (v_flag)
-    {
-        cerr << "   sym size: " << context.size()    << '\n';
-        cerr << "cipher size: " << cipherText.size() << '\n';
-        cerr << " block size: " << AES::BLOCKSIZE    << '\n';
-    }
+//    if (v_flag)
+//    {
+//        cerr << "   sym size: " << context.size()    << '\n';
+//        cerr << "cipher size: " << cipherText.size() << '\n';
+//        cerr << " block size: " << AES::BLOCKSIZE    << '\n';
+//    }
     
     
     
-    
-    
+//    mut.lock();
     std::ofstream outfile;
     string outName;
     outName = "CRYFA_OUT" + std::to_string(threadID);
-    
-    outfile.open(outName);
-    
+    outfile.open(outName, std::ios_base::app);
+//    mut.unlock();
+
+
 //    mut.lock();
-    // watermark for encrypted file
-    outfile << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
-                          + std::to_string(RELEASE_CRYFA) + "\n";
-//    cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
-//                       + std::to_string(RELEASE_CRYFA) + "\n";
+    // watermark for encrypted file //todo. should write once while joining
+//    outfile << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
+//                          + std::to_string(RELEASE_CRYFA) + "\n";
+    
+    //todo. write header containing threadID for each
+    outfile << threadID;    // just the number, for simplicity
     
     // dump cyphertext for read
-//    for (const char& c : cipherText)    cout << (char) (c & 0xFF);
     for (const char& c : cipherText)    outfile << (char) (c & 0xFF);
 ////        cout << (char) (0xFF & static_cast<byte> (*i));
     outfile << '\n';
-//    cout << '\n';
 //    mut.unlock();
 }
 

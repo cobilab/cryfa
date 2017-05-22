@@ -21,7 +21,7 @@ public:
 //    void compressFQ (const string&, const string&, const int);  // compress FQ
     void compressFQ (const string&, const string&, const int,
                      string, string, byte);  // compress FQ
-    void encrypt    (const string&, const string&, const int,
+    inline void encrypt    (const string&, const string&, const int,
                      byte);  // encrypt
     string decrypt  (const string&, const string&, const int);  // decrypt
     void decompress (const string&, const string&, const int);  // decompress

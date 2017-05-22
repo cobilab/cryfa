@@ -70,25 +70,24 @@ struct POWER<B, 0>
 /*******************************************************************************
     constants
 *******************************************************************************/
-#define DEFAULT_N_THREADS 1 // default number of threads
-//#define LINE_BUFFER 100000  // buffer size (lines) to separate files for
-#define LINE_BUFFER 8       // buffer size (lines) to separate files for
-                            // multithreading. MUST be multiple of 4
-#define LARGE_NUMBER std::numeric_limits<std::streamsize>::max()
-#define CAT_1 2             //       cat 1  =  2
-#define CAT_2 3             //       cat 2  =  3
-#define MIN_CAT_3 4         //  4 <= cat 3 <=  6
-#define MID_CAT_3 5
-#define MAX_CAT_3 6
-#define MIN_CAT_4 7         //  7 <= cat 4 <= 15
-#define MAX_CAT_4 15
-#define MIN_CAT_5 16        // 16 <= cat 5 <= 39
-#define MAX_CAT_5 39
-#define KEYLEN_CAT_1 7      // 7 to 1 byte.  for building hash table
-#define KEYLEN_CAT_2 5      // 5 to 1 byte
-#define KEYLEN_CAT_3 3      // 3 to 1 byte
-#define KEYLEN_CAT_4 2      // 2 to 1 byte
-#define KEYLEN_CAT_5 3      // 3 to 2 byte
+#define DEFAULT_N_THREADS 1   // default number of threads
+#define LINE_BUFFER       8   //100000   // buffer size (lines) to separate files for
+                              // multithreading. MUST be multiple of 4
+#define LARGE_NUMBER      std::numeric_limits<std::streamsize>::max()
+#define CAT_1             2   //       cat 1  =  2
+#define CAT_2             3   //       cat 2  =  3
+#define MIN_CAT_3         4   //  4 <= cat 3 <=  6
+#define MID_CAT_3         5
+#define MAX_CAT_3         6
+#define MIN_CAT_4         7   //  7 <= cat 4 <= 15
+#define MAX_CAT_4         15
+#define MIN_CAT_5         16  // 16 <= cat 5 <= 39
+#define MAX_CAT_5         39
+#define KEYLEN_CAT_1      7   // 7 to 1 byte.  for building hash table
+#define KEYLEN_CAT_2      5   // 5 to 1 byte
+#define KEYLEN_CAT_3      3   // 3 to 1 byte
+#define KEYLEN_CAT_4      2   // 2 to 1 byte
+#define KEYLEN_CAT_5      3   // 3 to 2 byte
 
 /*******************************************************************************
     lookup tables
