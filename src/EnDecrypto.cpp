@@ -259,10 +259,10 @@ void EnDecrypto::compressFQ (const string &inFileName,
     mut.unlock();
 
 
-//    //todo. nabas havijoori 'context+=' nevesht,
-//    //todo. chon va3 file 10GB mitereke
-//    //todo. bas hame kara ro block by block anjam dad
-//
+    //todo. nabas havijoori 'context+=' nevesht,
+    //todo. chon va3 file 10GB mitereke
+    //todo. bas hame kara ro block by block anjam dad
+
 ////    context += hdrRange;                       // send hdrRange to decryptor
 ////    context += (char) 254;                     // to detect hdrRange in dec.
 ////    context += qsRange;                        // send qsRange to decryptor
