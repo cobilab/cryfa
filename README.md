@@ -2,42 +2,42 @@
 alt="Cryfa" width="150" border="0" /></p>
 <br>
 <p>
-Cryfa is a FASTA encryption and decryption tool.
+Cryfa is a FASTA and FASTQ encryption and decryption tool.
 Cryfa uses AES symmetric encryption, with very fast processing times. 
-Cryfa can be applied to any fasta file (DNA sequences with headers).
-Cryfa compacts 3 DNA bases into 1 char, using a fixed block size packing. When compared with general encryption tools it allows to reduce the storage (~3x), without creating security problems such as those derived from CRIME attacks.
+Cryfa can be applied to any FASTA or FASTQ file (DNA sequences, headers and quality-scores).
+Cryfa compacts 3 DNA bases into 1 char, using a fixed block size packing. When compared with general encryption tools it allows to reduce the storage (~3x), without creating security problems such as those derived from CRIME or BREACH attacks.
 </p>
 
 ## INSTALLATION
-
 First you need to get cryfa using:
-<pre>
+```bash
 git clone https://github.com/pratas/cryfa.git
 cd cryfa/src/
-</pre>
+```
 Then, you need to install CryptoPP using:
-<pre>
+```bash
 git clone https://github.com/weidai11/cryptopp
 cd cryptopp/
 make
 cp libcryptopp.a ..
 cd ..
-</pre>
+```
 Finally, compile with:
-<pre>
+```bash
 g++ -std=c++11 -I cryptopp -o cryfa cryfa.cpp defs.h libcryptopp.a
-</pre>
+```
+or use
+```bash
+./scripts/execute.sh
+```
 
 ## PARAMETERS
-
 To see the possible options type
-<pre>
+```bash
 ./cryfa -h
-</pre>
+```
 These will print the following options:
-<pre>
-<p>
-
+```bash
 Synopsis:
     cryfa [OPTION]... -k [KEYFILENAME] [FILENAME]
 
@@ -52,18 +52,25 @@ Options:
          verbose mode (more information)
 
     -d,  --decrypt
-         decrypt mode
+         decryption mode
 
     -k [KEYFILE],  --key [KEYFILE]
          key filename
-</p>
-</pre>
+         
+    -t [NUMBER],  --thread [NUMBER]
+         number of threads
+```
 Cryfa uses stdin and stdout and, hence, can be directly integrated on pipelines.
 
 ## CITATION
 Please cite the followings, if you use <i>cryfa</i>:
-* D. Pratas, M. Hosseini and A.J. Pinho, "Cryfa: a tool to compact and encrypt FASTA files," 11'th International Conference on Practical Applications of Computational Biology & Bioinformatics (PACBB), Springer, June 2017.
-* https://github.com/pratas/cryfa
+* D. Pratas, M. Hosseini and A.J. Pinho, "Cryfa: a tool to compact and compress FASTA files," 11'th International Conference on Practical Applications of Computational Biology & Bioinformatics (PACBB), Springer, June 2017.
+
+## RELEASES
+https://github.com/pratas/cryfa/releases:
+
+* Release 2: FASTA and FASTQ handling (being developed);
+* Release 1: FASTA handling only;
 
 ## ISSUES
 Please let us know if there is any [issues](https://github.com/pratas/cryfa/issues).
@@ -73,4 +80,3 @@ GPL v3.
 
 For more information:
 <pre>http://www.gnu.org/licenses/gpl-3.0.html</pre>
-

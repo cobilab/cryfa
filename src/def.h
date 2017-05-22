@@ -16,20 +16,78 @@ using std::cout;
 using std::string;
 using std::unordered_map;
 
+//#define _XOPEN_SOURCE 500
+//#include <unistd.h>
+//pread();
+
 /*******************************************************************************
-    about cryfa
+    version and release
 *******************************************************************************/
 #define VERSION_CRYFA 1
-#define RELEASE_CRYFA 1
+#define RELEASE_CRYFA 17.05
 
 /*******************************************************************************
     typedefs
 *******************************************************************************/
-typedef unsigned char byte;
-typedef unsigned long long ULL;
-typedef long long LL;
-typedef std::mt19937 rng_type;
-typedef std::unordered_map<string, unsigned int> htable_t;
+typedef unsigned char       byte;
+typedef unsigned long long  ULL;
+typedef long long           LL;
+typedef unsigned int        UI;
+typedef std::mt19937        rng_type;
+typedef std::unordered_map<string, ULL> htable_t;
+
+/*******************************************************************************
+    metaprograms
+*******************************************************************************/
+// power (B^E) -- base (B) and exponent (E) MUST be known at compile time
+// usage: "cerr << POWER<3,2>::val;" which yields 9
+template<UI B, UI E>
+struct POWER
+{ static const ULL val = B * POWER<B, E-1>::val; };
+
+template<UI B>
+struct POWER<B, 0>
+{ static const ULL val = 1; };
+//..............................................................................
+
+/*******************************************************************************
+    macros
+*******************************************************************************/
+#define LOOP(v,N)            for(byte (v)=0; (v)!=(N); ++(v))
+#define LOOP2(i,j,N)         LOOP(i,N) LOOP(j,N)
+#define LOOP3(i,j,k,N)       LOOP(i,N) LOOP(j,N) LOOP(k,N)
+#define LOOP4(i,j,k,l,N)     LOOP(i,N) LOOP(j,N) LOOP(k,N) LOOP(l,N)
+#define LOOP5(i,j,k,l,m,N)   LOOP(i,N) LOOP(j,N) LOOP(k,N) LOOP(l,N) LOOP(m,N)
+#define LOOP6(i,j,k,l,m,n,N) LOOP(i,N) LOOP(j,N) LOOP(k,N) LOOP(l,N) LOOP(m,N) \
+                             LOOP(n,N)
+#define LOOP7(i,j,k,l,m,n,\
+                    o,N)     LOOP(i,N) LOOP(j,N) LOOP(k,N) LOOP(l,N) LOOP(m,N) \
+                             LOOP(n,N) LOOP(o,N)
+#define LOOP8(i,j,k,l,m,n,\
+                    o,p,N)   LOOP(i,N) LOOP(j,N) LOOP(k,N) LOOP(l,N) LOOP(m,N) \
+                             LOOP(n,N) LOOP(o,N) LOOP(p,N)
+
+/*******************************************************************************
+    constants
+*******************************************************************************/
+#define DEFAULT_N_THREADS 1   // default number of threads
+#define LINE_BUFFER       8   //100000   // buffer size (lines) to separate files for
+                              // multithreading. MUST be multiple of 4
+#define LARGE_NUMBER      std::numeric_limits<std::streamsize>::max()
+#define CAT_1             2   //       cat 1  =  2
+#define CAT_2             3   //       cat 2  =  3
+#define MIN_CAT_3         4   //  4 <= cat 3 <=  6
+#define MID_CAT_3         5
+#define MAX_CAT_3         6
+#define MIN_CAT_4         7   //  7 <= cat 4 <= 15
+#define MAX_CAT_4         15
+#define MIN_CAT_5         16  // 16 <= cat 5 <= 39
+#define MAX_CAT_5         39
+#define KEYLEN_CAT_1      7   // 7 to 1 byte.  for building hash table
+#define KEYLEN_CAT_2      5   // 5 to 1 byte
+#define KEYLEN_CAT_3      3   // 3 to 1 byte
+#define KEYLEN_CAT_4      2   // 2 to 1 byte
+#define KEYLEN_CAT_5      3   // 3 to 2 byte
 
 /*******************************************************************************
     lookup tables
@@ -57,7 +115,7 @@ const string DNA_UNPACK[] =     // 216 elements
     "XTA", "XTC", "XTG", "XTT", "XTN", "XTX", "XNA", "XNC", "XNG", "XNT", "XNN",
     "XNX", "XXA", "XXC", "XXG", "XXT", "XXN", "XXX"
 };
-
+//..............................................................................
 const htable_t DNA_MAP =
 {
     {"AAA",   0}, {"AAC",   1}, {"AAG",   2}, {"AAT",   3}, {"AAN",   4},
@@ -130,9 +188,12 @@ inline void Help ()    // usage guide
                                                                       << '\n'
       << "    -k [KEYFILE],  --key [KEYFILE]"                         << '\n'
       << "         key filename"                                      << '\n'
+                                                                      << '\n'
+      << "    -t [NUMBER],  --thread [NUMBER]"                        << '\n'
+      << "         number of threads"                                 << '\n'
                                                                       << '\n';
 }
-
+//..............................................................................
 inline void About ()   // About cryfa
 {
     cout                                                              << '\n'

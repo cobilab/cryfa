@@ -1,15 +1,15 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-             ====================================================
-             | CRYFA :: A FASTA encryption and decryption tool  |
-             ----------------------------------------------------
-             | Diogo Pratas, Morteza Hosseini, Armando J. Pinho |
-             |          {pratas,seyedmorteza,ap}@ua.pt          |
-             |     Copyright (C) 2017, University of Aveiro     |
-             ====================================================
-
+             =========================================================
+             | CRYFA :: A FASTA/FASTQ encryption and decryption tool |
+             ---------------------------------------------------------
+             |   Diogo Pratas, Morteza Hosseini, Armando J. Pinho    |
+             |            {pratas,seyedmorteza,ap}@ua.pt             |
+             |       Copyright (C) 2017, University of Aveiro        |
+             =========================================================
+             
   COMPILE:  g++ -std=c++11 -I cryptopp -o cryfa cryfa.cpp defs.h libcryptopp.a
-
+  
   DEPENDENCIES: https://github.com/weidai11/cryptopp
   sudo apt-get install libcrypto++-dev libcrypto++-doc libcrypto++-utils
   
@@ -19,13 +19,16 @@
 #include <getopt.h>
 #include <chrono>       // time
 #include <iomanip>      // setw, setprecision
+#include <thread>
 #include "def.h"
 #include "EnDecrypto.h"
+#include "fcn.h"
 using std::string;
 using std::cout;
 using std::cerr;
 using std::chrono::high_resolution_clock;
 using std::setprecision;
+using std::thread;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///////////////////                 M A I N                 ////////////////////
@@ -37,28 +40,31 @@ int main (int argc, char* argv[])
     
     EnDecrypto crpt;
     
+    const string inFileName = argv[argc-1];
     static int h_flag, a_flag, v_flag, d_flag;
-    string KeyFileName;     // argument of option 'k'
-    int c;                  // deal with getopt_long()
-    int option_index;       // option index stored by getopt_long()
+    string keyFileName;                  // argument of option 'k'
+    byte n_threads = DEFAULT_N_THREADS;  // number of threads
+    int c;                               // deal with getopt_long()
+    int option_index;                    // option index stored by getopt_long()
     opterr = 0;  // force getopt_long() to remain silent when it finds a problem
-    
+
     static struct option long_options[] =
     {
-        {"help",          no_argument, &h_flag, (int) 'h'},    // help
-        {"about",         no_argument, &a_flag, (int) 'a'},    // about
-        {"verbose",       no_argument, &v_flag, (int) 'v'},    // verbose
-        {"decrypt",       no_argument, &d_flag, (int) 'd'},    // decrypt mode
-        {"key",     required_argument,       0,       'k'},    // key file
+        {"help",          no_argument, &h_flag, (int) 'h'},   // help
+        {"about",         no_argument, &a_flag, (int) 'a'},   // about
+        {"verbose",       no_argument, &v_flag, (int) 'v'},   // verbose
+        {"decrypt",       no_argument, &d_flag, (int) 'd'},   // decryption mode
+        {"key",     required_argument,       0,       'k'},   // key file
+        {"thread",  required_argument,       0,       't'},   // #threads >= 1
         {0,                         0,       0,         0}
     };
-
+    
     while (1)
     {
         option_index = 0;
-        if ((c = getopt_long(argc, argv, ":havdk:",
+        if ((c = getopt_long(argc, argv, ":havdk:t:",
                              long_options, &option_index)) == -1)    break;
-        
+
         switch (c)
         {
             case 0:
@@ -67,12 +73,12 @@ int main (int argc, char* argv[])
                 cout << "option '" << long_options[option_index].name << "'\n";
                 if (optarg)     cout << " with arg " << optarg << '\n';
                 break;
-                
+
             case 'h':   // show usage guide
                 h_flag = 1;
                 Help();
                 break;
-                
+
             case 'a':   // show about
                 a_flag = 1;
                 About();
@@ -82,14 +88,18 @@ int main (int argc, char* argv[])
                 v_flag = 1;
                 break;
 
-            case 'd':   // decrypt mode
+            case 'd':   // decompress mode
                 d_flag = 1;
                 break;
-
+                
             case 'k':   // needs key filename
-                KeyFileName = (string) optarg;
+                keyFileName = (string) optarg;
                 break;
-
+            
+            case 't':   // number of threads
+                n_threads = (byte) stoi((string) optarg);
+                break;
+                
             default:
                 cerr << "Option '" << (char) optopt << "' is invalid.\n";
                 break;
@@ -100,8 +110,8 @@ int main (int argc, char* argv[])
     if (d_flag)
     {
         cerr << "Decrypting...\n";
-        crpt.decryptFA(argc, argv, v_flag, KeyFileName);
-    
+        crpt.decompress(inFileName, keyFileName, v_flag);
+        
         // stop timer
         high_resolution_clock::time_point finishTime =
                 high_resolution_clock::now();
@@ -114,7 +124,135 @@ int main (int argc, char* argv[])
     }
     
     cerr << "Encrypting...\n";
-    crpt.encryptFA(argc, argv, v_flag, KeyFileName);
+    //todo. at the moment, multithreading for fastq
+    if (fileType(inFileName) == 'A')
+    { crpt.compressFA(inFileName, keyFileName, v_flag); }
+    else
+    {
+        //todo. split file
+        std::ifstream inFile(inFileName);
+//    splitFile(inFile);
+        std::ofstream outfile;
+        string outName;
+    
+        string line, hdrRange, qsRange;
+        thread *arrThread;
+        int k = 0;
+        for (int i = k; i < 17; i += k)
+        {
+            
+            
+            for (byte j = 0; j < n_threads; ++j)
+            {
+                outName = "CRYFA_IN" + std::to_string(j);
+                outfile.open(outName);
+
+                for (k = i + j * LINE_BUFFER; k < i + (j + 1) * LINE_BUFFER; k += 4)
+                {
+                    if (getline(inFile, line).good())                       // header
+                    {
+                        for (const char &c : line)
+                            if (hdrRange.find_first_of(c) == string::npos)
+                                hdrRange += c;
+                        outfile << line << '\n';
+                    }
+                    if (getline(inFile, line).good())
+                        outfile << line << '\n';
+                    if (getline(inFile, line).good())
+                        outfile << line << '\n';
+                    if (getline(inFile, line).good())                       // quality score
+                    {
+                        for (const char &c : line)
+                            if (qsRange.find_first_of(c) == string::npos)
+                                qsRange += c;
+                        outfile << line << '\n';
+                    }
+                }
+            
+                outfile.close();    // is a MUST
+            }
+            
+//            cerr << k << ' ';
+            
+            arrThread = new thread[n_threads];
+            for (byte t = 0; t < n_threads; ++t)
+            {
+                arrThread[t] = thread(&EnDecrypto::compressFQ, &crpt,
+                                      ("CRYFA_IN" + std::to_string(t)),
+                                      keyFileName,
+                                      v_flag,
+                                      hdrRange,
+                                      qsRange,
+                                      t
+                );
+            }
+            for (byte t = 0; t < n_threads; ++t)
+                arrThread[t].join();
+            delete[] arrThread;
+
+
+        }
+        
+        inFile.close();
+    }
+    
+    
+    
+    
+    
+
+//    // get size of file
+//    infile.seekg(0, infile.end);
+//    long size = 1000000;//infile.tellg();
+//    infile.seekg(0);
+//
+//    // allocate memory for file content
+//    char *buffer = new char[size];
+//
+//    // read content of infile
+//    infile.read(buffer, size);
+//
+//    // write to outfile
+//    outfile.write(buffer, size);
+//
+//    // release dynamically-allocated memory
+//    delete[] buffer;
+
+//    outfile.close();
+//    infile.close();
+
+
+
+
+//    string *strIn = new string[n_threads];
+//    string line;
+//    string out;
+//    std::ifstream in("temp.fq");
+//    const bool FASTA = (crpt.fileType(in) == 'A');cerr<<FASTA;
+//    while (getline(in, line))
+//    {
+//        out += line + "\n";
+////        out+='\n';
+//    }
+//    out.pop_back();
+//
+//    cerr << out;
+
+
+//    for (byte t = 0; t < n_threads; ++t)
+//    {
+//        for(unsigned short lineNo = 0; getline(, line))
+////    strIn[t]+=;
+//    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     // stop timer
     high_resolution_clock::time_point finishTime = high_resolution_clock::now();
@@ -122,6 +260,6 @@ int main (int argc, char* argv[])
     std::chrono::duration<double> elapsed = finishTime - startTime;
     cerr << "done in " << std::fixed << setprecision(4) << elapsed.count()
          << " seconds.\n";
-    
+
     return 0;
 }
