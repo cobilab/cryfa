@@ -28,7 +28,7 @@ g++ -std=c++11 -I cryptopp -o cryfa cryfa.cpp defs.h libcryptopp.a
 ```
 or use
 ```bash
-./scripts/execute.sh
+./execute.sh
 ```
 
 ## PARAMETERS
@@ -64,7 +64,7 @@ Cryfa uses stdin and stdout and, hence, can be directly integrated on pipelines.
 
 ## CITATION
 Please cite the followings, if you use <i>cryfa</i>:
-* D. Pratas, M. Hosseini and A.J. Pinho, "Cryfa: a tool to compact and compress FASTA files," 11'th International Conference on Practical Applications of Computational Biology & Bioinformatics (PACBB), Springer, June 2017.
+* D. Pratas, M. Hosseini and A.J. Pinho, "Cryfa: a tool to compact and encrypt FASTA files," 11'th International Conference on Practical Applications of Computational Biology & Bioinformatics (PACBB), Springer, June 2017.
 
 ## RELEASES
 https://github.com/pratas/cryfa/releases:
