@@ -9,5 +9,6 @@ out="out"
 
 ./cryfa -t2 -k pass.txt $in > ENCRYPTED
 #./cryfa -dk pass.txt ENCRYPTED > $out
+#./cryfa -dk pass.txt CRYFA_OUT0 > $out
 #
 #cmp $in $out

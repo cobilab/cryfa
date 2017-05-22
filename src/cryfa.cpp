@@ -130,23 +130,27 @@ int main (int argc, char* argv[])
     else
     {
         //todo. split file
-        std::ifstream inFile(inFileName);
+        std::ifstream inFile(inFileName);   // main input file
 //    splitFile(inFile);
-        std::ofstream outfile;
-        string outName;
-    
+        std::ofstream inNFiles;             // splitted files
+        string inNFilesName;
+
         string line, hdrRange, qsRange;
         thread *arrThread;
         int k = 0;
-        for (int i = k; i < 17; i += k)
+        for (int i = k; i < 20; i += k)
         {
+//        int i=0;
             
-            
+            // write LINE_BUFFER lines to CRYFA_IN{1, 2, ..., n_threads}
             for (byte j = 0; j < n_threads; ++j)
             {
-                outName = "CRYFA_IN" + std::to_string(j);
-                outfile.open(outName);
-
+                inNFilesName = "CRYFA_IN" + std::to_string(j);
+                inNFiles.open(inNFilesName);
+//                inNFiles.open(inNFilesName,std::ios_base::app);
+                hdrRange.clear();
+                qsRange.clear();
+                
                 for (k = i + j * LINE_BUFFER; k < i + (j + 1) * LINE_BUFFER; k += 4)
                 {
                     if (getline(inFile, line).good())                       // header
@@ -154,26 +158,25 @@ int main (int argc, char* argv[])
                         for (const char &c : line)
                             if (hdrRange.find_first_of(c) == string::npos)
                                 hdrRange += c;
-                        outfile << line << '\n';
+                        inNFiles << line << '\n';
                     }
                     if (getline(inFile, line).good())
-                        outfile << line << '\n';
+                        inNFiles << line << '\n';
                     if (getline(inFile, line).good())
-                        outfile << line << '\n';
+                        inNFiles << line << '\n';
                     if (getline(inFile, line).good())                       // quality score
                     {
                         for (const char &c : line)
                             if (qsRange.find_first_of(c) == string::npos)
                                 qsRange += c;
-                        outfile << line << '\n';
+                        inNFiles << line << '\n';
                     }
                 }
-            
-                outfile.close();    // is a MUST
+                
+                inNFiles.close();    // is a MUST
             }
-            
-//            cerr << k << ' ';
-            
+
+
             arrThread = new thread[n_threads];
             for (byte t = 0; t < n_threads; ++t)
             {
@@ -191,16 +194,86 @@ int main (int argc, char* argv[])
             delete[] arrThread;
 
 
-        }
-        
-        inFile.close();
-    }
-    
-    
-    
-    
-    
 
+            //todo. join
+
+        }
+
+        inFile.close();
+    
+    
+//        crpt.compressFQ(("CRYFA_IN0"),
+//                        keyFileName,
+//                        v_flag,
+//                        hdrRange,
+//                        qsRange,
+//                        0);
+//
+//
+//        std::ifstream enc("CRYFA_PACKED0");
+//        int ln=0;
+//        while(getline(enc, line))
+//        {
+//            ++ln;
+//        }
+//        cerr<<ln;
+//
+        
+
+
+        
+        
+//        // join CRYFA_ENC files
+//        std::ofstream out("CRYFA_OUT");
+//        std::ifstream encFile;
+//        string encFileName;
+//
+//        k = 0;
+//        for (int i = k; i < 20; i += k)
+//        {
+//            for (byte j = 0; j < n_threads; ++j)
+//            {
+//                encFileName = "CRYFA_ENC" + std::to_string(j);
+//                encFile.open(encFileName);
+//                encFile.ignore(LARGE_NUMBER, '\n');
+//
+//                getline(encFile, line); out << line << '\n';
+//
+//
+////                for (k = i + j * LINE_BUFFER; k < i + (j + 1) * LINE_BUFFER; k += 4)
+////                {
+////                    getline(encFile, line); out << line << '\n';
+////                    getline(encFile, line); out << line << '\n';
+////                    getline(encFile, line); out << line << '\n';
+////                    getline(encFile, line); out << line << '\n';
+////                }
+//
+//                encFile.close();    // is a MUST
+//            }
+//            out.close();
+//
+//            k = k + n_threads; // to consider lines with thread ID
+//        }
+    
+        
+        
+    }
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
 //    // get size of file
 //    infile.seekg(0, infile.end);
 //    long size = 1000000;//infile.tellg();
@@ -260,6 +333,6 @@ int main (int argc, char* argv[])
     std::chrono::duration<double> elapsed = finishTime - startTime;
     cerr << "done in " << std::fixed << setprecision(4) << elapsed.count()
          << " seconds.\n";
-
+    
     return 0;
 }

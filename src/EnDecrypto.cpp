@@ -102,7 +102,9 @@ void EnDecrypto::compressFQ (const string &inFileName,
                              string hdrRange, string qsRange,
                              byte threadID)
 {
+//    mut.lock();
     ifstream in(inFileName);
+//    mut.unlock();
     string line, seq, context;  // FASTQ: context = header + seq + plus + qs
 //    string hdrRange, qsRange;   // header & qs symbols presented in FASTQ file
 
@@ -111,13 +113,15 @@ void EnDecrypto::compressFQ (const string &inFileName,
     { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
     mut.unlock();
 
-    // check if the third line contains only +
-    bool justPlus = true;
-    in.ignore(LARGE_NUMBER, '\n');                          // ignore header
-    in.ignore(LARGE_NUMBER, '\n');                          // ignore seq
-    if (getline(in, line).good()) { if (line.length() > 1)   justPlus = false; }
-//    else { cerr << "Error: file corrupted.\n";    return; }
-    in.clear();  in.seekg(0, in.beg);                       // beginning of file
+//    mut.lock();
+//    // check if the third line contains only +
+//    bool justPlus = true;
+//    in.ignore(LARGE_NUMBER, '\n');                          // ignore header
+//    in.ignore(LARGE_NUMBER, '\n');                          // ignore seq
+//    if (getline(in, line).good()) { if (line.length() > 1)   justPlus = false; }
+////    else { cerr << "Error: file corrupted.\n";    return; }
+//    in.clear();  in.seekg(0, in.beg);                       // beginning of file
+//    mut.unlock();
 
 //    // gather all headers and quality scores
 //    while(!in.eof())
@@ -204,7 +208,7 @@ void EnDecrypto::compressFQ (const string &inFileName,
             packHdr = &pack_1to1;
         }
     }
-    
+
     // quality score
     if (qsRangeLen > MAX_CAT_5)           // if len > 39 filter the last 39 ones
     {
@@ -255,35 +259,57 @@ void EnDecrypto::compressFQ (const string &inFileName,
     mut.unlock();
 
 
-    //todo. nabas havijoori 'context+=' nevesht,
-    //todo. chon va3 file 10GB mitereke
-    //todo. bas hame kara ro block by block anjam dad
-    
-    context += hdrRange;                       // send hdrRange to decryptor
-    context += (char) 254;                     // to detect hdrRange in dec.
-    context += qsRange;                        // send qsRange to decryptor
-    context += (justPlus ? (char) 253 : '\n'); //'+ or not just +' condition
-    while(!in.eof())    // process 4 lines by 4 lines
-    {
-        if (getline(in, line).good())          // header
-            context += packHdr(line.substr(1), HEADERS, HDR_MAP)
-                       + (char) 254;    // ignore '@'
-
-        if (getline(in, line).good())          // sequence
-            context += packSeq_3to1(line) + (char) 254;
-
-        in.ignore(LARGE_NUMBER, '\n');         // +. ignore
-
-        if (getline(in, line).good())          // quality score
-            context += packQS(line, QUALITY_SCORES, QS_MAP) + (char) 254;
-    }
-    context += (char) 252;  // end of file
+//    //todo. nabas havijoori 'context+=' nevesht,
+//    //todo. chon va3 file 10GB mitereke
+//    //todo. bas hame kara ro block by block anjam dad
+//
+////    context += hdrRange;                       // send hdrRange to decryptor
+////    context += (char) 254;                     // to detect hdrRange in dec.
+////    context += qsRange;                        // send qsRange to decryptor
+////    context += (justPlus ? (char) 253 : '\n'); //'+ or not just +' condition
+//    while(!in.eof())    // process 4 lines by 4 lines
+//    {
+//        if (getline(in, line).good())          // header
+//            context += packHdr(line.substr(1), HEADERS, HDR_MAP)
+//                       + (char) 254;    // ignore '@'
+//
+//        if (getline(in, line).good())          // sequence
+//            context += packSeq_3to1(line) + (char) 254;
+//
+//        in.ignore(LARGE_NUMBER, '\n');         // +. ignore
+//
+//        if (getline(in, line).good())          // quality score
+//            context += packQS(line, QUALITY_SCORES, QS_MAP) + (char) 254;
+//    }
+//    context += (char) 252;  // end of file
 
     in.close();
 
-    // encryption
-    encrypt(context, keyFileName, v_flag,
-            threadID);
+
+
+////    mut.lock();
+//    std::ofstream pkdfile;
+//    string encName= "CRYFA_PACKED" + std::to_string(threadID);
+//    pkdfile.open(encName, std::ios_base::app);
+////    encfile.open(encName);
+//    pkdfile << std::to_string(threadID) << '\n';    // just the number, for simplicity
+//    pkdfile << context << '\n';
+//    pkdfile.close();
+////    mut.unlock();
+
+
+
+
+
+
+
+
+
+
+//todo. send a single packed file to encrypt
+//    // encryption
+//    encrypt(context, keyFileName, v_flag,
+//            threadID);
 }
 
 /*******************************************************************************
@@ -330,25 +356,27 @@ inline void EnDecrypto::encrypt (const string &context, const string &keyFileNam
     
     
 //    mut.lock();
-    std::ofstream outfile;
-    string outName;
-    outName = "CRYFA_OUT" + std::to_string(threadID);
-    outfile.open(outName, std::ios_base::app);
+    std::ofstream encfile;
+    string encName= "CRYFA_ENC" + std::to_string(threadID);
+    encfile.open(encName, std::ios_base::app);
+//    encfile.open(encName);
 //    mut.unlock();
 
 
 //    mut.lock();
     // watermark for encrypted file //todo. should write once while joining
-//    outfile << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
+//    encfile << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
 //                          + std::to_string(RELEASE_CRYFA) + "\n";
     
     //todo. write header containing threadID for each
-    outfile << threadID;    // just the number, for simplicity
+    encfile << std::to_string(threadID) << '\n';    // just the number, for simplicity
     
     // dump cyphertext for read
-    for (const char& c : cipherText)    outfile << (char) (c & 0xFF);
-////        cout << (char) (0xFF & static_cast<byte> (*i));
-    outfile << '\n';
+    for (const char& c : cipherText)
+        encfile << (char) (c & 0xFF);
+//        cout << (char) (0xFF & static_cast<byte> (c));
+    encfile << '\n';
+//    encfile.close();
 //    mut.unlock();
 }
 
