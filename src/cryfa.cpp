@@ -30,6 +30,11 @@ using std::chrono::high_resolution_clock;
 using std::setprecision;
 using std::thread;
 
+
+
+
+#include <future>
+
 ////////////////////////////////////////////////////////////////////////////////
 ///////////////////                 M A I N                 ////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -146,8 +151,8 @@ int main (int argc, char* argv[])
             for (byte j = 0; j < n_threads; ++j)
             {
                 inNFilesName = "CRYFA_IN" + std::to_string(j);
-                inNFiles.open(inNFilesName);
-//                inNFiles.open(inNFilesName,std::ios_base::app);
+//                inNFiles.open(inNFilesName);
+                inNFiles.open(inNFilesName,std::ios_base::app);
                 hdrRange.clear();
                 qsRange.clear();
                 
@@ -174,52 +179,65 @@ int main (int argc, char* argv[])
                 }
                 
                 inNFiles.close();    // is a MUST
+    
+    
+    
+                crpt.compressFQ("CRYFA_IN0",
+                                keyFileName,
+                                v_flag,
+                                hdrRange,
+                                qsRange,
+                                0);
+    
             }
-
-
-            arrThread = new thread[n_threads];
-            for (byte t = 0; t < n_threads; ++t)
-            {
-                arrThread[t] = thread(&EnDecrypto::compressFQ, &crpt,
-                                      ("CRYFA_IN" + std::to_string(t)),
-                                      keyFileName,
-                                      v_flag,
-                                      hdrRange,
-                                      qsRange,
-                                      t
-                );
-            }
-            for (byte t = 0; t < n_threads; ++t)
-                arrThread[t].join();
-            delete[] arrThread;
-
-
-
+    
+            
+            
+//            std::future<void> fut = std::async (std::launch::async, &EnDecrypto::compressFQ,
+//                                                ("CRYFA_IN0"),
+//                                                keyFileName,
+//                                                v_flag,
+//                                                hdrRange,
+//                                                qsRange,
+//                                                0
+//            );
+            
+//            arrThread = new thread[n_threads];
+//            for (byte t = 0; t < n_threads; ++t)
+//            {
+////                std::shared_ptr<EnDecrypto> p(new EnDecrypto);
+////                arrThread[t] = thread (&EnDecrypto::compressFQ,p,
+////                                       ("CRYFA_IN" + std::to_string(t)),
+////                                       keyFileName,
+////                                       v_flag,
+////                                       hdrRange,
+////                                       qsRange,
+////                                       t
+////                );
+//
+//                arrThread[t] = thread(&EnDecrypto::compressFQ, &crpt,
+//                                      ("CRYFA_IN" + std::to_string(t)),
+//                                      keyFileName,
+//                                      v_flag,
+//                                      hdrRange,
+//                                      qsRange,
+//                                      t
+//                );
+//            }
+//            for (byte t = 0; t < n_threads; ++t)
+//                arrThread[t].join();
+//            delete[] arrThread;
+    
+    
             //todo. join
 
-        }
+        } // end for i
 
         inFile.close();
     
     
-//        crpt.compressFQ(("CRYFA_IN0"),
-//                        keyFileName,
-//                        v_flag,
-//                        hdrRange,
-//                        qsRange,
-//                        0);
-//
-//
-//        std::ifstream enc("CRYFA_PACKED0");
-//        int ln=0;
-//        while(getline(enc, line))
-//        {
-//            ++ln;
-//        }
-//        cerr<<ln;
-//
-        
 
+        
 
         
         

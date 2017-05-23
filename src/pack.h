@@ -299,7 +299,6 @@ inline string packSeq_3to1 (string seq)
 /*******************************************************************************
     encapsulate 3 symbols in 2 bytes -- reduction ~1/3.                  40 <= #
 *******************************************************************************/
-//inline string packLarge_3to2 (string strIn, string SYM_RANGE, htable_t &map)
 inline string packLarge_3to2 (string strIn, string SYM_RANGE, htable_t map)
 {
     string tuple, packed;
@@ -350,7 +349,6 @@ inline string packLarge_3to2 (string strIn, string SYM_RANGE, htable_t map)
 /*******************************************************************************
     encapsulate 3 symbols in 2 bytes -- reduction ~1/3.            16 <= # <= 39
 *******************************************************************************/
-//inline string pack_3to2 (string strIn, string SYM_RANGE, htable_t &map)
 inline string pack_3to2 (string strIn, string SYM_RANGE, htable_t map)
 {
     string tuple, packed;
@@ -387,7 +385,6 @@ inline string pack_3to2 (string strIn, string SYM_RANGE, htable_t map)
 /*******************************************************************************
     encapsulate 2 symbols in 1 bytes -- reduction ~1/2.             7 <= # <= 15
 *******************************************************************************/
-//inline string pack_2to1 (string strIn, string SYM_RANGE, htable_t &map)
 inline string pack_2to1 (string strIn, string SYM_RANGE, htable_t map)
 {
     string tuple, packed;
@@ -409,7 +406,6 @@ inline string pack_2to1 (string strIn, string SYM_RANGE, htable_t map)
 /*******************************************************************************
     encapsulate 3 symbols in 1 bytes -- reduction ~2/3.              # = 4, 5, 6
 *******************************************************************************/
-//inline string pack_3to1 (string strIn, string SYM_RANGE, htable_t &map)
 inline string pack_3to1 (string strIn, string SYM_RANGE, htable_t map)
 {
     string tuple, packed;
@@ -443,7 +439,6 @@ inline string pack_3to1 (string strIn, string SYM_RANGE, htable_t map)
 /*******************************************************************************
     encapsulate 5 symbols in 1 bytes -- reduction ~4/5.                    # = 3
 *******************************************************************************/
-//inline string pack_5to1 (string strIn, string SYM_RANGE, htable_t &map)
 inline string pack_5to1 (string strIn, string SYM_RANGE, htable_t map)
 {
     string tuple, packed;
@@ -491,7 +486,6 @@ inline string pack_5to1 (string strIn, string SYM_RANGE, htable_t map)
 /*******************************************************************************
     encapsulate 7 symbols in 1 bytes -- reduction ~6/7.                    # = 2
 *******************************************************************************/
-//inline string pack_7to1 (string strIn, string SYM_RANGE, htable_t &map)
 inline string pack_7to1 (string strIn, string SYM_RANGE, htable_t map)
 {
     string tuple, packed;
@@ -557,7 +551,6 @@ inline string pack_7to1 (string strIn, string SYM_RANGE, htable_t map)
 /*******************************************************************************
     show 1 symbol in 1 byte.                                               # = 1
 *******************************************************************************/
-//inline string pack_1to1 (string strIn, string SYM_RANGE, htable_t &map)
 inline string pack_1to1 (string strIn, string SYM_RANGE, htable_t map)
 {
     string single;
@@ -678,7 +671,6 @@ inline string unpackLarge_read2B (string::iterator &i, const char XChar,
 /*******************************************************************************
     unpack by reading 2 byte by 2 byte
 *******************************************************************************/
-//inline string unpack_read2B (string::iterator &i, string* &unpack)
 inline string unpack_read2B (string::iterator &i, string* unpack)
 {
     byte MSB, LSB;
@@ -703,7 +695,6 @@ inline string unpack_read2B (string::iterator &i, string* unpack)
 /*******************************************************************************
     unpack by reading 1 byte by 1 byte
 *******************************************************************************/
-//inline string unpack_read1B (string::iterator &i, string* &unpack)
 inline string unpack_read1B (string::iterator &i, string* unpack)
 {
     string out;

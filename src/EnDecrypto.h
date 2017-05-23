@@ -18,7 +18,6 @@ public:
     EnDecrypto();                                               // constructor
     
     void compressFA (const string&, const string&, const int);  // compress FA
-//    void compressFQ (const string&, const string&, const int);  // compress FQ
     void compressFQ (const string&, const string&, const int,
                      string, string, byte);  // compress FQ
     inline void encrypt    (const string&, const string&, const int,

@@ -152,14 +152,14 @@ void EnDecrypto::compressFQ (const string &inFileName,
 
     hdrRange.erase(hdrRange.begin());                       // remove '@'
     
-    std::sort(hdrRange.begin(), hdrRange.end());            // sort values
-    std::sort(qsRange.begin(),  qsRange.end());             // sort ASCII values
+//    std::sort(hdrRange.begin(), hdrRange.end());            // sort values
+//    std::sort(qsRange.begin(),  qsRange.end());             // sort ASCII values
     
     // todo. probably function pointer doesn't work with multithreading, in this way
-//    using packHdrPointer = string (*)(string, string, htable_t&);
     using packHdrPointer = string (*)(string, string, htable_t);
     packHdrPointer packHdr;                                 // function pointer
-//    using packQSPointer  = string (*)(string, string, htable_t&);
+//    std::function<string(string, string, htable_t)> packHdr;
+    
     using packQSPointer  = string (*)(string, string, htable_t);
     packQSPointer packQS;                                   // function pointer
     
@@ -167,7 +167,7 @@ void EnDecrypto::compressFQ (const string &inFileName,
     string QUALITY_SCORES_X;                          // extended QUALITY_SCORES
     const size_t qsRangeLen  = qsRange.length();
     const size_t hdrRangeLen = hdrRange.length();
-
+    
     // header
     if (hdrRangeLen > MAX_CAT_5)          // if len > 39 filter the last 39 ones
     {
@@ -175,18 +175,18 @@ void EnDecrypto::compressFQ (const string &inFileName,
         HEADERS_X = HEADERS;
         // ASCII char after last char in HEADERS
         HEADERS_X += (char) (HEADERS[HEADERS.size()-1] + 1);
-        
+
         HDR_MAP = buildHashTable(HDR_MAP, HEADERS_X, KEYLEN_CAT_5);
         packHdr = &packLarge_3to2;
     }
     else
     {
         HEADERS = hdrRange;
-
+        
         if (hdrRangeLen > MAX_CAT_4)            // cat 5
         {
             HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_5);
-            packHdr = &pack_3to2;
+            packHdr = pack_3to2;
         }
         else if (hdrRangeLen > MAX_CAT_3)       // cat 4
         {
@@ -223,14 +223,14 @@ void EnDecrypto::compressFQ (const string &inFileName,
         QUALITY_SCORES_X = QUALITY_SCORES;
         // ASCII char after last char in QUALITY_SCORES
         QUALITY_SCORES_X +=(char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
-    
+
         QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES_X, KEYLEN_CAT_5);
         packQS = &packLarge_3to2;
     }
     else
     {
         QUALITY_SCORES = qsRange;
-        
+
         if (qsRangeLen > MAX_CAT_4)             // cat 5
         {
             QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_5);
@@ -265,6 +265,11 @@ void EnDecrypto::compressFQ (const string &inFileName,
     }
     
     
+    cerr<<HEADERS<<'\n'<<QUALITY_SCORES<<'\n';
+    
+    
+    
+    
     
     //todo. nabas havijoori 'context+=' nevesht,
     //todo. chon va3 file 10GB mitereke
@@ -279,6 +284,7 @@ void EnDecrypto::compressFQ (const string &inFileName,
         if (getline(in, line).good())          // header
             context += packHdr(line.substr(1), HEADERS, HDR_MAP)
                        + (char) 254;    // ignore '@'
+
 //        if (getline(in, line).good())          // sequence
 //            context += packSeq_3to1(line) + (char) 254;
 //
@@ -290,9 +296,11 @@ void EnDecrypto::compressFQ (const string &inFileName,
     context += (char) 252;  // end of file
     
     in.close();
-
-
-
+    
+    
+    
+    
+    
 ////    mut.lock();
 //    std::ofstream pkdfile;
 //    string encName= "CRYFA_PACKED" + std::to_string(threadID);
@@ -302,10 +310,6 @@ void EnDecrypto::compressFQ (const string &inFileName,
 //    pkdfile << context << '\n';
 //    pkdfile.close();
 ////    mut.unlock();
-
-
-
-
 
 
 
@@ -502,10 +506,8 @@ void EnDecrypto::decompFQ (string decText, const string &keyFileName)
 //    cerr << hdrRange << '\n' << hdrRange.length() << '\n';
 //    cerr << qsRange << '\n' << qsRange.length() << '\n';
     
-//    using unpackHdrPointer = string (*)(string::iterator&, string* &);
     using unpackHdrPointer = string (*)(string::iterator&, string*);
     unpackHdrPointer unpackHdr;                              // function pointer
-//    using unpackQSPointer = string (*)(string::iterator&, string* &);
     using unpackQSPointer = string (*)(string::iterator&, string*);
     unpackQSPointer unpackQS;                                // function pointer
     
