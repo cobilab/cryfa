@@ -16,17 +16,10 @@ using std::cout;
 using std::cerr;
 using std::make_pair;
 
-htable_t HDR_MAP;
-htable_t QS_MAP;
-string*  HDR_UNPACK;
-string*  QS_UNPACK;
-string   HEADERS;           // 39 values
-string   QUALITY_SCORES;    // 39 values
-
 /*******************************************************************************
     build hash table
 *******************************************************************************/
-inline void buildHashTable (htable_t &map, const string &strIn, short keyLen)
+inline htable_t buildHashTable (htable_t map, const string &strIn, short keyLen)
 {
     const byte strInLen = strIn.length();
     ULL elementNo = 0;
@@ -118,6 +111,8 @@ inline void buildHashTable (htable_t &map, const string &strIn, short keyLen)
         default: break;
     }
     
+    return map;
+    
     // TEST
 //    htable_t::const_iterator got = map.find("II!");
 //    if (got == map.end()) cerr << "Error: key not found!\n";
@@ -131,7 +126,7 @@ inline void buildHashTable (htable_t &map, const string &strIn, short keyLen)
 /*******************************************************************************
     build table for unpacking
 *******************************************************************************/
-inline void buildUnpack (const string &strIn, short keyLen, string* &unpack)
+inline string* buildUnpack (const string &strIn, short keyLen, string* unpack)
 {
     const byte strLen = strIn.length();
     ULL elementNo = 0;
@@ -223,6 +218,8 @@ inline void buildUnpack (const string &strIn, short keyLen, string* &unpack)
         default: break;
     }
     
+    return unpack;
+    
     // test
 //    for (int i = 0; i != arrSize; ++i)
 //        cerr << unpack[i] << '\n';
@@ -302,7 +299,8 @@ inline string packSeq_3to1 (string seq)
 /*******************************************************************************
     encapsulate 3 symbols in 2 bytes -- reduction ~1/3.                  40 <= #
 *******************************************************************************/
-inline string packLarge_3to2 (string strIn, string SYM_RANGE, htable_t &map)
+//inline string packLarge_3to2 (string strIn, string SYM_RANGE, htable_t &map)
+inline string packLarge_3to2 (string strIn, string SYM_RANGE, htable_t map)
 {
     string tuple, packed;
     const LL iterLen = strIn.length() - 2;
@@ -352,7 +350,8 @@ inline string packLarge_3to2 (string strIn, string SYM_RANGE, htable_t &map)
 /*******************************************************************************
     encapsulate 3 symbols in 2 bytes -- reduction ~1/3.            16 <= # <= 39
 *******************************************************************************/
-inline string pack_3to2 (string strIn, string SYM_RANGE, htable_t &map)
+//inline string pack_3to2 (string strIn, string SYM_RANGE, htable_t &map)
+inline string pack_3to2 (string strIn, string SYM_RANGE, htable_t map)
 {
     string tuple, packed;
     const LL iterLen = strIn.length() - 2;
@@ -388,7 +387,8 @@ inline string pack_3to2 (string strIn, string SYM_RANGE, htable_t &map)
 /*******************************************************************************
     encapsulate 2 symbols in 1 bytes -- reduction ~1/2.             7 <= # <= 15
 *******************************************************************************/
-inline string pack_2to1 (string strIn, string SYM_RANGE, htable_t &map)
+//inline string pack_2to1 (string strIn, string SYM_RANGE, htable_t &map)
+inline string pack_2to1 (string strIn, string SYM_RANGE, htable_t map)
 {
     string tuple, packed;
     const LL iterLen = strIn.length() - 1;
@@ -409,7 +409,8 @@ inline string pack_2to1 (string strIn, string SYM_RANGE, htable_t &map)
 /*******************************************************************************
     encapsulate 3 symbols in 1 bytes -- reduction ~2/3.              # = 4, 5, 6
 *******************************************************************************/
-inline string pack_3to1 (string strIn, string SYM_RANGE, htable_t &map)
+//inline string pack_3to1 (string strIn, string SYM_RANGE, htable_t &map)
+inline string pack_3to1 (string strIn, string SYM_RANGE, htable_t map)
 {
     string tuple, packed;
     const LL iterLen = strIn.length() - 2;
@@ -442,7 +443,8 @@ inline string pack_3to1 (string strIn, string SYM_RANGE, htable_t &map)
 /*******************************************************************************
     encapsulate 5 symbols in 1 bytes -- reduction ~4/5.                    # = 3
 *******************************************************************************/
-inline string pack_5to1 (string strIn, string SYM_RANGE, htable_t &map)
+//inline string pack_5to1 (string strIn, string SYM_RANGE, htable_t &map)
+inline string pack_5to1 (string strIn, string SYM_RANGE, htable_t map)
 {
     string tuple, packed;
     const LL iterLen = strIn.length() - 4;
@@ -489,7 +491,8 @@ inline string pack_5to1 (string strIn, string SYM_RANGE, htable_t &map)
 /*******************************************************************************
     encapsulate 7 symbols in 1 bytes -- reduction ~6/7.                    # = 2
 *******************************************************************************/
-inline string pack_7to1 (string strIn, string SYM_RANGE, htable_t &map)
+//inline string pack_7to1 (string strIn, string SYM_RANGE, htable_t &map)
+inline string pack_7to1 (string strIn, string SYM_RANGE, htable_t map)
 {
     string tuple, packed;
     const LL iterLen = strIn.length() - 6;
@@ -554,7 +557,8 @@ inline string pack_7to1 (string strIn, string SYM_RANGE, htable_t &map)
 /*******************************************************************************
     show 1 symbol in 1 byte.                                               # = 1
 *******************************************************************************/
-inline string pack_1to1 (string strIn, string SYM_RANGE, htable_t &map)
+//inline string pack_1to1 (string strIn, string SYM_RANGE, htable_t &map)
+inline string pack_1to1 (string strIn, string SYM_RANGE, htable_t map)
 {
     string single;
     string packed;
@@ -625,7 +629,7 @@ inline string unpackSeqFQ_3to1 (string::iterator &i)
     unpack by reading 2 byte by 2 byte, when # > 39
 *******************************************************************************/
 inline string unpackLarge_read2B (string::iterator &i, const char XChar,
-                                  string* &unpack)
+                                  string* unpack)
 {
     byte MSB, LSB;
     unsigned short doubleB; // double byte
@@ -674,7 +678,8 @@ inline string unpackLarge_read2B (string::iterator &i, const char XChar,
 /*******************************************************************************
     unpack by reading 2 byte by 2 byte
 *******************************************************************************/
-inline string unpack_read2B (string::iterator &i, string* &unpack)
+//inline string unpack_read2B (string::iterator &i, string* &unpack)
+inline string unpack_read2B (string::iterator &i, string* unpack)
 {
     byte MSB, LSB;
     unsigned short doubleB; // double byte
@@ -698,7 +703,8 @@ inline string unpack_read2B (string::iterator &i, string* &unpack)
 /*******************************************************************************
     unpack by reading 1 byte by 1 byte
 *******************************************************************************/
-inline string unpack_read1B (string::iterator &i, string* &unpack)
+//inline string unpack_read1B (string::iterator &i, string* &unpack)
+inline string unpack_read1B (string::iterator &i, string* unpack)
 {
     string out;
     

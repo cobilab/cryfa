@@ -102,6 +102,11 @@ void EnDecrypto::compressFQ (const string &inFileName,
                              string hdrRange, string qsRange,
                              byte threadID)
 {
+    htable_t HDR_MAP;           // hash table for header
+    htable_t QS_MAP;            // hash table for quality score
+    string   HEADERS;           // max: 39 values
+    string   QUALITY_SCORES;    // max: 39 values
+    
 //    mut.lock();
     ifstream in(inFileName);
 //    mut.unlock();
@@ -146,21 +151,23 @@ void EnDecrypto::compressFQ (const string &inFileName,
 //    in.clear();  in.seekg(0, std::ios::beg);                // beginning of file
 
     hdrRange.erase(hdrRange.begin());                       // remove '@'
-
+    
     std::sort(hdrRange.begin(), hdrRange.end());            // sort values
     std::sort(qsRange.begin(),  qsRange.end());             // sort ASCII values
-
-    using packHdrPointer = string (*)(string, string, htable_t&);
+    
+    // todo. probably function pointer doesn't work with multithreading, in this way
+//    using packHdrPointer = string (*)(string, string, htable_t&);
+    using packHdrPointer = string (*)(string, string, htable_t);
     packHdrPointer packHdr;                                 // function pointer
-    using packQSPointer  = string (*)(string, string, htable_t&);
+//    using packQSPointer  = string (*)(string, string, htable_t&);
+    using packQSPointer  = string (*)(string, string, htable_t);
     packQSPointer packQS;                                   // function pointer
-
+    
     string HEADERS_X;                                 // extended HEADERS
     string QUALITY_SCORES_X;                          // extended QUALITY_SCORES
     const size_t qsRangeLen  = qsRange.length();
     const size_t hdrRangeLen = hdrRange.length();
 
-    mut.lock();
     // header
     if (hdrRangeLen > MAX_CAT_5)          // if len > 39 filter the last 39 ones
     {
@@ -168,8 +175,8 @@ void EnDecrypto::compressFQ (const string &inFileName,
         HEADERS_X = HEADERS;
         // ASCII char after last char in HEADERS
         HEADERS_X += (char) (HEADERS[HEADERS.size()-1] + 1);
-
-        buildHashTable(HDR_MAP, HEADERS_X, KEYLEN_CAT_5);
+        
+        HDR_MAP = buildHashTable(HDR_MAP, HEADERS_X, KEYLEN_CAT_5);
         packHdr = &packLarge_3to2;
     }
     else
@@ -178,37 +185,37 @@ void EnDecrypto::compressFQ (const string &inFileName,
 
         if (hdrRangeLen > MAX_CAT_4)            // cat 5
         {
-            buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_5);
+            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_5);
             packHdr = &pack_3to2;
         }
         else if (hdrRangeLen > MAX_CAT_3)       // cat 4
         {
-            buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_4);
+            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_4);
             packHdr = &pack_2to1;
         }
         else if (hdrRangeLen == MAX_CAT_3 || hdrRangeLen == MID_CAT_3
                  || hdrRangeLen == MIN_CAT_3)  // cat 3
         {
-            buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_3);
+            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_3);
             packHdr = &pack_3to1;
         }
         else if (hdrRangeLen == CAT_2)          // cat 2
         {
-            buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_2);
+            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_2);
             packHdr = &pack_5to1;
         }
         else if (hdrRangeLen == CAT_1)          // cat 1
         {
-            buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_1);
+            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_1);
             packHdr = &pack_7to1;
         }
         else    // hdrRangeLen = 1
         {
-            buildHashTable(HDR_MAP, HEADERS, 1);
+            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, 1);
             packHdr = &pack_1to1;
         }
     }
-
+    
     // quality score
     if (qsRangeLen > MAX_CAT_5)           // if len > 39 filter the last 39 ones
     {
@@ -216,63 +223,62 @@ void EnDecrypto::compressFQ (const string &inFileName,
         QUALITY_SCORES_X = QUALITY_SCORES;
         // ASCII char after last char in QUALITY_SCORES
         QUALITY_SCORES_X +=(char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
-
-        buildHashTable(QS_MAP, QUALITY_SCORES_X, KEYLEN_CAT_5);
+    
+        QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES_X, KEYLEN_CAT_5);
         packQS = &packLarge_3to2;
     }
     else
     {
         QUALITY_SCORES = qsRange;
-
+        
         if (qsRangeLen > MAX_CAT_4)             // cat 5
         {
-            buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_5);
+            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_5);
             packQS = &pack_3to2;
         }
         else if (qsRangeLen > MAX_CAT_3)        // cat 4
         {
-            buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_4);
+            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_4);
             packQS = &pack_2to1;
         }
         else if (qsRangeLen == MAX_CAT_3 || qsRangeLen == MID_CAT_3
                  || qsRangeLen == MIN_CAT_3)   // cat 3
         {
-            buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_3);
+            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_3);
             packQS = &pack_3to1;
         }
         else if (qsRangeLen == CAT_2)           // cat 2
         {
-            buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_2);
+            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_2);
             packQS = &pack_5to1;
         }
         else if (qsRangeLen == CAT_1)           // cat 1
         {
-            buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_1);
+            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_1);
             packQS = &pack_7to1;
         }
         else    // qsRangeLen = 1
         {
-            buildHashTable(QS_MAP, QUALITY_SCORES, 1);
+            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, 1);
             packQS = &pack_1to1;
         }
     }
-    mut.unlock();
-
-
+    
+    
+    
     //todo. nabas havijoori 'context+=' nevesht,
     //todo. chon va3 file 10GB mitereke
     //todo. bas hame kara ro block by block anjam dad
 
-////    context += hdrRange;                       // send hdrRange to decryptor
-////    context += (char) 254;                     // to detect hdrRange in dec.
-////    context += qsRange;                        // send qsRange to decryptor
-////    context += (justPlus ? (char) 253 : '\n'); //'+ or not just +' condition
-//    while(!in.eof())    // process 4 lines by 4 lines
-//    {
-//        if (getline(in, line).good())          // header
-//            context += packHdr(line.substr(1), HEADERS, HDR_MAP)
-//                       + (char) 254;    // ignore '@'
-//
+//    context += hdrRange;                       // send hdrRange to decryptor
+//    context += (char) 254;                     // to detect hdrRange in dec.
+//    context += qsRange;                        // send qsRange to decryptor
+//    context += (justPlus ? (char) 253 : '\n'); //'+ or not just +' condition
+    while(!in.eof())    // process 4 lines by 4 lines
+    {
+        if (getline(in, line).good())          // header
+            context += packHdr(line.substr(1), HEADERS, HDR_MAP)
+                       + (char) 254;    // ignore '@'
 //        if (getline(in, line).good())          // sequence
 //            context += packSeq_3to1(line) + (char) 254;
 //
@@ -280,9 +286,9 @@ void EnDecrypto::compressFQ (const string &inFileName,
 //
 //        if (getline(in, line).good())          // quality score
 //            context += packQS(line, QUALITY_SCORES, QS_MAP) + (char) 254;
-//    }
-//    context += (char) 252;  // end of file
-
+    }
+    context += (char) 252;  // end of file
+    
     in.close();
 
 
@@ -471,6 +477,9 @@ void EnDecrypto::decompFA (string decText, const string &keyFileName)
 *******************************************************************************/
 void EnDecrypto::decompFQ (string decText, const string &keyFileName)
 {
+    string*  HDR_UNPACK;    // for unpacking header
+    string*  QS_UNPACK;     // for unpacking quality score
+    
     string line;
     string::iterator i = decText.begin();
     
@@ -493,9 +502,11 @@ void EnDecrypto::decompFQ (string decText, const string &keyFileName)
 //    cerr << hdrRange << '\n' << hdrRange.length() << '\n';
 //    cerr << qsRange << '\n' << qsRange.length() << '\n';
     
-    using unpackHdrPointer = string (*)(string::iterator&, string* &);
+//    using unpackHdrPointer = string (*)(string::iterator&, string* &);
+    using unpackHdrPointer = string (*)(string::iterator&, string*);
     unpackHdrPointer unpackHdr;                              // function pointer
-    using unpackQSPointer = string (*)(string::iterator&, string* &);
+//    using unpackQSPointer = string (*)(string::iterator&, string* &);
+    using unpackQSPointer = string (*)(string::iterator&, string*);
     unpackQSPointer unpackQS;                                // function pointer
     
     // header
@@ -552,8 +563,8 @@ void EnDecrypto::decompFQ (string decText, const string &keyFileName)
         string quality_scores_X = quality_scores;    quality_scores_X+=XChar_qs;
         
         // tables for unpacking
-        buildUnpack(headers_X,        keyLen_hdr, HDR_UNPACK);
-        buildUnpack(quality_scores_X, keyLen_qs,  QS_UNPACK);
+        HDR_UNPACK = buildUnpack(headers_X,        keyLen_hdr, HDR_UNPACK);
+        QS_UNPACK  = buildUnpack(quality_scores_X, keyLen_qs,  QS_UNPACK);
         
         while (i != decText.end())
         {
@@ -575,8 +586,8 @@ void EnDecrypto::decompFQ (string decText, const string &keyFileName)
         string headers_X = headers;     headers_X += XChar_hdr;
         
         // tables for unpacking
-        buildUnpack(headers_X, keyLen_hdr, HDR_UNPACK);
-        buildUnpack(qsRange,   keyLen_qs,  QS_UNPACK);
+        HDR_UNPACK = buildUnpack(headers_X, keyLen_hdr, HDR_UNPACK);
+        QS_UNPACK  = buildUnpack(qsRange,   keyLen_qs,  QS_UNPACK);
         
         while (i != decText.end())
         {
@@ -598,8 +609,8 @@ void EnDecrypto::decompFQ (string decText, const string &keyFileName)
         string quality_scores_X=quality_scores;  quality_scores_X+=XChar_qs;
         
         // tables for unpacking
-        buildUnpack(hdrRange,         keyLen_hdr, HDR_UNPACK);
-        buildUnpack(quality_scores_X, keyLen_qs,  QS_UNPACK);
+        HDR_UNPACK = buildUnpack(hdrRange,         keyLen_hdr, HDR_UNPACK);
+        QS_UNPACK  = buildUnpack(quality_scores_X, keyLen_qs,  QS_UNPACK);
         
         while (i != decText.end())
         {
@@ -615,8 +626,8 @@ void EnDecrypto::decompFQ (string decText, const string &keyFileName)
     else if (hdrRangeLen <= MAX_CAT_5 && qsRangeLen <= MAX_CAT_5)
     {
         // tables for unpacking
-        buildUnpack(hdrRange, keyLen_hdr, HDR_UNPACK);
-        buildUnpack(qsRange,  keyLen_qs,  QS_UNPACK);
+        HDR_UNPACK = buildUnpack(hdrRange, keyLen_hdr, HDR_UNPACK);
+        QS_UNPACK  = buildUnpack(qsRange,  keyLen_qs,  QS_UNPACK);
         
         while (i != decText.end())
         {
