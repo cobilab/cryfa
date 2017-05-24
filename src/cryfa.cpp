@@ -139,30 +139,32 @@ int main (int argc, char* argv[])
 //    splitFile(inFile);
         std::ofstream inNFiles;             // splitted files
         string inNFilesName;
-
-        string line, hdrRange, qsRange;
+        
+        string line;
+        string hdrRange[n_threads], qsRange[n_threads];
         thread *arrThread;
         int k = 0;
-        for (int i = k; i < 20; i += k)
-        {
-//        int i=0;
+//        for (int i = k; i < 20; i += k)
+//        {
+        int i=0;
             
             // write LINE_BUFFER lines to CRYFA_IN{1, 2, ..., n_threads}
             for (byte j = 0; j < n_threads; ++j)
             {
-                inNFilesName = "CRYFA_IN" + std::to_string(j);
-//                inNFiles.open(inNFilesName);
-                inNFiles.open(inNFilesName,std::ios_base::app);
-                hdrRange.clear();
-                qsRange.clear();
+//                hdrRange.clear();
+//                qsRange.clear();
                 
-                for (k = i + j * LINE_BUFFER; k < i + (j + 1) * LINE_BUFFER; k += 4)
+                inNFilesName = "CRYFA_IN" + std::to_string(j);
+                inNFiles.open(inNFilesName);
+//                inNFiles.open(inNFilesName,std::ios_base::app);
+                
+                for (k = i + j*LINE_BUFFER; k < i + (j + 1)*LINE_BUFFER; k += 4)
                 {
                     if (getline(inFile, line).good())                       // header
                     {
                         for (const char &c : line)
-                            if (hdrRange.find_first_of(c) == string::npos)
-                                hdrRange += c;
+                            if (hdrRange[j].find_first_of(c) == string::npos)
+                                hdrRange[j] += c;
                         inNFiles << line << '\n';
                     }
                     if (getline(inFile, line).good())
@@ -172,26 +174,28 @@ int main (int argc, char* argv[])
                     if (getline(inFile, line).good())                       // quality score
                     {
                         for (const char &c : line)
-                            if (qsRange.find_first_of(c) == string::npos)
-                                qsRange += c;
+                            if (qsRange[j].find_first_of(c) == string::npos)
+                                qsRange[j] += c;
                         inNFiles << line << '\n';
                     }
                 }
                 
                 inNFiles.close();    // is a MUST
+                
+            }   // end j
     
     
     
-                crpt.compressFQ("CRYFA_IN0",
-                                keyFileName,
-                                v_flag,
-                                hdrRange,
-                                qsRange,
-                                0);
     
-            }
-    
-            
+//            for (byte j = 0; j < n_threads; ++j)
+//            {
+//                crpt.compressFQ(("CRYFA_IN" + std::to_string(j)),
+//                                keyFileName,
+//                                v_flag,
+//                                hdrRange[j],
+//                                qsRange[j],
+//                                j);
+//            }
             
 //            std::future<void> fut = std::async (std::launch::async, &EnDecrypto::compressFQ,
 //                                                ("CRYFA_IN0"),
@@ -202,36 +206,35 @@ int main (int argc, char* argv[])
 //                                                0
 //            );
             
-//            arrThread = new thread[n_threads];
-//            for (byte t = 0; t < n_threads; ++t)
-//            {
-////                std::shared_ptr<EnDecrypto> p(new EnDecrypto);
-////                arrThread[t] = thread (&EnDecrypto::compressFQ,p,
-////                                       ("CRYFA_IN" + std::to_string(t)),
-////                                       keyFileName,
-////                                       v_flag,
-////                                       hdrRange,
-////                                       qsRange,
-////                                       t
-////                );
-//
-//                arrThread[t] = thread(&EnDecrypto::compressFQ, &crpt,
-//                                      ("CRYFA_IN" + std::to_string(t)),
-//                                      keyFileName,
-//                                      v_flag,
-//                                      hdrRange,
-//                                      qsRange,
-//                                      t
+            arrThread = new thread[n_threads];
+            for (byte t = 0; t < n_threads; ++t)
+            {
+//                std::shared_ptr<EnDecrypto> p(new EnDecrypto);
+//                arrThread[t] = thread (&EnDecrypto::compressFQ,p,
+//                                       ("CRYFA_IN" + std::to_string(t)),
+//                                       keyFileName,
+//                                       v_flag,
+//                                       hdrRange,
+//                                       qsRange,
+//                                       t
 //                );
-//            }
-//            for (byte t = 0; t < n_threads; ++t)
-//                arrThread[t].join();
-//            delete[] arrThread;
+                
+                arrThread[t] = thread(&EnDecrypto::compressFQ, &crpt,
+                                      ("CRYFA_IN" + std::to_string(t)),
+                                      keyFileName,
+                                      v_flag,
+                                      hdrRange[t],
+                                      qsRange[t],
+                                      t
+                );
+            }
+            for (byte t = 0; t < n_threads; ++t)    arrThread[t].join();
+            delete[] arrThread;
     
     
             //todo. join
 
-        } // end for i
+//        } // end for i
 
         inFile.close();
     
@@ -241,41 +244,44 @@ int main (int argc, char* argv[])
 
         
         
-//        // join CRYFA_ENC files
-//        std::ofstream out("CRYFA_OUT");
-//        std::ifstream encFile;
-//        string encFileName;
-//
-//        k = 0;
+        // join CRYFA_ENC files
+        std::ofstream out("CRYFA_OUT");
+        std::ifstream encFile;
+        string encFileName;
+
+        k = 0;
 //        for (int i = k; i < 20; i += k)
 //        {
-//            for (byte j = 0; j < n_threads; ++j)
-//            {
-//                encFileName = "CRYFA_ENC" + std::to_string(j);
-//                encFile.open(encFileName);
-//                encFile.ignore(LARGE_NUMBER, '\n');
-//
-//                getline(encFile, line); out << line << '\n';
-//
-//
-////                for (k = i + j * LINE_BUFFER; k < i + (j + 1) * LINE_BUFFER; k += 4)
-////                {
-////                    getline(encFile, line); out << line << '\n';
-////                    getline(encFile, line); out << line << '\n';
-////                    getline(encFile, line); out << line << '\n';
-////                    getline(encFile, line); out << line << '\n';
-////                }
-//
-//                encFile.close();    // is a MUST
-//            }
-//            out.close();
-//
-//            k = k + n_threads; // to consider lines with thread ID
+            i=0;
+            for (byte j = 0; j < n_threads; ++j)
+            {
+                encFileName = "CRYFA_ENC" + std::to_string(j);
+                encFile.open(encFileName);
+                encFile.ignore(LARGE_NUMBER, '\n');
+    
+                getline(encFile, line);
+                out << line << '\n';
+
+
+//                for (k = i + j * LINE_BUFFER; k < i + (j + 1) * LINE_BUFFER; k += 4)
+//                {
+//                    getline(encFile, line); out << line << '\n';
+//                    getline(encFile, line); out << line << '\n';
+//                    getline(encFile, line); out << line << '\n';
+//                    getline(encFile, line); out << line << '\n';
+//                }
+
+                encFile.close();    // is a MUST
+            }
+            out.close();
+
+            //todo. not sure about the 'n_threads'
+            k = k + n_threads; // to consider lines with thread ID
 //        }
     
         
         
-    }
+    }   // end fastq
 
     
     
