@@ -144,16 +144,13 @@ int main (int argc, char* argv[])
         string hdrRange[n_threads], qsRange[n_threads];
         thread *arrThread;
         int k = 0;
-//        for (int i = k; i < 20; i += k)
-//        {
-        int i=0;
+        for (int i = k; i < 20; i += k)
+        {
+//        int i=0;
             
             // write LINE_BUFFER lines to CRYFA_IN{1, 2, ..., n_threads}
             for (byte j = 0; j < n_threads; ++j)
             {
-//                hdrRange.clear();
-//                qsRange.clear();
-                
                 inNFilesName = "CRYFA_IN" + std::to_string(j);
                 inNFiles.open(inNFilesName);
 //                inNFiles.open(inNFilesName,std::ios_base::app);
@@ -183,10 +180,8 @@ int main (int argc, char* argv[])
                 inNFiles.close();    // is a MUST
                 
             }   // end j
-    
-    
-    
-    
+            
+            
 //            for (byte j = 0; j < n_threads; ++j)
 //            {
 //                crpt.compressFQ(("CRYFA_IN" + std::to_string(j)),
@@ -197,28 +192,9 @@ int main (int argc, char* argv[])
 //                                j);
 //            }
             
-//            std::future<void> fut = std::async (std::launch::async, &EnDecrypto::compressFQ,
-//                                                ("CRYFA_IN0"),
-//                                                keyFileName,
-//                                                v_flag,
-//                                                hdrRange,
-//                                                qsRange,
-//                                                0
-//            );
-            
             arrThread = new thread[n_threads];
             for (byte t = 0; t < n_threads; ++t)
             {
-//                std::shared_ptr<EnDecrypto> p(new EnDecrypto);
-//                arrThread[t] = thread (&EnDecrypto::compressFQ,p,
-//                                       ("CRYFA_IN" + std::to_string(t)),
-//                                       keyFileName,
-//                                       v_flag,
-//                                       hdrRange,
-//                                       qsRange,
-//                                       t
-//                );
-                
                 arrThread[t] = thread(&EnDecrypto::compressFQ, &crpt,
                                       ("CRYFA_IN" + std::to_string(t)),
                                       keyFileName,
@@ -230,17 +206,15 @@ int main (int argc, char* argv[])
             }
             for (byte t = 0; t < n_threads; ++t)    arrThread[t].join();
             delete[] arrThread;
-    
-    
+
+            
             //todo. join
 
-//        } // end for i
+        } // end for i
 
         inFile.close();
     
     
-
-        
 
         
         
@@ -248,41 +222,81 @@ int main (int argc, char* argv[])
         std::ofstream out("CRYFA_OUT");
         std::ifstream encFile;
         string encFileName;
-
-        k = 0;
-//        for (int i = k; i < 20; i += k)
-//        {
-            i=0;
+        
+        
+        bool isThreadID = false;
+        bool isEOF = false;
+        
+        int count=0;
+        
+        do
+        {
             for (byte j = 0; j < n_threads; ++j)
+//            for (byte j = 0; j < 1; ++j)
             {
                 encFileName = "CRYFA_ENC" + std::to_string(j);
-                encFile.open(encFileName);
-                encFile.ignore(LARGE_NUMBER, '\n');
-    
-                getline(encFile, line);
-                out << line << '\n';
-
-
-//                for (k = i + j * LINE_BUFFER; k < i + (j + 1) * LINE_BUFFER; k += 4)
+//                encFile.open(encFileName);
+                encFile.open(encFileName, std::ios_base::app);
+                
+                
+                while (getline(encFile, line).good())
+                {
+//                    ++count;
+                    if (line.compare("THR=" + std::to_string(j)))   // if line isn't THR=...
+                        out << line << '\n';
+                    else
+                        break;
+            
+                    //todo. har chunk ee ke too "CRYFA_OUT" neveshti, positionesho
+                    //todo. ba "out.tellp()" save kon vase header, ke ba'dan betooni
+                    //todo. decompression ro ham multithreaded koni
+                }
+        
+                if (encFile.eof())
+                {
+                    ++count;
+                    isEOF = true;
+                }
+//                while (!encFile.eof() && !isThreadID)
 //                {
-//                    getline(encFile, line); out << line << '\n';
-//                    getline(encFile, line); out << line << '\n';
-//                    getline(encFile, line); out << line << '\n';
-//                    getline(encFile, line); out << line << '\n';
+//                    while (getline(encFile, line).good()
+////                           &&
+////                            line.compare("THR=" + std::to_string(j))
+//                            )
+//                    {
+//                        if (line.compare("THR=" + std::to_string(j)))   // if line isn't THR=...
+//                            out << line << '\n';
+//                        else
+//                        {
+//                            isThreadID = true;
+//                            break;
+//                        }
+//                    }
+//
+//
+//                    //todo. har chunk ee ke too "CRYFA_OUT" neveshti, positionesho
+//                    //todo. ba "out.tellp()" save kon vase header, ke ba'dan betooni
+//                    //todo. decompression ro ham multithreaded koni
 //                }
-
+                
+//                isThreadID = false;
+        
+        
                 encFile.close();    // is a MUST
             }
-            out.close();
-
-            //todo. not sure about the 'n_threads'
-            k = k + n_threads; // to consider lines with thread ID
-//        }
+            
+//            cerr<<isEOF<<' ';
+            cerr << count << ' ';
+        } while (!isEOF);
+        
+        
+        out.close();
     
         
         
+    
+    
     }   // end fastq
-
     
     
     
@@ -341,9 +355,6 @@ int main (int argc, char* argv[])
 //        for(unsigned short lineNo = 0; getline(, line))
 ////    strIn[t]+=;
 //    }
-    
-    
-    
     
     
     

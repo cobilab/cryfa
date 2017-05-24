@@ -284,18 +284,16 @@ void EnDecrypto::compressFQ (const string &inFileName,
                        + (char) 254;    // ignore '@'
         
         if (getline(in, line).good())          // sequence
-            context += packSeq_3to1(line) + (char) 254
-                    ;
-
+            context += packSeq_3to1(line) + (char) 254;
+        
         in.ignore(LARGE_NUMBER, '\n');         // +. ignore
 
         if (getline(in, line).good())          // quality score
-            context += packQS(line, QUALITY_SCORES, QS_MAP) + (char) 254
-                    ;
+            context += packQS(line, QUALITY_SCORES, QS_MAP) + (char) 254;
     }
     //todo. TAIL ro faghat 1 bar, akharesh, be encryptor mifrestim
 //    context += (char) 252;  // end of file
-
+    
     in.close();
     
     
@@ -366,8 +364,8 @@ inline void EnDecrypto::encrypt (const string &context, const string &keyFileNam
 //    mut.lock();
     std::ofstream encfile;
     string encName = "CRYFA_ENC" + std::to_string(threadID);
-//    encfile.open(encName, std::ios_base::app);
-    encfile.open(encName);
+    encfile.open(encName, std::ios_base::app);
+//    encfile.open(encName);
 //    mut.unlock();
 
 
@@ -377,7 +375,8 @@ inline void EnDecrypto::encrypt (const string &context, const string &keyFileNam
 //                          + std::to_string(RELEASE_CRYFA) + "\n";
     
     //todo. write header containing threadID for each
-    encfile << std::to_string(threadID) << '\n';    // just the number, for simplicity
+    encfile << "THR=" + std::to_string(threadID) << '\n';    // just the number, for simplicity
+//    encfile << std::to_string(threadID) << '\n';    // just the number, for simplicity
     
     // dump cyphertext for read
     for (const char& c : cipherText)
