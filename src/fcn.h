@@ -19,10 +19,10 @@ using std::cerr;
 inline char fileType (const string &inFileName)
 {
     ifstream in(inFileName);
+    string line;
+    
     if (!in.good())
     { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
-    
-    string line;
     
     // FASTQ
     while (getline(in, line).good())
@@ -31,12 +31,14 @@ inline char fileType (const string &inFileName)
         {
             in.clear();
             in.seekg(0, std::ios::beg);     // go to the beginning of file
+            in.close();
             return 'Q';
         }
     }
     
     // FASTA
     in.clear();  in.seekg(0, std::ios::beg);
+    in.close();
     return 'A';
 }
 
