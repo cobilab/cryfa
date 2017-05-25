@@ -30,11 +30,6 @@ using std::chrono::high_resolution_clock;
 using std::setprecision;
 using std::thread;
 
-
-
-
-#include <future>
-
 ////////////////////////////////////////////////////////////////////////////////
 ///////////////////                 M A I N                 ////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -144,7 +139,7 @@ int main (int argc, char* argv[])
         string hdrRange[n_threads], qsRange[n_threads];
         thread *arrThread;
         int k = 0;
-        for (int i = k; i < 20; i += k)
+        for (int i = k; i < 17; i += k)
         {
 //        int i=0;
             
@@ -182,15 +177,6 @@ int main (int argc, char* argv[])
             }   // end j
             
             
-//            for (byte j = 0; j < n_threads; ++j)
-//            {
-//                crpt.compressFQ(("CRYFA_IN" + std::to_string(j)),
-//                                keyFileName,
-//                                v_flag,
-//                                hdrRange[j],
-//                                qsRange[j],
-//                                j);
-//            }
             
             arrThread = new thread[n_threads];
             for (byte t = 0; t < n_threads; ++t)
@@ -215,87 +201,39 @@ int main (int argc, char* argv[])
         inFile.close();
     
     
-
+    
         
+        // join encrypted files
+        std::ofstream      out(ENC_FILENAME);
+        std::ifstream      encFile[n_threads];
+        std::vector<pos_t> chunkEndPos;
+    
+        // open input files
+        byte t;
+        for (t = 0; t != n_threads; ++t)
+            encFile[t].open(ENC_FILENAME+std::to_string(t));
         
-        // join CRYFA_ENC files
-        std::ofstream out("CRYFA_OUT");
-        std::ifstream encFile;
-        string encFileName;
-        
-        
-        bool isThreadID = false;
-        bool isEOF = false;
-        
-        int count=0;
-        
-        do
-        {
-            for (byte j = 0; j < n_threads; ++j)
-//            for (byte j = 0; j < 1; ++j)
+        while (!encFile[0].eof())
+            for (t = 0; t != n_threads; ++t)
             {
-                encFileName = "CRYFA_ENC" + std::to_string(j);
-//                encFile.open(encFileName);
-                encFile.open(encFileName, std::ios_base::app);
+                while (getline(encFile[t], line).good() &&
+                       line.compare(THR_ID_HDR + std::to_string(t)))
+                    out << line << '\n';        // line isn't THR=...
                 
-                
-                while (getline(encFile, line).good())
-                {
-//                    ++count;
-                    if (line.compare("THR=" + std::to_string(j)))   // if line isn't THR=...
-                        out << line << '\n';
-                    else
-                        break;
-            
-                    //todo. har chunk ee ke too "CRYFA_OUT" neveshti, positionesho
-                    //todo. ba "out.tellp()" save kon vase header, ke ba'dan betooni
-                    //todo. decompression ro ham multithreaded koni
-                }
-        
-                if (encFile.eof())
-                {
-                    ++count;
-                    isEOF = true;
-                }
-//                while (!encFile.eof() && !isThreadID)
-//                {
-//                    while (getline(encFile, line).good()
-////                           &&
-////                            line.compare("THR=" + std::to_string(j))
-//                            )
-//                    {
-//                        if (line.compare("THR=" + std::to_string(j)))   // if line isn't THR=...
-//                            out << line << '\n';
-//                        else
-//                        {
-//                            isThreadID = true;
-//                            break;
-//                        }
-//                    }
-//
-//
-//                    //todo. har chunk ee ke too "CRYFA_OUT" neveshti, positionesho
-//                    //todo. ba "out.tellp()" save kon vase header, ke ba'dan betooni
-//                    //todo. decompression ro ham multithreaded koni
-//                }
-                
-//                isThreadID = false;
-        
-        
-                encFile.close();    // is a MUST
+                chunkEndPos.push_back(out.tellp());     // chunks end position
             }
-            
-//            cerr<<isEOF<<' ';
-            cerr << count << ' ';
-        } while (!isEOF);
         
-        
+        // close input and output files
+        for (t = 0; t != n_threads; ++t)   encFile[t].close();
         out.close();
-    
+        
+        // remove the first zeros corresponding to the first line of all files
+        chunkEndPos.erase(chunkEndPos.begin(), chunkEndPos.begin() + n_threads);
         
         
-    
-    
+        
+        
+        
     }   // end fastq
     
     

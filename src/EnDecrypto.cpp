@@ -363,7 +363,7 @@ inline void EnDecrypto::encrypt (const string &context, const string &keyFileNam
     
 //    mut.lock();
     std::ofstream encfile;
-    string encName = "CRYFA_ENC" + std::to_string(threadID);
+    string encName = ENC_FILENAME + std::to_string(threadID);
     encfile.open(encName, std::ios_base::app);
 //    encfile.open(encName);
 //    mut.unlock();
@@ -375,7 +375,8 @@ inline void EnDecrypto::encrypt (const string &context, const string &keyFileNam
 //                          + std::to_string(RELEASE_CRYFA) + "\n";
     
     //todo. write header containing threadID for each
-    encfile << "THR=" + std::to_string(threadID) << '\n';    // just the number, for simplicity
+//    encfile << "THR=" + std::to_string(threadID) << '\n';    // just the number, for simplicity
+    encfile << THR_ID_HDR + std::to_string(threadID) << '\n';    // just the number, for simplicity
 //    encfile << std::to_string(threadID) << '\n';    // just the number, for simplicity
     
     // dump cyphertext for read

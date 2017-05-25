@@ -34,7 +34,8 @@ typedef unsigned long long  ULL;
 typedef long long           LL;
 typedef unsigned int        UI;
 typedef std::mt19937        rng_type;
-typedef std::unordered_map<string, ULL> htable_t;
+typedef std::unordered_map<string, ULL>   htable_t;
+typedef std::char_traits<char>::pos_type  pos_t;    // tellg(), tellp()
 
 /*******************************************************************************
     metaprograms
@@ -70,8 +71,10 @@ struct POWER<B, 0>
 /*******************************************************************************
     constants
 *******************************************************************************/
+#define THR_ID_HDR        "THR="        // thread ID header
+#define ENC_FILENAME      "CRYFA_ENC"   // encrypted file name
 #define DEFAULT_N_THREADS 1   // default number of threads
-#define LINE_BUFFER       8   //100000   // buffer size (lines) to separate files for
+#define LINE_BUFFER       8 //100000   // buffer size (lines) to separate files for
                               // multithreading. MUST be multiple of 4
 #define LARGE_NUMBER      std::numeric_limits<std::streamsize>::max()
 #define CAT_1             2   //       cat 1  =  2

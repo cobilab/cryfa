@@ -568,13 +568,11 @@ inline string pack_1to1 (string strIn, string SYM_RANGE, htable_t map)
 }
 
 /*******************************************************************************
-    penalty symbol
+    penalty symbol -- returns either input char or (char)10='\n'
 *******************************************************************************/
-inline
-//constexpr
-char penaltySym (char c)
+inline char penaltySym (char c)
 {
-    return (c != (char) 254 && c != (char) 252) ? c : (char) 10; //(char)10='\n'
+    return (c != (char) 254 && c != (char) 252) ? c : (char) 10;
 }
 
 /*******************************************************************************
