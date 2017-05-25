@@ -125,9 +125,9 @@ int main (int argc, char* argv[])
     
     cerr << "Encrypting...\n";
     //todo. at the moment, multithreading for fastq
-    if (fileType(inFileName) == 'A')
+    if (fileType(inFileName) == 'A')    // FASTA
     { crptObj.compressFA(inFileName, keyFileName, v_flag); }
-    else
+    else                                // FASTQ
     {
         std::ifstream inFile(inFileName);   // main input file
 //    splitFile(inFile);
@@ -171,7 +171,7 @@ int main (int argc, char* argv[])
                 inNFiles.close();    // is a MUST
 
             }   // end for t
-
+            
             // multithreaded compression
             arrThread = new thread[n_threads-nEmptyFiles];
             for (t = 0; t != n_threads-nEmptyFiles; ++t)

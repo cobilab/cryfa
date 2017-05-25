@@ -100,8 +100,8 @@ void EnDecrypto::compressFA (const string &inFileName,
 *******************************************************************************/
 void EnDecrypto::compressFQ (const string &inFileName,
                              const string &keyFileName, const int v_flag
-        ,string hdrRange, string qsRange, byte threadID
-)
+                            ,string hdrRange, string qsRange, byte threadID
+                            )
 {
     htable_t HDR_MAP;           // hash table for header
     htable_t QS_MAP;            // hash table for quality score
@@ -130,9 +130,8 @@ void EnDecrypto::compressFQ (const string &inFileName,
 //    mut.unlock();
     
     
-    
-    
-    
+
+
     
 //    string hdrRange, qsRange;
 //    // gather all headers and quality scores
@@ -156,10 +155,6 @@ void EnDecrypto::compressFQ (const string &inFileName,
 ////        else { cerr << "Error: file corrupted.\n";    return; }
 //    }
 //    in.clear();  in.seekg(0, std::ios::beg);                // beginning of file
-    
-    
-    
-    
     
     
     
