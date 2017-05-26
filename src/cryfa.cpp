@@ -131,13 +131,75 @@ int main (int argc, char* argv[])
     {
         std::ifstream inFile(inFileName);   // main input file
 //    splitFile(inFile);
+    
+        string line;
+        string hdrRange[n_threads], qsRange[n_threads];
+        string inTh[n_threads];  // input string which will be sent to threads
+        thread *arrThread;
+        byte t;
+    
+        // check if the third line contains only +
+        bool justPlus = true;
+        inFile.ignore(LARGE_NUMBER, '\n');                  // ignore header
+        inFile.ignore(LARGE_NUMBER, '\n');                  // ignore seq
+        if(getline(inFile, line).good())   if(line.length() > 1) justPlus=false;
+        inFile.clear();  inFile.seekg(0, inFile.beg);       // beginning of file
+        
+        byte nEmptyIn = 0;
+//        while (!inFile.eof())
+//        {
+            // write LINE_BUFFER lines to CRYFA_IN{0, 1, ..., n_threads-1}
+            for (t = 0; t != n_threads; ++t)
+            {
+                for (UI i = 0; i != LINE_BUFFER && !inFile.eof(); i += 4)
+                {
+                    if (getline(inFile, line).good())                       // header
+                    {
+                        for (const char &c : line)
+                            if (hdrRange[t].find_first_of(c) == string::npos)
+                                hdrRange[t] += c;
+
+                        inTh[t] += line + "\n";
+                    }
+                    if (getline(inFile, line).good())   inTh[t] += line + "\n";
+                    if (getline(inFile, line).good())   inTh[t] += line + "\n";
+                    if (getline(inFile, line).good())                       // quality score
+                    {
+                        for (const char &c : line)
+                            if (qsRange[t].find_first_of(c) == string::npos)
+                                qsRange[t] += c;
+    
+                        inTh[t] += line + "\n";
+                    }
+                }
+            
+                if (inTh[t].empty())  ++nEmptyIn;  // number of empty input strings
+            }   // end for t
+        
+            // multithreaded compression
+            arrThread = new thread[n_threads-nEmptyIn];
+    
+            for (t = 0; t != n_threads-nEmptyIn; ++t)
+                arrThread[t] = thread(&EnDecrypto::compressFQ, &crptObj,
+                                      inTh[t], keyFileName, v_flag,
+                                      hdrRange[t], qsRange[t], justPlus, t);
+        
+            for (t = 0; t != n_threads-nEmptyIn; ++t)   arrThread[t].join();
+            delete[] arrThread;
+        
+//        }   // end while
+    
+        inFile.close();
+
+        
+/*
         std::ofstream inNFiles;             // splitted files
         string line;
         string hdrRange[n_threads], qsRange[n_threads];
         thread *arrThread;
         byte t;
 
-        byte nEmptyFiles = 0;
+        byte nEmptyIn = 0;
         while (!inFile.eof())
         {
             // write LINE_BUFFER lines to CRYFA_IN{0, 1, ..., n_threads-1}
@@ -166,54 +228,53 @@ int main (int argc, char* argv[])
                     }
                 }
 
-                if (inNFiles.tellp() == 0)  ++nEmptyFiles;  // number of empty files
+                if (inNFiles.tellp() == 0)  ++nEmptyIn;  // number of empty files
 
                 inNFiles.close();    // is a MUST
 
             }   // end for t
-            
+
             // multithreaded compression
-            arrThread = new thread[n_threads-nEmptyFiles];
-            for (t = 0; t != n_threads-nEmptyFiles; ++t)
+            arrThread = new thread[n_threads-nEmptyIn];
+            for (t = 0; t != n_threads-nEmptyIn; ++t)
                 arrThread[t] = thread(&EnDecrypto::compressFQ, &crptObj,
                                     ("CRYFA_IN"+std::to_string(t)), keyFileName,
                                     v_flag, hdrRange[t], qsRange[t], t);
 
-            for (t = 0; t < n_threads-nEmptyFiles; ++t)    arrThread[t].join();
+            for (t = 0; t < n_threads-nEmptyIn; ++t)    arrThread[t].join();
             delete[] arrThread;
 
         }   // end while
 
         inFile.close();
+*/
+        
 
-
-
-
-        // join encrypted files
-        std::ofstream      out(ENC_FILENAME);
-        std::ifstream      encFile[n_threads];
-        std::vector<pos_t> chunkEndPos;
-
-        // open input files
-        for (t = 0; t != n_threads; ++t)
-            encFile[t].open(ENC_FILENAME+std::to_string(t));
-
-        while (!encFile[0].eof())
-            for (t = 0; t != n_threads; ++t)
-            {
-                while (getline(encFile[t], line).good() &&
-                       line.compare(THR_ID_HDR + std::to_string(t)))
-                    out << line << '\n';        // line isn't THR=...
-
-                chunkEndPos.push_back(out.tellp());     // chunks end position
-            }
-
-        // close input and output files
-        for (t = 0; t != n_threads; ++t)   encFile[t].close();
-        out.close();
-
-        // remove the first zeros corresponding to the first line of all files
-        chunkEndPos.erase(chunkEndPos.begin(), chunkEndPos.begin() + n_threads);
+//        // join encrypted files
+//        std::ofstream      out(ENC_FILENAME);
+//        std::ifstream      encFile[n_threads];
+//        std::vector<pos_t> chunkEndPos;
+//
+//        // open input files
+//        for (t = 0; t != n_threads; ++t)
+//            encFile[t].open(ENC_FILENAME+std::to_string(t));
+//
+//        while (!encFile[0].eof())
+//            for (t = 0; t != n_threads; ++t)
+//            {
+//                while (getline(encFile[t], line).good() &&
+//                       line.compare(THR_ID_HDR + std::to_string(t)))
+//                    out << line << '\n';        // line isn't THR=...
+//
+//                chunkEndPos.push_back(out.tellp());     // chunks end position
+//            }
+//
+//        // close input and output files
+//        for (t = 0; t != n_threads; ++t)   encFile[t].close();
+//        out.close();
+//
+//        // remove the first zeros corresponding to the first line of all files
+//        chunkEndPos.erase(chunkEndPos.begin(), chunkEndPos.begin() + n_threads);
 
 
 

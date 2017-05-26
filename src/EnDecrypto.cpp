@@ -9,6 +9,7 @@
 
 #include <fstream>
 #include <functional>
+#include <string>
 #include "EnDecrypto.h"
 #include "pack.h"
 #include "cryptopp/modes.h"
@@ -98,84 +99,64 @@ void EnDecrypto::compressFA (const string &inFileName,
            7 <= cat 4 <= 15
           16 <= cat 5 <= 39
 *******************************************************************************/
-void EnDecrypto::compressFQ (const string &inFileName,
-                             const string &keyFileName, const int v_flag
-                            ,string hdrRange, string qsRange, byte threadID
-                            )
+void EnDecrypto::compressFQ (const string &in, const string &keyFileName,
+                             const int v_flag, string hdrRange, string qsRange,
+                             const bool justPlus, const byte threadID)
 {
-    htable_t HDR_MAP;           // hash table for header
-    htable_t QS_MAP;            // hash table for quality score
-    string   HEADERS;           // max: 39 values
-    string   QUALITY_SCORES;    // max: 39 values
+    htable_t HDR_MAP;             // hash table for header
+    htable_t QS_MAP;              // hash table for quality score
+    string   HEADERS;             // max: 39 values
+    string   QUALITY_SCORES;      // max: 39 values
+    string   line, seq, context;  // FASTQ: context = header + seq + plus + qs
 
-//    mut.lock();
-    ifstream in(inFileName);
-//    mut.unlock();
-    string line, seq, context;  // FASTQ: context = header + seq + plus + qs
-//    string hdrRange, qsRange;   // header & qs symbols presented in FASTQ file
-
-//    mut.lock();
-    if (!in.good())
-    { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
-//    mut.unlock();
-
-//    mut.lock();
+    /*
     // check if the third line contains only +
     bool justPlus = true;
-    in.ignore(LARGE_NUMBER, '\n');                          // ignore header
-    in.ignore(LARGE_NUMBER, '\n');                          // ignore seq
-    if (getline(in, line).good()) { if (line.length() > 1)   justPlus = false; }
-//    else { cerr << "Error: file corrupted.\n";    return; }
-    in.clear();  in.seekg(0, in.beg);                       // beginning of file
-//    mut.unlock();
-    
-    
-
-
-    
-//    string hdrRange, qsRange;
-//    // gather all headers and quality scores
-//    while(!in.eof())
-//    {
-//        if (getline(in, line).good())                       // header
-//        {
-//            for (const char &c : line)
-//                if (hdrRange.find_first_of(c) == string::npos)
-//                    hdrRange += c;
-//        }
-////        else { cerr << "Error: file corrupted.\n";    return; }
-//        in.ignore(LARGE_NUMBER, '\n');                      // ignore seq
-//        in.ignore(LARGE_NUMBER, '\n');                      // ignore +
-//        if (getline(in, line).good())                       // quality score
-//        {
-//            for (const char &c : line)
-//                if (qsRange.find_first_of(c) == string::npos)
-//                    qsRange += c;
-//        }
-////        else { cerr << "Error: file corrupted.\n";    return; }
-//    }
-//    in.clear();  in.seekg(0, std::ios::beg);                // beginning of file
-    
-    
-    
-    
+    string::const_iterator lFFirst = std::find(in.begin(), in.end(), '\n');
+    string::const_iterator lFSecond = std::find(lFFirst+1, in.end(), '\n');
+    if (*(lFSecond+2) != '\n')  justPlus = false;   // check symbol after +
+    */
+    /*
+    string hdrRange, qsRange;
+    // gather all headers and quality scores
+    while(!in.eof())
+    {
+        if (getline(in, line).good())                       // header
+        {
+            for (const char &c : line)
+                if (hdrRange.find_first_of(c) == string::npos)
+                    hdrRange += c;
+        }
+//        else { cerr << "Error: file corrupted.\n";    return; }
+        in.ignore(LARGE_NUMBER, '\n');                      // ignore seq
+        in.ignore(LARGE_NUMBER, '\n');                      // ignore +
+        if (getline(in, line).good())                       // quality score
+        {
+            for (const char &c : line)
+                if (qsRange.find_first_of(c) == string::npos)
+                    qsRange += c;
+        }
+//        else { cerr << "Error: file corrupted.\n";    return; }
+    }
+    in.clear();  in.seekg(0, std::ios::beg);                // beginning of file
+    */
     
     hdrRange.erase(hdrRange.begin());                       // remove '@'
-    
+
     std::sort(hdrRange.begin(), hdrRange.end());            // sort values
     std::sort(qsRange.begin(),  qsRange.end());             // sort ASCII values
-    
+
     // todo. probably function pointer doesn't work with multithreading, in this way
     using packHdrPointer = string (*)(string, string, htable_t);
     packHdrPointer packHdr;                                 // function pointer
     using packQSPointer  = string (*)(string, string, htable_t);
     packQSPointer packQS;                                   // function pointer
-    
+
     string HEADERS_X;                                 // extended HEADERS
     string QUALITY_SCORES_X;                          // extended QUALITY_SCORES
     const size_t qsRangeLen  = qsRange.length();
     const size_t hdrRangeLen = hdrRange.length();
-    
+
     // header
     if (hdrRangeLen > MAX_CAT_5)          // if len > 39 filter the last 39 ones
     {
@@ -183,14 +164,14 @@ void EnDecrypto::compressFQ (const string &inFileName,
         HEADERS_X = HEADERS;
         // ASCII char after last char in HEADERS
         HEADERS_X += (char) (HEADERS[HEADERS.size()-1] + 1);
-        
+
         HDR_MAP = buildHashTable(HDR_MAP, HEADERS_X, KEYLEN_CAT_5);
         packHdr = &packLarge_3to2;
     }
     else
     {
         HEADERS = hdrRange;
-        
+
         if (hdrRangeLen > MAX_CAT_4)            // cat 5
         {
             HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_5);
@@ -223,7 +204,7 @@ void EnDecrypto::compressFQ (const string &inFileName,
             packHdr = &pack_1to1;
         }
     }
-    
+
     // quality score
     if (qsRangeLen > MAX_CAT_5)           // if len > 39 filter the last 39 ones
     {
@@ -231,14 +212,14 @@ void EnDecrypto::compressFQ (const string &inFileName,
         QUALITY_SCORES_X = QUALITY_SCORES;
         // ASCII char after last char in QUALITY_SCORES
         QUALITY_SCORES_X +=(char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
-        
+
         QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES_X, KEYLEN_CAT_5);
         packQS = &packLarge_3to2;
     }
     else
     {
         QUALITY_SCORES = qsRange;
-        
+
         if (qsRangeLen > MAX_CAT_4)             // cat 5
         {
             QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_5);
@@ -272,15 +253,33 @@ void EnDecrypto::compressFQ (const string &inFileName,
         }
     }
 
+    string::const_iterator inItr = in.begin();
+    string inTempStr;
+    while (inItr != in.end())
+    {
+        // header -- ignore '@'
+        inTempStr.clear();
+        for (inItr += 1; *inItr != '\n'; ++inItr)   inTempStr += *inItr;
+        context += packHdr(inTempStr, HEADERS, HDR_MAP) + (char) 254;
 
-//    cerr << HEADERS << '\n' << QUALITY_SCORES << '\n';
-//    cerr << HEADERS << '\n' << HEADERS.size() << '\n';
+        // sequence
+        inTempStr.clear();
+        for (inItr += 1; *inItr != '\n'; ++inItr)   inTempStr += *inItr;
+        context += packSeq_3to1(inTempStr) + (char) 254;
+
+        // +. ignore
+        for (inItr += 1; *inItr != '\n'; ++inItr);
+    
+        // quality score
+        inTempStr.clear();
+        for (inItr += 1; *inItr != '\n'; ++inItr)   inTempStr += *inItr;
+        context += packQS(inTempStr, QUALITY_SCORES, QS_MAP) + (char) 254;
+
+        inItr += 1;
+    }
     
     
-    
-    //todo. "context+=" va3 file 10GB mitereke
-    
-    //todo. HEAD ro faghat 1 bar, akharesh, be encryptor mifrestim
+/*
 //    context += hdrRange;                       // send hdrRange to decryptor
 //    context += (char) 254;                     // to detect hdrRange in dec.
 //    context += qsRange;                        // send qsRange to decryptor
@@ -290,41 +289,38 @@ void EnDecrypto::compressFQ (const string &inFileName,
         if (getline(in, line).good())          // header
             context += packHdr(line.substr(1), HEADERS, HDR_MAP)
                        + (char) 254;    // ignore '@'
-        
+
         if (getline(in, line).good())          // sequence
             context += packSeq_3to1(line) + (char) 254;
-        
+
         in.ignore(LARGE_NUMBER, '\n');         // +. ignore
-        
+
         if (getline(in, line).good())          // quality score
             context += packQS(line, QUALITY_SCORES, QS_MAP) + (char) 254;
     }
-    //todo. TAIL ro faghat 1 bar, akharesh, be encryptor mifrestim
 //    context += (char) 252;  // end of file
-    
+
     in.close();
+*/
 
 
-
-////    mut.lock();
-//    std::ofstream pkdfile;
-//    string encName= "CRYFA_PACKED" + std::to_string(threadID);
-//    pkdfile.open(encName, std::ios_base::app);
-////    encfile.open(encName);
-//    pkdfile << std::to_string(threadID) << '\n';    // just the number, for simplicity
-//    pkdfile << context << '\n';
-//    pkdfile.close();
-////    mut.unlock();
-    
-    
-    
-    
-    
-    
+//////    mut.lock();
+////    std::ofstream pkdfile;
+////    string encName= "CRYFA_PACKED" + std::to_string(threadID);
+////    pkdfile.open(encName, std::ios_base::app);
+//////    encfile.open(encName);
+////    pkdfile << std::to_string(threadID) << '\n';    // just the number, for simplicity
+////    pkdfile << context << '\n';
+////    pkdfile.close();
+//////    mut.unlock();
+//
+//
+//
+//
+//
+//
     // encryption
-    encrypt(context, keyFileName, v_flag
-                    , threadID
-    );
+    encrypt(context, keyFileName, v_flag, threadID);
 }
 
 /*******************************************************************************
@@ -333,10 +329,9 @@ void EnDecrypto::compressFQ (const string &inFileName,
     This key is secretly exchanged between two parties before communication
     begins. DEFAULT_KEYLENGTH = 16 bytes.
 *******************************************************************************/
-inline void EnDecrypto::encrypt (const string &context, const string &keyFileName,
-                                 const int v_flag
-        , byte threadID
-)
+inline void EnDecrypto::encrypt (const string &context,
+                                 const string &keyFileName, const int v_flag,
+                                 const byte threadID)
 {
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
@@ -417,7 +412,7 @@ void EnDecrypto::decompress (const string &inFileName,
           (char) 253:  instead of '>' in header
           (char) 252:  instead of empty line
 *******************************************************************************/
-void EnDecrypto::decompFA (string decText, const string &keyFileName)
+inline void EnDecrypto::decompFA (string decText, const string &keyFileName)
 {
     string line;
     string tpl;     // tuplet
@@ -486,7 +481,7 @@ void EnDecrypto::decompFA (string decText, const string &keyFileName)
            7 <= cat 4 <= 15
           16 <= cat 5 <= 39
 *******************************************************************************/
-void EnDecrypto::decompFQ (string decText, const string &keyFileName)
+inline void EnDecrypto::decompFQ (string decText, const string &keyFileName)
 {
     string*  HDR_UNPACK;    // for unpacking header
     string*  QS_UNPACK;     // for unpacking quality score
