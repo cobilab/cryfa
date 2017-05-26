@@ -75,7 +75,7 @@ struct POWER<B, 0>
 #define THR_ID_HDR        "THR="        // thread ID header
 #define ENC_FILENAME      "CRYFA_ENC"   // encrypted file name
 #define DEFAULT_N_THREADS 1   // default number of threads
-#define LINE_BUFFER       8 //10000  // buffer size (lines) to separate files for
+#define LINE_BUFFER       10000 //10000  // buffer size (lines) to separate files for
                               // multithreading. MUST be multiple of 4
 #define LARGE_NUMBER      std::numeric_limits<std::streamsize>::max()
 #define CAT_1             2   //       cat 1  =  2

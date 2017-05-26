@@ -19,7 +19,6 @@
 #include <getopt.h>
 #include <chrono>       // time
 #include <iomanip>      // setw, setprecision
-#include <thread>
 #include "def.h"
 #include "EnDecrypto.h"
 #include "fcn.h"
@@ -28,7 +27,6 @@ using std::cout;
 using std::cerr;
 using std::chrono::high_resolution_clock;
 using std::setprecision;
-using std::thread;
 
 ////////////////////////////////////////////////////////////////////////////////
 ///////////////////                 M A I N                 ////////////////////
@@ -124,228 +122,11 @@ int main (int argc, char* argv[])
     }
     
     cerr << "Encrypting...\n";
-    //todo. at the moment, multithreading for fastq
+    //todo. now, multithreading only for fastq
     if (fileType(inFileName) == 'A')    // FASTA
-    { crptObj.compressFA(inFileName, keyFileName, v_flag); }
+        crptObj.compressFA(inFileName, keyFileName, v_flag);
     else                                // FASTQ
-    {
-        std::ifstream inFile(inFileName);   // main input file
-//    splitFile(inFile);
-    
-        string line;
-        string hdrRange[n_threads], qsRange[n_threads];
-        string inTh[n_threads];  // input string which will be sent to threads
-        thread *arrThread;
-        byte t;
-    
-        // check if the third line contains only +
-        bool justPlus = true;
-        inFile.ignore(LARGE_NUMBER, '\n');                  // ignore header
-        inFile.ignore(LARGE_NUMBER, '\n');                  // ignore seq
-        if(getline(inFile, line).good())   if(line.length() > 1) justPlus=false;
-        inFile.clear();  inFile.seekg(0, inFile.beg);       // beginning of file
-        
-        byte nEmptyIn = 0;
-//        while (!inFile.eof())
-//        {
-            // write LINE_BUFFER lines to CRYFA_IN{0, 1, ..., n_threads-1}
-            for (t = 0; t != n_threads; ++t)
-            {
-                for (UI i = 0; i != LINE_BUFFER && !inFile.eof(); i += 4)
-                {
-                    if (getline(inFile, line).good())                       // header
-                    {
-                        for (const char &c : line)
-                            if (hdrRange[t].find_first_of(c) == string::npos)
-                                hdrRange[t] += c;
-
-                        inTh[t] += line + "\n";
-                    }
-                    if (getline(inFile, line).good())   inTh[t] += line + "\n";
-                    if (getline(inFile, line).good())   inTh[t] += line + "\n";
-                    if (getline(inFile, line).good())                       // quality score
-                    {
-                        for (const char &c : line)
-                            if (qsRange[t].find_first_of(c) == string::npos)
-                                qsRange[t] += c;
-    
-                        inTh[t] += line + "\n";
-                    }
-                }
-            
-                if (inTh[t].empty())  ++nEmptyIn;  // number of empty input strings
-            }   // end for t
-        
-            // multithreaded compression
-            arrThread = new thread[n_threads-nEmptyIn];
-    
-            for (t = 0; t != n_threads-nEmptyIn; ++t)
-                arrThread[t] = thread(&EnDecrypto::compressFQ, &crptObj,
-                                      inTh[t], keyFileName, v_flag,
-                                      hdrRange[t], qsRange[t], justPlus, t);
-        
-            for (t = 0; t != n_threads-nEmptyIn; ++t)   arrThread[t].join();
-            delete[] arrThread;
-        
-//        }   // end while
-    
-        inFile.close();
-
-        
-/*
-        std::ofstream inNFiles;             // splitted files
-        string line;
-        string hdrRange[n_threads], qsRange[n_threads];
-        thread *arrThread;
-        byte t;
-
-        byte nEmptyIn = 0;
-        while (!inFile.eof())
-        {
-            // write LINE_BUFFER lines to CRYFA_IN{0, 1, ..., n_threads-1}
-            for (t = 0; t != n_threads; ++t)
-            {
-                inNFiles.open("CRYFA_IN"+std::to_string(t));
-
-                for (UI i = 0; i != LINE_BUFFER; i += 4)
-                {
-                    if (getline(inFile, line).good())                       // header
-                    {
-                        for (const char &c : line)
-                            if (hdrRange[t].find_first_of(c) == string::npos)
-                                hdrRange[t] += c;
-                        inNFiles << line << '\n';
-                    }
-                    if (getline(inFile, line).good())   inNFiles << line << '\n';
-                    if (getline(inFile, line).good())   inNFiles << line << '\n';
-                    if (getline(inFile, line).good())                       // quality score
-                    {
-                        for (const char &c : line)
-                            if (qsRange[t].find_first_of(c) == string::npos)
-                                qsRange[t] += c;
-
-                        inNFiles << line << '\n';
-                    }
-                }
-
-                if (inNFiles.tellp() == 0)  ++nEmptyIn;  // number of empty files
-
-                inNFiles.close();    // is a MUST
-
-            }   // end for t
-
-            // multithreaded compression
-            arrThread = new thread[n_threads-nEmptyIn];
-            for (t = 0; t != n_threads-nEmptyIn; ++t)
-                arrThread[t] = thread(&EnDecrypto::compressFQ, &crptObj,
-                                    ("CRYFA_IN"+std::to_string(t)), keyFileName,
-                                    v_flag, hdrRange[t], qsRange[t], t);
-
-            for (t = 0; t < n_threads-nEmptyIn; ++t)    arrThread[t].join();
-            delete[] arrThread;
-
-        }   // end while
-
-        inFile.close();
-*/
-        
-
-//        // join encrypted files
-//        std::ofstream      out(ENC_FILENAME);
-//        std::ifstream      encFile[n_threads];
-//        std::vector<pos_t> chunkEndPos;
-//
-//        // open input files
-//        for (t = 0; t != n_threads; ++t)
-//            encFile[t].open(ENC_FILENAME+std::to_string(t));
-//
-//        while (!encFile[0].eof())
-//            for (t = 0; t != n_threads; ++t)
-//            {
-//                while (getline(encFile[t], line).good() &&
-//                       line.compare(THR_ID_HDR + std::to_string(t)))
-//                    out << line << '\n';        // line isn't THR=...
-//
-//                chunkEndPos.push_back(out.tellp());     // chunks end position
-//            }
-//
-//        // close input and output files
-//        for (t = 0; t != n_threads; ++t)   encFile[t].close();
-//        out.close();
-//
-//        // remove the first zeros corresponding to the first line of all files
-//        chunkEndPos.erase(chunkEndPos.begin(), chunkEndPos.begin() + n_threads);
-
-
-
-
-//        crptObj.encrypt(argc, argv, keyFileName, v_flag);
-
-    }   // end fastq
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-//    // get size of file
-//    infile.seekg(0, infile.end);
-//    long size = 1000000;//infile.tellg();
-//    infile.seekg(0);
-//
-//    // allocate memory for file content
-//    char *buffer = new char[size];
-//
-//    // read content of infile
-//    infile.read(buffer, size);
-//
-//    // write to outfile
-//    outfile.write(buffer, size);
-//
-//    // release dynamically-allocated memory
-//    delete[] buffer;
-
-//    outfile.close();
-//    infile.close();
-
-
-
-
-//    string *strIn = new string[n_threads];
-//    string line;
-//    string out;
-//    std::ifstream in("temp.fq");
-//    const bool FASTA = (crptObj.fileType(in) == 'A');cerr<<FASTA;
-//    while (getline(in, line))
-//    {
-//        out += line + "\n";
-////        out+='\n';
-//    }
-//    out.pop_back();
-//
-//    cerr << out;
-
-
-//    for (byte t = 0; t < n_threads; ++t)
-//    {
-//        for(US lineNo = 0; getline(, line))
-////    strIn[t]+=;
-//    }
-    
-    
-    
-    
-    
-    
+        crptObj.compressFQ(inFileName, keyFileName, v_flag, n_threads);
     
     // stop timer
     high_resolution_clock::time_point finishTime = high_resolution_clock::now();

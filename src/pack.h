@@ -16,6 +16,15 @@ using std::cout;
 using std::cerr;
 using std::make_pair;
 
+
+
+
+
+//htable_t HDR_MAP, QS_MAP;           // hash tables for header and quality score
+//string   HEADERS, QUALITY_SCORES;   // max: 39 values
+
+
+
 /*******************************************************************************
     build hash table
 *******************************************************************************/
@@ -299,7 +308,8 @@ inline string packSeq_3to1 (string seq)
 /*******************************************************************************
     encapsulate 3 symbols in 2 bytes -- reduction ~1/3.                  40 <= #
 *******************************************************************************/
-inline string packLarge_3to2 (string strIn, string SYM_RANGE, htable_t map)
+//inline string packLarge_3to2 (string strIn, string SYM_RANGE, htable_t map)
+inline string packLarge_3to2 (string strIn, string SYM_RANGE, htable_t &map)
 {
     string tuple, packed;
     const LL iterLen = strIn.length() - 2;
@@ -349,7 +359,8 @@ inline string packLarge_3to2 (string strIn, string SYM_RANGE, htable_t map)
 /*******************************************************************************
     encapsulate 3 symbols in 2 bytes -- reduction ~1/3.            16 <= # <= 39
 *******************************************************************************/
-inline string pack_3to2 (string strIn, string SYM_RANGE, htable_t map)
+//inline string pack_3to2 (string strIn, string SYM_RANGE, htable_t map)
+inline string pack_3to2 (string strIn, string SYM_RANGE, htable_t &map)
 {
     string tuple, packed;
     const LL iterLen = strIn.length() - 2;
@@ -385,7 +396,8 @@ inline string pack_3to2 (string strIn, string SYM_RANGE, htable_t map)
 /*******************************************************************************
     encapsulate 2 symbols in 1 bytes -- reduction ~1/2.             7 <= # <= 15
 *******************************************************************************/
-inline string pack_2to1 (string strIn, string SYM_RANGE, htable_t map)
+//inline string pack_2to1 (string strIn, string SYM_RANGE, htable_t map)
+inline string pack_2to1 (string strIn, string SYM_RANGE, htable_t &map)
 {
     string tuple, packed;
     const LL iterLen = strIn.length() - 1;
@@ -406,7 +418,8 @@ inline string pack_2to1 (string strIn, string SYM_RANGE, htable_t map)
 /*******************************************************************************
     encapsulate 3 symbols in 1 bytes -- reduction ~2/3.              # = 4, 5, 6
 *******************************************************************************/
-inline string pack_3to1 (string strIn, string SYM_RANGE, htable_t map)
+//inline string pack_3to1 (string strIn, string SYM_RANGE, htable_t map)
+inline string pack_3to1 (string strIn, string SYM_RANGE, htable_t &map)
 {
     string tuple, packed;
     const LL iterLen = strIn.length() - 2;
@@ -439,7 +452,8 @@ inline string pack_3to1 (string strIn, string SYM_RANGE, htable_t map)
 /*******************************************************************************
     encapsulate 5 symbols in 1 bytes -- reduction ~4/5.                    # = 3
 *******************************************************************************/
-inline string pack_5to1 (string strIn, string SYM_RANGE, htable_t map)
+//inline string pack_5to1 (string strIn, string SYM_RANGE, htable_t map)
+inline string pack_5to1 (string strIn, string SYM_RANGE, htable_t &map)
 {
     string tuple, packed;
     const LL iterLen = strIn.length() - 4;
@@ -486,7 +500,8 @@ inline string pack_5to1 (string strIn, string SYM_RANGE, htable_t map)
 /*******************************************************************************
     encapsulate 7 symbols in 1 bytes -- reduction ~6/7.                    # = 2
 *******************************************************************************/
-inline string pack_7to1 (string strIn, string SYM_RANGE, htable_t map)
+//inline string pack_7to1 (string strIn, string SYM_RANGE, htable_t map)
+inline string pack_7to1 (string strIn, string SYM_RANGE, htable_t &map)
 {
     string tuple, packed;
     const LL iterLen = strIn.length() - 6;
@@ -551,7 +566,8 @@ inline string pack_7to1 (string strIn, string SYM_RANGE, htable_t map)
 /*******************************************************************************
     show 1 symbol in 1 byte.                                               # = 1
 *******************************************************************************/
-inline string pack_1to1 (string strIn, string SYM_RANGE, htable_t map)
+//inline string pack_1to1 (string strIn, string SYM_RANGE, htable_t map)
+inline string pack_1to1 (string strIn, string SYM_RANGE, htable_t &map)
 {
     string single;
     string packed;

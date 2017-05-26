@@ -19,14 +19,19 @@ public:
     EnDecrypto();                                               // constructor
     
     void compressFA (const string&, const string&, const int);  // compress FA
-    void compressFQ (const string&, const string&, const int,
-                     string, string, const bool, const byte);   // compress FQ
-    inline void encrypt (const string&, const string&,
-                         const int, const byte);                // encrypt
+    void compressFQ (const string&, const string&, const int, const byte);  // compress FQ
+//    inline void pack (const string&, const string&,
+//                      string (*)(string, string, htable_t&),
+//                      string (*)(string, string, htable_t&),
+//                      const int, const byte); // pack
+    inline void pack (const string&, const string&,
+                      const int, const byte); // pack
+
+    inline void encrypt (const string&, const string&, const int, const byte);  // encrypt
     
     string decrypt  (const string&, const string&, const int);  // decrypt
     void decompress (const string&, const string&, const int);  // decompress
-
+    
 private:
     inline void decompFA   (string, const string&);           // decomp. FA
     inline void decompFQ   (string, const string&);           // decomp. FQ
