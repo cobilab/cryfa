@@ -164,8 +164,8 @@ void EnDecrypto::compressFQ (const string &inFileName,
 
     string HEADERS_X;                                 // extended HEADERS
     string QUALITY_SCORES_X;                          // extended QUALITY_SCORES
-    const size_t qsRangeLen  = qsRange.length();
     const size_t hdrRangeLen = hdrRange.length();
+    const size_t qsRangeLen  = qsRange.length();
 
     // header
     if (hdrRangeLen > MAX_CAT_5)          // if len > 39 filter the last 39 ones
@@ -262,65 +262,139 @@ void EnDecrypto::compressFQ (const string &inFileName,
             packQS = &pack_1to1;
         }
     }
+    
+    
+//    bool single = true;     // single-thread
+    bool single = false;
+    
+    if(single)
+    {
+        // watermark for encrypted file
+        cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
+                + std::to_string(RELEASE_CRYFA) + "\n";
+    
+        string cipherText;
+        string context;
+        context += hdrRange;                       // send hdrRange to decryptor
+        context += (char) 254;                     // to detect hdrRange in dec.
+        context += qsRange;                        // send qsRange to decryptor
+        context += (justPlus ? (char) 253 : '\n'); //'+ or not just +' condition
+        while (!in.eof())    // process 4 lines by 4 lines
+        {
+            if (getline(in, line).good())          // header
+                context += packHdr(line.substr(1), HEADERS, HDR_MAP)
+                           + (char) 254;    // ignore '@'
 
-//    byte nEmptyIn = 0;
-//    while (!in.eof())
+            if (getline(in, line).good())          // sequence
+                context += packSeq_3to1(line) + (char) 254;
+
+            in.ignore(LARGE_NUMBER, '\n');         // +. ignore
+
+            if (getline(in, line).good())          // quality score
+                context += packQS(line, QUALITY_SCORES, QS_MAP) + (char) 254;
+        }
+//    while (!in.eof())    // process 4 lines by 4 lines
 //    {
-//        // save LINE_BUFFER lines to a string & pass to "pack"
-//        for (t = 0; t != n_threads; ++t)
-//        {
-//            inTh.clear();
-//            for (UI i = 0; i != LINE_BUFFER && !in.eof()
-//                           && getline(in, line).good(); ++i)
-//                inTh += line + "\n";
+//        if (getline(in, line).good())          // header
+//            context += line.substr(1) + (char) 254;    // ignore '@'
 //
-//            if (inTh.empty())   ++nEmptyIn; // number of empty input strings
-//            else  arrThread[t] = thread(&EnDecrypto::pack, this,
-//                                        inTh, keyFileName, packHdr, packQS,
-//                                        v_flag, t);
-//        }   // end for t
+//        if (getline(in, line).good())          // sequence
+//            context += line + (char) 254;
 //
-//        for (t = 0; t != n_threads-nEmptyIn; ++t)   arrThread[t].join();
-//    }   // end while
-    
-    
-    
+//        in.ignore(LARGE_NUMBER, '\n');         // +. ignore
+//
+//        if (getline(in, line).good())          // quality score
+//            context += line + (char) 254;
+//    }
+        context += (char) 252;  // end of file
+        cout << context;
+
+//    // encryption
+//    cout << encrypt(context, keyFileName, v_flag);
+////    // dump cyphertext for read
+////    for (const char &c : cipherText)
+////        cout << (char) (c & 0xFF);
+//    cout << '\n';
+    }
+    else
+    {
+    byte nEmptyIn = 0;
+    while (!in.eof())
+    {
+        // save LINE_BUFFER lines to a string & pass to "pack"
+        for (t = 0; t != n_threads; ++t)
+        {
+            inTh.clear();
+            for (UI i = 0; i != LINE_BUFFER && !in.eof()
+                           && getline(in, line).good(); ++i)
+                inTh += line + "\n";
+
+            if (inTh.empty())   ++nEmptyIn; // number of empty input strings
+            else  arrThread[t] = thread(&EnDecrypto::pack, this,
+                                        inTh, keyFileName, packHdr, packQS,
+                                        v_flag, t);
+        }   // end for t
+
+        for (t = 0; t != n_threads-nEmptyIn; ++t)   arrThread[t].join();
+    }   // end while
+
+
+    // join encrypted files
+    std::ifstream encFile[n_threads];
+//    std::vector<pos_t> chunkEndPos;
+    string context;
+
     // watermark for encrypted file
     cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
                        + std::to_string(RELEASE_CRYFA) + "\n";
-    
-    string cipherText;
-    string context;
+
     context += hdrRange;                       // send hdrRange to decryptor
     context += (char) 254;                     // to detect hdrRange in dec.
     context += qsRange;                        // send qsRange to decryptor
     context += (justPlus ? (char) 253 : '\n'); //'+ or not just +' condition
-    while (!in.eof())    // process 4 lines by 4 lines
+//    out << context ;//<< '\n';
+
+    // open input files
+    for (t = 0; t != n_threads; ++t)
+        encFile[t].open(ENC_FILENAME + std::to_string(t));
+        
+    bool prevLineNotThrID;    // if previous line was "THR=" or not
+    while (!encFile[0].eof())
     {
-        if (getline(in, line).good())          // header
-            context += packHdr(line.substr(1), HEADERS, HDR_MAP)
-                       + (char) 254;    // ignore '@'
-        
-        if (getline(in, line).good())          // sequence
-            context += packSeq_3to1(line) + (char) 254;
-        
-        in.ignore(LARGE_NUMBER, '\n');         // +. ignore
-        
-        if (getline(in, line).good())          // quality score
-            context += packQS(line, QUALITY_SCORES, QS_MAP) + (char) 254;
+        for (t = 0; t != n_threads; ++t)
+        {
+            prevLineNotThrID = false;
+            
+            while (getline(encFile[t], line).good() &&
+                    line.compare(THR_ID_HDR+std::to_string(t)))
+            {
+                if (prevLineNotThrID)
+                    context += '\n';
+                context += line;
+                prevLineNotThrID = true;
+            }
+
+//            chunkEndPos.push_back(out.tellp());     // chunks end position
+        }
     }
-    context += (char) 252;  // end of file
-    
-    // encryption
-    cout << encrypt(context, keyFileName, v_flag);
-//    // dump cyphertext for read
-//    for (const char &c : cipherText)
-//        cout << (char) (c & 0xFF);
-    cout << '\n';
-    
-    
+    context += (char) 252;
+
+    // close input and output files
+    for (t = 0; t != n_threads; ++t)   encFile[t].close();
+
+    cout << context;
+//
+//
+//    // remove the first zeros corresponding to the first line of all files
+//    chunkEndPos.erase(chunkEndPos.begin(), chunkEndPos.begin() + n_threads);
+//
+//    cout << encrypt(context, keyFileName, v_flag);
+//    cout << '\n';
+    }
 
 
+
+    
 //    // join encrypted files
 //    std::ofstream out(ENC_FILENAME);
 //    std::ifstream encFile[n_threads];
@@ -406,9 +480,9 @@ inline void EnDecrypto::pack (const string &in, const string &keyFileName,
 ////    byte t;
 ////    htable_t HDR_MAP, QS_MAP;           // hash tables for header and quality score
 ////    string   HEADERS, QUALITY_SCORES;   // max: 39 values
-//    string context; // output string
-//    string inTempStr;
-//    string::const_iterator i = in.begin();
+    string context; // output string
+    string inTempStr;
+    string::const_iterator i = in.begin();
 ////    i = in.begin();
 ////
 ////    // gather all headers and quality scores
@@ -576,22 +650,21 @@ inline void EnDecrypto::pack (const string &in, const string &keyFileName,
 //
 //
 //
-////    string context; // output string
-////    string::const_iterator i = in.begin();
-////    string inTempStr;
-//    i = in.begin();
-//
+//    string context; // output string
+//    string::const_iterator i = in.begin();
+//    string inTempStr;
+    i = in.begin();
 //    while (i != in.end())
 //    {
 //        // header -- ignore '@'
 //        inTempStr.clear();
 //        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-//        context += packHdr(inTempStr, HEADERS, HDR_MAP) + (char) 254;
+//        context += inTempStr + (char) 254;
 //
 //        // sequence
 //        inTempStr.clear();
 //        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-//        context += packSeq_3to1(inTempStr) + (char) 254;
+//        context += inTempStr + (char) 254;
 //
 //        // +. ignore
 //        for (i += 1; *i != '\n'; ++i);
@@ -599,10 +672,52 @@ inline void EnDecrypto::pack (const string &in, const string &keyFileName,
 //        // quality score
 //        inTempStr.clear();
 //        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-//        context += packQS(inTempStr, QUALITY_SCORES, QS_MAP) + (char) 254;
+//        context += inTempStr + (char) 254;
 //
 //        i += 1;
 //    }
+    while (i != in.end())
+    {
+        // header -- ignore '@'
+        inTempStr.clear();
+        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
+        context += packHdr(inTempStr, HEADERS, HDR_MAP) + (char) 254;
+
+        // sequence
+        inTempStr.clear();
+        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
+        context += packSeq_3to1(inTempStr) + (char) 254;
+
+        // +. ignore
+        for (i += 1; *i != '\n'; ++i);
+
+        // quality score
+        inTempStr.clear();
+        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
+        context += packQS(inTempStr, QUALITY_SCORES, QS_MAP) + (char) 254;
+
+        i += 1;
+    }
+    
+    std::ofstream encfile;
+    encfile.open(ENC_FILENAME+std::to_string(threadID), std::ios_base::app);
+    
+    // write header containing threadID for each
+    encfile << THR_ID_HDR + std::to_string(threadID) << '\n';
+    encfile << context << '\n';
+    
+    encfile.close();
+
+
+
+
+
+
+
+
+
+
+
 //
 //    // encrypt & write result into file
 //    string cipherText = encrypt(context, keyFileName, v_flag);
