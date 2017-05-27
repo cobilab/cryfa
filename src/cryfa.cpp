@@ -108,7 +108,7 @@ int main (int argc, char* argv[])
     if (d_flag)
     {
         cerr << "Decrypting...\n";
-//        crptObj.decompress(inFileName, keyFileName, v_flag);
+        crptObj.decompress(inFileName, keyFileName, v_flag);
         
         // stop timer
         high_resolution_clock::time_point finishTime =

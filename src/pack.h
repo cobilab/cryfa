@@ -20,8 +20,8 @@ using std::make_pair;
 
 
 
-//htable_t HDR_MAP, QS_MAP;           // hash tables for header and quality score
-//string   HEADERS, QUALITY_SCORES;   // max: 39 values
+htable_t HDR_MAP, QS_MAP;           // hash tables for header and quality score
+string   HEADERS, QUALITY_SCORES;   // max: 39 values
 
 
 

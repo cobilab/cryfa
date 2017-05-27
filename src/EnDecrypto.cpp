@@ -107,12 +107,13 @@ void EnDecrypto::compressFQ (const string &inFileName,
 {
     std::ifstream in(inFileName);   // main input file
     string line;                    // each file line
-//    string hdrRange, qsRange;
     string inTh;    // input string which will be sent to threads
     thread arrThread[n_threads];
     byte t;
+    
 //    htable_t HDR_MAP, QS_MAP;           // hash tables for header and quality score
 //    string   HEADERS, QUALITY_SCORES;   // max: 39 values
+    string hdrRange, qsRange;
 ////    string   line, seq, context;        // FASTQ: context = header + seq + plus + qs
 
     // check if the third line contains only +
@@ -130,343 +131,27 @@ void EnDecrypto::compressFQ (const string &inFileName,
     if (*(lFSecond+2) != '\n')  justPlus = false;   // check symbol after +
     */
 
-//    // gather all headers and quality scores
-//    while (!in.eof())
-//    {
-//        if (getline(in, line).good())                       // header
-//        {
-//            for (const char &c : line)
-//                if (hdrRange.find_first_of(c) == string::npos)
-//                    hdrRange += c;
-//        }
-//        in.ignore(LARGE_NUMBER, '\n');                      // ignore sequence
-//        in.ignore(LARGE_NUMBER, '\n');                      // ignore +
-//        if (getline(in, line).good())                       // quality score
-//        {
-//            for (const char &c : line)
-//                if (qsRange.find_first_of(c) == string::npos)
-//                    qsRange += c;
-//        }
-//    }
-//    in.clear();     in.seekg(0, std::ios::beg);             // beginning of file
-//
-//    hdrRange.erase(hdrRange.begin());                       //ignore '@'
-//    std::sort(hdrRange.begin(), hdrRange.end());            // sort values
-//    std::sort(qsRange.begin(),  qsRange.end());             // sort ASCII values
-//
-////    using packHdrPointer = string (*)(string, string, htable_t);
-//    using packHdrPointer = string (*)(string, string, htable_t&);
-//    packHdrPointer packHdr;                                 // function pointer
-////    using packQSPointer  = string (*)(string, string, htable_t);
-//    using packQSPointer  = string (*)(string, string, htable_t&);
-//    packQSPointer packQS;                                   // function pointer
-//
-//    string HEADERS_X;                                 // extended HEADERS
-//    string QUALITY_SCORES_X;                          // extended QUALITY_SCORES
-//    const size_t qsRangeLen  = qsRange.length();
-//    const size_t hdrRangeLen = hdrRange.length();
-//
-//    // header
-//    if (hdrRangeLen > MAX_CAT_5)          // if len > 39 filter the last 39 ones
-//    {
-//        HEADERS   = hdrRange.substr(hdrRangeLen - MAX_CAT_5);
-//        HEADERS_X = HEADERS;
-//        // ASCII char after last char in HEADERS
-//        HEADERS_X += (char) (HEADERS[HEADERS.size()-1] + 1);
-//
-//        HDR_MAP = buildHashTable(HDR_MAP, HEADERS_X, KEYLEN_CAT_5);
-//        packHdr = &packLarge_3to2;
-//    }
-//    else
-//    {
-//        HEADERS = hdrRange;
-//
-//        if (hdrRangeLen > MAX_CAT_4)            // cat 5
-//        {
-//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_5);
-//            packHdr = &pack_3to2;
-//        }
-//        else if (hdrRangeLen > MAX_CAT_3)       // cat 4
-//        {
-//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_4);
-//            packHdr = &pack_2to1;
-//        }
-//        else if (hdrRangeLen == MAX_CAT_3 || hdrRangeLen == MID_CAT_3
-//                 || hdrRangeLen == MIN_CAT_3)  // cat 3
-//        {
-//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_3);
-//            packHdr = &pack_3to1;
-//        }
-//        else if (hdrRangeLen == CAT_2)          // cat 2
-//        {
-//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_2);
-//            packHdr = &pack_5to1;
-//        }
-//        else if (hdrRangeLen == CAT_1)          // cat 1
-//        {
-//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_1);
-//            packHdr = &pack_7to1;
-//        }
-//        else    // hdrRangeLen = 1
-//        {
-//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, 1);
-//            packHdr = &pack_1to1;
-//        }
-//    }
-//
-//    // quality score
-//    if (qsRangeLen > MAX_CAT_5)           // if len > 39 filter the last 39 ones
-//    {
-//        QUALITY_SCORES   = qsRange.substr(qsRangeLen - MAX_CAT_5);
-//        QUALITY_SCORES_X = QUALITY_SCORES;
-//        // ASCII char after last char in QUALITY_SCORES
-//        QUALITY_SCORES_X +=(char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
-//
-//        QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES_X, KEYLEN_CAT_5);
-//        packQS = &packLarge_3to2;
-//    }
-//    else
-//    {
-//        QUALITY_SCORES = qsRange;
-//
-//        if (qsRangeLen > MAX_CAT_4)             // cat 5
-//        {
-//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_5);
-//            packQS = &pack_3to2;
-//        }
-//        else if (qsRangeLen > MAX_CAT_3)        // cat 4
-//        {
-//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_4);
-//            packQS = &pack_2to1;
-//        }
-//        else if (qsRangeLen == MAX_CAT_3 || qsRangeLen == MID_CAT_3
-//                 || qsRangeLen == MIN_CAT_3)   // cat 3
-//        {
-//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_3);
-//            packQS = &pack_3to1;
-//        }
-//        else if (qsRangeLen == CAT_2)           // cat 2
-//        {
-//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_2);
-//            packQS = &pack_5to1;
-//        }
-//        else if (qsRangeLen == CAT_1)           // cat 1
-//        {
-//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_1);
-//            packQS = &pack_7to1;
-//        }
-//        else    // qsRangeLen = 1
-//        {
-//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, 1);
-//            packQS = &pack_1to1;
-//        }
-//    }
-
-    byte nEmptyIn = 0;
+    // gather all headers and quality scores
     while (!in.eof())
     {
-        // save LINE_BUFFER lines to a string & pass to "pack"
-        for (t = 0; t != n_threads; ++t)
+        if (getline(in, line).good())                       // header
         {
-            inTh.clear();
-            for (UI i = 0; i != LINE_BUFFER && !in.eof()
-                           && getline(in, line).good(); ++i)
-                inTh += line + "\n";
-
-            if (inTh.empty())   ++nEmptyIn; // number of empty input strings
-            else  arrThread[t] = thread(&EnDecrypto::pack, this,
-                                        inTh, keyFileName, //packHdr, packQS,
-                                        v_flag, t);
-        }   // end for t
-
-        for (t = 0; t != n_threads-nEmptyIn; ++t)   arrThread[t].join();
-    }   // end while
-
-    in.close();
-
-
-    
-//    string context;
-////        context += hdrRange;                       // send hdrRange to decryptor
-////        context += (char) 254;                     // to detect hdrRange in dec.
-////        context += qsRange;                        // send qsRange to decryptor
-////        context += (justPlus ? (char) 253 : '\n'); //'+ or not just +' condition
-//        while(!in.eof())    // process 4 lines by 4 lines
-//        {
-//            if (getline(in, line).good())          // header
-////                cerr<<line.substr(1)<<'\n';
-//                context += packHdr(line.substr(1), HEADERS, HDR_MAP)
-//                           + (char) 254
-//                        ;    // ignore '@'
-//
-//            if (getline(in, line).good())          // sequence
-//                context += packSeq_3to1(line) + (char) 254
-//                        ;
-//
-//            in.ignore(LARGE_NUMBER, '\n');         // +. ignore
-//
-//            if (getline(in, line).good())          // quality score
-//                context += packQS(line, QUALITY_SCORES, QS_MAP) + (char) 254
-//                        ;
-//        }
-////        context += (char) 252;  // end of file
-
-
-    // encryption
-//    encrypt(context, keyFileName, v_flag, 0);
-//    encrypt(context, keyFileName, v_flag, threadID);
-
-
-
-
-
-
-        // join encrypted files
-        std::ofstream      out(ENC_FILENAME);
-        std::ifstream      encFile[n_threads];
-        std::vector<pos_t> chunkEndPos;
-
-        // open input files
-        for (t = 0; t != n_threads; ++t)
-            encFile[t].open(ENC_FILENAME+std::to_string(t));
-
-        while (!encFile[0].eof())
-            for (t = 0; t != n_threads; ++t)
-            {
-                while (getline(encFile[t], line).good() &&
-                       line.compare(THR_ID_HDR + std::to_string(t)))
-                    out << line << '\n';        // line isn't THR=...
-
-                chunkEndPos.push_back(out.tellp());     // chunks end position
-            }
-
-        // close input and output files
-        for (t = 0; t != n_threads; ++t)   encFile[t].close();
-        out.close();
-
-        // remove the first zeros corresponding to the first line of all files
-        chunkEndPos.erase(chunkEndPos.begin(), chunkEndPos.begin() + n_threads);
-    
-    
-//    in.close();
-/*
-//    // get size of file
-//    infile.seekg(0, infile.end);
-//    long size = 1000000;//infile.tellg();
-//    infile.seekg(0);
-//
-//    // allocate memory for file content
-//    char *buffer = new char[size];
-//
-//    // read content of infile
-//    infile.read(buffer, size);
-//
-//    // write to outfile
-//    outfile.write(buffer, size);
-//
-//    // release dynamically-allocated memory
-//    delete[] buffer;
-
-//    outfile.close();
-//    infile.close();
-
-
-
-
-//    string *strIn = new string[n_threads];
-//    string line;
-//    string out;
-//    std::ifstream in("temp.fq");
-//    const bool FASTA = (crptObj.fileType(in) == 'A');cerr<<FASTA;
-//    while (getline(in, line))
-//    {
-//        out += line + "\n";
-////        out+='\n';
-//    }
-//    out.pop_back();
-//
-//    cerr << out;
-
-
-//    for (byte t = 0; t < n_threads; ++t)
-//    {
-//        for(US lineNo = 0; getline(, line))
-////    strIn[t]+=;
-//    }
-    */
-    
-}
-
-/*******************************************************************************
-    pack
-*******************************************************************************/
-inline void EnDecrypto::pack (const string &in, const string &keyFileName,
-//                              string (*packHdr)(string, string, htable_t&),
-//                              string (*packQS)(string, string, htable_t&),
-                              const int v_flag, const byte threadID)
-{
-    string line;                    // each file line
-    string hdrRange, qsRange;
-    string inTh;    // input string which will be sent to threads
-    byte t;
-    htable_t HDR_MAP, QS_MAP;           // hash tables for header and quality score
-    string   HEADERS, QUALITY_SCORES;   // max: 39 values
-    string context; // output string
-    string::const_iterator i = in.begin();
-    string inTempStr;
-    i = in.begin();
-    
-    // gather all headers and quality scores
-    while (i != in.end())
-    {
-        // header -- ignore '@'
-        inTempStr.clear();
-        for (i += 1; *i != '\n'; ++i)
-            if (hdrRange.find_first_of(*i) == string::npos)
-                hdrRange += *i;
-        
-        // sequence
-        inTempStr.clear();
-        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-        context += packSeq_3to1(inTempStr) + (char) 254;
-        
-        // +. ignore
-        for (i += 1; *i != '\n'; ++i);
-        
-        // quality score
-        inTempStr.clear();
-        for (i += 1; *i != '\n'; ++i)
-            if (qsRange.find_first_of(*i) == string::npos)
-                qsRange += *i;
-    
-        i += 1;
+            for (const char &c : line)
+                if (hdrRange.find_first_of(c) == string::npos)
+                    hdrRange += c;
+        }
+        in.ignore(LARGE_NUMBER, '\n');                      // ignore sequence
+        in.ignore(LARGE_NUMBER, '\n');                      // ignore +
+        if (getline(in, line).good())                       // quality score
+        {
+            for (const char &c : line)
+                if (qsRange.find_first_of(c) == string::npos)
+                    qsRange += c;
+        }
     }
-    
-//    // gather all headers and quality scores
-//    while (!in.eof())
-//    {
-//        if (getline(in, line).good())                       // header
-//        {
-//            for (const char &c : line)
-//                if (hdrRange.find_first_of(c) == string::npos)
-//                    hdrRange += c;
-//        }
-//        in.ignore(LARGE_NUMBER, '\n');                      // ignore sequence
-//        in.ignore(LARGE_NUMBER, '\n');                      // ignore +
-//        if (getline(in, line).good())                       // quality score
-//        {
-//            for (const char &c : line)
-//                if (qsRange.find_first_of(c) == string::npos)
-//                    qsRange += c;
-//        }
-//    }
-//    in.clear();     in.seekg(0, std::ios::beg);             // beginning of file
-    
-    
-    
-    
-    // if processing based on string, '@' already ignored
-//    hdrRange.erase(hdrRange.begin());                       //ignore '@'
+    in.clear();     in.seekg(0, std::ios::beg);             // beginning of file
+
+    hdrRange.erase(hdrRange.begin());                       //ignore '@'
     std::sort(hdrRange.begin(), hdrRange.end());            // sort values
     std::sort(qsRange.begin(),  qsRange.end());             // sort ASCII values
 
@@ -476,12 +161,12 @@ inline void EnDecrypto::pack (const string &in, const string &keyFileName,
 //    using packQSPointer  = string (*)(string, string, htable_t);
     using packQSPointer  = string (*)(string, string, htable_t&);
     packQSPointer packQS;                                   // function pointer
-    
+
     string HEADERS_X;                                 // extended HEADERS
     string QUALITY_SCORES_X;                          // extended QUALITY_SCORES
     const size_t qsRangeLen  = qsRange.length();
     const size_t hdrRangeLen = hdrRange.length();
-    
+
     // header
     if (hdrRangeLen > MAX_CAT_5)          // if len > 39 filter the last 39 ones
     {
@@ -489,14 +174,14 @@ inline void EnDecrypto::pack (const string &in, const string &keyFileName,
         HEADERS_X = HEADERS;
         // ASCII char after last char in HEADERS
         HEADERS_X += (char) (HEADERS[HEADERS.size()-1] + 1);
-        
+
         HDR_MAP = buildHashTable(HDR_MAP, HEADERS_X, KEYLEN_CAT_5);
         packHdr = &packLarge_3to2;
     }
     else
     {
         HEADERS = hdrRange;
-        
+
         if (hdrRangeLen > MAX_CAT_4)            // cat 5
         {
             HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_5);
@@ -529,7 +214,7 @@ inline void EnDecrypto::pack (const string &in, const string &keyFileName,
             packHdr = &pack_1to1;
         }
     }
-    
+
     // quality score
     if (qsRangeLen > MAX_CAT_5)           // if len > 39 filter the last 39 ones
     {
@@ -537,14 +222,14 @@ inline void EnDecrypto::pack (const string &in, const string &keyFileName,
         QUALITY_SCORES_X = QUALITY_SCORES;
         // ASCII char after last char in QUALITY_SCORES
         QUALITY_SCORES_X +=(char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
-        
+
         QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES_X, KEYLEN_CAT_5);
         packQS = &packLarge_3to2;
     }
     else
     {
         QUALITY_SCORES = qsRange;
-        
+
         if (qsRangeLen > MAX_CAT_4)             // cat 5
         {
             QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_5);
@@ -577,54 +262,427 @@ inline void EnDecrypto::pack (const string &in, const string &keyFileName,
             packQS = &pack_1to1;
         }
     }
+
+//    byte nEmptyIn = 0;
+//    while (!in.eof())
+//    {
+//        // save LINE_BUFFER lines to a string & pass to "pack"
+//        for (t = 0; t != n_threads; ++t)
+//        {
+//            inTh.clear();
+//            for (UI i = 0; i != LINE_BUFFER && !in.eof()
+//                           && getline(in, line).good(); ++i)
+//                inTh += line + "\n";
+//
+//            if (inTh.empty())   ++nEmptyIn; // number of empty input strings
+//            else  arrThread[t] = thread(&EnDecrypto::pack, this,
+//                                        inTh, keyFileName, packHdr, packQS,
+//                                        v_flag, t);
+//        }   // end for t
+//
+//        for (t = 0; t != n_threads-nEmptyIn; ++t)   arrThread[t].join();
+//    }   // end while
     
     
     
+    // watermark for encrypted file
+    cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
+                       + std::to_string(RELEASE_CRYFA) + "\n";
     
-//    string context; // output string
-//    string::const_iterator i = in.begin();
-//    string inTempStr;
-    i = in.begin();
-    
-    while (i != in.end())
-    {
-        // header -- ignore '@'
-        inTempStr.clear();
-        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-        context += packHdr(inTempStr, HEADERS, HDR_MAP) + (char) 254;
+    string cipherText;
+    string context;
+    context += hdrRange;                       // send hdrRange to decryptor
+    context += (char) 254;                     // to detect hdrRange in dec.
+    context += qsRange;                        // send qsRange to decryptor
+    context += (justPlus ? (char) 253 : '\n'); //'+ or not just +' condition
+//    context += '\n';
+//    cout << '\n';
 
-        // sequence
-        inTempStr.clear();
-        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-        context += packSeq_3to1(inTempStr) + (char) 254;
-
-        // +. ignore
-        for (i += 1; *i != '\n'; ++i);
-
-        // quality score
-        inTempStr.clear();
-        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-        context += packQS(inTempStr, QUALITY_SCORES, QS_MAP) + (char) 254;
-
-        i += 1;
-    }
-
+context+=context;
     // encryption
-    encrypt(context, keyFileName, v_flag, threadID);
+    cout << encrypt(context, keyFileName, v_flag);
+    
+    // encryption
+//    cout << encrypt(context, keyFileName, v_flag);
+
+    cout << '\n';
+
+
+    
+    
+    
+    
+    
+////    while (!in.eof())    // process 4 lines by 4 lines
+////    {
+////        if (getline(in, line).good())          // header
+//////                cerr<<line.substr(1)<<'\n';
+////            context += packHdr(line.substr(1), HEADERS, HDR_MAP)
+////                       + (char) 254;    // ignore '@'
+////
+////        if (getline(in, line).good())          // sequence
+////            context += packSeq_3to1(line) + (char) 254;
+////
+////        in.ignore(LARGE_NUMBER, '\n');         // +. ignore
+////
+////        if (getline(in, line).good())          // quality score
+////            context += packQS(line, QUALITY_SCORES, QS_MAP) + (char) 254;
+////    }
+//    while (!in.eof())    // process 4 lines by 4 lines
+//    {
+//        if (getline(in, line).good())          // header
+////                cerr<<line.substr(1)<<'\n';
+//            context += line + (char) 254;    // ignore '@'
+//
+//        if (getline(in, line).good())          // sequence
+//            context += line + (char) 254;
+//
+//        in.ignore(LARGE_NUMBER, '\n');         // +. ignore
+//
+//        if (getline(in, line).good())          // quality score
+//            context += line + (char) 254;
+//    }
+//    // encryption
+//    cipherText = encrypt(context, keyFileName, v_flag);
+//
+//    // dump cyphertext for read
+//    for (const char &c : cipherText)
+//        cout << (char) (c & 0xFF);
+//    cout << '\n';
+//
+//    context += (char) 252;  // end of file
+//    // encryption
+//    cipherText = encrypt(context, keyFileName, v_flag);
+//
+//    // dump cyphertext for read
+//    for (const char &c : cipherText)
+//        cout << (char) (c & 0xFF);
+//    cout << '\n';
+    
+    
+
+
+//    // join encrypted files
+//    std::ofstream out(ENC_FILENAME);
+//    std::ifstream encFile[n_threads];
+//    std::vector<pos_t> chunkEndPos;
+//
+//    // watermark for encrypted file
+//    cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
+//                       + std::to_string(RELEASE_CRYFA) + "\n";
+//
+//    string context;
+//    context += hdrRange;                       // send hdrRange to decryptor
+//    context += (char) 254;                     // to detect hdrRange in dec.
+//    context += qsRange;                        // send qsRange to decryptor
+//    context += (justPlus ? (char) 253 : '\n'); //'+ or not just +' condition
+//
+//    cipherText = encrypt(context, keyFileName, v_flag);
+//    for (const char &c : cipherText)    cout << (char) (c & 0xFF);
+//    cout << '\n';
+//
+//    // open input files
+//    for (t = 0; t != n_threads; ++t)
+//        encFile[t].open(ENC_FILENAME + std::to_string(t));
+//
+//    while (!encFile[0].eof())
+//        for (t = 0; t != n_threads; ++t)
+//        {
+//            while (getline(encFile[t], line).good() &&
+//                   line.compare(THR_ID_HDR + std::to_string(t)))
+////                out << line << '\n';        // line isn't THR=...
+//            cout << line << '\n';        // line isn't THR=...
+//
+//            chunkEndPos.push_back(out.tellp());     // chunks end position
+//        }
+//
+//    cipherText = encrypt(std::to_string((char) 252), keyFileName, v_flag);
+//    for (const char &c : cipherText)    cout << (char) (c & 0xFF);
+//    cout << '\n';
+//
+//    // close input and output files
+//    for (t = 0; t != n_threads; ++t)   encFile[t].close();
+//    out.close();
+//
+//    // remove the first zeros corresponding to the first line of all files
+//    chunkEndPos.erase(chunkEndPos.begin(), chunkEndPos.begin() + n_threads);
+    
+    in.close();
+    
+/*
+//    // get size of file
+//    infile.seekg(0, infile.end);
+//    long size = 1000000;//infile.tellg();
+//    infile.seekg(0);
+//
+//    // allocate memory for file content
+//    char *buffer = new char[size];
+//
+//    // read content of infile
+//    infile.read(buffer, size);
+//
+//    // write to outfile
+//    outfile.write(buffer, size);
+//
+//    // release dynamically-allocated memory
+//    delete[] buffer;
+
+//    outfile.close();
+//    infile.close();
+*/
+    
 }
+
+/*******************************************************************************
+    pack
+*******************************************************************************/
+inline void EnDecrypto::pack (const string &in, const string &keyFileName,
+                              string (*packHdr)(string, string, htable_t&),
+                              string (*packQS)(string, string, htable_t&),
+                              const int v_flag, const byte threadID)
+{
+////    string line;                    // each file line
+////    string hdrRange, qsRange;
+////    string inTh;    // input string which will be sent to threads
+////    byte t;
+////    htable_t HDR_MAP, QS_MAP;           // hash tables for header and quality score
+////    string   HEADERS, QUALITY_SCORES;   // max: 39 values
+//    string context; // output string
+//    string inTempStr;
+//    string::const_iterator i = in.begin();
+////    i = in.begin();
+////
+////    // gather all headers and quality scores
+////    while (i != in.end())
+////    {
+////        // header -- ignore '@'
+////        inTempStr.clear();
+////        for (i += 1; *i != '\n'; ++i)
+////            if (hdrRange.find_first_of(*i) == string::npos)
+////                hdrRange += *i;
+////
+////        // sequence
+////        inTempStr.clear();
+////        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
+////        context += packSeq_3to1(inTempStr) + (char) 254;
+////
+////        // +. ignore
+////        for (i += 1; *i != '\n'; ++i);
+////
+////        // quality score
+////        inTempStr.clear();
+////        for (i += 1; *i != '\n'; ++i)
+////            if (qsRange.find_first_of(*i) == string::npos)
+////                qsRange += *i;
+////
+////        i += 1;
+////    }
+////
+//////    // gather all headers and quality scores
+//////    while (!in.eof())
+//////    {
+//////        if (getline(in, line).good())                       // header
+//////        {
+//////            for (const char &c : line)
+//////                if (hdrRange.find_first_of(c) == string::npos)
+//////                    hdrRange += c;
+//////        }
+//////        in.ignore(LARGE_NUMBER, '\n');                      // ignore sequence
+//////        in.ignore(LARGE_NUMBER, '\n');                      // ignore +
+//////        if (getline(in, line).good())                       // quality score
+//////        {
+//////            for (const char &c : line)
+//////                if (qsRange.find_first_of(c) == string::npos)
+//////                    qsRange += c;
+//////        }
+//////    }
+//////    in.clear();     in.seekg(0, std::ios::beg);             // beginning of file
+////
+////
+////
+////
+////    // if processing based on string, '@' already ignored
+//////    hdrRange.erase(hdrRange.begin());                       //ignore '@'
+////    std::sort(hdrRange.begin(), hdrRange.end());            // sort values
+////    std::sort(qsRange.begin(),  qsRange.end());             // sort ASCII values
+////
+//////    using packHdrPointer = string (*)(string, string, htable_t);
+////    using packHdrPointer = string (*)(string, string, htable_t&);
+////    packHdrPointer packHdr;                                 // function pointer
+//////    using packQSPointer  = string (*)(string, string, htable_t);
+////    using packQSPointer  = string (*)(string, string, htable_t&);
+////    packQSPointer packQS;                                   // function pointer
+////
+////    string HEADERS_X;                                 // extended HEADERS
+////    string QUALITY_SCORES_X;                          // extended QUALITY_SCORES
+////    const size_t qsRangeLen  = qsRange.length();
+////    const size_t hdrRangeLen = hdrRange.length();
+////
+////    // header
+////    if (hdrRangeLen > MAX_CAT_5)          // if len > 39 filter the last 39 ones
+////    {
+////        HEADERS   = hdrRange.substr(hdrRangeLen - MAX_CAT_5);
+////        HEADERS_X = HEADERS;
+////        // ASCII char after last char in HEADERS
+////        HEADERS_X += (char) (HEADERS[HEADERS.size()-1] + 1);
+////
+////        HDR_MAP = buildHashTable(HDR_MAP, HEADERS_X, KEYLEN_CAT_5);
+////        packHdr = &packLarge_3to2;
+////    }
+////    else
+////    {
+////        HEADERS = hdrRange;
+////
+////        if (hdrRangeLen > MAX_CAT_4)            // cat 5
+////        {
+////            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_5);
+////            packHdr = &pack_3to2;
+////        }
+////        else if (hdrRangeLen > MAX_CAT_3)       // cat 4
+////        {
+////            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_4);
+////            packHdr = &pack_2to1;
+////        }
+////        else if (hdrRangeLen == MAX_CAT_3 || hdrRangeLen == MID_CAT_3
+////                 || hdrRangeLen == MIN_CAT_3)  // cat 3
+////        {
+////            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_3);
+////            packHdr = &pack_3to1;
+////        }
+////        else if (hdrRangeLen == CAT_2)          // cat 2
+////        {
+////            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_2);
+////            packHdr = &pack_5to1;
+////        }
+////        else if (hdrRangeLen == CAT_1)          // cat 1
+////        {
+////            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_1);
+////            packHdr = &pack_7to1;
+////        }
+////        else    // hdrRangeLen = 1
+////        {
+////            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, 1);
+////            packHdr = &pack_1to1;
+////        }
+////    }
+////
+////    // quality score
+////    if (qsRangeLen > MAX_CAT_5)           // if len > 39 filter the last 39 ones
+////    {
+////        QUALITY_SCORES   = qsRange.substr(qsRangeLen - MAX_CAT_5);
+////        QUALITY_SCORES_X = QUALITY_SCORES;
+////        // ASCII char after last char in QUALITY_SCORES
+////        QUALITY_SCORES_X +=(char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
+////
+////        QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES_X, KEYLEN_CAT_5);
+////        packQS = &packLarge_3to2;
+////    }
+////    else
+////    {
+////        QUALITY_SCORES = qsRange;
+////
+////        if (qsRangeLen > MAX_CAT_4)             // cat 5
+////        {
+////            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_5);
+////            packQS = &pack_3to2;
+////        }
+////        else if (qsRangeLen > MAX_CAT_3)        // cat 4
+////        {
+////            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_4);
+////            packQS = &pack_2to1;
+////        }
+////        else if (qsRangeLen == MAX_CAT_3 || qsRangeLen == MID_CAT_3
+////                 || qsRangeLen == MIN_CAT_3)   // cat 3
+////        {
+////            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_3);
+////            packQS = &pack_3to1;
+////        }
+////        else if (qsRangeLen == CAT_2)           // cat 2
+////        {
+////            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_2);
+////            packQS = &pack_5to1;
+////        }
+////        else if (qsRangeLen == CAT_1)           // cat 1
+////        {
+////            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_1);
+////            packQS = &pack_7to1;
+////        }
+////        else    // qsRangeLen = 1
+////        {
+////            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, 1);
+////            packQS = &pack_1to1;
+////        }
+////    }
+////
+//
+//
+//
+////    string context; // output string
+////    string::const_iterator i = in.begin();
+////    string inTempStr;
+//    i = in.begin();
+//
+//    while (i != in.end())
+//    {
+//        // header -- ignore '@'
+//        inTempStr.clear();
+//        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
+//        context += packHdr(inTempStr, HEADERS, HDR_MAP) + (char) 254;
+//
+//        // sequence
+//        inTempStr.clear();
+//        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
+//        context += packSeq_3to1(inTempStr) + (char) 254;
+//
+//        // +. ignore
+//        for (i += 1; *i != '\n'; ++i);
+//
+//        // quality score
+//        inTempStr.clear();
+//        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
+//        context += packQS(inTempStr, QUALITY_SCORES, QS_MAP) + (char) 254;
+//
+//        i += 1;
+//    }
+//
+//    // encrypt & write result into file
+//    string cipherText = encrypt(context, keyFileName, v_flag);
+//    writeEncoded(cipherText, threadID);
+    
+    //todo. definition e ghablie writeEncoded
+//    std::ofstream encfile;
+//    encfile.open(ENC_FILENAME+std::to_string(threadID), std::ios_base::app);
+//
+//    // watermark for encrypted file //todo. should write once while joining
+////    encfile << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
+////                          + std::to_string(RELEASE_CRYFA) + "\n";
+//
+//    // write header containing threadID for each
+//    encfile << THR_ID_HDR + std::to_string(threadID) << '\n';
+//
+//    // dump cyphertext for read
+//    for (const char &c : cipherText)
+//        encfile << (char) (c & 0xFF);
+////        cout << (char) (c & 0xFF);
+////        cout << (char) (0xFF & static_cast<byte> (c));
+//    encfile << '\n';
+////    cout << '\n';
+//    encfile.close();
+
+}
+
 /*******************************************************************************
     encrypt.
     AES encryption uses a secret key of a variable length (128, 196 or 256 bit).
     This key is secretly exchanged between two parties before communication
     begins. DEFAULT_KEYLENGTH = 16 bytes.
 *******************************************************************************/
-inline void EnDecrypto::encrypt (const string &context,
-                                 const string &keyFileName, const int v_flag,
-                                 const byte threadID)
+inline string EnDecrypto::encrypt (const string &context,
+                                   const string &keyFileName, const int v_flag)
 {
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
-    memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
+    memset(iv, 0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
     
     const string pass = getPassFromFile(keyFileName);
     buildKey(key, pass);
@@ -641,44 +699,45 @@ inline void EnDecrypto::encrypt (const string &context,
     AES::Encryption aesEncryption(key, (size_t) AES::DEFAULT_KEYLENGTH);
     CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
     StreamTransformationFilter stfEncryptor(cbcEncryption,
-                                            new CryptoPP::StringSink(cipherText));
-    stfEncryptor.Put(reinterpret_cast<const byte*>
+                                          new CryptoPP::StringSink(cipherText));
+    stfEncryptor.Put(reinterpret_cast<const byte *>
                      (context.c_str()), context.length() + 1);
     stfEncryptor.MessageEnd();
-
+    
 //    if (v_flag)
 //    {
 //        cerr << "   sym size: " << context.size()    << '\n';
 //        cerr << "cipher size: " << cipherText.size() << '\n';
 //        cerr << " block size: " << AES::BLOCKSIZE    << '\n';
 //    }
+    
+    string encryptedText;
+    for (const char &c : cipherText)
+        encryptedText += (char) (0xFF & static_cast<byte> (c));
+//        encryptedText += (char) (c & 0xFF);
+//    encryptedText+='\n';
+    return encryptedText;
+}
 
-
-
-////    mutx.lock();
+/*******************************************************************************
+    write encoded context
+*******************************************************************************/
+inline void EnDecrypto::writeEncoded (string cipherText, const byte& threadID)
+{
     std::ofstream encfile;
     encfile.open(ENC_FILENAME+std::to_string(threadID), std::ios_base::app);
-////    encfile.open(encName);
-////    mutx.unlock();
-
-
-//    mutx.lock();
-    // watermark for encrypted file //todo. should write once while joining
-//    encfile << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
-//                          + std::to_string(RELEASE_CRYFA) + "\n";
     
-    //todo. write header containing threadID for each
+    // write header containing threadID for each
     encfile << THR_ID_HDR + std::to_string(threadID) << '\n';
-    
+
     // dump cyphertext for read
-    for ( char c : cipherText)
+    for (const char &c : cipherText)
         encfile << (char) (c & 0xFF);
 //        cout << (char) (c & 0xFF);
 //        cout << (char) (0xFF & static_cast<byte> (c));
     encfile << '\n';
 //    cout << '\n';
-//    encfile.close();
-//    mutx.unlock();
+    encfile.close();
 }
 
 /*******************************************************************************
@@ -689,8 +748,13 @@ void EnDecrypto::decompress (const string &inFileName,
 {
     string decText = decrypt(inFileName, keyFileName, v_flag);   //decryption
     
-    (decText[0] == (char) 127) ? decompFA(decText, keyFileName)
-                               : decompFQ(decText, keyFileName); //decompression
+    
+    cerr<<decText;
+    
+    
+    //todo. uncomment
+//    (decText[0] == (char) 127) ? decompFA(decText, keyFileName)
+//                               : decompFQ(decText, keyFileName); //decompression
 }
 
 /*******************************************************************************

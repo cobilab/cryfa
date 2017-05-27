@@ -5,10 +5,9 @@ make
 
 #in="in.fa"
 in=$1
-out="out"
+out="OUT"
 
-./cryfa -t8 -k pass.txt $in > ENCRYPTED
-#./cryfa -dk pass.txt ENCRYPTED > $out
-#./cryfa -dk pass.txt CRYFA_OUT0 > $out
-#
-#cmp $in $out
+./cryfa -t2 -k pass.txt $in > ENCRYPTED
+./cryfa -dk pass.txt ENCRYPTED > $out
+
+cmp $in $out
