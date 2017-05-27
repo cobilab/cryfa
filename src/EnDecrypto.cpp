@@ -295,69 +295,28 @@ void EnDecrypto::compressFQ (const string &inFileName,
     context += (char) 254;                     // to detect hdrRange in dec.
     context += qsRange;                        // send qsRange to decryptor
     context += (justPlus ? (char) 253 : '\n'); //'+ or not just +' condition
-//    context += '\n';
-//    cout << '\n';
-
-context+=context;
+    while (!in.eof())    // process 4 lines by 4 lines
+    {
+        if (getline(in, line).good())          // header
+            context += packHdr(line.substr(1), HEADERS, HDR_MAP)
+                       + (char) 254;    // ignore '@'
+        
+        if (getline(in, line).good())          // sequence
+            context += packSeq_3to1(line) + (char) 254;
+        
+        in.ignore(LARGE_NUMBER, '\n');         // +. ignore
+        
+        if (getline(in, line).good())          // quality score
+            context += packQS(line, QUALITY_SCORES, QS_MAP) + (char) 254;
+    }
+    context += (char) 252;  // end of file
+    
     // encryption
     cout << encrypt(context, keyFileName, v_flag);
-    
-    // encryption
-//    cout << encrypt(context, keyFileName, v_flag);
-
+//    // dump cyphertext for read
+//    for (const char &c : cipherText)
+//        cout << (char) (c & 0xFF);
     cout << '\n';
-
-
-    
-    
-    
-    
-    
-////    while (!in.eof())    // process 4 lines by 4 lines
-////    {
-////        if (getline(in, line).good())          // header
-//////                cerr<<line.substr(1)<<'\n';
-////            context += packHdr(line.substr(1), HEADERS, HDR_MAP)
-////                       + (char) 254;    // ignore '@'
-////
-////        if (getline(in, line).good())          // sequence
-////            context += packSeq_3to1(line) + (char) 254;
-////
-////        in.ignore(LARGE_NUMBER, '\n');         // +. ignore
-////
-////        if (getline(in, line).good())          // quality score
-////            context += packQS(line, QUALITY_SCORES, QS_MAP) + (char) 254;
-////    }
-//    while (!in.eof())    // process 4 lines by 4 lines
-//    {
-//        if (getline(in, line).good())          // header
-////                cerr<<line.substr(1)<<'\n';
-//            context += line + (char) 254;    // ignore '@'
-//
-//        if (getline(in, line).good())          // sequence
-//            context += line + (char) 254;
-//
-//        in.ignore(LARGE_NUMBER, '\n');         // +. ignore
-//
-//        if (getline(in, line).good())          // quality score
-//            context += line + (char) 254;
-//    }
-//    // encryption
-//    cipherText = encrypt(context, keyFileName, v_flag);
-//
-//    // dump cyphertext for read
-//    for (const char &c : cipherText)
-//        cout << (char) (c & 0xFF);
-//    cout << '\n';
-//
-//    context += (char) 252;  // end of file
-//    // encryption
-//    cipherText = encrypt(context, keyFileName, v_flag);
-//
-//    // dump cyphertext for read
-//    for (const char &c : cipherText)
-//        cout << (char) (c & 0xFF);
-//    cout << '\n';
     
     
 
@@ -700,7 +659,7 @@ inline string EnDecrypto::encrypt (const string &context,
     CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
     StreamTransformationFilter stfEncryptor(cbcEncryption,
                                           new CryptoPP::StringSink(cipherText));
-    stfEncryptor.Put(reinterpret_cast<const byte *>
+    stfEncryptor.Put(reinterpret_cast<const byte*>
                      (context.c_str()), context.length() + 1);
     stfEncryptor.MessageEnd();
     
@@ -748,13 +707,9 @@ void EnDecrypto::decompress (const string &inFileName,
 {
     string decText = decrypt(inFileName, keyFileName, v_flag);   //decryption
     
-    
-    cerr<<decText;
-    
-    
     //todo. uncomment
-//    (decText[0] == (char) 127) ? decompFA(decText, keyFileName)
-//                               : decompFQ(decText, keyFileName); //decompression
+    (decText[0] == (char) 127) ? decompFA(decText, keyFileName)
+                               : decompFQ(decText, keyFileName); //decompression
 }
 
 /*******************************************************************************
