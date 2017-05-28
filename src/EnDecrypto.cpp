@@ -20,6 +20,7 @@
 using std::cout;
 using std::cerr;
 using std::ifstream;
+using std::ofstream;
 using std::getline;
 using std::thread;
 using CryptoPP::AES;
@@ -105,16 +106,16 @@ void EnDecrypto::compressFQ (const string &inFileName,
                              const string &keyFileName, const int v_flag,
                              const byte n_threads)
 {
-    std::ifstream in(inFileName);   // main input file
+    ifstream in(inFileName);   // main input file
     string line;                    // each file line
     string inTh;    // input string which will be sent to threads
     thread arrThread[n_threads];
     byte t;
     
-//    htable_t HDR_MAP, QS_MAP;           // hash tables for header and quality score
+//    htable_t HDR_MAP, QS_MAP;          // hash tables for header and quality score
 //    string   HEADERS, QUALITY_SCORES;   // max: 39 values
-    string hdrRange, qsRange;
-////    string   line, seq, context;        // FASTQ: context = header + seq + plus + qs
+//    string hdrRange, qsRange;
+////    string   line, seq, context;   // FASTQ: context = header + seq + plus + qs
 
     // check if the third line contains only +
     bool justPlus = true;
@@ -130,194 +131,181 @@ void EnDecrypto::compressFQ (const string &inFileName,
     string::const_iterator lFSecond = std::find(lFFirst+1, in.end(), '\n');
     if (*(lFSecond+2) != '\n')  justPlus = false;   // check symbol after +
     */
-
-    // gather all headers and quality scores
-    while (!in.eof())
-    {
-        if (getline(in, line).good())                       // header
-        {
-            for (const char &c : line)
-                if (hdrRange.find_first_of(c) == string::npos)
-                    hdrRange += c;
-        }
-        in.ignore(LARGE_NUMBER, '\n');                      // ignore sequence
-        in.ignore(LARGE_NUMBER, '\n');                      // ignore +
-        if (getline(in, line).good())                       // quality score
-        {
-            for (const char &c : line)
-                if (qsRange.find_first_of(c) == string::npos)
-                    qsRange += c;
-        }
-    }
-    in.clear();     in.seekg(0, std::ios::beg);             // beginning of file
-
-    hdrRange.erase(hdrRange.begin());                       //ignore '@'
-    std::sort(hdrRange.begin(), hdrRange.end());            // sort values
-    std::sort(qsRange.begin(),  qsRange.end());             // sort ASCII values
-
-//    using packHdrPointer = string (*)(string, string, htable_t);
-    using packHdrPointer = string (*)(string, string, htable_t&);
-    packHdrPointer packHdr;                                 // function pointer
-//    using packQSPointer  = string (*)(string, string, htable_t);
-    using packQSPointer  = string (*)(string, string, htable_t&);
-    packQSPointer packQS;                                   // function pointer
-
-    string HEADERS_X;                                 // extended HEADERS
-    string QUALITY_SCORES_X;                          // extended QUALITY_SCORES
-    const size_t hdrRangeLen = hdrRange.length();
-    const size_t qsRangeLen  = qsRange.length();
-
-    // header
-    if (hdrRangeLen > MAX_CAT_5)          // if len > 39 filter the last 39 ones
-    {
-        HEADERS   = hdrRange.substr(hdrRangeLen - MAX_CAT_5);
-        HEADERS_X = HEADERS;
-        // ASCII char after last char in HEADERS
-        HEADERS_X += (char) (HEADERS[HEADERS.size()-1] + 1);
-
-        HDR_MAP = buildHashTable(HDR_MAP, HEADERS_X, KEYLEN_CAT_5);
-        packHdr = &packLarge_3to2;
-    }
-    else
-    {
-        HEADERS = hdrRange;
-
-        if (hdrRangeLen > MAX_CAT_4)            // cat 5
-        {
-            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_5);
-            packHdr = &pack_3to2;
-        }
-        else if (hdrRangeLen > MAX_CAT_3)       // cat 4
-        {
-            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_4);
-            packHdr = &pack_2to1;
-        }
-        else if (hdrRangeLen == MAX_CAT_3 || hdrRangeLen == MID_CAT_3
-                 || hdrRangeLen == MIN_CAT_3)  // cat 3
-        {
-            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_3);
-            packHdr = &pack_3to1;
-        }
-        else if (hdrRangeLen == CAT_2)          // cat 2
-        {
-            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_2);
-            packHdr = &pack_5to1;
-        }
-        else if (hdrRangeLen == CAT_1)          // cat 1
-        {
-            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_1);
-            packHdr = &pack_7to1;
-        }
-        else    // hdrRangeLen = 1
-        {
-            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, 1);
-            packHdr = &pack_1to1;
-        }
-    }
-
-    // quality score
-    if (qsRangeLen > MAX_CAT_5)           // if len > 39 filter the last 39 ones
-    {
-        QUALITY_SCORES   = qsRange.substr(qsRangeLen - MAX_CAT_5);
-        QUALITY_SCORES_X = QUALITY_SCORES;
-        // ASCII char after last char in QUALITY_SCORES
-        QUALITY_SCORES_X +=(char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
-
-        QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES_X, KEYLEN_CAT_5);
-        packQS = &packLarge_3to2;
-    }
-    else
-    {
-        QUALITY_SCORES = qsRange;
-
-        if (qsRangeLen > MAX_CAT_4)             // cat 5
-        {
-            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_5);
-            packQS = &pack_3to2;
-        }
-        else if (qsRangeLen > MAX_CAT_3)        // cat 4
-        {
-            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_4);
-            packQS = &pack_2to1;
-        }
-        else if (qsRangeLen == MAX_CAT_3 || qsRangeLen == MID_CAT_3
-                 || qsRangeLen == MIN_CAT_3)   // cat 3
-        {
-            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_3);
-            packQS = &pack_3to1;
-        }
-        else if (qsRangeLen == CAT_2)           // cat 2
-        {
-            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_2);
-            packQS = &pack_5to1;
-        }
-        else if (qsRangeLen == CAT_1)           // cat 1
-        {
-            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_1);
-            packQS = &pack_7to1;
-        }
-        else    // qsRangeLen = 1
-        {
-            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, 1);
-            packQS = &pack_1to1;
-        }
-    }
-    
-    
-//    bool single = true;     // single-thread
-    bool single = false;
-    
-    if(single)
-    {
-        // watermark for encrypted file
-        cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
-                + std::to_string(RELEASE_CRYFA) + "\n";
-    
-        string cipherText;
-        string context;
-        context += hdrRange;                       // send hdrRange to decryptor
-        context += (char) 254;                     // to detect hdrRange in dec.
-        context += qsRange;                        // send qsRange to decryptor
-        context += (justPlus ? (char) 253 : '\n'); //'+ or not just +' condition
-        while (!in.eof())    // process 4 lines by 4 lines
-        {
-            if (getline(in, line).good())          // header
-                context += packHdr(line.substr(1), HEADERS, HDR_MAP)
-                           + (char) 254;    // ignore '@'
-
-            if (getline(in, line).good())          // sequence
-                context += packSeq_3to1(line) + (char) 254;
-
-            in.ignore(LARGE_NUMBER, '\n');         // +. ignore
-
-            if (getline(in, line).good())          // quality score
-                context += packQS(line, QUALITY_SCORES, QS_MAP) + (char) 254;
-        }
-//    while (!in.eof())    // process 4 lines by 4 lines
+//
+//    // gather all headers and quality scores
+//    while (!in.eof())
 //    {
-//        if (getline(in, line).good())          // header
-//            context += line.substr(1) + (char) 254;    // ignore '@'
-//
-//        if (getline(in, line).good())          // sequence
-//            context += line + (char) 254;
-//
-//        in.ignore(LARGE_NUMBER, '\n');         // +. ignore
-//
-//        if (getline(in, line).good())          // quality score
-//            context += line + (char) 254;
+//        if (getline(in, line).good())                       // header
+//        {
+//            for (const char &c : line)
+//                if (hdrRange.find_first_of(c) == string::npos)
+//                    hdrRange += c;
+//        }
+//        in.ignore(LARGE_NUMBER, '\n');                      // ignore sequence
+//        in.ignore(LARGE_NUMBER, '\n');                      // ignore +
+//        if (getline(in, line).good())                       // quality score
+//        {
+//            for (const char &c : line)
+//                if (qsRange.find_first_of(c) == string::npos)
+//                    qsRange += c;
+//        }
 //    }
-        context += (char) 252;  // end of file
-        cout << context;
-
-//    // encryption
-//    cout << encrypt(context, keyFileName, v_flag);
-////    // dump cyphertext for read
-////    for (const char &c : cipherText)
-////        cout << (char) (c & 0xFF);
-//    cout << '\n';
-    }
-    else
-    {
+//    in.clear();     in.seekg(0, std::ios::beg);             // beginning of file
+//
+//    hdrRange.erase(hdrRange.begin());                       //ignore '@'
+//    std::sort(hdrRange.begin(), hdrRange.end());            // sort values
+//    std::sort(qsRange.begin(),  qsRange.end());             // sort ASCII values
+//
+////    using packHdrPointer = string (*)(string, string, htable_t);
+//    using packHdrPointer = string (*)(string, string, htable_t&);
+//    packHdrPointer packHdr;                                 // function pointer
+////    using packQSPointer  = string (*)(string, string, htable_t);
+//    using packQSPointer  = string (*)(string, string, htable_t&);
+//    packQSPointer packQS;                                   // function pointer
+//
+//    string HEADERS_X;                                 // extended HEADERS
+//    string QUALITY_SCORES_X;                          // extended QUALITY_SCORES
+//    const size_t hdrRangeLen = hdrRange.length();
+//    const size_t qsRangeLen  = qsRange.length();
+//
+//    // header
+//    if (hdrRangeLen > MAX_CAT_5)          // if len > 39 filter the last 39 ones
+//    {
+//        HEADERS   = hdrRange.substr(hdrRangeLen - MAX_CAT_5);
+//        HEADERS_X = HEADERS;
+//        // ASCII char after last char in HEADERS
+//        HEADERS_X += (char) (HEADERS[HEADERS.size()-1] + 1);
+//
+//        HDR_MAP = buildHashTable(HDR_MAP, HEADERS_X, KEYLEN_CAT_5);
+//        packHdr = &packLarge_3to2;
+//    }
+//    else
+//    {
+//        HEADERS = hdrRange;
+//
+//        if (hdrRangeLen > MAX_CAT_4)            // cat 5
+//        {
+//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_5);
+//            packHdr = &pack_3to2;
+//        }
+//        else if (hdrRangeLen > MAX_CAT_3)       // cat 4
+//        {
+//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_4);
+//            packHdr = &pack_2to1;
+//        }
+//        else if (hdrRangeLen == MAX_CAT_3 || hdrRangeLen == MID_CAT_3
+//                 || hdrRangeLen == MIN_CAT_3)  // cat 3
+//        {
+//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_3);
+//            packHdr = &pack_3to1;
+//        }
+//        else if (hdrRangeLen == CAT_2)          // cat 2
+//        {
+//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_2);
+//            packHdr = &pack_5to1;
+//        }
+//        else if (hdrRangeLen == CAT_1)          // cat 1
+//        {
+//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_1);
+//            packHdr = &pack_7to1;
+//        }
+//        else    // hdrRangeLen = 1
+//        {
+//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, 1);
+//            packHdr = &pack_1to1;
+//        }
+//    }
+//
+//    // quality score
+//    if (qsRangeLen > MAX_CAT_5)           // if len > 39 filter the last 39 ones
+//    {
+//        QUALITY_SCORES   = qsRange.substr(qsRangeLen - MAX_CAT_5);
+//        QUALITY_SCORES_X = QUALITY_SCORES;
+//        // ASCII char after last char in QUALITY_SCORES
+//        QUALITY_SCORES_X +=(char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
+//
+//        QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES_X, KEYLEN_CAT_5);
+//        packQS = &packLarge_3to2;
+//    }
+//    else
+//    {
+//        QUALITY_SCORES = qsRange;
+//
+//        if (qsRangeLen > MAX_CAT_4)             // cat 5
+//        {
+//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_5);
+//            packQS = &pack_3to2;
+//        }
+//        else if (qsRangeLen > MAX_CAT_3)        // cat 4
+//        {
+//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_4);
+//            packQS = &pack_2to1;
+//        }
+//        else if (qsRangeLen == MAX_CAT_3 || qsRangeLen == MID_CAT_3
+//                 || qsRangeLen == MIN_CAT_3)   // cat 3
+//        {
+//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_3);
+//            packQS = &pack_3to1;
+//        }
+//        else if (qsRangeLen == CAT_2)           // cat 2
+//        {
+//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_2);
+//            packQS = &pack_5to1;
+//        }
+//        else if (qsRangeLen == CAT_1)           // cat 1
+//        {
+//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_1);
+//            packQS = &pack_7to1;
+//        }
+//        else    // qsRangeLen = 1
+//        {
+//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, 1);
+//            packQS = &pack_1to1;
+//        }
+//    }
+//
+    
+////    bool single = true;     // single-thread
+//    bool single = false;
+//
+//    if(single)
+//    {
+//        // watermark for encrypted file
+//        cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
+//                + std::to_string(RELEASE_CRYFA) + "\n";
+//
+//        string cipherText;
+//        string context;
+//        context += hdrRange;                       // send hdrRange to decryptor
+//        context += (char) 254;                     // to detect hdrRange in dec.
+//        context += qsRange;                        // send qsRange to decryptor
+//        context += (justPlus ? (char) 253 : '\n'); //'+ or not just +' condition
+//        while (!in.eof())    // process 4 lines by 4 lines
+//        {
+//            if (getline(in, line).good())          // header
+//                context += packHdr(line.substr(1), HEADERS, HDR_MAP)
+//                           + (char) 254;    // ignore '@'
+//
+//            if (getline(in, line).good())          // sequence
+//                context += packSeq_3to1(line) + (char) 254;
+//
+//            in.ignore(LARGE_NUMBER, '\n');         // +. ignore
+//
+//            if (getline(in, line).good())          // quality score
+//                context += packQS(line, QUALITY_SCORES, QS_MAP) + (char) 254;
+//        }
+//        context += (char) 252;  // end of file
+//        cout << context;
+//
+////    // encryption
+////    cout << encrypt(context, keyFileName, v_flag);
+//////    // dump cyphertext for read
+//////    for (const char &c : cipherText)
+//////        cout << (char) (c & 0xFF);
+////    cout << '\n';
+//    }
+//    else
+//    {
     byte nEmptyIn = 0;
     while (!in.eof())
     {
@@ -331,7 +319,7 @@ void EnDecrypto::compressFQ (const string &inFileName,
 
             if (inTh.empty())   ++nEmptyIn; // number of empty input strings
             else  arrThread[t] = thread(&EnDecrypto::pack, this,
-                                        inTh, keyFileName, packHdr, packQS,
+                                        inTh, keyFileName, //packHdr, packQS,
                                         v_flag, t);
         }   // end for t
 
@@ -340,17 +328,20 @@ void EnDecrypto::compressFQ (const string &inFileName,
 
 
     // join encrypted files
-    std::ifstream encFile[n_threads];
+    ifstream encFile[n_threads];
 //    std::vector<pos_t> chunkEndPos;
     string context;
 
     // watermark for encrypted file
     cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
                        + std::to_string(RELEASE_CRYFA) + "\n";
-
-    context += hdrRange;                       // send hdrRange to decryptor
+    
+//    context += hdrRange;                       // send hdrRange to decryptor
+//    context += (char) 254;                     // to detect hdrRange in dec.
+//    context += qsRange;                        // send qsRange to decryptor
+    context += totHdrRange;                       // send hdrRange to decryptor
     context += (char) 254;                     // to detect hdrRange in dec.
-    context += qsRange;                        // send qsRange to decryptor
+    context += totQsRange;                        // send qsRange to decryptor
     context += (justPlus ? (char) 253 : '\n'); //'+ or not just +' condition
 //    out << context ;//<< '\n';
 
@@ -383,21 +374,23 @@ void EnDecrypto::compressFQ (const string &inFileName,
     for (t = 0; t != n_threads; ++t)   encFile[t].close();
 
     cout << context;
-//
+    
 //
 //    // remove the first zeros corresponding to the first line of all files
 //    chunkEndPos.erase(chunkEndPos.begin(), chunkEndPos.begin() + n_threads);
 //
 //    cout << encrypt(context, keyFileName, v_flag);
 //    cout << '\n';
-    }
+
+
+//    }
 
 
 
     
 //    // join encrypted files
-//    std::ofstream out(ENC_FILENAME);
-//    std::ifstream encFile[n_threads];
+//    ofstream out(ENC_FILENAME);
+//    ifstream encFile[n_threads];
 //    std::vector<pos_t> chunkEndPos;
 //
 //    // watermark for encrypted file
@@ -470,212 +463,157 @@ void EnDecrypto::compressFQ (const string &inFileName,
     pack
 *******************************************************************************/
 inline void EnDecrypto::pack (const string &in, const string &keyFileName,
-                              string (*packHdr)(string, string, htable_t&),
-                              string (*packQS)(string, string, htable_t&),
+//                              string (*packHdr)(string, string, htable_t&),
+//                              string (*packQS)(string, string, htable_t&),
                               const int v_flag, const byte threadID)
 {
-////    string line;                    // each file line
-////    string hdrRange, qsRange;
-////    string inTh;    // input string which will be sent to threads
-////    byte t;
-////    htable_t HDR_MAP, QS_MAP;           // hash tables for header and quality score
-////    string   HEADERS, QUALITY_SCORES;   // max: 39 values
+    string hdrRange, qsRange;
+    htable_t HDR_MAP, QS_MAP;           // hash tables for header and quality score
+    string   HEADERS, QUALITY_SCORES;   // max: 39 values
     string context; // output string
     string inTempStr;
     string::const_iterator i = in.begin();
-////    i = in.begin();
-////
-////    // gather all headers and quality scores
-////    while (i != in.end())
-////    {
-////        // header -- ignore '@'
-////        inTempStr.clear();
-////        for (i += 1; *i != '\n'; ++i)
-////            if (hdrRange.find_first_of(*i) == string::npos)
-////                hdrRange += *i;
-////
-////        // sequence
-////        inTempStr.clear();
-////        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-////        context += packSeq_3to1(inTempStr) + (char) 254;
-////
-////        // +. ignore
-////        for (i += 1; *i != '\n'; ++i);
-////
-////        // quality score
-////        inTempStr.clear();
-////        for (i += 1; *i != '\n'; ++i)
-////            if (qsRange.find_first_of(*i) == string::npos)
-////                qsRange += *i;
-////
-////        i += 1;
-////    }
-////
-//////    // gather all headers and quality scores
-//////    while (!in.eof())
-//////    {
-//////        if (getline(in, line).good())                       // header
-//////        {
-//////            for (const char &c : line)
-//////                if (hdrRange.find_first_of(c) == string::npos)
-//////                    hdrRange += c;
-//////        }
-//////        in.ignore(LARGE_NUMBER, '\n');                      // ignore sequence
-//////        in.ignore(LARGE_NUMBER, '\n');                      // ignore +
-//////        if (getline(in, line).good())                       // quality score
-//////        {
-//////            for (const char &c : line)
-//////                if (qsRange.find_first_of(c) == string::npos)
-//////                    qsRange += c;
-//////        }
-//////    }
-//////    in.clear();     in.seekg(0, std::ios::beg);             // beginning of file
-////
-////
-////
-////
-////    // if processing based on string, '@' already ignored
-//////    hdrRange.erase(hdrRange.begin());                       //ignore '@'
-////    std::sort(hdrRange.begin(), hdrRange.end());            // sort values
-////    std::sort(qsRange.begin(),  qsRange.end());             // sort ASCII values
-////
-//////    using packHdrPointer = string (*)(string, string, htable_t);
-////    using packHdrPointer = string (*)(string, string, htable_t&);
-////    packHdrPointer packHdr;                                 // function pointer
-//////    using packQSPointer  = string (*)(string, string, htable_t);
-////    using packQSPointer  = string (*)(string, string, htable_t&);
-////    packQSPointer packQS;                                   // function pointer
-////
-////    string HEADERS_X;                                 // extended HEADERS
-////    string QUALITY_SCORES_X;                          // extended QUALITY_SCORES
-////    const size_t qsRangeLen  = qsRange.length();
-////    const size_t hdrRangeLen = hdrRange.length();
-////
-////    // header
-////    if (hdrRangeLen > MAX_CAT_5)          // if len > 39 filter the last 39 ones
-////    {
-////        HEADERS   = hdrRange.substr(hdrRangeLen - MAX_CAT_5);
-////        HEADERS_X = HEADERS;
-////        // ASCII char after last char in HEADERS
-////        HEADERS_X += (char) (HEADERS[HEADERS.size()-1] + 1);
-////
-////        HDR_MAP = buildHashTable(HDR_MAP, HEADERS_X, KEYLEN_CAT_5);
-////        packHdr = &packLarge_3to2;
-////    }
-////    else
-////    {
-////        HEADERS = hdrRange;
-////
-////        if (hdrRangeLen > MAX_CAT_4)            // cat 5
-////        {
-////            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_5);
-////            packHdr = &pack_3to2;
-////        }
-////        else if (hdrRangeLen > MAX_CAT_3)       // cat 4
-////        {
-////            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_4);
-////            packHdr = &pack_2to1;
-////        }
-////        else if (hdrRangeLen == MAX_CAT_3 || hdrRangeLen == MID_CAT_3
-////                 || hdrRangeLen == MIN_CAT_3)  // cat 3
-////        {
-////            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_3);
-////            packHdr = &pack_3to1;
-////        }
-////        else if (hdrRangeLen == CAT_2)          // cat 2
-////        {
-////            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_2);
-////            packHdr = &pack_5to1;
-////        }
-////        else if (hdrRangeLen == CAT_1)          // cat 1
-////        {
-////            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_1);
-////            packHdr = &pack_7to1;
-////        }
-////        else    // hdrRangeLen = 1
-////        {
-////            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, 1);
-////            packHdr = &pack_1to1;
-////        }
-////    }
-////
-////    // quality score
-////    if (qsRangeLen > MAX_CAT_5)           // if len > 39 filter the last 39 ones
-////    {
-////        QUALITY_SCORES   = qsRange.substr(qsRangeLen - MAX_CAT_5);
-////        QUALITY_SCORES_X = QUALITY_SCORES;
-////        // ASCII char after last char in QUALITY_SCORES
-////        QUALITY_SCORES_X +=(char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
-////
-////        QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES_X, KEYLEN_CAT_5);
-////        packQS = &packLarge_3to2;
-////    }
-////    else
-////    {
-////        QUALITY_SCORES = qsRange;
-////
-////        if (qsRangeLen > MAX_CAT_4)             // cat 5
-////        {
-////            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_5);
-////            packQS = &pack_3to2;
-////        }
-////        else if (qsRangeLen > MAX_CAT_3)        // cat 4
-////        {
-////            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_4);
-////            packQS = &pack_2to1;
-////        }
-////        else if (qsRangeLen == MAX_CAT_3 || qsRangeLen == MID_CAT_3
-////                 || qsRangeLen == MIN_CAT_3)   // cat 3
-////        {
-////            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_3);
-////            packQS = &pack_3to1;
-////        }
-////        else if (qsRangeLen == CAT_2)           // cat 2
-////        {
-////            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_2);
-////            packQS = &pack_5to1;
-////        }
-////        else if (qsRangeLen == CAT_1)           // cat 1
-////        {
-////            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_1);
-////            packQS = &pack_7to1;
-////        }
-////        else    // qsRangeLen = 1
-////        {
-////            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, 1);
-////            packQS = &pack_1to1;
-////        }
-////    }
-////
-//
-//
-//
-//    string context; // output string
-//    string::const_iterator i = in.begin();
-//    string inTempStr;
+    
+    // gather all headers and quality scores
+    while (i != in.end())
+    {
+        for (i += 1; *i != '\n'; ++i)   // header -- ignore '@'
+            if (hdrRange.find_first_of(*i) == string::npos)
+                hdrRange += *i;
+        
+        for (i += 1; *i != '\n'; ++i);  // ignore sequence
+        for (i += 1; *i != '\n'; ++i);  // ignore +
+        
+        for (i += 1; *i != '\n'; ++i)   // quality score
+            if (qsRange.find_first_of(*i) == string::npos)
+                qsRange += *i;
+        
+        i += 1;
+    }
+    
+//    mutx.lock();
+    for (const char &c : hdrRange)
+        if (totHdrRange.find_first_of(c) == string::npos)
+            totHdrRange += c;
+    
+    for (const char &c : qsRange)
+        if (totQsRange.find_first_of(c) == string::npos)
+            totQsRange += c;
+//    mutx.unlock();
+    
+//    hdrRange.erase(hdrRange.begin());                       //ignore '@'
+    std::sort(hdrRange.begin(), hdrRange.end());            // sort values
+    std::sort(qsRange.begin(),  qsRange.end());             // sort ASCII values
+
+//    using packHdrPointer = string (*)(string, string, htable_t);
+    using packHdrPointer = string (*)(string, string, htable_t&);
+    packHdrPointer packHdr;                                 // function pointer
+//    using packQSPointer  = string (*)(string, string, htable_t);
+    using packQSPointer  = string (*)(string, string, htable_t&);
+    packQSPointer packQS;                                   // function pointer
+    
+    string HEADERS_X;                                 // extended HEADERS
+    string QUALITY_SCORES_X;                          // extended QUALITY_SCORES
+    const size_t hdrRangeLen = hdrRange.length();
+    const size_t qsRangeLen  = qsRange.length();
+    
+    // header
+    if (hdrRangeLen > MAX_CAT_5)          // if len > 39 filter the last 39 ones
+    {
+        HEADERS   = hdrRange.substr(hdrRangeLen - MAX_CAT_5);
+        HEADERS_X = HEADERS;
+        // ASCII char after last char in HEADERS
+        HEADERS_X += (char) (HEADERS[HEADERS.size()-1] + 1);
+        
+        HDR_MAP = buildHashTable(HDR_MAP, HEADERS_X, KEYLEN_CAT_5);
+        packHdr = &packLarge_3to2;
+    }
+    else
+    {
+        HEADERS = hdrRange;
+        
+        if (hdrRangeLen > MAX_CAT_4)            // cat 5
+        {
+            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_5);
+            packHdr = &pack_3to2;
+        }
+        else if (hdrRangeLen > MAX_CAT_3)       // cat 4
+        {
+            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_4);
+            packHdr = &pack_2to1;
+        }
+        else if (hdrRangeLen == MAX_CAT_3 || hdrRangeLen == MID_CAT_3
+                 || hdrRangeLen == MIN_CAT_3)  // cat 3
+        {
+            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_3);
+            packHdr = &pack_3to1;
+        }
+        else if (hdrRangeLen == CAT_2)          // cat 2
+        {
+            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_2);
+            packHdr = &pack_5to1;
+        }
+        else if (hdrRangeLen == CAT_1)          // cat 1
+        {
+            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_1);
+            packHdr = &pack_7to1;
+        }
+        else    // hdrRangeLen = 1
+        {
+            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, 1);
+            packHdr = &pack_1to1;
+        }
+    }
+    
+    // quality score
+    if (qsRangeLen > MAX_CAT_5)           // if len > 39 filter the last 39 ones
+    {
+        QUALITY_SCORES   = qsRange.substr(qsRangeLen - MAX_CAT_5);
+        QUALITY_SCORES_X = QUALITY_SCORES;
+        // ASCII char after last char in QUALITY_SCORES
+        QUALITY_SCORES_X +=(char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
+        
+        QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES_X, KEYLEN_CAT_5);
+        packQS = &packLarge_3to2;
+    }
+    else
+    {
+        QUALITY_SCORES = qsRange;
+        
+        if (qsRangeLen > MAX_CAT_4)             // cat 5
+        {
+            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_5);
+            packQS = &pack_3to2;
+        }
+        else if (qsRangeLen > MAX_CAT_3)        // cat 4
+        {
+            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_4);
+            packQS = &pack_2to1;
+        }
+        else if (qsRangeLen == MAX_CAT_3 || qsRangeLen == MID_CAT_3
+                 || qsRangeLen == MIN_CAT_3)   // cat 3
+        {
+            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_3);
+            packQS = &pack_3to1;
+        }
+        else if (qsRangeLen == CAT_2)           // cat 2
+        {
+            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_2);
+            packQS = &pack_5to1;
+        }
+        else if (qsRangeLen == CAT_1)           // cat 1
+        {
+            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_1);
+            packQS = &pack_7to1;
+        }
+        else    // qsRangeLen = 1
+        {
+            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, 1);
+            packQS = &pack_1to1;
+        }
+    }
+    
     i = in.begin();
-//    while (i != in.end())
-//    {
-//        // header -- ignore '@'
-//        inTempStr.clear();
-//        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-//        context += inTempStr + (char) 254;
-//
-//        // sequence
-//        inTempStr.clear();
-//        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-//        context += inTempStr + (char) 254;
-//
-//        // +. ignore
-//        for (i += 1; *i != '\n'; ++i);
-//
-//        // quality score
-//        inTempStr.clear();
-//        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-//        context += inTempStr + (char) 254;
-//
-//        i += 1;
-//    }
     while (i != in.end())
     {
         // header -- ignore '@'
@@ -699,7 +637,7 @@ inline void EnDecrypto::pack (const string &in, const string &keyFileName,
         i += 1;
     }
     
-    std::ofstream encfile;
+    ofstream encfile;
     encfile.open(ENC_FILENAME+std::to_string(threadID), std::ios_base::app);
     
     // write header containing threadID for each

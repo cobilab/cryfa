@@ -21,8 +21,8 @@ public:
     void compressFA (const string&, const string&, const int);  // compress FA
     void compressFQ (const string&, const string&, const int, const byte);  // compress FQ
     inline void pack (const string&, const string&,
-                      string (*)(string, string, htable_t&),
-                      string (*)(string, string, htable_t&),
+//                      string (*)(string, string, htable_t&),
+//                      string (*)(string, string, htable_t&),
                       const int, const byte); // pack
     inline string encrypt (const string&, const string&, const int);  // encrypt
     inline void writeEncoded (string, const byte&);  // write encoded context
