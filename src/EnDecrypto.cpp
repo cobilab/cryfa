@@ -129,6 +129,7 @@ void EnDecrypto::compressFQ (const string &inFileName,
     if (*(lFSecond+2) != '\n')  justPlus = false;   // check symbol after +
     */
 
+
 //    // gather all headers and quality scores
 //    while (!in.eof())
 //    {
@@ -305,28 +306,41 @@ void EnDecrypto::compressFQ (const string &inFileName,
 //    {
     //todo. be jaye khoondane inja, pack() ba index i ke migire,
     //todo. az file asli mikhoone. ta un index ro ignore() mikone
-    byte nEmptyIn = 0;
-    while (!in.eof())
+//    byte nEmptyIn = 0;
+    ULL startLine;
+    ULL i=0;
+//    while (!in.eof())
+    while (!nEmptyIn)
     {
         // save LINE_BUFFER lines to a string & pass to "pack"
         for (t = 0; t != n_threads; ++t)
         {
-            inTh.clear();
-            for (UI i = 0; i != LINE_BUFFER && !in.eof()
-                           && getline(in, line).good(); ++i)
-                inTh += line + "\n";
-
-            if (inTh.empty())   ++nEmptyIn; // number of empty input strings
-            else  arrThread[t] = thread(&EnDecrypto::pack, this,
-                                        inTh, keyFileName,
+            startLine = (i*n_threads + t) * LINE_BUFFER;
+//            inTh.clear();
+//            for (UI i = 0; i != LINE_BUFFER && !in.eof()
+//                           && getline(in, line).good(); ++i)
+//                inTh += line + "\n";
+//
+//            if (inTh.empty())   ++nEmptyIn; // number of empty input strings
+//            else
+                arrThread[t] = thread(&EnDecrypto::pack, this,
+                                        startLine,
+                                        inFileName,
+//                                        inTh,
+                                        keyFileName,
 //                                        packHdr, packQS,
                                         v_flag, t);
         }   // end for t
 
         for (t = 0; t != n_threads-nEmptyIn; ++t)   arrThread[t].join();
+    
+        cerr<<"hi";
+        ++i;
     }   // end while
 
-
+    
+    
+    
     // join encrypted files
     ifstream encFile[n_threads];
 //    std::vector<pos_t> chunkEndPos;
@@ -383,9 +397,7 @@ void EnDecrypto::compressFQ (const string &inFileName,
 //    cout << '\n';
 
 
-//    }
-
-
+//    } // end not single thread
 
     
 //    // join encrypted files
@@ -462,7 +474,9 @@ void EnDecrypto::compressFQ (const string &inFileName,
 /*******************************************************************************
     pack
 *******************************************************************************/
-inline void EnDecrypto::pack (const string &in, const string &keyFileName,
+inline void EnDecrypto::pack (ULL startLine,string fileName,
+//        const string &in,
+                              const string &keyFileName,
 //                              string (*packHdr)(string, string, htable_t&),
 //                              string (*packQS)(string, string, htable_t&),
                               const int v_flag, const byte threadID)
@@ -472,183 +486,273 @@ inline void EnDecrypto::pack (const string &in, const string &keyFileName,
     string HEADERS, QUALITY_SCORES;   // max: 39 values
     string context; // output string
     string inTempStr;
-    string::const_iterator i = in.begin();
-    
-    // gather all headers and quality scores
-    while (i != in.end())
-    {
-        for (i += 1; *i != '\n'; ++i)   // header -- ignore '@'
-            if (hdrRange.find_first_of(*i) == string::npos)
-                hdrRange += *i;
+//    string::const_iterator i = in.begin();
 
-        for (i += 1; *i != '\n'; ++i);  // ignore sequence
-        for (i += 1; *i != '\n'; ++i);  // ignore +
+    ifstream in(fileName);
+    string line;
 
-        for (i += 1; *i != '\n'; ++i)   // quality score
-            if (qsRange.find_first_of(*i) == string::npos)
-                qsRange += *i;
-
-        i += 1;
-    }
-
-//    mutx.lock();
-    for (const char &c : hdrRange)
-        if (totHdrRange.find_first_of(c) == string::npos)
-            totHdrRange += c;
-
-    for (const char &c : qsRange)
-        if (totQsRange.find_first_of(c) == string::npos)
-            totQsRange += c;
-//    mutx.unlock();
-
+    for (ULL l = 0; l != startLine; ++l)    in.ignore(LARGE_NUMBER, '\n');
+    ++nEmptyIn;
+//    // gather all headers and quality scores
+//    for (ULL l = 0; l != LINE_BUFFER; ++l)
+//    {
+//        if (getline(in, line).good())                       // header
+//        {
+//            for (const char &c : line)
+//                if (hdrRange.find_first_of(c) == string::npos)
+//                    hdrRange += c;
+//        }
+//        else
+//        {
+//            mutx.lock();
+//            ++nEmptyIn;
+//            mutx.unlock();
+//        }
+//
+//        if (getline(in, line).good());
+//        else
+//        {
+//            mutx.lock();
+//            ++nEmptyIn;
+//            mutx.unlock();
+//        }
+//        if (getline(in, line).good());
+//        else
+//        {
+//            mutx.lock();
+//            ++nEmptyIn;
+//            mutx.unlock();
+//        }
+////        in.ignore(LARGE_NUMBER, '\n');                      // ignore sequence
+////        in.ignore(LARGE_NUMBER, '\n');                      // ignore +
+//        if (getline(in, line).good())                       // quality score
+//        {
+//            for (const char &c : line)
+//                if (qsRange.find_first_of(c) == string::npos)
+//                    qsRange += c;
+//        }
+//        else
+//        {
+//            mutx.lock();
+//            ++nEmptyIn;
+//            mutx.unlock();
+//        }
+//
+////        if(line.empty())
+////        {
+////            mutx.lock();
+////            ++nEmptyIn;
+////            mutx.unlock();
+////        }
+//    }
+//    in.clear();     in.seekg(0, std::ios::beg);             // beginning of file
 //    hdrRange.erase(hdrRange.begin());                       //ignore '@'
-    std::sort(hdrRange.begin(), hdrRange.end());            // sort values
-    std::sort(qsRange.begin(),  qsRange.end());             // sort ASCII values
 
-//    using packHdrPointer = string (*)(string, string, htable_t);
-    using packHdrPointer = string (*)(string, string, htable_t&);
-    packHdrPointer packHdr;                                 // function pointer
-//    using packQSPointer  = string (*)(string, string, htable_t);
-    using packQSPointer  = string (*)(string, string, htable_t&);
-    packQSPointer packQS;                                   // function pointer
-
-    string HEADERS_X;                                 // extended HEADERS
-    string QUALITY_SCORES_X;                          // extended QUALITY_SCORES
-    const size_t hdrRangeLen = hdrRange.length();
-    const size_t qsRangeLen  = qsRange.length();
-
-    // header
-    if (hdrRangeLen > MAX_CAT_5)          // if len > 39 filter the last 39 ones
-    {
-        HEADERS   = hdrRange.substr(hdrRangeLen - MAX_CAT_5);
-        HEADERS_X = HEADERS;
-        // ASCII char after last char in HEADERS
-        HEADERS_X += (char) (HEADERS[HEADERS.size()-1] + 1);
-
-        HDR_MAP = buildHashTable(HDR_MAP, HEADERS_X, KEYLEN_CAT_5);
-        packHdr = &packLarge_3to2;
-    }
-    else
-    {
-        HEADERS = hdrRange;
-
-        if (hdrRangeLen > MAX_CAT_4)            // cat 5
-        {
-            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_5);
-            packHdr = &pack_3to2;
-        }
-        else if (hdrRangeLen > MAX_CAT_3)       // cat 4
-        {
-            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_4);
-            packHdr = &pack_2to1;
-        }
-        else if (hdrRangeLen == MAX_CAT_3 || hdrRangeLen == MID_CAT_3
-                 || hdrRangeLen == MIN_CAT_3)  // cat 3
-        {
-            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_3);
-            packHdr = &pack_3to1;
-        }
-        else if (hdrRangeLen == CAT_2)          // cat 2
-        {
-            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_2);
-            packHdr = &pack_5to1;
-        }
-        else if (hdrRangeLen == CAT_1)          // cat 1
-        {
-            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_1);
-            packHdr = &pack_7to1;
-        }
-        else    // hdrRangeLen = 1
-        {
-            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, 1);
-            packHdr = &pack_1to1;
-        }
-    }
-
-    // quality score
-    if (qsRangeLen > MAX_CAT_5)           // if len > 39 filter the last 39 ones
-    {
-        QUALITY_SCORES   = qsRange.substr(qsRangeLen - MAX_CAT_5);
-        QUALITY_SCORES_X = QUALITY_SCORES;
-        // ASCII char after last char in QUALITY_SCORES
-        QUALITY_SCORES_X +=(char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
-
-        QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES_X, KEYLEN_CAT_5);
-        packQS = &packLarge_3to2;
-    }
-    else
-    {
-        QUALITY_SCORES = qsRange;
-
-        if (qsRangeLen > MAX_CAT_4)             // cat 5
-        {
-            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_5);
-            packQS = &pack_3to2;
-        }
-        else if (qsRangeLen > MAX_CAT_3)        // cat 4
-        {
-            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_4);
-            packQS = &pack_2to1;
-        }
-        else if (qsRangeLen == MAX_CAT_3 || qsRangeLen == MID_CAT_3
-                 || qsRangeLen == MIN_CAT_3)   // cat 3
-        {
-            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_3);
-            packQS = &pack_3to1;
-        }
-        else if (qsRangeLen == CAT_2)           // cat 2
-        {
-            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_2);
-            packQS = &pack_5to1;
-        }
-        else if (qsRangeLen == CAT_1)           // cat 1
-        {
-            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_1);
-            packQS = &pack_7to1;
-        }
-        else    // qsRangeLen = 1
-        {
-            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, 1);
-            packQS = &pack_1to1;
-        }
-    }
+//
+//    cerr<<nEmptyIn;
+//
+//
+////    // gather all headers and quality scores
+////    while (i != in.end())
+////    {
+////        for (i += 1; *i != '\n'; ++i)   // header -- ignore '@'
+////            if (hdrRange.find_first_of(*i) == string::npos)
+////                hdrRange += *i;
+////
+////        for (i += 1; *i != '\n'; ++i);  // ignore sequence
+////        for (i += 1; *i != '\n'; ++i);  // ignore +
+////
+////        for (i += 1; *i != '\n'; ++i)   // quality score
+////            if (qsRange.find_first_of(*i) == string::npos)
+////                qsRange += *i;
+////
+////        i += 1;
+////    }
+//
+////    mutx.lock();
+//    for (const char &c : hdrRange)
+//        if (totHdrRange.find_first_of(c) == string::npos)
+//            totHdrRange += c;
+//
+//    for (const char &c : qsRange)
+//        if (totQsRange.find_first_of(c) == string::npos)
+//            totQsRange += c;
+////    mutx.unlock();
+//
+////    hdrRange.erase(hdrRange.begin());                       //ignore '@'
+//    std::sort(hdrRange.begin(), hdrRange.end());            // sort values
+//    std::sort(qsRange.begin(),  qsRange.end());             // sort ASCII values
+//
+////    using packHdrPointer = string (*)(string, string, htable_t);
+//    using packHdrPointer = string (*)(string, string, htable_t&);
+//    packHdrPointer packHdr;                                 // function pointer
+////    using packQSPointer  = string (*)(string, string, htable_t);
+//    using packQSPointer  = string (*)(string, string, htable_t&);
+//    packQSPointer packQS;                                   // function pointer
+//
+//    string HEADERS_X;                                 // extended HEADERS
+//    string QUALITY_SCORES_X;                          // extended QUALITY_SCORES
+//    const size_t hdrRangeLen = hdrRange.length();
+//    const size_t qsRangeLen  = qsRange.length();
+//
+//    // header
+//    if (hdrRangeLen > MAX_CAT_5)          // if len > 39 filter the last 39 ones
+//    {
+//        HEADERS   = hdrRange.substr(hdrRangeLen - MAX_CAT_5);
+//        HEADERS_X = HEADERS;
+//        // ASCII char after last char in HEADERS
+//        HEADERS_X += (char) (HEADERS[HEADERS.size()-1] + 1);
+//
+//        HDR_MAP = buildHashTable(HDR_MAP, HEADERS_X, KEYLEN_CAT_5);
+//        packHdr = &packLarge_3to2;
+//    }
+//    else
+//    {
+//        HEADERS = hdrRange;
+//
+//        if (hdrRangeLen > MAX_CAT_4)            // cat 5
+//        {
+//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_5);
+//            packHdr = &pack_3to2;
+//        }
+//        else if (hdrRangeLen > MAX_CAT_3)       // cat 4
+//        {
+//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_4);
+//            packHdr = &pack_2to1;
+//        }
+//        else if (hdrRangeLen == MAX_CAT_3 || hdrRangeLen == MID_CAT_3
+//                 || hdrRangeLen == MIN_CAT_3)  // cat 3
+//        {
+//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_3);
+//            packHdr = &pack_3to1;
+//        }
+//        else if (hdrRangeLen == CAT_2)          // cat 2
+//        {
+//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_2);
+//            packHdr = &pack_5to1;
+//        }
+//        else if (hdrRangeLen == CAT_1)          // cat 1
+//        {
+//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_1);
+//            packHdr = &pack_7to1;
+//        }
+//        else    // hdrRangeLen = 1
+//        {
+//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, 1);
+//            packHdr = &pack_1to1;
+//        }
+//    }
+//
+//    // quality score
+//    if (qsRangeLen > MAX_CAT_5)           // if len > 39 filter the last 39 ones
+//    {
+//        QUALITY_SCORES   = qsRange.substr(qsRangeLen - MAX_CAT_5);
+//        QUALITY_SCORES_X = QUALITY_SCORES;
+//        // ASCII char after last char in QUALITY_SCORES
+//        QUALITY_SCORES_X +=(char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
+//
+//        QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES_X, KEYLEN_CAT_5);
+//        packQS = &packLarge_3to2;
+//    }
+//    else
+//    {
+//        QUALITY_SCORES = qsRange;
+//
+//        if (qsRangeLen > MAX_CAT_4)             // cat 5
+//        {
+//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_5);
+//            packQS = &pack_3to2;
+//        }
+//        else if (qsRangeLen > MAX_CAT_3)        // cat 4
+//        {
+//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_4);
+//            packQS = &pack_2to1;
+//        }
+//        else if (qsRangeLen == MAX_CAT_3 || qsRangeLen == MID_CAT_3
+//                 || qsRangeLen == MIN_CAT_3)   // cat 3
+//        {
+//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_3);
+//            packQS = &pack_3to1;
+//        }
+//        else if (qsRangeLen == CAT_2)           // cat 2
+//        {
+//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_2);
+//            packQS = &pack_5to1;
+//        }
+//        else if (qsRangeLen == CAT_1)           // cat 1
+//        {
+//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_1);
+//            packQS = &pack_7to1;
+//        }
+//        else    // qsRangeLen = 1
+//        {
+//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, 1);
+//            packQS = &pack_1to1;
+//        }
+//    }
+//
+//
+//
+////    while (!in.eof())    // process 4 lines by 4 lines
+//    for (ULL l = 0; l != LINE_BUFFER; ++l)
+//    {
+//        if (getline(in, line).good())          // header
+//            context += packHdr(line.substr(1), HEADERS, HDR_MAP)
+//                       + (char) 254;    // ignore '@'
+//
+//        if (getline(in, line).good())          // sequence
+//            context += packSeq_3to1(line) + (char) 254;
+//
+//        in.ignore(LARGE_NUMBER, '\n');         // +. ignore
+//
+//        if (getline(in, line).good())          // quality score
+//            context += packQS(line, QUALITY_SCORES, QS_MAP) + (char) 254;
+//    }
+//
+//
+//
+////    i = in.begin();
+////    while (i != in.end())
+////    {
+////        // header -- ignore '@'
+////        inTempStr.clear();
+////        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
+////        context += packHdr(inTempStr, HEADERS, HDR_MAP) + (char) 254;
+////
+////        // sequence
+////        inTempStr.clear();
+////        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
+////        context += packSeq_3to1(inTempStr) + (char) 254;
+////
+////        // +. ignore
+////        for (i += 1; *i != '\n'; ++i);
+////
+////        // quality score
+////        inTempStr.clear();
+////        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
+////        context += packQS(inTempStr, QUALITY_SCORES, QS_MAP) + (char) 254;
+////
+////        i += 1;
+////    }
+//
+//    ofstream encfile;
+//    encfile.open(ENC_FILENAME+std::to_string(threadID), std::ios_base::app);
+//
+//    // write header containing threadID for each
+//    encfile << THR_ID_HDR + std::to_string(threadID) << '\n';
+//    encfile << context << '\n';
+//
+//    encfile.close();
+//
+//
+////    // encrypt
+////    string cipherText = encrypt(context, keyFileName, v_flag);
     
-    i = in.begin();
-    while (i != in.end())
-    {
-        // header -- ignore '@'
-        inTempStr.clear();
-        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-        context += packHdr(inTempStr, HEADERS, HDR_MAP) + (char) 254;
-        
-        // sequence
-        inTempStr.clear();
-        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-        context += packSeq_3to1(inTempStr) + (char) 254;
-
-        // +. ignore
-        for (i += 1; *i != '\n'; ++i);
-
-        // quality score
-        inTempStr.clear();
-        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-        context += packQS(inTempStr, QUALITY_SCORES, QS_MAP) + (char) 254;
-        
-        i += 1;
-    }
     
-    ofstream encfile;
-    encfile.open(ENC_FILENAME+std::to_string(threadID), std::ios_base::app);
     
-    // write header containing threadID for each
-    encfile << THR_ID_HDR + std::to_string(threadID) << '\n';
-    encfile << context << '\n';
     
-    encfile.close();
-
     
-//    // encrypt
-//    string cipherText = encrypt(context, keyFileName, v_flag);
+    in.close();
 }
 
 /*******************************************************************************
