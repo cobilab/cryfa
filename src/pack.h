@@ -23,7 +23,9 @@ using std::make_pair;
 //string   HEADERS, QUALITY_SCORES;   // max: 39 values
 
 string totHdrRange, totQsRange;     // if hash tables are built in pack function
-byte nEmptyIn = 0;
+byte nEmptyIn;
+//bool finished;
+
 
 
 /*******************************************************************************
