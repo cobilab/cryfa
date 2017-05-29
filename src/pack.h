@@ -638,8 +638,10 @@ inline string unpackSeqFQ_3to1 (string::iterator &i)
 /*******************************************************************************
     unpack by reading 2 byte by 2 byte, when # > 39
 *******************************************************************************/
+//inline string unpackLarge_read2B (string::iterator &i, const char XChar,
+//                                  string* unpack)
 inline string unpackLarge_read2B (string::iterator &i, const char XChar,
-                                  string* unpack)
+                                  string* &unpack)
 {
     byte MSB, LSB;
     US doubleB; // double byte
@@ -688,7 +690,8 @@ inline string unpackLarge_read2B (string::iterator &i, const char XChar,
 /*******************************************************************************
     unpack by reading 2 byte by 2 byte
 *******************************************************************************/
-inline string unpack_read2B (string::iterator &i, string* unpack)
+//inline string unpack_read2B (string::iterator &i, string* unpack)
+inline string unpack_read2B (string::iterator &i, string* &unpack)
 {
     byte MSB, LSB;
     US doubleB; // double byte
@@ -702,7 +705,7 @@ inline string unpack_read2B (string::iterator &i, string* unpack)
         MSB     = *i;
         LSB     = *(i+1);
         doubleB = MSB<<8 | LSB;    // join two bytes
-
+        
         out += unpack[doubleB];
     }
 
@@ -712,7 +715,8 @@ inline string unpack_read2B (string::iterator &i, string* unpack)
 /*******************************************************************************
     unpack by reading 1 byte by 1 byte
 *******************************************************************************/
-inline string unpack_read1B (string::iterator &i, string* unpack)
+//inline string unpack_read1B (string::iterator &i, string* unpack)
+inline string unpack_read1B (string::iterator &i, string* &unpack)
 {
     string out;
 
