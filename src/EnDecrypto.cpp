@@ -30,8 +30,6 @@ using CryptoPP::StreamTransformationFilter;
 std::mutex mutx;
 
 htable_t HDR_MAP, QS_MAP;          // hash tables for header and quality score
-//string   HEADERS, QUALITY_SCORES;   // max: 39 values
-string totHdrRange, totQsRange;     // if hash tables are built in pack function
 byte nEmptyIn;
 //bool finished;
 
@@ -111,23 +109,18 @@ void EnDecrypto::compressFA ()
 *******************************************************************************/
 void EnDecrypto::compressFQ ()
 {
-    ifstream in(inFileName);   // main input file
-    string line;                    // each file line
-    string inTh;    // input string which will be sent to threads
+    ifstream in(inFileName);
+    string line;
     thread arrThread[n_threads];
     byte t;
+    string hdrRange, qsRange;
     
-//    htable_t HDR_MAP, QS_MAP;          // hash tables for header and quality score
-//    string   HEADERS, QUALITY_SCORES;   // max: 39 values
-//    string hdrRange, qsRange;
-////    string   line, seq, context;   // FASTQ: context = header + seq + plus + qs
-
     // check if the third line contains only +
     bool justPlus = true;
-    in.ignore(LARGE_NUMBER, '\n');                  // ignore header
-    in.ignore(LARGE_NUMBER, '\n');                  // ignore seq
+    in.ignore(LARGE_NUMBER, '\n');          // ignore header
+    in.ignore(LARGE_NUMBER, '\n');          // ignore seq
     if(getline(in, line).good() && line.length() > 1)   justPlus = false;
-    in.clear();  in.seekg(0, in.beg);       // beginning of file
+    in.clear();    in.seekg(0, in.beg);     // beginning of file
     
     /*
     // check if the third line contains only +
@@ -137,97 +130,83 @@ void EnDecrypto::compressFQ ()
     if (*(lFSecond+2) != '\n')  justPlus = false;   // check symbol after +
     */
 
-
     // gather all headers and quality scores
     while (!in.eof())
     {
-        if (getline(in, line).good())                       // header
+        if (getline(in, line).good())       // header
         {
             for (const char &c : line)
-                if (totHdrRange.find_first_of(c) == string::npos)
-                    totHdrRange += c;
+                if (hdrRange.find_first_of(c) == string::npos)
+                    hdrRange += c;
         }
-        in.ignore(LARGE_NUMBER, '\n');                      // ignore sequence
-        in.ignore(LARGE_NUMBER, '\n');                      // ignore +
-        if (getline(in, line).good())                       // quality score
+        in.ignore(LARGE_NUMBER, '\n');      // ignore sequence
+        in.ignore(LARGE_NUMBER, '\n');      // ignore +
+        if (getline(in, line).good())       // quality score
         {
             for (const char &c : line)
-                if (totQsRange.find_first_of(c) == string::npos)
-                    totQsRange += c;
+                if (qsRange.find_first_of(c) == string::npos)
+                    qsRange += c;
         }
     }
-//    in.clear();     in.seekg(0, std::ios::beg);             // beginning of file
     in.close();
     
-    totHdrRange.erase(totHdrRange.begin());                       //ignore '@'
-    std::sort(totHdrRange.begin(), totHdrRange.end());            // sort values
-    std::sort(totQsRange.begin(),  totQsRange.end());             // sort ASCII values
+    hdrRange.erase(hdrRange.begin());                 //ignore '@'
+    std::sort(hdrRange.begin(), hdrRange.end());      // sort values
+    std::sort(qsRange.begin(),  qsRange.end());       // sort ASCII values
 
-//    using packHdrPointer = string (*)(string, string, htable_t);
     using packHdrPointer = string (*)(const string&, const htable_t&);
-//    using packHdrPointer = string (*)(const string&, const string&, const htable_t&);
-    packHdrPointer packHdr;                                 // function pointer
-//    using packQSPointer  = string (*)(string, string, htable_t);
+    packHdrPointer packHdr;                           // function pointer
     using packQSPointer  = string (*)(const string&, const htable_t&);
-//    using packQSPointer  = string (*)(const string&, const string&, const htable_t&);
-    packQSPointer packQS;                                   // function pointer
+    packQSPointer packQS;                             // function pointer
 
     string HEADERS_X;                                 // extended HEADERS
     string QUALITY_SCORES_X;                          // extended QUALITY_SCORES
-    const size_t hdrRangeLen = totHdrRange.length();
-    const size_t qsRangeLen  = totQsRange.length();
+    const size_t hdrRangeLen = hdrRange.length();
+    const size_t qsRangeLen  = qsRange.length();
 
     // header
     if (hdrRangeLen > MAX_CAT_5)          // if len > 39 filter the last 39 ones
     {
-        HEADERS   = totHdrRange.substr(hdrRangeLen - MAX_CAT_5);
+        HEADERS   = hdrRange.substr(hdrRangeLen - MAX_CAT_5);
         HEADERS_X = HEADERS;
         // ASCII char after last char in HEADERS
         HEADERS_X += (char) (HEADERS[HEADERS.size()-1] + 1);
     
-//        HDR_MAP = buildHashTable(HDR_MAP, HEADERS_X, KEYLEN_CAT_5);
         HDR_MAP = buildHashTable(HEADERS_X, KEYLEN_CAT_5);
         packHdr = &packLargeHdr_3to2;
-//        packHdr = &packLarge_3to2;
     }
     else
     {
-        HEADERS = totHdrRange;
+        HEADERS = hdrRange;
 
         if (hdrRangeLen > MAX_CAT_4)            // cat 5
         {
-//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_5);
             HDR_MAP = buildHashTable(HEADERS, KEYLEN_CAT_5);
             packHdr = &pack_3to2;
         }
         else if (hdrRangeLen > MAX_CAT_3)       // cat 4
         {
-//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_4);
             HDR_MAP = buildHashTable(HEADERS, KEYLEN_CAT_4);
             packHdr = &pack_2to1;
         }
         else if (hdrRangeLen == MAX_CAT_3 || hdrRangeLen == MID_CAT_3
                  || hdrRangeLen == MIN_CAT_3)  // cat 3
         {
-//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_3);
             HDR_MAP = buildHashTable(HEADERS, KEYLEN_CAT_3);
             packHdr = &pack_3to1;
         }
         else if (hdrRangeLen == CAT_2)          // cat 2
         {
-//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_2);
             HDR_MAP = buildHashTable(HEADERS, KEYLEN_CAT_2);
             packHdr = &pack_5to1;
         }
         else if (hdrRangeLen == CAT_1)          // cat 1
         {
-//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_1);
             HDR_MAP = buildHashTable(HEADERS, KEYLEN_CAT_1);
             packHdr = &pack_7to1;
         }
         else    // hdrRangeLen = 1
         {
-//            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, 1);
             HDR_MAP = buildHashTable(HEADERS, 1);
             packHdr = &pack_1to1;
         }
@@ -236,147 +215,74 @@ void EnDecrypto::compressFQ ()
     // quality score
     if (qsRangeLen > MAX_CAT_5)           // if len > 39 filter the last 39 ones
     {
-        QUALITY_SCORES   = totQsRange.substr(qsRangeLen - MAX_CAT_5);
+        QUALITY_SCORES   = qsRange.substr(qsRangeLen - MAX_CAT_5);
         QUALITY_SCORES_X = QUALITY_SCORES;
         // ASCII char after last char in QUALITY_SCORES
         QUALITY_SCORES_X +=(char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
     
-//        QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES_X, KEYLEN_CAT_5);
         QS_MAP = buildHashTable(QUALITY_SCORES_X, KEYLEN_CAT_5);
         packQS = &packLargeQs_3to2;
-//        packQS = &packLarge_3to2;
     }
     else
     {
-        QUALITY_SCORES = totQsRange;
+        QUALITY_SCORES = qsRange;
 
         if (qsRangeLen > MAX_CAT_4)             // cat 5
         {
-//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_5);
             QS_MAP = buildHashTable(QUALITY_SCORES, KEYLEN_CAT_5);
             packQS = &pack_3to2;
         }
         else if (qsRangeLen > MAX_CAT_3)        // cat 4
         {
-//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_4);
             QS_MAP = buildHashTable(QUALITY_SCORES, KEYLEN_CAT_4);
             packQS = &pack_2to1;
         }
         else if (qsRangeLen == MAX_CAT_3 || qsRangeLen == MID_CAT_3
                  || qsRangeLen == MIN_CAT_3)   // cat 3
         {
-//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_3);
             QS_MAP = buildHashTable(QUALITY_SCORES, KEYLEN_CAT_3);
             packQS = &pack_3to1;
         }
         else if (qsRangeLen == CAT_2)           // cat 2
         {
-//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_2);
             QS_MAP = buildHashTable(QUALITY_SCORES, KEYLEN_CAT_2);
             packQS = &pack_5to1;
         }
         else if (qsRangeLen == CAT_1)           // cat 1
         {
-//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_1);
             QS_MAP = buildHashTable(QUALITY_SCORES, KEYLEN_CAT_1);
             packQS = &pack_7to1;
         }
         else    // qsRangeLen = 1
         {
-//            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, 1);
             QS_MAP = buildHashTable(QUALITY_SCORES, 1);
             packQS = &pack_1to1;
         }
     }
     
-    
-//    for (htable_t::iterator i = HDR_MAP.begin(); i != HDR_MAP.end(); ++i)
-//        cerr << i->first << "\t" << i->second << '\n';
-
-
-
-
-////    bool single = true;     // single-thread
-//    bool single = false;
-//
-//    if(single)
-//    {
-//        // watermark for encrypted file
-//        cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
-//                + std::to_string(RELEASE_CRYFA) + "\n";
-//
-//        string cipherText;
-//        string context;
-//        context += hdrRange;                       // send hdrRange to decryptor
-//        context += (char) 254;                     // to detect hdrRange in dec.
-//        context += qsRange;                        // send qsRange to decryptor
-//        context += (justPlus ? (char) 253 : '\n'); //'+ or not just +' condition
-//        while (!in.eof())    // process 4 lines by 4 lines
-//        {
-//            if (getline(in, line).good())          // header
-//                context += packHdr(line.substr(1), HEADERS, HDR_MAP)
-//                           + (char) 254;    // ignore '@'
-//
-//            if (getline(in, line).good())          // sequence
-//                context += packSeq_3to1(line) + (char) 254;
-//
-//            in.ignore(LARGE_NUMBER, '\n');         // +. ignore
-//
-//            if (getline(in, line).good())          // quality score
-//                context += packQS(line, QUALITY_SCORES, QS_MAP) + (char) 254;
-//        }
-//        context += (char) 252;  // end of file
-//        cout << context;
-//
-////    // encryption
-////    cout << encrypt(context);
-//////    // dump cyphertext for read
-//////    for (const char &c : cipherText)
-//////        cout << (char) (c & 0xFF);
-////    cout << '\n';
-//    }
-//    else
-    {
-
-//    byte nEmptyIn = 0;
     ull startLine;
     ull i=0;
 //    finished = false;
-//    while (!in.eof())
     while (!nEmptyIn)
-//    while (i<1)
 //    while (!finished)
     {
         nEmptyIn = 0;
 
 //        finished = true;
 
-        // save LINE_BUFFER lines to a string & pass to "pack"
         for (t = 0; t != n_threads; ++t)
         {
             startLine = (i*n_threads + t) * LINE_BUFFER;
 
-//            inTh.clear();
-//            for (rightB i = 0; i != LINE_BUFFER && !in.eof()
-//                           && getline(in, line).good(); ++i)
-//                inTh += line + "\n";
-//
-//            if (inTh.empty())   ++nEmptyIn; // number of empty input strings
-//            else
             arrThread[t] = thread(&EnDecrypto::pack, this,
                                   startLine, t, packHdr, packQS);
-        }   // end for t
-
-
-        for (t = 0; t != n_threads; ++t)
-                arrThread[t].join();
+        }
+        
+        for (t = 0; t != n_threads; ++t)    arrThread[t].join();
 
         ++i;
-    }   // end while
-
-
-
-
+    }
+    
     // join encrypted files
     ifstream encFile[n_threads];
 //    std::vector<pos_t> chunkEndPos;
@@ -386,20 +292,17 @@ void EnDecrypto::compressFQ ()
     cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
                        + std::to_string(RELEASE_CRYFA) + "\n";
 
-//    context += hdrRange;                       // send hdrRange to decryptor
-//    context += (char) 254;                     // to detect hdrRange in dec.
-//    context += qsRange;                        // send qsRange to decryptor
-    context += totHdrRange;                       // send hdrRange to decryptor
-    context += (char) 254;                     // to detect hdrRange in dec.
-    context += totQsRange;                        // send qsRange to decryptor
-    context += (justPlus ? (char) 253 : '\n'); //'+ or not just +' condition
-//    out << context ;//<< '\n';    // too aes cbc mode nemishe
+    context += hdrRange;                        // send hdrRange to decryptor
+    context += (char) 254;                         // to detect hdrRange in dec.
+    context += qsRange;                         // send qsRange to decryptor
+    context += (justPlus ? (char) 253 : '\n');     //'+ or not just +' condition
+//    out << context ;//<< '\n';    //todo. too aes cbc mode nemishe
 
     // open input files
     for (t = 0; t != n_threads; ++t)
         encFile[t].open(ENC_FILENAME + std::to_string(t));
 
-    bool prevLineNotThrID;    // if previous line was "THR=" or not
+    bool prevLineNotThrID;      // if previous line was "THR=" or not
     while (!encFile[0].eof())
     {
         for (t = 0; t != n_threads; ++t)
@@ -413,7 +316,7 @@ void EnDecrypto::compressFQ ()
                 context += line;
                 prevLineNotThrID = true;
             }
-
+            //todo. chunks
 //            chunkEndPos.push_back(out.tellp());     // chunks end position
         }
     }
@@ -421,94 +324,35 @@ void EnDecrypto::compressFQ ()
 
     // close input and output files
     for (t = 0; t != n_threads; ++t)   encFile[t].close();
-
-//    cout << context;
-
-
-
+    
+    //todo. chunks
 //    // remove the first zeros corresponding to the first line of all files
 //    chunkEndPos.erase(chunkEndPos.begin(), chunkEndPos.begin() + n_threads);
-//
+    
     cout << encrypt(context);
     cout << '\n';
-
-
-    } // end not single thread
-
     
-    
-    
-    
+    /*
+    // get size of file
+    infile.seekg(0, infile.end);
+    long size = 1000000;//infile.tellg();
+    infile.seekg(0);
 
-//    // join encrypted files
-//    ofstream out(ENC_FILENAME);
-//    ifstream encFile[n_threads];
-//    std::vector<pos_t> chunkEndPos;
-//
-//    // watermark for encrypted file
-//    cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
-//                       + std::to_string(RELEASE_CRYFA) + "\n";
-//
-//    string context;
-//    context += hdrRange;                       // send hdrRange to decryptor
-//    context += (char) 254;                     // to detect hdrRange in dec.
-//    context += qsRange;                        // send qsRange to decryptor
-//    context += (justPlus ? (char) 253 : '\n'); //'+ or not just +' condition
-//
-//    cipherText = encrypt(context);
-//    for (const char &c : cipherText)    cout << (char) (c & 0xFF);
-//    cout << '\n';
-//
-//    // open input files
-//    for (t = 0; t != n_threads; ++t)
-//        encFile[t].open(ENC_FILENAME + std::to_string(t));
-//
-//    while (!encFile[0].eof())
-//        for (t = 0; t != n_threads; ++t)
-//        {
-//            while (getline(encFile[t], line).good() &&
-//                   line.compare(THR_ID_HDR + std::to_string(t)))
-////                out << line << '\n';        // line isn't THR=...
-//            cout << line << '\n';        // line isn't THR=...
-//
-//            chunkEndPos.push_back(out.tellp());     // chunks end position
-//        }
-//
-//    cipherText = encrypt(std::to_string((char) 252));
-//    for (const char &c : cipherText)    cout << (char) (c & 0xFF);
-//    cout << '\n';
-//
-//    // close input and output files
-//    for (t = 0; t != n_threads; ++t)   encFile[t].close();
-//    out.close();
-//
-//    // remove the first zeros corresponding to the first line of all files
-//    chunkEndPos.erase(chunkEndPos.begin(), chunkEndPos.begin() + n_threads);
+    // allocate memory for file content
+    char *buffer = new char[size];
 
-//    in.close();
+    // read content of infile
+    infile.read(buffer, size);
 
-/*
-//    // get size of file
-//    infile.seekg(0, infile.end);
-//    long size = 1000000;//infile.tellg();
-//    infile.seekg(0);
-//
-//    // allocate memory for file content
-//    char *buffer = new char[size];
-//
-//    // read content of infile
-//    infile.read(buffer, size);
-//
-//    // write to outfile
-//    outfile.write(buffer, size);
-//
-//    // release dynamically-allocated memory
-//    delete[] buffer;
+    // write to outfile
+    outfile.write(buffer, size);
 
-//    outfile.close();
-//    infile.close();
-*/
+    // release dynamically-allocated memory
+    delete[] buffer;
 
+    outfile.close();
+    infile.close();
+    */
 }
 
 /*******************************************************************************
@@ -518,12 +362,8 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
                               string (*packHdr)(const string&, const htable_t&),
                               string (*packQS)(const string&, const htable_t&))
 {
-//    string hdrRange, qsRange;
-//    htable_t HDR_MAP, QS_MAP;           // hash tables for header and quality score
-//    string HEADERS, QUALITY_SCORES;   // max: 39 values
     string context; // output string
     string inTempStr;
-//    string::const_iterator i = in.begin();
     
     mutx.lock();
     ifstream in(inFileName);
@@ -534,231 +374,14 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
     for (ull l = 0; l != startLine; ++l)    in.ignore(LARGE_NUMBER, '\n');
     
     // beginning of the part of file for this thread
-//    std::ios_base::seekdir pos_beg = std::ios_base::cur;
     pos_t pos_beg = in.tellg();
     
-//    mutx.lock();
-//    cerr << (int) threadID << ';' << startLine << ' '
-////         << pos_beg
-//         << (char) in.peek() << '\n';
-//    mutx.unlock();
-    
-    //todo. mohem
     if (in.peek()==EOF) { mutx.lock();  ++nEmptyIn;  mutx.unlock();    return; }
-    
-//    if (!getline(in, line).good())
-//    {
-//        mutx.lock();
-//        ++nEmptyIn;
-////        cerr << "ID=" << (int) threadID << ' ' << '\n';
-//        mutx.unlock();
-//        return;
-//    }
-//
-//    in.clear();    in.seekg(pos_beg);  // return to beginning of line
-////    in.seekg(-line.size() - 1, std::ios_base::cur);// return to beginning of line
-
-
-
-    
-//    // gather all headers and quality scores
-//    for (ull l = 0; l != LINE_BUFFER && !in.eof(); l+=4)
-//    {
-//        if (getline(in, line).good())                       // header
-//            for (const char &c : line)
-//                if (hdrRange.find_first_of(c) == string::npos)
-//                    hdrRange += c;
-//
-//        in.ignore(LARGE_NUMBER, '\n');                      // ignore sequence
-//        in.ignore(LARGE_NUMBER, '\n');                      // ignore +
-//
-//        if (getline(in, line).good())                       // quality score
-//            for (const char &c : line)
-//                if (qsRange.find_first_of(c) == string::npos)
-//                    qsRange += c;
-//    }
-//    in.clear();     in.seekg(pos_beg);             // beginning of this part of file
-////    in.clear();     in.seekg(0, std::ios::beg);             // beginning of file
-//    hdrRange.erase(hdrRange.begin());                       //ignore '@'
-//
-////    mutx.lock();
-////    cerr << (int) threadID << '=' << hdrRange << '\n';
-//////    cerr << (int) threadID << '=' << qsRange << '\n';
-////    mutx.unlock();
-    
-    
-    /*
-    // gather all headers and quality scores
-    while (i != in.end())
-    {
-        for (i += 1; *i != '\n'; ++i)   // header -- ignore '@'
-            if (hdrRange.find_first_of(*i) == string::npos)
-                hdrRange += *i;
-
-        for (i += 1; *i != '\n'; ++i);  // ignore sequence
-        for (i += 1; *i != '\n'; ++i);  // ignore +
-
-        for (i += 1; *i != '\n'; ++i)   // quality score
-            if (qsRange.find_first_of(*i) == string::npos)
-                qsRange += *i;
-
-        i += 1;
-    }
-     */
-    
-////    mutx.lock();
-//    for (const char &c : hdrRange)
-//        if (totHdrRange.find_first_of(c) == string::npos)
-//            totHdrRange += c;
-//
-//    for (const char &c : qsRange)
-//        if (totQsRange.find_first_of(c) == string::npos)
-//            totQsRange += c;
-////    mutx.unlock();
-    
-    
-    // '@' must be included in 'totHdrRange'
-//    totHdrRange.erase(std::remove(totHdrRange.begin(), totHdrRange.end(), '@'),
-//                      totHdrRange.end());
-//    cerr << totHdrRange << '\n';
-
-////    hdrRange.erase(hdrRange.begin());                       //ignore '@'
-//    std::sort(hdrRange.begin(), hdrRange.end());            // sort values
-//    std::sort(qsRange.begin(),  qsRange.end());             // sort ASCII values
-//
-//    std::sort(totHdrRange.begin(), totHdrRange.end());  // sort values
-//    std::sort(totQsRange.begin(),  totQsRange.end());   // sort ASCII values
-//
-//
-////    using packHdrPointer = string (*)(string, string, htable_t);
-//    using packHdrPointer = string (*)(string, string, htable_t&);
-//    packHdrPointer packHdr;                                 // function pointer
-////    using packQSPointer  = string (*)(string, string, htable_t);
-//    using packQSPointer  = string (*)(string, string, htable_t&);
-//    packQSPointer packQS;                                   // function pointer
-//
-//    string HEADERS_X;                                 // extended HEADERS
-//    string QUALITY_SCORES_X;                          // extended QUALITY_SCORES
-//    const size_t hdrRangeLen = hdrRange.length();
-//    const size_t qsRangeLen  = qsRange.length();
-//
-//    // header
-//    if (hdrRangeLen > MAX_CAT_5)          // if len > 39 filter the last 39 ones
-//    {
-//        HEADERS   = hdrRange.substr(hdrRangeLen - MAX_CAT_5);
-//        HEADERS_X = HEADERS;
-//        // ASCII char after last char in HEADERS
-//        HEADERS_X += (char) (HEADERS[HEADERS.size()-1] + 1);
-//
-////        HDR_MAP = buildHashTable(HDR_MAP, HEADERS_X, KEYLEN_CAT_5);
-//        HDR_MAP = buildHashTable(HEADERS_X, KEYLEN_CAT_5);
-//        packHdr = &packLarge_3to2;
-//    }
-//    else
-//    {
-//        HEADERS = hdrRange;
-//
-//        if (hdrRangeLen > MAX_CAT_4)            // cat 5
-//        {
-////            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_5);
-//            HDR_MAP = buildHashTable(HEADERS, KEYLEN_CAT_5);
-//            packHdr = &pack_3to2;
-//        }
-//        else if (hdrRangeLen > MAX_CAT_3)       // cat 4
-//        {
-//            HDR_MAP = buildHashTable(HEADERS, KEYLEN_CAT_4);
-////            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_4);
-//            packHdr = &pack_2to1;
-//        }
-//        else if (hdrRangeLen == MAX_CAT_3 || hdrRangeLen == MID_CAT_3
-//                 || hdrRangeLen == MIN_CAT_3)  // cat 3
-//        {
-//            HDR_MAP = buildHashTable(HEADERS, KEYLEN_CAT_3);
-////            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_3);
-//            packHdr = &pack_3to1;
-//        }
-//        else if (hdrRangeLen == CAT_2)          // cat 2
-//        {
-//            HDR_MAP = buildHashTable(HEADERS, KEYLEN_CAT_2);
-////            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_2);
-//            packHdr = &pack_5to1;
-//        }
-//        else if (hdrRangeLen == CAT_1)          // cat 1
-//        {
-//            HDR_MAP = buildHashTable(HEADERS, KEYLEN_CAT_1);
-////            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, KEYLEN_CAT_1);
-//            packHdr = &pack_7to1;
-//        }
-//        else    // hdrRangeLen = 1
-//        {
-//            HDR_MAP = buildHashTable(HEADERS, 1);
-////            HDR_MAP = buildHashTable(HDR_MAP, HEADERS, 1);
-//            packHdr = &pack_1to1;
-//        }
-//    }
-//
-//    // quality score
-//    if (qsRangeLen > MAX_CAT_5)           // if len > 39 filter the last 39 ones
-//    {
-//        QUALITY_SCORES   = qsRange.substr(qsRangeLen - MAX_CAT_5);
-//        QUALITY_SCORES_X = QUALITY_SCORES;
-//        // ASCII char after last char in QUALITY_SCORES
-//        QUALITY_SCORES_X +=(char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
-//
-//        QS_MAP = buildHashTable(QUALITY_SCORES_X, KEYLEN_CAT_5);
-////        QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES_X, KEYLEN_CAT_5);
-//        packQS = &packLarge_3to2;
-//    }
-//    else
-//    {
-//        QUALITY_SCORES = qsRange;
-//
-//        if (qsRangeLen > MAX_CAT_4)             // cat 5
-//        {
-//            QS_MAP = buildHashTable(QUALITY_SCORES, KEYLEN_CAT_5);
-////            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_5);
-//            packQS = &pack_3to2;
-//        }
-//        else if (qsRangeLen > MAX_CAT_3)        // cat 4
-//        {
-//            QS_MAP = buildHashTable(QUALITY_SCORES, KEYLEN_CAT_4);
-////            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_4);
-//            packQS = &pack_2to1;
-//        }
-//        else if (qsRangeLen == MAX_CAT_3 || qsRangeLen == MID_CAT_3
-//                 || qsRangeLen == MIN_CAT_3)   // cat 3
-//        {
-//            QS_MAP = buildHashTable(QUALITY_SCORES, KEYLEN_CAT_3);
-////            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_3);
-//            packQS = &pack_3to1;
-//        }
-//        else if (qsRangeLen == CAT_2)           // cat 2
-//        {
-//            QS_MAP = buildHashTable(QUALITY_SCORES, KEYLEN_CAT_2);
-////            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_2);
-//            packQS = &pack_5to1;
-//        }
-//        else if (qsRangeLen == CAT_1)           // cat 1
-//        {
-//            QS_MAP = buildHashTable(QUALITY_SCORES, KEYLEN_CAT_1);
-////            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, KEYLEN_CAT_1);
-//            packQS = &pack_7to1;
-//        }
-//        else    // qsRangeLen = 1
-//        {
-//            QS_MAP = buildHashTable(QUALITY_SCORES, 1);
-////            QS_MAP = buildHashTable(QS_MAP, QUALITY_SCORES, 1);
-//            packQS = &pack_1to1;
-//        }
-//    }
-
-
     
     for (ull l = 0; l != LINE_BUFFER; l+=4)     // process 4 lines by 4 lines
     {
         if (getline(in, line).good())           // header -- ignore '@'
             context += packHdr(line.substr(1), HDR_MAP) + (char) 254;
-//        context += packHdr(line.substr(1), HEADERS, HDR_MAP) + (char) 254;
 
         if (getline(in, line).good())           // sequence
             context += packSeq_3to1(line) + (char) 254;
@@ -767,7 +390,6 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
 
         if (getline(in, line).good())           // quality score
             context += packQS(line, QS_MAP) + (char) 254;
-//        context += packQS(line, QUALITY_SCORES, QS_MAP) + (char) 254;
     }
     
 //    i = in.begin();
@@ -1078,96 +700,87 @@ inline void EnDecrypto::decompFQ (string decText)
     { keyLen_qs = KEYLEN_CAT_1;     unpackQS = &unpack_read1B; }
 
     else { keyLen_qs = 1;           unpackQS = &unpack_read1B; }    // = 1
-
+    
     string plusMore;
-//    if (hdrRangeLen > MAX_CAT_5 && qsRangeLen > MAX_CAT_5)
-//    {
-//        const string headers = hdrRange.substr(hdrRangeLen - MAX_CAT_5);
-//        const string quality_scores = qsRange.substr(qsRangeLen-MAX_CAT_5);
-//        // ASCII char after the last char in headers & quality_scores string
-//        const char XChar_hdr = (char) (headers[headers.size()-1] + 1);
-//        const char XChar_qs=(char)(quality_scores[quality_scores.size()-1] + 1);
-//        string headers_X = headers;                  headers_X+=XChar_hdr;
-//        string quality_scores_X = quality_scores;    quality_scores_X+=XChar_qs;
-//
-//        // tables for unpacking
-//        HDR_UNPACK = buildUnpack(headers_X,        keyLen_hdr, HDR_UNPACK);
-//        QS_UNPACK  = buildUnpack(quality_scores_X, keyLen_qs,  QS_UNPACK);
-//
-//        while (i != decText.end())
-//        {
-//            cout << '@';
-//            cout << (plusMore = unpackLarge_read2B(i, XChar_hdr, HDR_UNPACK))
-//                 << '\n';                                         ++i;    // hdr
-//            cout << unpackSeqFQ_3to1(i) << '\n';                          // seq
-//            cout << (justPlus ? "+" : "+" + plusMore) << '\n';    ++i;    // +
-//            cout << unpackLarge_read2B(i, XChar_qs, QS_UNPACK) << '\n';   // qs
-//            // end of file
-//            if (*(++i) == (char) 252)   break;
-//        }
-//    }
-//    else if (hdrRangeLen > MAX_CAT_5 && qsRangeLen <= MAX_CAT_5)
-//    {
-//        const string headers = hdrRange.substr(hdrRangeLen - MAX_CAT_5);
-//        // ASCII char after the last char in headers string
-//        const char XChar_hdr = (char) (headers[headers.size()-1] + 1);
-//        string headers_X = headers;     headers_X += XChar_hdr;
-//
-//        // tables for unpacking
-//        HDR_UNPACK = buildUnpack(headers_X, keyLen_hdr, HDR_UNPACK);
-//        QS_UNPACK  = buildUnpack(qsRange,   keyLen_qs,  QS_UNPACK);
-//
-//        while (i != decText.end())
-//        {
-//            cout << '@';
-//            cout << (plusMore = unpackLarge_read2B(i, XChar_hdr, HDR_UNPACK))
-//                 << '\n';                                         ++i;    // hdr
-//            cout << unpackSeqFQ_3to1(i)               << '\n';            // seq
-//            cout << (justPlus ? "+" : "+" + plusMore) << '\n';    ++i;    // +
-//            cout << unpackQS(i, QS_UNPACK)            << '\n';            // qs
-//            // end of file
-//            if (*(++i) == (char) 252)   break;
-//        }
-//    }
-//    else if (hdrRangeLen <= MAX_CAT_5 && qsRangeLen > MAX_CAT_5)
-//    {
-//        const string quality_scores = qsRange.substr(qsRangeLen - MAX_CAT_5);
-//        // ASCII char after the last char in quality_scores string
-//        const char XChar_qs=(char)(quality_scores[quality_scores.size()-1] + 1);
-//        string quality_scores_X=quality_scores;  quality_scores_X+=XChar_qs;
-//
-//        // tables for unpacking
-//        HDR_UNPACK = buildUnpack(hdrRange,         keyLen_hdr, HDR_UNPACK);
-//        QS_UNPACK  = buildUnpack(quality_scores_X, keyLen_qs,  QS_UNPACK);
-//
-//        while (i != decText.end())
-//        {
-//            cout << '@';
-//            cout << (plusMore = unpackHdr(i, HDR_UNPACK)) << '\n';  ++i;  // hdr
-//            cout << unpackSeqFQ_3to1(i)                   << '\n';        // seq
-//            cout << (justPlus ? "+" : "+" + plusMore)     << '\n';  ++i;  // +
-//            cout << unpackLarge_read2B(i, XChar_qs, QS_UNPACK) << '\n';   // qs
-//            // end of file
-//            if (*(++i) == (char) 252)   break;
-//        }
-//    }
-//    else
-    if (hdrRangeLen <= MAX_CAT_5 && qsRangeLen <= MAX_CAT_5)
+    if (hdrRangeLen > MAX_CAT_5 && qsRangeLen > MAX_CAT_5)
+    {
+        const string headers = hdrRange.substr(hdrRangeLen - MAX_CAT_5);
+        const string quality_scores = qsRange.substr(qsRangeLen-MAX_CAT_5);
+        // ASCII char after the last char in headers & quality_scores string
+        const char XChar_hdr = (char) (headers[headers.size()-1] + 1);
+        const char XChar_qs=(char)(quality_scores[quality_scores.size()-1] + 1);
+        string headers_X = headers;                  headers_X+=XChar_hdr;
+        string quality_scores_X = quality_scores;    quality_scores_X+=XChar_qs;
+
+        // tables for unpacking
+        HDR_UNPACK = buildUnpack(headers_X,        keyLen_hdr);
+        QS_UNPACK  = buildUnpack(quality_scores_X, keyLen_qs);
+
+        while (i != decText.end())
+        {
+            cout << '@';
+            cout << (plusMore = unpackLarge_read2B(i, XChar_hdr, HDR_UNPACK))
+                 << '\n';                                         ++i;    // hdr
+            cout << unpackSeqFQ_3to1(i) << '\n';                          // seq
+            cout << (justPlus ? "+" : "+" + plusMore) << '\n';    ++i;    // +
+            cout << unpackLarge_read2B(i, XChar_qs, QS_UNPACK) << '\n';   // qs
+            // end of file
+            if (*(++i) == (char) 252)   break;
+        }
+    }
+    else if (hdrRangeLen > MAX_CAT_5 && qsRangeLen <= MAX_CAT_5)
+    {
+        const string headers = hdrRange.substr(hdrRangeLen - MAX_CAT_5);
+        // ASCII char after the last char in headers string
+        const char XChar_hdr = (char) (headers[headers.size()-1] + 1);
+        string headers_X = headers;     headers_X += XChar_hdr;
+
+        // tables for unpacking
+        HDR_UNPACK = buildUnpack(headers_X, keyLen_hdr);
+        QS_UNPACK  = buildUnpack(qsRange,   keyLen_qs);
+        
+        while (i != decText.end())
+        {
+            cout << '@';
+            cout << (plusMore = unpackLarge_read2B(i, XChar_hdr, HDR_UNPACK))
+                 << '\n';                                         ++i;    // hdr
+            cout << unpackSeqFQ_3to1(i)               << '\n';            // seq
+            cout << (justPlus ? "+" : "+" + plusMore) << '\n';    ++i;    // +
+            cout << unpackQS(i, QS_UNPACK)            << '\n';            // qs
+            // end of file
+            if (*(++i) == (char) 252)   break;
+        }
+    }
+    else if (hdrRangeLen <= MAX_CAT_5 && qsRangeLen > MAX_CAT_5)
+    {
+        const string quality_scores = qsRange.substr(qsRangeLen - MAX_CAT_5);
+        // ASCII char after the last char in quality_scores string
+        const char XChar_qs=(char)(quality_scores[quality_scores.size()-1] + 1);
+        string quality_scores_X=quality_scores;     quality_scores_X+=XChar_qs;
+
+        // tables for unpacking
+        HDR_UNPACK = buildUnpack(hdrRange, keyLen_hdr);
+        QS_UNPACK  = buildUnpack(quality_scores_X, keyLen_qs);
+        
+        while (i != decText.end())
+        {
+            cout << '@';
+            cout << (plusMore = unpackHdr(i, HDR_UNPACK)) << '\n';  ++i;  // hdr
+            cout << unpackSeqFQ_3to1(i)                   << '\n';        // seq
+            cout << (justPlus ? "+" : "+" + plusMore)     << '\n';  ++i;  // +
+            cout << unpackLarge_read2B(i, XChar_qs, QS_UNPACK) << '\n';   // qs
+            // end of file
+            if (*(++i) == (char) 252)   break;
+        }
+    }
+    else if (hdrRangeLen <= MAX_CAT_5 && qsRangeLen <= MAX_CAT_5)
     {
         // tables for unpacking
         HDR_UNPACK = buildUnpack(hdrRange, keyLen_hdr);
         QS_UNPACK  = buildUnpack(qsRange,  keyLen_qs);
-//        HDR_UNPACK = buildUnpack(hdrRange, keyLen_hdr, HDR_UNPACK);
-//        QS_UNPACK  = buildUnpack(qsRange,  keyLen_qs,  QS_UNPACK);
         
-//        for(string s:HDR_UNPACK)
-//            cerr<<s<<' ';
-
-
-
         while (i != decText.end())
         {
-
             cout << '@';
             cout << (plusMore = unpackHdr(i, HDR_UNPACK)) << '\n';  ++i;  // hdr
             cout << unpackSeqFQ_3to1(i)                   << '\n';        // seq

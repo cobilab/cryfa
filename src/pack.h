@@ -718,7 +718,7 @@ inline string unpack_read2B (string::iterator &i, vector<string> &unpack)
     byte leftB, rightB;
     us doubleB;     // double byte
     string out;
-
+    
     for (; *i != (char) 254; i += 2)
     {
         // hdr len not multiple of keyLen

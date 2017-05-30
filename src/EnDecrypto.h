@@ -29,6 +29,8 @@ public:
     string inFileName;                                     // input file name
     string keyFileName;                                    // password file name
     bool   verbose = false;                                // for verbose mode
+//    string HEADERS;                                        // max: 39 values
+//    string QUALITY_SCORES;                                 // max: 39 values
     
 private:
     inline void decompFA (string);                         // decomp. FA
