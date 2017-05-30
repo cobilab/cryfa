@@ -83,7 +83,7 @@ int main (int argc, char* argv[])
 
             case 'v':   // verbose mode
                 v_flag = 1;
-                cryptObj.verbose = (bool) v_flag;
+                cryptObj.verbose = true;
                 break;
 
             case 'd':   // decompress mode
@@ -104,7 +104,7 @@ int main (int argc, char* argv[])
         }
     }
     
-    if (v_flag) cerr << "Verbose mode on.\n";
+    if (v_flag)  cerr << "Verbose mode on.\n";
     if (d_flag)
     {
         cerr << "Decrypting...\n";
@@ -120,11 +120,10 @@ int main (int argc, char* argv[])
         
         return 0;
     }
-
-    cerr << "Encrypting...\n";
-    if (fileType(cryptObj.inFileName) == 'A') cryptObj.compressFA();    // FA
-    else  cryptObj.compressFQ();                               // FQ
     
+    cerr << "Encrypting...\n";
+    (fileType(cryptObj.inFileName)=='A') ? cryptObj.compressFA()    // FASTA
+                                         : cryptObj.compressFQ();   // FASTQ
     // stop timer
     high_resolution_clock::time_point finishTime = high_resolution_clock::now();
     // duration in seconds

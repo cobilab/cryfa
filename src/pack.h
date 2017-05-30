@@ -22,16 +22,35 @@ string   HEADERS, QUALITY_SCORES;   // max: 39 values
 /*******************************************************************************
     build hash table
 *******************************************************************************/
-//inline htable_t buildHashTable (htable_t map, const string &strIn, short keyLen)
 inline htable_t buildHashTable (const string &strIn, short keyLen)
 {
-    htable_t map;
     const byte strInLen = strIn.length();
-    ULL elementNo = 0;
+    ull elementNo = 0;
     string element;
+    htable_t map;
 
     switch (keyLen)
     {
+        case 3:
+            LOOP3(i, j, k, strInLen)
+            {
+                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+                map.insert(make_pair(element, elementNo));
+                ++elementNo;
+            }
+            break;
+    
+        case 2:
+            LOOP2(i, j, strInLen)
+            {
+                element = strIn[i];   element += strIn[j];
+                map.insert(make_pair(element, elementNo));
+////            map.insert({element, elementNo});
+////            map[element] = elementNo;
+                ++elementNo;
+            }
+            break;
+    
         case 1:
             LOOP(i, strInLen)
             {
@@ -41,26 +60,6 @@ inline htable_t buildHashTable (const string &strIn, short keyLen)
             }
             break;
             
-        case 2:
-            LOOP2(i, j, strInLen)
-            {
-                element = strIn[i];   element += strIn[j];
-                map.insert(make_pair(element, elementNo));
-////                map.insert({element, elementNo});
-////                map[element] = elementNo;
-                ++elementNo;
-            }
-            break;
-
-        case 3:
-            LOOP3(i, j, k, strInLen)
-            {
-                element  = strIn[i];  element += strIn[j];  element += strIn[k];
-                map.insert(make_pair(element, elementNo));
-                ++elementNo;
-            }
-            break;
-
         case 5:
             LOOP5(i, j, k, l, m, strInLen)
             {
@@ -127,25 +126,20 @@ inline htable_t buildHashTable (const string &strIn, short keyLen)
 /*******************************************************************************
     build table for unpacking
 *******************************************************************************/
-//inline string* buildUnpack (const string &strIn, US keyLen, string* unpack)
-inline vector<string> buildUnpack (const string &strIn, US keyLen)
+inline vector<string> buildUnpack (const string &strIn, us keyLen)
 {
     const byte strLen = strIn.length();
-    ULL elementNo = 0;
+    ull elementNo = 0;
     string element;
-    const ULL arrSize = pow(strLen, keyLen);
-//    unpack = new string[arrSize];
     vector<string> unpack;
     
     switch (keyLen)
     {
-        case 1:
-            LOOP(i, strLen)
+        case 3:
+            LOOP3(i, j, k, strLen)
             {
-                element = strIn[i];
-//                unpack[elementNo] = element;
+                element  = strIn[i];  element += strIn[j];  element += strIn[k];
                 unpack.push_back(element);
-//                ++elementNo;
             }
             break;
 
@@ -153,31 +147,24 @@ inline vector<string> buildUnpack (const string &strIn, US keyLen)
             LOOP2(i, j, strLen)
             {
                 element = strIn[i];   element += strIn[j];
-//                unpack[elementNo] = element;
-                
                 unpack.push_back(element);
-//                ++elementNo;
             }
             break;
-
-        case 3:
-            LOOP3(i, j, k, strLen)
+    
+        case 1:
+            LOOP(i, strLen)
             {
-                element  = strIn[i];  element += strIn[j];  element += strIn[k];
-//                unpack[elementNo] = element;
+                element = strIn[i];
                 unpack.push_back(element);
-//                ++elementNo;
             }
             break;
-
+    
         case 5:
             LOOP5(i, j, k, l, m, strLen)
             {
                 element  = strIn[i];  element += strIn[j];  element += strIn[k];
                 element += strIn[l];  element += strIn[m];
-//                unpack[elementNo] = element;
                 unpack.push_back(element);
-//                ++elementNo;
             }
             break;
 
@@ -187,9 +174,7 @@ inline vector<string> buildUnpack (const string &strIn, US keyLen)
                 element  = strIn[i];  element += strIn[j];  element += strIn[k];
                 element += strIn[l];  element += strIn[m];  element += strIn[n];
                 element += strIn[o];
-//                unpack[elementNo] = element;
                 unpack.push_back(element);
-//                ++elementNo;
             }
             break;
 
@@ -198,9 +183,7 @@ inline vector<string> buildUnpack (const string &strIn, US keyLen)
             {
                 element  = strIn[i];  element += strIn[j];  element += strIn[k];
                 element += strIn[l];
-//                unpack[elementNo] = element;
                 unpack.push_back(element);
-//                ++elementNo;
             }
             break;
 
@@ -209,9 +192,7 @@ inline vector<string> buildUnpack (const string &strIn, US keyLen)
             {
                 element  = strIn[i];  element += strIn[j];  element += strIn[k];
                 element += strIn[l];  element += strIn[m];  element += strIn[n];
-//                unpack[elementNo] = element;
                 unpack.push_back(element);
-//                ++elementNo;
             }
             break;
             
@@ -221,9 +202,7 @@ inline vector<string> buildUnpack (const string &strIn, US keyLen)
                 element  = strIn[i];  element += strIn[j];  element += strIn[k];
                 element += strIn[l];  element += strIn[m];  element += strIn[n];
                 element += strIn[o];  element += strIn[p];
-//                unpack[elementNo] = element;
                 unpack.push_back(element);
-//                ++elementNo;
             }
             break;
 
@@ -240,7 +219,7 @@ inline vector<string> buildUnpack (const string &strIn, US keyLen)
 /*******************************************************************************
     index of each DNA bases pack
 *******************************************************************************/
-inline US dnaPack (const string &dna)
+inline us dnaPack (const string &dna)
 {
     htable_t::const_iterator got = DNA_MAP.find(dna);
     if (got == DNA_MAP.end()) { cerr << "Error: key not found!\n"; return 0; }
@@ -250,7 +229,7 @@ inline US dnaPack (const string &dna)
 /*******************************************************************************
     index of each pack, when # > 39
 *******************************************************************************/
-inline US largePack (const string &strIn, const htable_t &map)
+inline us largePack (const string &strIn, const htable_t &map)
 {
     htable_t::const_iterator got = map.find(strIn);
     if (got == map.end()) { cerr << "Error: key not found!\n"; return 0; }
@@ -263,8 +242,8 @@ inline US largePack (const string &strIn, const htable_t &map)
 inline string packSeq_3to1 (string seq)
 {
     string packedSeq;
-    const LL iterLen = seq.length() - 2;
-    LL x = 0;
+    const ll iterLen = seq.length() - 2;
+    ll x = 0;
     bool firstNotIn, secondNotIn, thirdNotIn;
     char s0, s1, s2;
     string tuple;
@@ -314,11 +293,11 @@ inline string packSeq_3to1 (string seq)
 inline string packLargeHdr_3to2 (const string& strIn, const htable_t &map)
 {
     string tuple, packed;
-    const LL iterLen = strIn.length() - 2;
-    LL x = 0;
+    const ll iterLen = strIn.length() - 2;
+    ll x = 0;
     bool firstNotIn, secondNotIn, thirdNotIn;
     char s0, s1, s2;
-    US shortTuple;
+    us shortTuple;
     // ASCII char after the last char in HEADERS string
     const char XChar = (char) (HEADERS[HEADERS.size()-1] + 1);
     
@@ -364,11 +343,11 @@ inline string packLargeHdr_3to2 (const string& strIn, const htable_t &map)
 inline string packLargeQs_3to2 (const string& strIn, const htable_t &map)
 {
     string tuple, packed;
-    const LL iterLen = strIn.length() - 2;
-    LL x = 0;
+    const ll iterLen = strIn.length() - 2;
+    ll x = 0;
     bool firstNotIn, secondNotIn, thirdNotIn;
     char s0, s1, s2;
-    US shortTuple;
+    us shortTuple;
     // ASCII char after the last char in QUALITY_SCORES string
     const char XChar = (char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
     
@@ -417,9 +396,9 @@ inline string packLargeQs_3to2 (const string& strIn, const htable_t &map)
 inline string pack_3to2 (const string& strIn, const htable_t &map)
 {
     string tuple, packed;
-    const LL iterLen = strIn.length() - 2;
-    LL x = 0;
-    US shortTuple;
+    const ll iterLen = strIn.length() - 2;
+    ll x = 0;
+    us shortTuple;
 
     for (x = 0; x < iterLen; x += 3)
     {
@@ -453,8 +432,8 @@ inline string pack_3to2 (const string& strIn, const htable_t &map)
 inline string pack_2to1 (const string& strIn, const htable_t &map)
 {
     string tuple, packed;
-    const LL iterLen = strIn.length() - 1;
-    LL x = 0;
+    const ll iterLen = strIn.length() - 1;
+    ll x = 0;
 
     for (x = 0; x < iterLen; x += 2)
     {
@@ -474,8 +453,8 @@ inline string pack_2to1 (const string& strIn, const htable_t &map)
 inline string pack_3to1 (const string& strIn, const htable_t &map)
 {
     string tuple, packed;
-    const LL iterLen = strIn.length() - 2;
-    LL x = 0;
+    const ll iterLen = strIn.length() - 2;
+    ll x = 0;
 
     for (x = 0; x < iterLen; x += 3)
     {
@@ -507,8 +486,8 @@ inline string pack_3to1 (const string& strIn, const htable_t &map)
 inline string pack_5to1 (const string& strIn, const htable_t &map)
 {
     string tuple, packed;
-    const LL iterLen = strIn.length() - 4;
-    LL x = 0;
+    const ll iterLen = strIn.length() - 4;
+    ll x = 0;
 
     for (x = 0; x < iterLen; x += 5)
     {
@@ -554,8 +533,8 @@ inline string pack_5to1 (const string& strIn, const htable_t &map)
 inline string pack_7to1 (const string& strIn, const htable_t &map)
 {
     string tuple, packed;
-    const LL iterLen = strIn.length() - 6;
-    LL x = 0;
+    const ll iterLen = strIn.length() - 6;
+    ll x = 0;
 
     for (x = 0; x < iterLen; x += 7)
     {
@@ -620,8 +599,8 @@ inline string pack_1to1 (const string& strIn, const htable_t &map)
 {
     string single;
     string packed;
-    const LL iterLen = strIn.length();
-    LL x = 0;
+    const ll iterLen = strIn.length();
+    ll x = 0;
 
     for (x = 0; x < iterLen; ++x)
     {
@@ -688,8 +667,8 @@ inline string unpackLarge_read2B (string::iterator &i, const char XChar,
                                   vector<string> &unpack)
 {
     byte leftB, rightB;
-    US doubleB; // double byte
-    string tpl;             // tuplet
+    us doubleB;     // double byte
+    string tpl;     // tuplet
     string out;
 
     while (*i != (char) 254)
@@ -735,11 +714,9 @@ inline string unpackLarge_read2B (string::iterator &i, const char XChar,
     unpack by reading 2 byte by 2 byte
 *******************************************************************************/
 inline string unpack_read2B (string::iterator &i, vector<string> &unpack)
-//inline string unpack_read2B (string::iterator &i, string* unpack)
-//inline string unpack_read2B (string::iterator &i, string* &unpack)
 {
     byte leftB, rightB;
-    US doubleB; // double byte
+    us doubleB;     // double byte
     string out;
 
     for (; *i != (char) 254; i += 2)
@@ -761,8 +738,6 @@ inline string unpack_read2B (string::iterator &i, vector<string> &unpack)
     unpack by reading 1 byte by 1 byte
 *******************************************************************************/
 inline string unpack_read1B (string::iterator &i, vector<string> &unpack)
-//inline string unpack_read1B (string::iterator &i, string* unpack)
-//inline string unpack_read1B (string::iterator &i, string* &unpack)
 {
     string out;
 
@@ -777,8 +752,6 @@ inline string unpack_read1B (string::iterator &i, vector<string> &unpack)
 }
 
 #endif //CRYFA_PACK_H
-
-
 
 
 
@@ -818,7 +791,7 @@ inline string unpack_read1B (string::iterator &i, vector<string> &unpack)
 //inline void buildHashTable (htable_t &map, const string &strIn, short keyLen)
 //{
 //    const byte strInLen = strIn.length();
-//    ULL elementNo = 0;
+//    ull elementNo = 0;
 //    string element;
 //
 //    switch (keyLen)
@@ -845,63 +818,63 @@ inline string unpack_read1B (string::iterator &i, vector<string> &unpack)
 //
 //        case 3:
 //            LOOP3(i, j, k, strInLen)
-//                    {
-//                        element  = strIn[i];  element += strIn[j];  element += strIn[k];
-//                        map.insert(make_pair(element, elementNo));
-//                        ++elementNo;
-//                    }
+//            {
+//                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+//                map.insert(make_pair(element, elementNo));
+//                ++elementNo;
+//            }
 //            break;
 //
 //        case 5:
 //            LOOP5(i, j, k, l, m, strInLen)
-//                            {
-//                                element  = strIn[i];  element += strIn[j];  element += strIn[k];
-//                                element += strIn[l];  element += strIn[m];
-//                                map.insert(make_pair(element, elementNo));
-//                                ++elementNo;
-//                            }
+//            {
+//                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+//                element += strIn[l];  element += strIn[m];
+//                map.insert(make_pair(element, elementNo));
+//                ++elementNo;
+//            }
 //            break;
 //
 //        case 7:
 //            LOOP7(i, j, k, l, m, n, o, strInLen)
-//                                    {
-//                                        element  = strIn[i];  element += strIn[j];  element += strIn[k];
-//                                        element += strIn[l];  element += strIn[m];  element += strIn[n];
-//                                        element += strIn[o];
-//                                        map.insert(make_pair(element, elementNo));
-//                                        ++elementNo;
-//                                    }
+//            {
+//                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+//                element += strIn[l];  element += strIn[m];  element += strIn[n];
+//                element += strIn[o];
+//                map.insert(make_pair(element, elementNo));
+//                ++elementNo;
+//            }
 //            break;
 //
 //        case 4:
 //            LOOP4(i, j, k, l, strInLen)
-//                        {
-//                            element  = strIn[i];  element += strIn[j];  element += strIn[k];
-//                            element += strIn[l];
-//                            map.insert(make_pair(element, elementNo));
-//                            ++elementNo;
-//                        }
+//            {
+//                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+//                element += strIn[l];
+//                map.insert(make_pair(element, elementNo));
+//                ++elementNo;
+//            }
 //            break;
 //
 //        case 6:
 //            LOOP6(i, j, k, l, m, n, strInLen)
-//                                {
-//                                    element  = strIn[i];  element += strIn[j];  element += strIn[k];
-//                                    element += strIn[l];  element += strIn[m];  element += strIn[n];
-//                                    map.insert(make_pair(element, elementNo));
-//                                    ++elementNo;
-//                                }
+//            {
+//                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+//                element += strIn[l];  element += strIn[m];  element += strIn[n];
+//                map.insert(make_pair(element, elementNo));
+//                ++elementNo;
+//            }
 //            break;
 //
 //        case 8:
 //            LOOP8(i, j, k, l, m, n, o, p, strInLen)
-//                                        {
-//                                            element  = strIn[i];  element += strIn[j];  element += strIn[k];
-//                                            element += strIn[l];  element += strIn[m];  element += strIn[n];
-//                                            element += strIn[o];  element += strIn[p];
-//                                            map.insert(make_pair(element, elementNo));
-//                                            ++elementNo;
-//                                        }
+//            {
+//                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+//                element += strIn[l];  element += strIn[m];  element += strIn[n];
+//                element += strIn[o];  element += strIn[p];
+//                map.insert(make_pair(element, elementNo));
+//                ++elementNo;
+//            }
 //            break;
 //
 //        default: break;
@@ -923,9 +896,9 @@ inline string unpack_read1B (string::iterator &i, vector<string> &unpack)
 //inline void buildUnpack (const string &strIn, short keyLen, string* &unpack)
 //{
 //    const byte strLen = strIn.length();
-//    ULL elementNo = 0;
+//    ull elementNo = 0;
 //    string element;
-//    const ULL arrSize = pow(strLen, keyLen);
+//    const ull arrSize = pow(strLen, keyLen);
 //    unpack = new string[arrSize];
 //
 //    switch (keyLen)
@@ -941,72 +914,72 @@ inline string unpack_read1B (string::iterator &i, vector<string> &unpack)
 //
 //        case 2:
 //            LOOP2(i, j, strLen)
-//                {
-//                    element = strIn[i];   element += strIn[j];
-//                    unpack[elementNo] = element;
-//                    ++elementNo;
-//                }
+//            {
+//                element = strIn[i];   element += strIn[j];
+//                unpack[elementNo] = element;
+//                ++elementNo;
+//            }
 //            break;
 //
 //        case 3:
 //            LOOP3(i, j, k, strLen)
-//                    {
-//                        element  = strIn[i];  element += strIn[j];  element += strIn[k];
-//                        unpack[elementNo] = element;
-//                        ++elementNo;
-//                    }
+//            {
+//                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+//                unpack[elementNo] = element;
+//                ++elementNo;
+//            }
 //            break;
 //
 //        case 5:
 //            LOOP5(i, j, k, l, m, strLen)
-//                            {
-//                                element  = strIn[i];  element += strIn[j];  element += strIn[k];
-//                                element += strIn[l];  element += strIn[m];
-//                                unpack[elementNo] = element;
-//                                ++elementNo;
-//                            }
+//            {
+//                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+//                element += strIn[l];  element += strIn[m];
+//                unpack[elementNo] = element;
+//                ++elementNo;
+//            }
 //            break;
 //
 //        case 7:
 //            LOOP7(i, j, k, l, m, n, o, strLen)
-//                                    {
-//                                        element  = strIn[i];  element += strIn[j];  element += strIn[k];
-//                                        element += strIn[l];  element += strIn[m];  element += strIn[n];
-//                                        element += strIn[o];
-//                                        unpack[elementNo] = element;
-//                                        ++elementNo;
-//                                    }
+//            {
+//                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+//                element += strIn[l];  element += strIn[m];  element += strIn[n];
+//                element += strIn[o];
+//                unpack[elementNo] = element;
+//                ++elementNo;
+//            }
 //            break;
 //
 //        case 4:
 //            LOOP4(i, j, k, l, strLen)
-//                        {
-//                            element  = strIn[i];  element += strIn[j];  element += strIn[k];
-//                            element += strIn[l];
-//                            unpack[elementNo] = element;
-//                            ++elementNo;
-//                        }
+//            {
+//                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+//                element += strIn[l];
+//                unpack[elementNo] = element;
+//                ++elementNo;
+//            }
 //            break;
 //
 //        case 6:
 //            LOOP6(i, j, k, l, m, n, strLen)
-//                                {
-//                                    element  = strIn[i];  element += strIn[j];  element += strIn[k];
-//                                    element += strIn[l];  element += strIn[m];  element += strIn[n];
-//                                    unpack[elementNo] = element;
-//                                    ++elementNo;
-//                                }
+//            {
+//                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+//                element += strIn[l];  element += strIn[m];  element += strIn[n];
+//                unpack[elementNo] = element;
+//                ++elementNo;
+//            }
 //            break;
 //
 //        case 8:
 //            LOOP8(i, j, k, l, m, n, o, p, strLen)
-//                                        {
-//                                            element  = strIn[i];  element += strIn[j];  element += strIn[k];
-//                                            element += strIn[l];  element += strIn[m];  element += strIn[n];
-//                                            element += strIn[o];  element += strIn[p];
-//                                            unpack[elementNo] = element;
-//                                            ++elementNo;
-//                                        }
+//            {
+//                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+//                element += strIn[l];  element += strIn[m];  element += strIn[n];
+//                element += strIn[o];  element += strIn[p];
+//                unpack[elementNo] = element;
+//                ++elementNo;
+//            }
 //            break;
 //
 //        default: break;
@@ -1043,8 +1016,8 @@ inline string unpack_read1B (string::iterator &i, vector<string> &unpack)
 //inline string packSeq_3to1 (string seq)
 //{
 //    string packedSeq;
-//    const LL iterLen = seq.length() - 2;
-//    LL x = 0;
+//    const ll iterLen = seq.length() - 2;
+//    ll x = 0;
 //    bool firstNotIn, secondNotIn, thirdNotIn;
 //    char s0, s1, s2;
 //    string tuple;
@@ -1094,8 +1067,8 @@ inline string unpack_read1B (string::iterator &i, vector<string> &unpack)
 //inline string packLarge_3to2 (string strIn, string SYM_RANGE, htable_t &map)
 //{
 //    string tuple, packed;
-//    const LL iterLen = strIn.length() - 2;
-//    LL x = 0;
+//    const ll iterLen = strIn.length() - 2;
+//    ll x = 0;
 //    bool firstNotIn, secondNotIn, thirdNotIn;
 //    char s0, s1, s2;
 //    unsigned short shortTuple;
@@ -1144,8 +1117,8 @@ inline string unpack_read1B (string::iterator &i, vector<string> &unpack)
 //inline string pack_3to2 (string strIn, string SYM_RANGE, htable_t &map)
 //{
 //    string tuple, packed;
-//    const LL iterLen = strIn.length() - 2;
-//    LL x = 0;
+//    const ll iterLen = strIn.length() - 2;
+//    ll x = 0;
 //    unsigned short shortTuple;
 //
 //    for (x = 0; x < iterLen; x += 3)
@@ -1180,8 +1153,8 @@ inline string unpack_read1B (string::iterator &i, vector<string> &unpack)
 //inline string pack_2to1 (string strIn, string SYM_RANGE, htable_t &map)
 //{
 //    string tuple, packed;
-//    const LL iterLen = strIn.length() - 1;
-//    LL x = 0;
+//    const ll iterLen = strIn.length() - 1;
+//    ll x = 0;
 //
 //    for (x = 0; x < iterLen; x += 2)
 //    {
@@ -1201,8 +1174,8 @@ inline string unpack_read1B (string::iterator &i, vector<string> &unpack)
 //inline string pack_3to1 (string strIn, string SYM_RANGE, htable_t &map)
 //{
 //    string tuple, packed;
-//    const LL iterLen = strIn.length() - 2;
-//    LL x = 0;
+//    const ll iterLen = strIn.length() - 2;
+//    ll x = 0;
 //
 //    for (x = 0; x < iterLen; x += 3)
 //    {
@@ -1234,8 +1207,8 @@ inline string unpack_read1B (string::iterator &i, vector<string> &unpack)
 //inline string pack_5to1 (string strIn, string SYM_RANGE, htable_t &map)
 //{
 //    string tuple, packed;
-//    const LL iterLen = strIn.length() - 4;
-//    LL x = 0;
+//    const ll iterLen = strIn.length() - 4;
+//    ll x = 0;
 //
 //    for (x = 0; x < iterLen; x += 5)
 //    {
@@ -1281,8 +1254,8 @@ inline string unpack_read1B (string::iterator &i, vector<string> &unpack)
 //inline string pack_7to1 (string strIn, string SYM_RANGE, htable_t &map)
 //{
 //    string tuple, packed;
-//    const LL iterLen = strIn.length() - 6;
-//    LL x = 0;
+//    const ll iterLen = strIn.length() - 6;
+//    ll x = 0;
 //
 //    for (x = 0; x < iterLen; x += 7)
 //    {
@@ -1347,8 +1320,8 @@ inline string unpack_read1B (string::iterator &i, vector<string> &unpack)
 //{
 //    string single;
 //    string packed;
-//    const LL iterLen = strIn.length();
-//    LL x = 0;
+//    const ll iterLen = strIn.length();
+//    ll x = 0;
 //
 //    for (x = 0; x < iterLen; ++x)
 //    {

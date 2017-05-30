@@ -51,10 +51,10 @@ EnDecrypto::EnDecrypto () {}
 void EnDecrypto::compressFA ()
 {
     ifstream in(inFileName);
-    string line, seq, context;  // FASTA: context = header + seq (+ empty lines)
-    
     if (!in.good())
     { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
+    
+    string line, seq, context;  // FASTA: context = header + seq (+ empty lines)
     
     // watermark for encrypted file
     cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
@@ -73,11 +73,11 @@ void EnDecrypto::compressFA ()
             // header line. (char) 253 instead of '>'
             context += (char) 253 + line.substr(1) + "\n";
         }
-            
-            // empty line. (char) 252 instead of line feed
+        
+        // empty line. (char) 252 instead of line feed
         else if (line.empty())    seq += (char) 252;
             
-            // sequence
+        // sequence
         else
         {
             if (line.find(' ') != string::npos)
@@ -128,8 +128,6 @@ void EnDecrypto::compressFQ ()
     in.ignore(LARGE_NUMBER, '\n');                  // ignore seq
     if(getline(in, line).good() && line.length() > 1)   justPlus = false;
     in.clear();  in.seekg(0, in.beg);       // beginning of file
-//    in.close();
-
     
     /*
     // check if the third line contains only +
@@ -158,7 +156,7 @@ void EnDecrypto::compressFQ ()
                     totQsRange += c;
         }
     }
-    in.clear();     in.seekg(0, std::ios::beg);             // beginning of file
+//    in.clear();     in.seekg(0, std::ios::beg);             // beginning of file
     in.close();
     
     totHdrRange.erase(totHdrRange.begin());                       //ignore '@'
@@ -341,8 +339,8 @@ void EnDecrypto::compressFQ ()
     {
 
 //    byte nEmptyIn = 0;
-    ULL startLine;
-    ULL i=0;
+    ull startLine;
+    ull i=0;
 //    finished = false;
 //    while (!in.eof())
     while (!nEmptyIn)
@@ -359,14 +357,14 @@ void EnDecrypto::compressFQ ()
             startLine = (i*n_threads + t) * LINE_BUFFER;
 
 //            inTh.clear();
-//            for (UI i = 0; i != LINE_BUFFER && !in.eof()
+//            for (rightB i = 0; i != LINE_BUFFER && !in.eof()
 //                           && getline(in, line).good(); ++i)
 //                inTh += line + "\n";
 //
 //            if (inTh.empty())   ++nEmptyIn; // number of empty input strings
 //            else
             arrThread[t] = thread(&EnDecrypto::pack, this,
-                                  startLine, packHdr, packQS, t);
+                                  startLine, t, packHdr, packQS);
         }   // end for t
 
 
@@ -516,10 +514,9 @@ void EnDecrypto::compressFQ ()
 /*******************************************************************************
     pack -- '@' at the beginning of headers is not packed
 *******************************************************************************/
-inline void EnDecrypto::pack (const ULL startLine,
+inline void EnDecrypto::pack (const ull startLine, const byte threadID,
                               string (*packHdr)(const string&, const htable_t&),
-                              string (*packQS)(const string&, const htable_t&),
-                              const byte threadID)
+                              string (*packQS)(const string&, const htable_t&))
 {
 //    string hdrRange, qsRange;
 //    htable_t HDR_MAP, QS_MAP;           // hash tables for header and quality score
@@ -534,7 +531,7 @@ inline void EnDecrypto::pack (const ULL startLine,
     
     string line;
     
-    for (ULL l = 0; l != startLine; ++l)    in.ignore(LARGE_NUMBER, '\n');
+    for (ull l = 0; l != startLine; ++l)    in.ignore(LARGE_NUMBER, '\n');
     
     // beginning of the part of file for this thread
 //    std::ios_base::seekdir pos_beg = std::ios_base::cur;
@@ -565,7 +562,7 @@ inline void EnDecrypto::pack (const ULL startLine,
 
     
 //    // gather all headers and quality scores
-//    for (ULL l = 0; l != LINE_BUFFER && !in.eof(); l+=4)
+//    for (ull l = 0; l != LINE_BUFFER && !in.eof(); l+=4)
 //    {
 //        if (getline(in, line).good())                       // header
 //            for (const char &c : line)
@@ -757,7 +754,7 @@ inline void EnDecrypto::pack (const ULL startLine,
 
 
     
-    for (ULL l = 0; l != LINE_BUFFER; l+=4)     // process 4 lines by 4 lines
+    for (ull l = 0; l != LINE_BUFFER; l+=4)     // process 4 lines by 4 lines
     {
         if (getline(in, line).good())           // header -- ignore '@'
             context += packHdr(line.substr(1), HDR_MAP) + (char) 254;
@@ -1018,8 +1015,7 @@ inline void EnDecrypto::decompFQ (string decText)
 
     const size_t qsRangeLen  = qsRange.length();
     const size_t hdrRangeLen = hdrRange.length();
-    US keyLen_hdr = 0;
-    US keyLen_qs = 0;
+    us keyLen_hdr = 0,  keyLen_qs = 0;
     
     //todo. ehtemalan niaz nis chon ghablan sort shode
 //    std::sort(hdrRange.begin(),hdrRange.end());
@@ -1172,13 +1168,6 @@ inline void EnDecrypto::decompFQ (string decText)
         while (i != decText.end())
         {
 
-//            cerr << '@';
-//            cerr << (plusMore = unpackHdr(i, HDR_UNPACK)) << '\n';  ++i;  // hdr
-//            cerr << unpackSeqFQ_3to1(i)                   << '\n';        // seq
-//            cerr << (justPlus ? "+" : "+" + plusMore)     << '\n';  ++i;  // +
-//            cerr << unpackQS(i, QS_UNPACK)                << '\n';        // qs
-
-            
             cout << '@';
             cout << (plusMore = unpackHdr(i, HDR_UNPACK)) << '\n';  ++i;  // hdr
             cout << unpackSeqFQ_3to1(i)                   << '\n';        // seq
@@ -1201,18 +1190,16 @@ inline void EnDecrypto::buildIV (byte *iv, const string &pass)
     evalPassSize(pass);  // pass size must be >= 8
     
     // using old rand to generate the new rand seed
-    srand((UI) 7919 * pass[2] * pass[5] + 75653);
-    ULL seed = 0;
-//    for (byte i = 0; i != pass.size(); ++i)
+    srand((ui) 7919 * pass[2] * pass[5] + 75653);
+    ull seed = 0;
     for (byte i = (byte) pass.size(); i--;)
-        seed += ((ULL) pass[i] * rand()) + rand();
+        seed += ((ull) pass[i] * rand()) + rand();
     seed %= 4294967295;
     
     const rng_type::result_type seedval = seed;
     rng.seed(seedval);
 
-//    for (UI i = 0; i != AES::BLOCKSIZE; ++i)
-    for (UI i = (UI) AES::BLOCKSIZE; i--;)
+    for (ui i = (ui) AES::BLOCKSIZE; i--;)
         iv[i] = (byte) (udist(rng) % 255);
 }
 
@@ -1227,18 +1214,16 @@ inline void EnDecrypto::buildKey (byte *key, const string &pwd)
     evalPassSize(pwd);  // pass size must be >= 8
     
     // using old rand to generate the new rand seed
-    srand((UI) 24593 * (pwd[0] * pwd[2]) + 49157);
-    ULL seed = 0;
-//    for (byte i = 0; i != pwd.size(); ++i)
+    srand((ui) 24593 * (pwd[0] * pwd[2]) + 49157);
+    ull seed = 0;
     for (byte i = (byte) pwd.size(); i--;)
-        seed += ((ULL) pwd[i] * rand()) + rand();
+        seed += ((ull) pwd[i] * rand()) + rand();
     seed %= 4294967295;
     
     const rng_type::result_type seedval = seed;
     rng.seed(seedval);
 
-//    for (UI i = 0; i != AES::DEFAULT_KEYLENGTH; ++i)
-    for (UI i = (UI) AES::DEFAULT_KEYLENGTH; i--;)
+    for (ui i = (ui) AES::DEFAULT_KEYLENGTH; i--;)
         key[i] = (byte) (udist(rng) % 255);
 }
 
@@ -1248,7 +1233,7 @@ inline void EnDecrypto::buildKey (byte *key, const string &pwd)
 inline void EnDecrypto::printIV (byte *iv) const
 {
     cerr << "IV = [" << (int) iv[0];
-    for (UI i = 1; i != AES::BLOCKSIZE; ++i)
+    for (ui i = 1; i != AES::BLOCKSIZE; ++i)
         cerr << " " << (int) iv[i];
     cerr << "]\n";
 }
@@ -1259,7 +1244,7 @@ inline void EnDecrypto::printIV (byte *iv) const
 inline void EnDecrypto::printKey (byte *key) const
 {
     cerr << "KEY: [" << (int) key[0];
-    for (UI i = 1; i != AES::DEFAULT_KEYLENGTH; ++i)
+    for (ui i = 1; i != AES::DEFAULT_KEYLENGTH; ++i)
         cerr << " " << (int) key[i];
     cerr << "]\n";
 }
@@ -1269,27 +1254,21 @@ inline void EnDecrypto::printKey (byte *key) const
 *******************************************************************************/
 inline string EnDecrypto::getPassFromFile () const
 {
-    ifstream input(keyFileName);
-    string line;
+    ifstream in(keyFileName);
+    string l;   // each line of file
     
     if (keyFileName.empty())
+    { cerr << "Error: no password file has been set!\n";     exit(1); }
+    else if (!in.good())
+    { cerr << "Error opening '" << keyFileName << "'.\n";    exit(1); }
+    
+    while (getline(in, l).good())
     {
-        cerr << "Error: no password file has been set!\n";
-        exit(1);
-    }
-    else if (!input.good())
-    {
-        cerr << "Error opening '" << keyFileName << "'.\n";
-        exit(1);
+        if (l.empty()) { cerr<<"Error: empty password line file!\n";  exit(1); }
+        return l;
     }
     
-    while (getline(input, line).good())
-    {
-        if (line.empty()) {cerr<<"Error: empty password line file!\n"; exit(1);}
-        return line;
-    }
-    
-    return "unknown";
+    return "UNKNOWN";
 }
 
 /*******************************************************************************
@@ -1298,15 +1277,8 @@ inline string EnDecrypto::getPassFromFile () const
 inline void EnDecrypto::evalPassSize (const string &pass) const
 {
     if (pass.size() < 8)
-    {
-        cerr << "Error: password size must be at least 8!\n";
-        exit(1);
-    }
+    { cerr << "Error: password size must be at least 8!\n";    exit(1); }
 }
-
-
-
-
 
 
 
@@ -1558,9 +1530,9 @@ inline void EnDecrypto::evalPassSize (const string &pass) const
 //
 //
 //
-//        //todo. nabas havijoori 'context+=' nevesht,
-//        //todo. chon va3 file 10GB mitereke
-//        //todo. bas hame kara ro block by block anjam dad
+//        // nabas havijoori 'context+=' nevesht,
+//        // chon va3 file 10GB mitereke
+//        // bas hame kara ro block by block anjam dad
 //
 //        context += hdrRange;                       // send hdrRange to decryptor
 //        context += (char) 254;                     // to detect hdrRange in dec.
@@ -1700,7 +1672,7 @@ inline void EnDecrypto::evalPassSize (const string &pass) const
 //
 //    // process decrypted text
 //    string tpl;     // tuplet
-//    const ULL decTxtSize = decText.size() - 1;
+//    const ull decTxtSize = decText.size() - 1;
 //    const bool FASTA = (decText[0] == (char) 127);
 //    const bool FASTQ = !FASTA; // const bool FASTQ = (decText[0] != (char) 127);
 //    string::iterator i = decText.begin();
@@ -1932,10 +1904,10 @@ inline void EnDecrypto::evalPassSize (const string &pass) const
 //
 //    // using old rand to generate the new rand seed
 //    srand((unsigned int) 7919 * pass[2] * pass[5] + 75653);
-//    ULL seed = 0;
+//    ull seed = 0;
 ////    for (byte i = 0; i != pass.size(); ++i)
 //    for (byte i = (byte) pass.size(); i--;)
-//        seed += ((ULL) pass[i] * rand()) + rand();
+//        seed += ((ull) pass[i] * rand()) + rand();
 //    seed %= 4294967295;
 //
 //    const rng_type::result_type seedval = seed;
@@ -1958,10 +1930,10 @@ inline void EnDecrypto::evalPassSize (const string &pass) const
 //
 //    // using old rand to generate the new rand seed
 //    srand((unsigned int) 24593 * (pwd[0] * pwd[2]) + 49157);
-//    ULL seed = 0;
+//    ull seed = 0;
 ////    for (byte i = 0; i != pwd.size(); ++i)
 //    for (byte i = (byte) pwd.size(); i--;)
-//        seed += ((ULL) pwd[i] * rand()) + rand();
+//        seed += ((ull) pwd[i] * rand()) + rand();
 //    seed %= 4294967295;
 //
 //    const rng_type::result_type seedval = seed;

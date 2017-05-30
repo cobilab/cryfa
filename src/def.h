@@ -16,10 +16,6 @@ using std::cout;
 using std::string;
 using std::unordered_map;
 
-//#define _XOPEN_SOURCE 500
-//#include <unistd.h>
-//pread();
-
 /*******************************************************************************
     version and release
 *******************************************************************************/
@@ -29,13 +25,13 @@ using std::unordered_map;
 /*******************************************************************************
     typedefs
 *******************************************************************************/
-typedef unsigned char       byte;
-typedef unsigned short      US;
-typedef unsigned int        UI;
-typedef unsigned long long  ULL;
-typedef long long           LL;
-typedef std::mt19937        rng_type;
-typedef std::unordered_map<string, ULL>   htable_t;
+typedef unsigned char                     byte;
+typedef unsigned short                    us;
+typedef unsigned int                      ui;
+typedef unsigned long long                ull;
+typedef long long                         ll;
+typedef std::mt19937                      rng_type;
+typedef std::unordered_map<string, ull>   htable_t;
 typedef std::char_traits<char>::pos_type  pos_t;    // tellg(), tellp()
 
 /*******************************************************************************
@@ -43,13 +39,13 @@ typedef std::char_traits<char>::pos_type  pos_t;    // tellg(), tellp()
 *******************************************************************************/
 // power (B^E) -- base (B) and exponent (E) MUST be known at compile time
 // usage: "cerr << POWER<3,2>::val;" which yields 9
-template<UI B, UI E>
+template<ui B, ui E>
 struct POWER
-{ static const ULL val = B * POWER<B, E-1>::val; };
+{ static const ull val = B * POWER<B, E-1>::val; };
 
-template<UI B>
+template<ui B>
 struct POWER<B, 0>
-{ static const ULL val = 1; };
+{ static const ull val = 1; };
 //..............................................................................
 
 /*******************************************************************************
@@ -74,9 +70,9 @@ struct POWER<B, 0>
 *******************************************************************************/
 #define THR_ID_HDR        "THR="        // thread ID header
 #define ENC_FILENAME      "CRYFA_ENC"   // encrypted file name
-#define DEFAULT_N_THREADS 1   // default number of threads
-#define LINE_BUFFER       600000 //600000//10000// buffer size (lines) to separate files for
-                              // multithreading. MUST be multiple of 4
+#define DEFAULT_N_THREADS 1         // default number of threads
+#define LINE_BUFFER       600000    // buffer size (lines) to separate files for
+                                    // multithreading. MUST be multiple of 4
 #define LARGE_NUMBER      std::numeric_limits<std::streamsize>::max()
 #define CAT_1             2   //       cat 1  =  2
 #define CAT_2             3   //       cat 2  =  3
