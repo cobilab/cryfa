@@ -51,6 +51,10 @@ void EnDecrypto::compressFA (const string &inFileName,
     if (!in.good())
     { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
     
+    // watermark for encrypted file
+    cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
+                       + std::to_string(RELEASE_CRYFA) + "\n";
+
     // to tell decryptor this isn't FASTQ
     context += (char) 127;      // context += "\n";
     while (getline(in, line).good())
@@ -83,6 +87,8 @@ void EnDecrypto::compressFA (const string &inFileName,
     
     // encryption
 //    encrypt(context, keyFileName, v_flag);
+    cout << encrypt(context, keyFileName, v_flag);
+    cout << '\n';
 }
 
 /*******************************************************************************
@@ -382,7 +388,7 @@ void EnDecrypto::compressFQ (const string &inFileName,
     context += (char) 254;                     // to detect hdrRange in dec.
     context += totQsRange;                        // send qsRange to decryptor
     context += (justPlus ? (char) 253 : '\n'); //'+ or not just +' condition
-//    out << context ;//<< '\n';
+//    out << context ;//<< '\n';    // too aes cbc mode nemishe
 
     // open input files
     for (t = 0; t != n_threads; ++t)
@@ -825,6 +831,7 @@ inline string EnDecrypto::encrypt (const string &context,
 //    }
     
     string encryptedText;
+//    for (char c : cipherText)
     for (const char &c : cipherText)
         encryptedText += (char) (0xFF & static_cast<byte> (c));
 //        encryptedText += (char) (c & 0xFF);
@@ -840,9 +847,61 @@ void EnDecrypto::decompress (const string &inFileName,
 {
     string decText = decrypt(inFileName, keyFileName, v_flag);   //decryption
     
-    //todo. uncomment
     (decText[0] == (char) 127) ? decompFA(decText, keyFileName)
                                : decompFQ(decText, keyFileName); //decompression
+}
+
+/*******************************************************************************
+    decrypt.
+    AES encryption uses a secret key of a variable length (128, 196 or 256 bit).
+    This key is secretly exchanged between two parties before communication
+    begins. DEFAULT_KEYLENGTH = 16 bytes.
+*******************************************************************************/
+string EnDecrypto::decrypt (const string &inFileName, const string &keyFileName,
+                            const int v_flag)
+{
+    string decText;
+    ifstream in(inFileName);
+    if (!in.good())
+    { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
+    
+    byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
+    memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
+    memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
+    
+    const string pass = getPassFromFile(keyFileName);
+    buildKey(key, pass);
+    buildIV(iv, pass);
+//    printIV(iv);      // debug
+//    printKey(key);    // debug
+    
+    string cipherText( (std::istreambuf_iterator<char> (in)),
+                       std::istreambuf_iterator<char> () );
+    
+    // watermark
+    string watermark = "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
+                                  + std::to_string(RELEASE_CRYFA) + "\n";
+    
+    string::size_type watermarkIdx = cipherText.find(watermark);
+    if (watermarkIdx == string::npos)
+    { cerr << "Error: invalid encrypted file!\n";    exit(1); }
+    else  cipherText.erase(watermarkIdx, watermark.length());
+    
+    if (v_flag)
+    {
+        cerr << "cipher size: " << cipherText.size()-1 << '\n';
+        cerr << " block size: " << AES::BLOCKSIZE        << '\n';
+    }
+    
+    AES::Decryption aesDecryption(key, (size_t) AES::DEFAULT_KEYLENGTH);
+    CBC_Mode_ExternalCipher::Decryption cbcDecryption(aesDecryption, iv);
+    StreamTransformationFilter stfDecryptor(cbcDecryption,
+                                            new CryptoPP::StringSink(decText));
+    stfDecryptor.Put(reinterpret_cast<const byte*>
+                     (cipherText.c_str()), cipherText.size()-1);
+    stfDecryptor.MessageEnd();
+    
+    return decText;
 }
 
 /*******************************************************************************
@@ -948,202 +1007,149 @@ inline void EnDecrypto::decompFQ (string decText, const string &keyFileName)
     mutx.lock();
     cerr<<hdrRange<<'\n'<<qsRange<<'\n';
     mutx.unlock();
-    
-//    // TEST
-//    cerr << hdrRange << '\n' << hdrRange.length() << '\n';
-//    cerr << qsRange << '\n' << qsRange.length() << '\n';
-
-//    using unpackHdrPointer = string (*)(string::iterator&, string*);
-    using unpackHdrPointer = string (*)(string::iterator&, string* &);
-    unpackHdrPointer unpackHdr;                              // function pointer
-//    using unpackQSPointer = string (*)(string::iterator&, string*);
-    using unpackQSPointer = string (*)(string::iterator&, string* &);
-    unpackQSPointer unpackQS;                                // function pointer
-
-    // header
-    if (hdrRangeLen > MAX_CAT_5)    keyLen_hdr = KEYLEN_CAT_5;
-
-    else if (hdrRangeLen > MAX_CAT_4)                               // cat 5
-    { keyLen_hdr = KEYLEN_CAT_5;    unpackHdr = &unpack_read2B; }
-
-    else if (hdrRangeLen > MAX_CAT_3)                               // cat 4
-    { keyLen_hdr = KEYLEN_CAT_4;    unpackHdr = &unpack_read1B; }
-
-    else if (hdrRangeLen == MAX_CAT_3 || hdrRangeLen == MID_CAT_3   // cat 3
-             || hdrRangeLen == MIN_CAT_3)
-    { keyLen_hdr = KEYLEN_CAT_3;    unpackHdr = &unpack_read1B; }
-
-    else if (hdrRangeLen == CAT_2)                                  // cat 2
-    { keyLen_hdr = KEYLEN_CAT_2;    unpackHdr = &unpack_read1B; }
-
-    else if (hdrRangeLen == CAT_1)                                  // cat 1
-    { keyLen_hdr = KEYLEN_CAT_1;    unpackHdr = &unpack_read1B; }
-
-    else { keyLen_hdr = 1;          unpackHdr = &unpack_read1B; }   // = 1
-
-    // quality score
-    if (qsRangeLen > MAX_CAT_5)     keyLen_qs = KEYLEN_CAT_5;
-
-    else if (qsRangeLen > MAX_CAT_4)                                // cat 5
-    { keyLen_qs = KEYLEN_CAT_5;     unpackQS = &unpack_read2B; }
-
-    else if (qsRangeLen > MAX_CAT_3)                                // cat 4
-    { keyLen_qs = KEYLEN_CAT_4;     unpackQS = &unpack_read1B; }
-
-    else if (qsRangeLen == MAX_CAT_3 || qsRangeLen == MID_CAT_3     // cat 3
-             || qsRangeLen == MIN_CAT_3)
-    { keyLen_qs = KEYLEN_CAT_3;     unpackQS = &unpack_read1B; }
-
-    else if (qsRangeLen == CAT_2)                                   // cat 2
-    { keyLen_qs = KEYLEN_CAT_2;     unpackQS = &unpack_read1B; }
-
-    else if (qsRangeLen == CAT_1)                                   // cat 1
-    { keyLen_qs = KEYLEN_CAT_1;     unpackQS = &unpack_read1B; }
-
-    else { keyLen_qs = 1;           unpackQS = &unpack_read1B; }    // = 1
-
-    string plusMore;
-    if (hdrRangeLen > MAX_CAT_5 && qsRangeLen > MAX_CAT_5)
-    {
-        const string headers = hdrRange.substr(hdrRangeLen - MAX_CAT_5);
-        const string quality_scores = qsRange.substr(qsRangeLen-MAX_CAT_5);
-        // ASCII char after the last char in headers & quality_scores string
-        const char XChar_hdr = (char) (headers[headers.size()-1] + 1);
-        const char XChar_qs=(char)(quality_scores[quality_scores.size()-1] + 1);
-        string headers_X = headers;                  headers_X+=XChar_hdr;
-        string quality_scores_X = quality_scores;    quality_scores_X+=XChar_qs;
-
-        // tables for unpacking
-        HDR_UNPACK = buildUnpack(headers_X,        keyLen_hdr, HDR_UNPACK);
-        QS_UNPACK  = buildUnpack(quality_scores_X, keyLen_qs,  QS_UNPACK);
-
-        while (i != decText.end())
-        {
-            cout << '@';
-            cout << (plusMore = unpackLarge_read2B(i, XChar_hdr, HDR_UNPACK))
-                 << '\n';                                         ++i;    // hdr
-            cout << unpackSeqFQ_3to1(i) << '\n';                          // seq
-            cout << (justPlus ? "+" : "+" + plusMore) << '\n';    ++i;    // +
-            cout << unpackLarge_read2B(i, XChar_qs, QS_UNPACK) << '\n';   // qs
-            // end of file
-            if (*(++i) == (char) 252)   break;
-        }
-    }
-    else if (hdrRangeLen > MAX_CAT_5 && qsRangeLen <= MAX_CAT_5)
-    {
-        const string headers = hdrRange.substr(hdrRangeLen - MAX_CAT_5);
-        // ASCII char after the last char in headers string
-        const char XChar_hdr = (char) (headers[headers.size()-1] + 1);
-        string headers_X = headers;     headers_X += XChar_hdr;
-
-        // tables for unpacking
-        HDR_UNPACK = buildUnpack(headers_X, keyLen_hdr, HDR_UNPACK);
-        QS_UNPACK  = buildUnpack(qsRange,   keyLen_qs,  QS_UNPACK);
-
-        while (i != decText.end())
-        {
-            cout << '@';
-            cout << (plusMore = unpackLarge_read2B(i, XChar_hdr, HDR_UNPACK))
-                 << '\n';                                         ++i;    // hdr
-            cout << unpackSeqFQ_3to1(i)               << '\n';            // seq
-            cout << (justPlus ? "+" : "+" + plusMore) << '\n';    ++i;    // +
-            cout << unpackQS(i, QS_UNPACK)            << '\n';            // qs
-            // end of file
-            if (*(++i) == (char) 252)   break;
-        }
-    }
-    else if (hdrRangeLen <= MAX_CAT_5 && qsRangeLen > MAX_CAT_5)
-    {
-        const string quality_scores = qsRange.substr(qsRangeLen - MAX_CAT_5);
-        // ASCII char after the last char in quality_scores string
-        const char XChar_qs=(char)(quality_scores[quality_scores.size()-1] + 1);
-        string quality_scores_X=quality_scores;  quality_scores_X+=XChar_qs;
-
-        // tables for unpacking
-        HDR_UNPACK = buildUnpack(hdrRange,         keyLen_hdr, HDR_UNPACK);
-        QS_UNPACK  = buildUnpack(quality_scores_X, keyLen_qs,  QS_UNPACK);
-
-        while (i != decText.end())
-        {
-            cout << '@';
-            cout << (plusMore = unpackHdr(i, HDR_UNPACK)) << '\n';  ++i;  // hdr
-            cout << unpackSeqFQ_3to1(i)                   << '\n';        // seq
-            cout << (justPlus ? "+" : "+" + plusMore)     << '\n';  ++i;  // +
-            cout << unpackLarge_read2B(i, XChar_qs, QS_UNPACK) << '\n';   // qs
-            // end of file
-            if (*(++i) == (char) 252)   break;
-        }
-    }
-    else if (hdrRangeLen <= MAX_CAT_5 && qsRangeLen <= MAX_CAT_5)
-    {
-        // tables for unpacking
-        HDR_UNPACK = buildUnpack(hdrRange, keyLen_hdr, HDR_UNPACK);
-        QS_UNPACK  = buildUnpack(qsRange,  keyLen_qs,  QS_UNPACK);
-        
-        while (i != decText.end())
-        {
-            cout << '@';
-            cout << (plusMore = unpackHdr(i, HDR_UNPACK)) << '\n';  ++i;  // hdr
-            cout << unpackSeqFQ_3to1(i)                   << '\n';        // seq
-            cout << (justPlus ? "+" : "+" + plusMore)     << '\n';  ++i;  // +
-//            cout << unpackQS(i, QS_UNPACK)                << '\n';        // qs
-            // end of file
-            if (*(++i) == (char) 252)   break;
-        }
-    }
-}
-
-/*******************************************************************************
-    decrypt.
-    AES encryption uses a secret key of a variable length (128, 196 or 256 bit).
-    This key is secretly exchanged between two parties before communication
-    begins. DEFAULT_KEYLENGTH = 16 bytes.
-*******************************************************************************/
-string EnDecrypto::decrypt (const string &inFileName, const string &keyFileName,
-                            const int v_flag)
-{
-    string decText;
-    ifstream in(inFileName);
-    if (!in.good())
-    { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
-    
-    byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
-    memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
-    memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
-    
-    const string pass = getPassFromFile(keyFileName);
-    buildKey(key, pass);
-    buildIV(iv, pass);
-//    printIV(iv);      // debug
-//    printKey(key);    // debug
-    
-    string cipherText( (std::istreambuf_iterator<char> (in)),
-                       std::istreambuf_iterator<char> () );
-    
-    // watermark
-    string watermark = "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
-                       + std::to_string(RELEASE_CRYFA) + "\n";
-    
-    string::size_type watermarkIdx = cipherText.find(watermark);
-    if (watermarkIdx == string::npos)
-    { cerr << "Error: invalid encrypted file!\n";    exit(1); }
-    else  cipherText.erase(watermarkIdx, watermark.length());
-    
-    if (v_flag)
-    {
-        cerr << "cipher size: " << cipherText.size()-1 << '\n';
-        cerr << " block size: " << AES::BLOCKSIZE        << '\n';
-    }
-    
-    AES::Decryption aesDecryption(key, (size_t) AES::DEFAULT_KEYLENGTH);
-    CBC_Mode_ExternalCipher::Decryption cbcDecryption(aesDecryption, iv);
-    StreamTransformationFilter stfDecryptor(cbcDecryption,
-                                            new CryptoPP::StringSink(decText));
-    stfDecryptor.Put(reinterpret_cast<const byte*>
-                     (cipherText.c_str()), cipherText.size()-1);
-    stfDecryptor.MessageEnd();
-    
-    return decText;
+//
+////    // TEST
+////    cerr << hdrRange << '\n' << hdrRange.length() << '\n';
+////    cerr << qsRange << '\n' << qsRange.length() << '\n';
+//
+////    using unpackHdrPointer = string (*)(string::iterator&, string*);
+//    using unpackHdrPointer = string (*)(string::iterator&, string* &);
+//    unpackHdrPointer unpackHdr;                              // function pointer
+////    using unpackQSPointer = string (*)(string::iterator&, string*);
+//    using unpackQSPointer = string (*)(string::iterator&, string* &);
+//    unpackQSPointer unpackQS;                                // function pointer
+//
+//    // header
+//    if (hdrRangeLen > MAX_CAT_5)    keyLen_hdr = KEYLEN_CAT_5;
+//
+//    else if (hdrRangeLen > MAX_CAT_4)                               // cat 5
+//    { keyLen_hdr = KEYLEN_CAT_5;    unpackHdr = &unpack_read2B; }
+//
+//    else if (hdrRangeLen > MAX_CAT_3)                               // cat 4
+//    { keyLen_hdr = KEYLEN_CAT_4;    unpackHdr = &unpack_read1B; }
+//
+//    else if (hdrRangeLen == MAX_CAT_3 || hdrRangeLen == MID_CAT_3   // cat 3
+//             || hdrRangeLen == MIN_CAT_3)
+//    { keyLen_hdr = KEYLEN_CAT_3;    unpackHdr = &unpack_read1B; }
+//
+//    else if (hdrRangeLen == CAT_2)                                  // cat 2
+//    { keyLen_hdr = KEYLEN_CAT_2;    unpackHdr = &unpack_read1B; }
+//
+//    else if (hdrRangeLen == CAT_1)                                  // cat 1
+//    { keyLen_hdr = KEYLEN_CAT_1;    unpackHdr = &unpack_read1B; }
+//
+//    else { keyLen_hdr = 1;          unpackHdr = &unpack_read1B; }   // = 1
+//
+//    // quality score
+//    if (qsRangeLen > MAX_CAT_5)     keyLen_qs = KEYLEN_CAT_5;
+//
+//    else if (qsRangeLen > MAX_CAT_4)                                // cat 5
+//    { keyLen_qs = KEYLEN_CAT_5;     unpackQS = &unpack_read2B; }
+//
+//    else if (qsRangeLen > MAX_CAT_3)                                // cat 4
+//    { keyLen_qs = KEYLEN_CAT_4;     unpackQS = &unpack_read1B; }
+//
+//    else if (qsRangeLen == MAX_CAT_3 || qsRangeLen == MID_CAT_3     // cat 3
+//             || qsRangeLen == MIN_CAT_3)
+//    { keyLen_qs = KEYLEN_CAT_3;     unpackQS = &unpack_read1B; }
+//
+//    else if (qsRangeLen == CAT_2)                                   // cat 2
+//    { keyLen_qs = KEYLEN_CAT_2;     unpackQS = &unpack_read1B; }
+//
+//    else if (qsRangeLen == CAT_1)                                   // cat 1
+//    { keyLen_qs = KEYLEN_CAT_1;     unpackQS = &unpack_read1B; }
+//
+//    else { keyLen_qs = 1;           unpackQS = &unpack_read1B; }    // = 1
+//
+//    string plusMore;
+//    if (hdrRangeLen > MAX_CAT_5 && qsRangeLen > MAX_CAT_5)
+//    {
+//        const string headers = hdrRange.substr(hdrRangeLen - MAX_CAT_5);
+//        const string quality_scores = qsRange.substr(qsRangeLen-MAX_CAT_5);
+//        // ASCII char after the last char in headers & quality_scores string
+//        const char XChar_hdr = (char) (headers[headers.size()-1] + 1);
+//        const char XChar_qs=(char)(quality_scores[quality_scores.size()-1] + 1);
+//        string headers_X = headers;                  headers_X+=XChar_hdr;
+//        string quality_scores_X = quality_scores;    quality_scores_X+=XChar_qs;
+//
+//        // tables for unpacking
+//        HDR_UNPACK = buildUnpack(headers_X,        keyLen_hdr, HDR_UNPACK);
+//        QS_UNPACK  = buildUnpack(quality_scores_X, keyLen_qs,  QS_UNPACK);
+//
+//        while (i != decText.end())
+//        {
+//            cout << '@';
+//            cout << (plusMore = unpackLarge_read2B(i, XChar_hdr, HDR_UNPACK))
+//                 << '\n';                                         ++i;    // hdr
+//            cout << unpackSeqFQ_3to1(i) << '\n';                          // seq
+//            cout << (justPlus ? "+" : "+" + plusMore) << '\n';    ++i;    // +
+//            cout << unpackLarge_read2B(i, XChar_qs, QS_UNPACK) << '\n';   // qs
+//            // end of file
+//            if (*(++i) == (char) 252)   break;
+//        }
+//    }
+//    else if (hdrRangeLen > MAX_CAT_5 && qsRangeLen <= MAX_CAT_5)
+//    {
+//        const string headers = hdrRange.substr(hdrRangeLen - MAX_CAT_5);
+//        // ASCII char after the last char in headers string
+//        const char XChar_hdr = (char) (headers[headers.size()-1] + 1);
+//        string headers_X = headers;     headers_X += XChar_hdr;
+//
+//        // tables for unpacking
+//        HDR_UNPACK = buildUnpack(headers_X, keyLen_hdr, HDR_UNPACK);
+//        QS_UNPACK  = buildUnpack(qsRange,   keyLen_qs,  QS_UNPACK);
+//
+//        while (i != decText.end())
+//        {
+//            cout << '@';
+//            cout << (plusMore = unpackLarge_read2B(i, XChar_hdr, HDR_UNPACK))
+//                 << '\n';                                         ++i;    // hdr
+//            cout << unpackSeqFQ_3to1(i)               << '\n';            // seq
+//            cout << (justPlus ? "+" : "+" + plusMore) << '\n';    ++i;    // +
+//            cout << unpackQS(i, QS_UNPACK)            << '\n';            // qs
+//            // end of file
+//            if (*(++i) == (char) 252)   break;
+//        }
+//    }
+//    else if (hdrRangeLen <= MAX_CAT_5 && qsRangeLen > MAX_CAT_5)
+//    {
+//        const string quality_scores = qsRange.substr(qsRangeLen - MAX_CAT_5);
+//        // ASCII char after the last char in quality_scores string
+//        const char XChar_qs=(char)(quality_scores[quality_scores.size()-1] + 1);
+//        string quality_scores_X=quality_scores;  quality_scores_X+=XChar_qs;
+//
+//        // tables for unpacking
+//        HDR_UNPACK = buildUnpack(hdrRange,         keyLen_hdr, HDR_UNPACK);
+//        QS_UNPACK  = buildUnpack(quality_scores_X, keyLen_qs,  QS_UNPACK);
+//
+//        while (i != decText.end())
+//        {
+//            cout << '@';
+//            cout << (plusMore = unpackHdr(i, HDR_UNPACK)) << '\n';  ++i;  // hdr
+//            cout << unpackSeqFQ_3to1(i)                   << '\n';        // seq
+//            cout << (justPlus ? "+" : "+" + plusMore)     << '\n';  ++i;  // +
+//            cout << unpackLarge_read2B(i, XChar_qs, QS_UNPACK) << '\n';   // qs
+//            // end of file
+//            if (*(++i) == (char) 252)   break;
+//        }
+//    }
+//    else if (hdrRangeLen <= MAX_CAT_5 && qsRangeLen <= MAX_CAT_5)
+//    {
+//        // tables for unpacking
+//        HDR_UNPACK = buildUnpack(hdrRange, keyLen_hdr, HDR_UNPACK);
+//        QS_UNPACK  = buildUnpack(qsRange,  keyLen_qs,  QS_UNPACK);
+//
+//        while (i != decText.end())
+//        {
+//            cout << '@';
+//            cout << (plusMore = unpackHdr(i, HDR_UNPACK)) << '\n';  ++i;  // hdr
+//            cout << unpackSeqFQ_3to1(i)                   << '\n';        // seq
+//            cout << (justPlus ? "+" : "+" + plusMore)     << '\n';  ++i;  // +
+////            cout << unpackQS(i, QS_UNPACK)                << '\n';        // qs
+//            // end of file
+//            if (*(++i) == (char) 252)   break;
+//        }
+//    }
 }
 
 /*******************************************************************************
