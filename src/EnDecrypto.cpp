@@ -404,8 +404,7 @@ void EnDecrypto::compressFQ (const string &inFileName,
             while (getline(encFile[t], line).good() &&
                     line.compare(THR_ID_HDR+std::to_string(t)))
             {
-                if (prevLineNotThrID)
-                    context += '\n';
+                if (prevLineNotThrID)   context += '\n';
                 context += line;
                 prevLineNotThrID = true;
             }
@@ -504,7 +503,7 @@ void EnDecrypto::compressFQ (const string &inFileName,
 }
 
 /*******************************************************************************
-    pack
+    pack -- '@' at the beginning of headers is not packed
 *******************************************************************************/
 inline void EnDecrypto::pack (ULL startLine,string fileName,
 //        const string &in,
@@ -542,7 +541,6 @@ inline void EnDecrypto::pack (ULL startLine,string fileName,
     //todo. mohem
     if (in.peek()==EOF) { mutx.lock();  ++nEmptyIn;  mutx.unlock();    return; }
     
-////todo. mohem
 //    if (!getline(in, line).good())
 //    {
 //        mutx.lock();
@@ -574,7 +572,8 @@ inline void EnDecrypto::pack (ULL startLine,string fileName,
     }
     in.clear();     in.seekg(pos_beg);             // beginning of this part of file
 //    in.clear();     in.seekg(0, std::ios::beg);             // beginning of file
-
+    hdrRange.erase(hdrRange.begin());                       //ignore '@'
+    
 //    mutx.lock();
 //    cerr << (int) threadID << '=' << hdrRange << '\n';
 //    cerr << (int) threadID << '=' << qsRange << '\n';
@@ -601,22 +600,25 @@ inline void EnDecrypto::pack (ULL startLine,string fileName,
      */
     
 //    mutx.lock();
-    // '@' must be included in 'totHdrRange'
+    //todo. check whether '@' must be included in 'totHdrRange'
     for (const char &c : hdrRange)
         if (totHdrRange.find_first_of(c) == string::npos)
             totHdrRange += c;
-
+    
     for (const char &c : qsRange)
         if (totQsRange.find_first_of(c) == string::npos)
             totQsRange += c;
 //    mutx.unlock();
     
+    
     // '@' must be included in 'totHdrRange'
-    hdrRange.erase(hdrRange.begin());                       //ignore '@'
+//    totHdrRange.erase(std::remove(totHdrRange.begin(), totHdrRange.end(), '@'),
+//                      totHdrRange.end());
+//    cerr << totHdrRange << '\n';
+
+//    hdrRange.erase(hdrRange.begin());                       //ignore '@'
     std::sort(hdrRange.begin(), hdrRange.end());            // sort values
     std::sort(qsRange.begin(),  qsRange.end());             // sort ASCII values
-
-
     
     
 //    using packHdrPointer = string (*)(string, string, htable_t);
@@ -630,7 +632,7 @@ inline void EnDecrypto::pack (ULL startLine,string fileName,
     string QUALITY_SCORES_X;                          // extended QUALITY_SCORES
     const size_t hdrRangeLen = hdrRange.length();
     const size_t qsRangeLen  = qsRange.length();
-
+    
     // header
     if (hdrRangeLen > MAX_CAT_5)          // if len > 39 filter the last 39 ones
     {
@@ -678,7 +680,7 @@ inline void EnDecrypto::pack (ULL startLine,string fileName,
             packHdr = &pack_1to1;
         }
     }
-
+    
     // quality score
     if (qsRangeLen > MAX_CAT_5)           // if len > 39 filter the last 39 ones
     {
@@ -726,8 +728,7 @@ inline void EnDecrypto::pack (ULL startLine,string fileName,
             packQS = &pack_1to1;
         }
     }
-
-
+    
 
 //    while (!in.eof())    // process 4 lines by 4 lines
     for (ULL l = 0; l != LINE_BUFFER; l+=4)
@@ -745,8 +746,7 @@ inline void EnDecrypto::pack (ULL startLine,string fileName,
             context += packQS(line, QUALITY_SCORES, QS_MAP) + (char) 254;
     }
 
-
-
+    
 //    i = in.begin();
 //    while (i != in.end())
 //    {
@@ -1001,67 +1001,66 @@ inline void EnDecrypto::decompFQ (string decText, const string &keyFileName)
 
     const size_t qsRangeLen  = qsRange.length();
     const size_t hdrRangeLen = hdrRange.length();
-    short keyLen_hdr = 0;
-    short keyLen_qs = 0;
-
+    US keyLen_hdr = 0;
+    US keyLen_qs = 0;
+    
     mutx.lock();
-    cerr<<hdrRange<<'\n'<<qsRange<<'\n';
+    cerr<<hdrRange<<'\t'<<hdrRangeLen<<'\n'<<qsRange<<'\t'<<qsRangeLen<<'\n';
     mutx.unlock();
-//
-////    // TEST
-////    cerr << hdrRange << '\n' << hdrRange.length() << '\n';
-////    cerr << qsRange << '\n' << qsRange.length() << '\n';
-//
-////    using unpackHdrPointer = string (*)(string::iterator&, string*);
+    
+    
+    
+    
+    using unpackHdrPointer = string (*)(string::iterator&, string*);
 //    using unpackHdrPointer = string (*)(string::iterator&, string* &);
-//    unpackHdrPointer unpackHdr;                              // function pointer
-////    using unpackQSPointer = string (*)(string::iterator&, string*);
+    unpackHdrPointer unpackHdr;                              // function pointer
+    using unpackQSPointer = string (*)(string::iterator&, string*);
 //    using unpackQSPointer = string (*)(string::iterator&, string* &);
-//    unpackQSPointer unpackQS;                                // function pointer
-//
-//    // header
-//    if (hdrRangeLen > MAX_CAT_5)    keyLen_hdr = KEYLEN_CAT_5;
-//
-//    else if (hdrRangeLen > MAX_CAT_4)                               // cat 5
-//    { keyLen_hdr = KEYLEN_CAT_5;    unpackHdr = &unpack_read2B; }
-//
-//    else if (hdrRangeLen > MAX_CAT_3)                               // cat 4
-//    { keyLen_hdr = KEYLEN_CAT_4;    unpackHdr = &unpack_read1B; }
-//
-//    else if (hdrRangeLen == MAX_CAT_3 || hdrRangeLen == MID_CAT_3   // cat 3
-//             || hdrRangeLen == MIN_CAT_3)
-//    { keyLen_hdr = KEYLEN_CAT_3;    unpackHdr = &unpack_read1B; }
-//
-//    else if (hdrRangeLen == CAT_2)                                  // cat 2
-//    { keyLen_hdr = KEYLEN_CAT_2;    unpackHdr = &unpack_read1B; }
-//
-//    else if (hdrRangeLen == CAT_1)                                  // cat 1
-//    { keyLen_hdr = KEYLEN_CAT_1;    unpackHdr = &unpack_read1B; }
-//
-//    else { keyLen_hdr = 1;          unpackHdr = &unpack_read1B; }   // = 1
-//
-//    // quality score
-//    if (qsRangeLen > MAX_CAT_5)     keyLen_qs = KEYLEN_CAT_5;
-//
-//    else if (qsRangeLen > MAX_CAT_4)                                // cat 5
-//    { keyLen_qs = KEYLEN_CAT_5;     unpackQS = &unpack_read2B; }
-//
-//    else if (qsRangeLen > MAX_CAT_3)                                // cat 4
-//    { keyLen_qs = KEYLEN_CAT_4;     unpackQS = &unpack_read1B; }
-//
-//    else if (qsRangeLen == MAX_CAT_3 || qsRangeLen == MID_CAT_3     // cat 3
-//             || qsRangeLen == MIN_CAT_3)
-//    { keyLen_qs = KEYLEN_CAT_3;     unpackQS = &unpack_read1B; }
-//
-//    else if (qsRangeLen == CAT_2)                                   // cat 2
-//    { keyLen_qs = KEYLEN_CAT_2;     unpackQS = &unpack_read1B; }
-//
-//    else if (qsRangeLen == CAT_1)                                   // cat 1
-//    { keyLen_qs = KEYLEN_CAT_1;     unpackQS = &unpack_read1B; }
-//
-//    else { keyLen_qs = 1;           unpackQS = &unpack_read1B; }    // = 1
-//
-//    string plusMore;
+    unpackQSPointer unpackQS;                                // function pointer
+
+    // header
+    if (hdrRangeLen > MAX_CAT_5)    keyLen_hdr = KEYLEN_CAT_5;
+
+    else if (hdrRangeLen > MAX_CAT_4)                               // cat 5
+    { keyLen_hdr = KEYLEN_CAT_5;    unpackHdr = &unpack_read2B; }
+
+    else if (hdrRangeLen > MAX_CAT_3)                               // cat 4
+    { keyLen_hdr = KEYLEN_CAT_4;    unpackHdr = &unpack_read1B; }
+
+    else if (hdrRangeLen == MAX_CAT_3 || hdrRangeLen == MID_CAT_3   // cat 3
+             || hdrRangeLen == MIN_CAT_3)
+    { keyLen_hdr = KEYLEN_CAT_3;    unpackHdr = &unpack_read1B; }
+
+    else if (hdrRangeLen == CAT_2)                                  // cat 2
+    { keyLen_hdr = KEYLEN_CAT_2;    unpackHdr = &unpack_read1B; }
+
+    else if (hdrRangeLen == CAT_1)                                  // cat 1
+    { keyLen_hdr = KEYLEN_CAT_1;    unpackHdr = &unpack_read1B; }
+
+    else { keyLen_hdr = 1;          unpackHdr = &unpack_read1B; }   // = 1
+    
+    // quality score
+    if (qsRangeLen > MAX_CAT_5)     keyLen_qs = KEYLEN_CAT_5;
+    
+    else if (qsRangeLen > MAX_CAT_4)                                // cat 5
+    { keyLen_qs = KEYLEN_CAT_5;     unpackQS = &unpack_read2B; }
+
+    else if (qsRangeLen > MAX_CAT_3)                                // cat 4
+    { keyLen_qs = KEYLEN_CAT_4;     unpackQS = &unpack_read1B; }
+
+    else if (qsRangeLen == MAX_CAT_3 || qsRangeLen == MID_CAT_3     // cat 3
+             || qsRangeLen == MIN_CAT_3)
+    { keyLen_qs = KEYLEN_CAT_3;     unpackQS = &unpack_read1B; }
+
+    else if (qsRangeLen == CAT_2)                                   // cat 2
+    { keyLen_qs = KEYLEN_CAT_2;     unpackQS = &unpack_read1B; }
+
+    else if (qsRangeLen == CAT_1)                                   // cat 1
+    { keyLen_qs = KEYLEN_CAT_1;     unpackQS = &unpack_read1B; }
+
+    else { keyLen_qs = 1;           unpackQS = &unpack_read1B; }    // = 1
+
+    string plusMore;
 //    if (hdrRangeLen > MAX_CAT_5 && qsRangeLen > MAX_CAT_5)
 //    {
 //        const string headers = hdrRange.substr(hdrRangeLen - MAX_CAT_5);
@@ -1133,11 +1132,23 @@ inline void EnDecrypto::decompFQ (string decText, const string &keyFileName)
 //            if (*(++i) == (char) 252)   break;
 //        }
 //    }
-//    else if (hdrRangeLen <= MAX_CAT_5 && qsRangeLen <= MAX_CAT_5)
-//    {
-//        // tables for unpacking
-//        HDR_UNPACK = buildUnpack(hdrRange, keyLen_hdr, HDR_UNPACK);
-//        QS_UNPACK  = buildUnpack(qsRange,  keyLen_qs,  QS_UNPACK);
+//    else
+    if (hdrRangeLen <= MAX_CAT_5 && qsRangeLen <= MAX_CAT_5)
+    {//todo. HDR_UNPACK dorost sakhte nemishe aslan, pas segmentation fault mide
+        // tables for unpacking
+        HDR_UNPACK = buildUnpack(hdrRange, keyLen_hdr, HDR_UNPACK);
+//        QS_UNPACK  = buildUnpack(qsRange,  keyLen_qs,  QS_UNPACK);//todo. uncomment
+    
+//        for(int i=0;i<HDR_UNPACK->size();++i)
+//        {
+//            cerr<<HDR_UNPACK[i]<<' ';
+//        }
+//        for (string s:HDR_UNPACK)
+//        {
+//            cerr<<s<<' ';
+//        }
+
+//        i+=1;
 //
 //        while (i != decText.end())
 //        {
@@ -1145,11 +1156,11 @@ inline void EnDecrypto::decompFQ (string decText, const string &keyFileName)
 //            cout << (plusMore = unpackHdr(i, HDR_UNPACK)) << '\n';  ++i;  // hdr
 //            cout << unpackSeqFQ_3to1(i)                   << '\n';        // seq
 //            cout << (justPlus ? "+" : "+" + plusMore)     << '\n';  ++i;  // +
-////            cout << unpackQS(i, QS_UNPACK)                << '\n';        // qs
+//            cout << unpackQS(i, QS_UNPACK)                << '\n';        // qs
 //            // end of file
 //            if (*(++i) == (char) 252)   break;
 //        }
-//    }
+    }
 }
 
 /*******************************************************************************

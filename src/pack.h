@@ -47,7 +47,7 @@ inline htable_t buildHashTable (htable_t map, const string &strIn, short keyLen)
                 ++elementNo;
             }
             break;
-
+            
         case 2:
             LOOP2(i, j, strInLen)
             {
@@ -138,7 +138,7 @@ inline htable_t buildHashTable (htable_t map, const string &strIn, short keyLen)
 /*******************************************************************************
     build table for unpacking
 *******************************************************************************/
-inline string* buildUnpack (const string &strIn, short keyLen, string* unpack)
+inline string* buildUnpack (const string &strIn, US keyLen, string* unpack)
 {
     const byte strLen = strIn.length();
     ULL elementNo = 0;
@@ -161,9 +161,21 @@ inline string* buildUnpack (const string &strIn, short keyLen, string* unpack)
             LOOP2(i, j, strLen)
             {
                 element = strIn[i];   element += strIn[j];
-                unpack[elementNo] = element;
+//                unpack[elementNo] = element;
+                
+//                unpack+= element;
+//                cerr<<elementNo<<'/'<<element<<' ';
+                
                 ++elementNo;
             }
+        
+//            cerr<<'\n';
+//            for (int i = 0; i < unpack->size(); ++i)
+//            {
+//                cerr << unpack[i] << ' ';
+//            }
+        
+        
             break;
 
         case 3:
@@ -638,10 +650,10 @@ inline string unpackSeqFQ_3to1 (string::iterator &i)
 /*******************************************************************************
     unpack by reading 2 byte by 2 byte, when # > 39
 *******************************************************************************/
-//inline string unpackLarge_read2B (string::iterator &i, const char XChar,
-//                                  string* unpack)
 inline string unpackLarge_read2B (string::iterator &i, const char XChar,
-                                  string* &unpack)
+                                  string* unpack)
+//inline string unpackLarge_read2B (string::iterator &i, const char XChar,
+//                                  string* &unpack)
 {
     byte MSB, LSB;
     US doubleB; // double byte
@@ -690,8 +702,8 @@ inline string unpackLarge_read2B (string::iterator &i, const char XChar,
 /*******************************************************************************
     unpack by reading 2 byte by 2 byte
 *******************************************************************************/
-//inline string unpack_read2B (string::iterator &i, string* unpack)
-inline string unpack_read2B (string::iterator &i, string* &unpack)
+inline string unpack_read2B (string::iterator &i, string* unpack)
+//inline string unpack_read2B (string::iterator &i, string* &unpack)
 {
     byte MSB, LSB;
     US doubleB; // double byte
@@ -715,8 +727,8 @@ inline string unpack_read2B (string::iterator &i, string* &unpack)
 /*******************************************************************************
     unpack by reading 1 byte by 1 byte
 *******************************************************************************/
-//inline string unpack_read1B (string::iterator &i, string* unpack)
-inline string unpack_read1B (string::iterator &i, string* &unpack)
+inline string unpack_read1B (string::iterator &i, string* unpack)
+//inline string unpack_read1B (string::iterator &i, string* &unpack)
 {
     string out;
 
