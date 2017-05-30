@@ -36,12 +36,11 @@ int main (int argc, char* argv[])
     // start timer
     high_resolution_clock::time_point startTime = high_resolution_clock::now();
     
-    EnDecrypto crptObj;
+    EnDecrypto cryptObj;
+    cryptObj.inFileName = argv[argc-1];  // input file name
+    cryptObj.n_threads = DEFAULT_N_THREADS;  // number of threads
     
-    const string inFileName = argv[argc-1];
     static int h_flag, a_flag, v_flag, d_flag;
-    string keyFileName;                  // argument of option 'k'
-    byte n_threads = DEFAULT_N_THREADS;  // number of threads
     int c;                               // deal with getopt_long()
     int option_index;                    // option index stored by getopt_long()
     opterr = 0;  // force getopt_long() to remain silent when it finds a problem
@@ -84,6 +83,7 @@ int main (int argc, char* argv[])
 
             case 'v':   // verbose mode
                 v_flag = 1;
+                cryptObj.verbose = (bool) v_flag;
                 break;
 
             case 'd':   // decompress mode
@@ -91,11 +91,11 @@ int main (int argc, char* argv[])
                 break;
                 
             case 'k':   // needs key filename
-                keyFileName = (string) optarg;
+                cryptObj.keyFileName = (string) optarg;
                 break;
             
             case 't':   // number of threads
-                n_threads = (byte) stoi((string) optarg);
+                cryptObj.n_threads = (byte) stoi((string) optarg);
                 break;
                 
             default:
@@ -108,7 +108,7 @@ int main (int argc, char* argv[])
     if (d_flag)
     {
         cerr << "Decrypting...\n";
-        crptObj.decompress(inFileName, keyFileName, v_flag);
+        cryptObj.decompress();
         
         // stop timer
         high_resolution_clock::time_point finishTime =
@@ -120,13 +120,10 @@ int main (int argc, char* argv[])
         
         return 0;
     }
-    
+
     cerr << "Encrypting...\n";
-    //todo. now, multithreading only for fastq
-    if (fileType(inFileName) == 'A')    // FASTA
-        crptObj.compressFA(inFileName, keyFileName, v_flag);
-    else                                // FASTQ
-        crptObj.compressFQ(inFileName, keyFileName, v_flag, n_threads);
+    if (fileType(cryptObj.inFileName) == 'A') cryptObj.compressFA();    // FA
+    else  cryptObj.compressFQ();                               // FQ
     
     // stop timer
     high_resolution_clock::time_point finishTime = high_resolution_clock::now();

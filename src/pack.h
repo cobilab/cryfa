@@ -12,27 +12,20 @@
 #include <iostream>
 #include "def.h"
 using std::string;
+using std::vector;
 using std::cout;
 using std::cerr;
 using std::make_pair;
 
-
-
-
-//htable_t HDR_MAP, QS_MAP;          // hash tables for header and quality score
-//string   HEADERS, QUALITY_SCORES;   // max: 39 values
-
-string totHdrRange, totQsRange;     // if hash tables are built in pack function
-byte nEmptyIn;
-//bool finished;
-
-
+string   HEADERS, QUALITY_SCORES;   // max: 39 values
 
 /*******************************************************************************
     build hash table
 *******************************************************************************/
-inline htable_t buildHashTable (htable_t map, const string &strIn, short keyLen)
+//inline htable_t buildHashTable (htable_t map, const string &strIn, short keyLen)
+inline htable_t buildHashTable (const string &strIn, short keyLen)
 {
+    htable_t map;
     const byte strInLen = strIn.length();
     ULL elementNo = 0;
     string element;
@@ -124,12 +117,8 @@ inline htable_t buildHashTable (htable_t map, const string &strIn, short keyLen)
     }
 
     return map;
-
+    
     // TEST
-//    htable_t::const_iterator got = map.find("II!");
-//    if (got == map.end()) cerr << "Error: key not found!\n";
-//    else  cerr << got->second;
-
 //    for (htable_t::iterator i = map.begin(); i != map.end(); ++i)
 //        cerr << i->first << "\t" << i->second << '\n';
 //    cerr << elementNo << '\n';
@@ -138,22 +127,25 @@ inline htable_t buildHashTable (htable_t map, const string &strIn, short keyLen)
 /*******************************************************************************
     build table for unpacking
 *******************************************************************************/
-inline string* buildUnpack (const string &strIn, US keyLen, string* unpack)
+//inline string* buildUnpack (const string &strIn, US keyLen, string* unpack)
+inline vector<string> buildUnpack (const string &strIn, US keyLen)
 {
     const byte strLen = strIn.length();
     ULL elementNo = 0;
     string element;
     const ULL arrSize = pow(strLen, keyLen);
-    unpack = new string[arrSize];
-
+//    unpack = new string[arrSize];
+    vector<string> unpack;
+    
     switch (keyLen)
     {
         case 1:
             LOOP(i, strLen)
             {
                 element = strIn[i];
-                unpack[elementNo] = element;
-                ++elementNo;
+//                unpack[elementNo] = element;
+                unpack.push_back(element);
+//                ++elementNo;
             }
             break;
 
@@ -163,27 +155,18 @@ inline string* buildUnpack (const string &strIn, US keyLen, string* unpack)
                 element = strIn[i];   element += strIn[j];
 //                unpack[elementNo] = element;
                 
-//                unpack+= element;
-//                cerr<<elementNo<<'/'<<element<<' ';
-                
-                ++elementNo;
+                unpack.push_back(element);
+//                ++elementNo;
             }
-        
-//            cerr<<'\n';
-//            for (int i = 0; i < unpack->size(); ++i)
-//            {
-//                cerr << unpack[i] << ' ';
-//            }
-        
-        
             break;
 
         case 3:
             LOOP3(i, j, k, strLen)
             {
                 element  = strIn[i];  element += strIn[j];  element += strIn[k];
-                unpack[elementNo] = element;
-                ++elementNo;
+//                unpack[elementNo] = element;
+                unpack.push_back(element);
+//                ++elementNo;
             }
             break;
 
@@ -192,8 +175,9 @@ inline string* buildUnpack (const string &strIn, US keyLen, string* unpack)
             {
                 element  = strIn[i];  element += strIn[j];  element += strIn[k];
                 element += strIn[l];  element += strIn[m];
-                unpack[elementNo] = element;
-                ++elementNo;
+//                unpack[elementNo] = element;
+                unpack.push_back(element);
+//                ++elementNo;
             }
             break;
 
@@ -203,8 +187,9 @@ inline string* buildUnpack (const string &strIn, US keyLen, string* unpack)
                 element  = strIn[i];  element += strIn[j];  element += strIn[k];
                 element += strIn[l];  element += strIn[m];  element += strIn[n];
                 element += strIn[o];
-                unpack[elementNo] = element;
-                ++elementNo;
+//                unpack[elementNo] = element;
+                unpack.push_back(element);
+//                ++elementNo;
             }
             break;
 
@@ -213,8 +198,9 @@ inline string* buildUnpack (const string &strIn, US keyLen, string* unpack)
             {
                 element  = strIn[i];  element += strIn[j];  element += strIn[k];
                 element += strIn[l];
-                unpack[elementNo] = element;
-                ++elementNo;
+//                unpack[elementNo] = element;
+                unpack.push_back(element);
+//                ++elementNo;
             }
             break;
 
@@ -223,19 +209,21 @@ inline string* buildUnpack (const string &strIn, US keyLen, string* unpack)
             {
                 element  = strIn[i];  element += strIn[j];  element += strIn[k];
                 element += strIn[l];  element += strIn[m];  element += strIn[n];
-                unpack[elementNo] = element;
-                ++elementNo;
+//                unpack[elementNo] = element;
+                unpack.push_back(element);
+//                ++elementNo;
             }
             break;
-
+            
         case 8:
             LOOP8(i, j, k, l, m, n, o, p, strLen)
             {
                 element  = strIn[i];  element += strIn[j];  element += strIn[k];
                 element += strIn[l];  element += strIn[m];  element += strIn[n];
                 element += strIn[o];  element += strIn[p];
-                unpack[elementNo] = element;
-                ++elementNo;
+//                unpack[elementNo] = element;
+                unpack.push_back(element);
+//                ++elementNo;
             }
             break;
 
@@ -262,7 +250,7 @@ inline US dnaPack (const string &dna)
 /*******************************************************************************
     index of each pack, when # > 39
 *******************************************************************************/
-inline US largePack (const string &strIn, htable_t &map)
+inline US largePack (const string &strIn, const htable_t &map)
 {
     htable_t::const_iterator got = map.find(strIn);
     if (got == map.end()) { cerr << "Error: key not found!\n"; return 0; }
@@ -321,10 +309,9 @@ inline string packSeq_3to1 (string seq)
 }
 
 /*******************************************************************************
-    encapsulate 3 symbols in 2 bytes -- reduction ~1/3.                  40 <= #
+    encapsulate 3 header symbols in 2 bytes -- reduction ~1/3.           40 <= #
 *******************************************************************************/
-//inline string packLarge_3to2 (string strIn, string SYM_RANGE, htable_t map)
-inline string packLarge_3to2 (string strIn, string SYM_RANGE, htable_t &map)
+inline string packLargeHdr_3to2 (const string& strIn, const htable_t &map)
 {
     string tuple, packed;
     const LL iterLen = strIn.length() - 2;
@@ -332,50 +319,102 @@ inline string packLarge_3to2 (string strIn, string SYM_RANGE, htable_t &map)
     bool firstNotIn, secondNotIn, thirdNotIn;
     char s0, s1, s2;
     US shortTuple;
-    // ASCII char after the last char in SYM_RANGE string
-    const char XChar = (char) (SYM_RANGE[SYM_RANGE.size()-1] + 1);
-
+    // ASCII char after the last char in HEADERS string
+    const char XChar = (char) (HEADERS[HEADERS.size()-1] + 1);
+    
     for (x = 0; x < iterLen; x += 3)
     {
         s0 = strIn[x], s1 = strIn[x+1], s2 = strIn[x+2];
-
+        
         tuple.clear();
-        tuple  =(firstNotIn  = (SYM_RANGE.find(s0)==string::npos)) ? XChar : s0;
-        tuple +=(secondNotIn = (SYM_RANGE.find(s1)==string::npos)) ? XChar : s1;
-        tuple +=(thirdNotIn  = (SYM_RANGE.find(s2)==string::npos)) ? XChar : s2;
-
+        tuple  = (firstNotIn  = (HEADERS.find(s0)==string::npos)) ? XChar : s0;
+        tuple += (secondNotIn = (HEADERS.find(s1)==string::npos)) ? XChar : s1;
+        tuple += (thirdNotIn  = (HEADERS.find(s2)==string::npos)) ? XChar : s2;
+        
         shortTuple = largePack(tuple, map);
         packed += (unsigned char) (shortTuple >> 8);      // left byte
         packed += (unsigned char) (shortTuple & 0xFF);    // right byte
-
+        
         if (firstNotIn)   packed += s0;
         if (secondNotIn)  packed += s1;
         if (thirdNotIn)   packed += s2;
     }
-
+    
     // if len isn't multiple of 3, add (char) 255 before each sym
     switch (strIn.length() % 3)
     {
         case 1:
             packed += 255;   packed += strIn[x];
             break;
-
+        
         case 2:
             packed += 255;   packed += strIn[x];
             packed += 255;   packed += strIn[x+1];
             break;
-
+        
         default: break;
     }
+    
+    return packed;
+}
 
+/*******************************************************************************
+    encapsulate 3 quality score symbols in 2 bytes -- reduction ~1/3.    40 <= #
+*******************************************************************************/
+inline string packLargeQs_3to2 (const string& strIn, const htable_t &map)
+{
+    string tuple, packed;
+    const LL iterLen = strIn.length() - 2;
+    LL x = 0;
+    bool firstNotIn, secondNotIn, thirdNotIn;
+    char s0, s1, s2;
+    US shortTuple;
+    // ASCII char after the last char in QUALITY_SCORES string
+    const char XChar = (char) (QUALITY_SCORES[QUALITY_SCORES.size()-1] + 1);
+    
+    for (x = 0; x < iterLen; x += 3)
+    {
+        s0 = strIn[x], s1 = strIn[x+1], s2 = strIn[x+2];
+        
+        tuple.clear();
+        tuple  = (firstNotIn  = (QUALITY_SCORES.find(s0) == string::npos))
+                 ? XChar : s0;
+        tuple += (secondNotIn = (QUALITY_SCORES.find(s1) == string::npos))
+                 ? XChar : s1;
+        tuple += (thirdNotIn  = (QUALITY_SCORES.find(s2) == string::npos))
+                 ? XChar : s2;
+        
+        shortTuple = largePack(tuple, map);
+        packed += (unsigned char) (shortTuple >> 8);      // left byte
+        packed += (unsigned char) (shortTuple & 0xFF);    // right byte
+        
+        if (firstNotIn)   packed += s0;
+        if (secondNotIn)  packed += s1;
+        if (thirdNotIn)   packed += s2;
+    }
+    
+    // if len isn't multiple of 3, add (char) 255 before each sym
+    switch (strIn.length() % 3)
+    {
+        case 1:
+            packed += 255;   packed += strIn[x];
+            break;
+        
+        case 2:
+            packed += 255;   packed += strIn[x];
+            packed += 255;   packed += strIn[x+1];
+            break;
+        
+        default: break;
+    }
+    
     return packed;
 }
 
 /*******************************************************************************
     encapsulate 3 symbols in 2 bytes -- reduction ~1/3.            16 <= # <= 39
 *******************************************************************************/
-//inline string pack_3to2 (string strIn, string SYM_RANGE, htable_t map)
-inline string pack_3to2 (string strIn, string SYM_RANGE, htable_t &map)
+inline string pack_3to2 (const string& strIn, const htable_t &map)
 {
     string tuple, packed;
     const LL iterLen = strIn.length() - 2;
@@ -411,8 +450,7 @@ inline string pack_3to2 (string strIn, string SYM_RANGE, htable_t &map)
 /*******************************************************************************
     encapsulate 2 symbols in 1 bytes -- reduction ~1/2.             7 <= # <= 15
 *******************************************************************************/
-//inline string pack_2to1 (string strIn, string SYM_RANGE, htable_t map)
-inline string pack_2to1 (string strIn, string SYM_RANGE, htable_t &map)
+inline string pack_2to1 (const string& strIn, const htable_t &map)
 {
     string tuple, packed;
     const LL iterLen = strIn.length() - 1;
@@ -433,8 +471,7 @@ inline string pack_2to1 (string strIn, string SYM_RANGE, htable_t &map)
 /*******************************************************************************
     encapsulate 3 symbols in 1 bytes -- reduction ~2/3.              # = 4, 5, 6
 *******************************************************************************/
-//inline string pack_3to1 (string strIn, string SYM_RANGE, htable_t map)
-inline string pack_3to1 (string strIn, string SYM_RANGE, htable_t &map)
+inline string pack_3to1 (const string& strIn, const htable_t &map)
 {
     string tuple, packed;
     const LL iterLen = strIn.length() - 2;
@@ -467,8 +504,7 @@ inline string pack_3to1 (string strIn, string SYM_RANGE, htable_t &map)
 /*******************************************************************************
     encapsulate 5 symbols in 1 bytes -- reduction ~4/5.                    # = 3
 *******************************************************************************/
-//inline string pack_5to1 (string strIn, string SYM_RANGE, htable_t map)
-inline string pack_5to1 (string strIn, string SYM_RANGE, htable_t &map)
+inline string pack_5to1 (const string& strIn, const htable_t &map)
 {
     string tuple, packed;
     const LL iterLen = strIn.length() - 4;
@@ -515,8 +551,7 @@ inline string pack_5to1 (string strIn, string SYM_RANGE, htable_t &map)
 /*******************************************************************************
     encapsulate 7 symbols in 1 bytes -- reduction ~6/7.                    # = 2
 *******************************************************************************/
-//inline string pack_7to1 (string strIn, string SYM_RANGE, htable_t map)
-inline string pack_7to1 (string strIn, string SYM_RANGE, htable_t &map)
+inline string pack_7to1 (const string& strIn, const htable_t &map)
 {
     string tuple, packed;
     const LL iterLen = strIn.length() - 6;
@@ -581,8 +616,7 @@ inline string pack_7to1 (string strIn, string SYM_RANGE, htable_t &map)
 /*******************************************************************************
     show 1 symbol in 1 byte.                                               # = 1
 *******************************************************************************/
-//inline string pack_1to1 (string strIn, string SYM_RANGE, htable_t map)
-inline string pack_1to1 (string strIn, string SYM_RANGE, htable_t &map)
+inline string pack_1to1 (const string& strIn, const htable_t &map)
 {
     string single;
     string packed;
@@ -651,11 +685,9 @@ inline string unpackSeqFQ_3to1 (string::iterator &i)
     unpack by reading 2 byte by 2 byte, when # > 39
 *******************************************************************************/
 inline string unpackLarge_read2B (string::iterator &i, const char XChar,
-                                  string* unpack)
-//inline string unpackLarge_read2B (string::iterator &i, const char XChar,
-//                                  string* &unpack)
+                                  vector<string> &unpack)
 {
-    byte MSB, LSB;
+    byte leftB, rightB;
     US doubleB; // double byte
     string tpl;             // tuplet
     string out;
@@ -664,11 +696,11 @@ inline string unpackLarge_read2B (string::iterator &i, const char XChar,
     {
         // hdr len not multiple of keyLen
         if (*i == (char) 255) { out += penaltySym(*(i+1));   i+=2;   continue; }
-
-        MSB     = *i;
-        LSB     = *(i+1);
-        doubleB = MSB<<8 | LSB;    // join two bytes
-
+        
+        leftB   = *i;
+        rightB  = *(i+1);
+        doubleB = leftB<<8 | rightB;    // join two bytes
+        
         tpl = unpack[doubleB];
 
         if (tpl[0]!=XChar && tpl[1]!=XChar && tpl[2]!=XChar)              // ...
@@ -702,10 +734,11 @@ inline string unpackLarge_read2B (string::iterator &i, const char XChar,
 /*******************************************************************************
     unpack by reading 2 byte by 2 byte
 *******************************************************************************/
-inline string unpack_read2B (string::iterator &i, string* unpack)
+inline string unpack_read2B (string::iterator &i, vector<string> &unpack)
+//inline string unpack_read2B (string::iterator &i, string* unpack)
 //inline string unpack_read2B (string::iterator &i, string* &unpack)
 {
-    byte MSB, LSB;
+    byte leftB, rightB;
     US doubleB; // double byte
     string out;
 
@@ -714,9 +747,9 @@ inline string unpack_read2B (string::iterator &i, string* unpack)
         // hdr len not multiple of keyLen
         if (*i == (char) 255) { out += penaltySym(*(i+1));    continue; }
 
-        MSB     = *i;
-        LSB     = *(i+1);
-        doubleB = MSB<<8 | LSB;    // join two bytes
+        leftB   = *i;
+        rightB  = *(i+1);
+        doubleB = leftB<<8 | rightB;    // join two bytes
         
         out += unpack[doubleB];
     }
@@ -727,7 +760,8 @@ inline string unpack_read2B (string::iterator &i, string* unpack)
 /*******************************************************************************
     unpack by reading 1 byte by 1 byte
 *******************************************************************************/
-inline string unpack_read1B (string::iterator &i, string* unpack)
+inline string unpack_read1B (string::iterator &i, vector<string> &unpack)
+//inline string unpack_read1B (string::iterator &i, string* unpack)
 //inline string unpack_read1B (string::iterator &i, string* &unpack)
 {
     string out;
@@ -743,6 +777,8 @@ inline string unpack_read1B (string::iterator &i, string* unpack)
 }
 
 #endif //CRYFA_PACK_H
+
+
 
 
 
