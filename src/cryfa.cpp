@@ -38,7 +38,7 @@ int main (int argc, char* argv[])
     
     EnDecrypto cryptObj;
     cryptObj.inFileName = argv[argc-1];  // input file name
-    cryptObj.n_threads = DEFAULT_N_THREADS;  // number of threads
+    cryptObj.n_threads = DEFAULT_N_THR;  // initialize number of threads
     
     static int h_flag, a_flag, v_flag, d_flag;
     int c;                               // deal with getopt_long()
