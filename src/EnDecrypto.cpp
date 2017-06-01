@@ -300,15 +300,19 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
     {
         if (getline(in, line).good())           // header -- ignore '@'
             context += packHdr(line.substr(1), HdrMap) + (char) 254;
-
+            
         if (getline(in, line).good())           // sequence
             context += packSeq_3to1(line) + (char) 254;
-
+    
         in.ignore(LARGE_NUMBER, '\n');          // +. ignore
 
         if (getline(in, line).good())           // quality score
             context += packQS(line, QsMap) + (char) 254;
     }
+    
+//    std::random_shuffle(context.begin(), context.end());
+//    cerr << context;
+    
     
     /*
     i = in.begin();
