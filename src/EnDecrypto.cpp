@@ -6,6 +6,7 @@
     Armando J. Pinho    ap@ua.pt
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
+//#include <string>
 #include <fstream>
 #include <functional>
 #include <mutex>
@@ -22,6 +23,7 @@ using std::cerr;
 using std::ifstream;
 using std::ofstream;
 using std::getline;
+using std::to_string;
 using std::thread;
 using CryptoPP::AES;
 using CryptoPP::CBC_Mode_ExternalCipher;
@@ -51,8 +53,8 @@ void EnDecrypto::compressFA ()
     string line, seq, context;  // FASTA: context = header + seq (+ empty lines)
     
     // watermark for encrypted file
-    cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
-                       + std::to_string(RELEASE_CRYFA) + "\n";
+    cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
+                       + to_string(RELEASE_CRYFA) + "\n";
 
     // to tell decryptor this isn't FASTQ
     context += (char) 127;      // context += "\n";
@@ -118,7 +120,7 @@ void EnDecrypto::compressFQ ()
     packHdrPointer packHdr;
     using packQSPointer  = string (*)(const string&, const htable_t&);
     packQSPointer packQS;
-    
+
     const size_t headersLen = headers.length();
     const size_t qscoresLen = qscores.length();
 
@@ -187,7 +189,7 @@ void EnDecrypto::compressFQ ()
         else                                                   // qscoresLen = 1
         { QsMap = buildHashTable(QSs, 1);           packQS = &pack_1to1; }
     }
-    
+
     // distribute file among threads, for reading and packing
     ull i = 0;
     while (!isInEmpty)
@@ -211,8 +213,8 @@ void EnDecrypto::compressFQ ()
     string context;
 
     // watermark for encrypted file
-    cout << "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
-                       + std::to_string(RELEASE_CRYFA) + "\n";
+    cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
+                       + to_string(RELEASE_CRYFA) + "\n";
 
     context += headers;                             // send headers to decryptor
     context += (char) 254;                          // to detect headers in dec.
@@ -222,7 +224,7 @@ void EnDecrypto::compressFQ ()
 
     // open input files
     for (t = 0; t != n_threads; ++t)
-        encFile[t].open(ENC_FILENAME + std::to_string(t));
+        encFile[t].open(ENC_FILENAME + to_string(t));
 
     bool prevLineNotThrID;      // if previous line was "THR=" or not
     while (!encFile[0].eof())
@@ -232,7 +234,7 @@ void EnDecrypto::compressFQ ()
             prevLineNotThrID = false;
 
             while (getline(encFile[t], line).good() &&
-                    line.compare(THR_ID_HDR+std::to_string(t)))
+                    line.compare(THR_ID_HDR+to_string(t)))
             {
                 if (prevLineNotThrID)   context += '\n';
                 context += line;
@@ -313,6 +315,13 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
 //    std::random_shuffle(context.begin(), context.end());
 //    cerr << context;
     
+    // for unshuffling: insert the size of packed context in the beginning of it
+    string contextSize = to_string(context.size());     contextSize+=(char) 254;
+    context.insert(0, contextSize);
+
+//    cerr<<context.size();
+//    cerr<<to_string(context.size());
+    
     
     /*
     i = in.begin();
@@ -341,10 +350,10 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
     */
     
     ofstream encfile;
-    encfile.open(ENC_FILENAME+std::to_string(threadID), std::ios_base::app);
+    encfile.open(ENC_FILENAME+to_string(threadID), std::ios_base::app);
     
     // write header containing threadID for each
-    encfile << THR_ID_HDR + std::to_string(threadID) << '\n';
+    encfile << THR_ID_HDR + to_string(threadID) << '\n';
     encfile << context << '\n';
     
     encfile.close();
@@ -435,8 +444,8 @@ inline string EnDecrypto::decrypt ()
                        std::istreambuf_iterator<char> () );
     
     // watermark
-    string watermark = "#cryfa v" + std::to_string(VERSION_CRYFA) + "."
-                                  + std::to_string(RELEASE_CRYFA) + "\n";
+    string watermark = "#cryfa v" + to_string(VERSION_CRYFA) + "."
+                                  + to_string(RELEASE_CRYFA) + "\n";
     
     string::size_type watermarkIdx = cipherText.find(watermark);
     if (watermarkIdx == string::npos)
@@ -539,19 +548,38 @@ inline void EnDecrypto::decompFA (string decText)
 *******************************************************************************/
 inline void EnDecrypto::decompFQ (string decText)
 {
-    vector<string> hdrUnpack;      // for unpacking header
-    vector<string> qsUnpack;       // for unpacking quality score
+    vector<string> hdrUnpack;   // for unpacking header
+    vector<string> qsUnpack;    // for unpacking quality score
     string line;
     string::iterator i = decText.begin();
     string qscores, headers;
     bool justPlus = true;
+    int pkdSize;                // packed context size
+    string pkdSizeStr;
     
-    for (; *i != (char) 254; ++i)   headers += *i;                   // all hdrs
-    ++i;                                         // jump over (char) 254
-    for (; *i != '\n' && *i != (char) 253; ++i)     qscores += *i;   // all qss
-    if (*i == '\n')  justPlus = false;           // if 3rd line is just +
-    ++i;                                         // jump over '\n' or (char) 253
-
+    for (; *i != (char) 254; ++i)
+        headers += *i;                          // all hdrs
+    ++i;                                        // jump over (char) 254
+    for (; *i != '\n' && *i != (char) 253; ++i)
+        qscores += *i;                          // all qss
+    if (*i == '\n')
+        justPlus = false;                       // if 3rd line is just +
+    ++i;                                        // jump over '\n' or (char) 253
+    
+    
+    
+    
+    //todo.
+    for (; *i != (char) 254; ++i)   pkdSizeStr += *i;  // packed ctx size string
+    ++i;                                               // jump over (char) 254
+    pkdSize = std::stoi(pkdSizeStr);
+    
+    
+    cerr<<std::stoull(pkdSizeStr);
+    
+    
+    
+    
     const size_t qscoresLen  = qscores.length();
     const size_t headersLen = headers.length();
     us keyLen_hdr = 0,  keyLen_qs = 0;
