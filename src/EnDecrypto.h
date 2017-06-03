@@ -44,6 +44,12 @@ private:
     inline bool hasFQjustPlus ()                const;     // check '+' line
     inline void gatherHdrQs (string&,string&)   const;     // gather hdrs & qss
     
+    
+    inline void shufflePkd (string&)         const;     // shuffle packed
+    inline string unshufflePkd (string::iterator &, const ull)         const;     // unshufflePkd packed
+    inline ull un_shuffleSeedGen ()         const;       // (un)shuffle seed gen
+    
+    
     string   HdrsX;                                        // extended Hdrs
     string   QSsX;                                         // extended QSs
     htable_t HdrMap;                                       // Hdrs hash table
