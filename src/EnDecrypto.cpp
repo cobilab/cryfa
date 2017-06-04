@@ -247,6 +247,9 @@ void EnDecrypto::compressFQ ()
     }
     context += (char) 252;
 
+    
+    cerr<<context;
+    
     // close input and output files
     for (t = 0; t != n_threads; ++t)   encFile[t].close();
 
@@ -335,8 +338,10 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
     contextSize += 'X';
     context.insert(0, contextSize);
     
-    cerr<<context;
-
+////    mutx.lock();
+//    cerr << context;
+////    mutx.unlock();
+    
     /*
     i = in.begin();
     while (i != in.end())
@@ -734,40 +739,39 @@ inline void EnDecrypto::decompFQ (string decText)
         hdrUnpack = buildUnpack(headers, keyLen_hdr);
         qsUnpack  = buildUnpack(qscores, keyLen_qs);
         
-        cerr<<decText;
-        while (i != decText.end())
-        {
+//        while (i != decText.end())
+//        {
             
             //todo. unshufflePkd/reorder
 //            if (*i == (char) 253)
             if (*i == 'Z')//todo.test
             {
 //                cerr<<'y';//todo.test
-                
+        
                 ++i;
-                
+        
                 chunkSizeStr.clear();
 //                for (; *i != (char) 254; ++i)
                 for (; *i != 'X'; ++i)
                     chunkSizeStr += *i; // chunk size str
-                ++i;                                               // jump over (char) 254
+                ++i;                                 // jump over (char) 254
 
 //                mutx.lock();
                 unshufflePkd(i, stoull(chunkSizeStr));
 //                mutx.unlock();
-                
-//                cerr<<*i<<*(i+1)<<*(i+2)<<*(i+3)<<*(i+4)<<*(i+5)<<*(i+6)<<*(i+7)<<*(i+8)
-//                        <<*(i+9)<<*(i+10)<<*(i+11)<<*(i+12)<<*(i+13)<<*(i+14)<<*(i+15);
+        
+//                cerr << *i << *(i + 1) << *(i + 2) << *(i + 3) << *(i + 4)
+//                     << *(i + 5) << *(i + 6);
             }
-            
-            cout << '@';
-            cout << (plusMore = unpackHdr(i, hdrUnpack)) << '\n';  ++i;   // hdr
-            cout << unpackSeqFQ_3to1(i)                  << '\n';         // seq
-            cout << (justPlus ? "+" : "+" + plusMore)    << '\n';  ++i;   // +
-            cout << unpackQS(i, qsUnpack)                << '\n';         // qs
-            // end of file
-            if (*(++i) == (char) 252)   break;
-        }
+        
+//            cout << '@';
+//            cout << (plusMore = unpackHdr(i, hdrUnpack)) << '\n';  ++i;   // hdr
+//            cout << unpackSeqFQ_3to1(i)                  << '\n';         // seq
+//            cout << (justPlus ? "+" : "+" + plusMore)    << '\n';  ++i;   // +
+//            cout << unpackQS(i, qsUnpack)                << '\n';         // qs
+//            // end of file
+//            if (*(++i) == (char) 252)   break;
+//        }
     }
 }
 
@@ -874,7 +878,7 @@ inline void EnDecrypto::unshufflePkd (string::iterator &i, const ull size) const
     string shuffledStr, unshuffledStr;
     for (string::iterator j = i; i != j+size; ++i)    shuffledStr += *i;
 //++i;//todo. check
-//    cerr<<shuffledStr;
+    cerr<<shuffledStr;
     
     const ull seed = un_shuffleSeedGen();    // unshuffling seed
     
@@ -910,7 +914,7 @@ inline void EnDecrypto::unshufflePkd (string::iterator &i, const ull size) const
     }
     
     i -= size;
-    
+//    cerr<<*i;
 //    i -= size;
 //    for (string::iterator sI = unshuffledStr.begin(); sI != unshuffledStr.end(); ++sI)
 //    {
