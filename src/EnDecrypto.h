@@ -12,6 +12,13 @@
 #include "def.h"
 using std::string;
 
+// shuffled node
+struct shuffNode_s
+{
+    char character;
+    ull  position;
+};
+
 class EnDecrypto
 {
 public:
@@ -39,14 +46,14 @@ private:
     inline void buildKey (byte*, const string&);         // build key
     inline void printIV  (byte*)                const;   // print IV
     inline void printKey (byte*)                const;   // print key
-    inline string getPassFromFile ()            const;   // get password
+    inline string getPassFromFile ()            const;   // get password    todo. rename to 'extractPass'
     inline void evalPassSize (const string&)    const;   // evaluate pass size
     inline bool hasFQjustPlus ()                const;   // check '+' line
     inline void gatherHdrQs (string&, string&)  const;   // gather hdrs & qss
     inline ull  un_shuffleSeedGen (ui)          const;   // (un)shuffle seed gen
     inline void shufflePkd (string&, ui)        const;   // shuffle packed
-    inline void unshufflePkd (string::iterator&, const ull, ui)
-                                                const;   // unshuffle packed
+    inline void unshufflePkd (string::iterator&,
+                              const ull, ui)    const;   // unshuffle packed
     
     string   HdrsX;                                      // extended Hdrs
     string   QSsX;                                       // extended QSs

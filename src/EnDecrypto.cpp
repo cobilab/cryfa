@@ -872,25 +872,41 @@ inline void EnDecrypto::shufflePkd (string &in, ui unique) const
 inline void EnDecrypto::unshufflePkd (string::iterator &i,
                                       const ull size, ui unique) const
 {
+    //todo. struct doesn't work properly
+    shuffNode_s *node = new shuffNode_s[size];
     string shuffledStr, unshuffledStr;
-    for (string::iterator j = i; i != j+size; ++i)    shuffledStr += *i;
+//    for (string::iterator j = i; i != j+size; ++i)    shuffledStr += *i;
     
-    const ull seed = un_shuffleSeedGen(unique);   // unshuffling seed
-    
-    // vector of positions
+    // shuffle vector of positions
     vector<ull> vecPos;              vecPos.reserve(size);
     for (ull p = 0; p != size; ++p)  vecPos.push_back(p);
-    // shuffle the vector of positions
+    const ull seed = un_shuffleSeedGen(unique);
     std::shuffle(vecPos.begin(),vecPos.end(), std::default_random_engine(seed));
     
-    i -= size;  // return to the beginning
-    // todo. quadratic = disaster
-    ull idx = 0;
     for (ull j = 0; j != size; ++j, ++i)
     {
-        for (ull k = 0; k != size; ++k)   if (vecPos[k]==j) { idx = k;  break; }
-        *i = shuffledStr[idx];
+        node[j].character = *i;
+        node[j].position  = vecPos[j];
     }
+    i -= size;  // return to the beginning
+    
+    std::sort(node, node+size,
+              [](const shuffNode_s& lhs, const shuffNode_s& rhs)
+              { return lhs.position < rhs.position; });
+    
+    for (ull j = 0; j != size; ++j, ++i)
+    {
+        *i = node[j].character;
+    }
+    
+    delete[] node;
+    
+//    ull idx = 0;
+//    for (ull j = 0; j != size; ++j, ++i)
+//    {
+//        for (ull k = 0; k != size; ++k)   if (vecPos[k]==j) { idx = k;  break; }
+//        *i = shuffledStr[idx];
+//    }
     
     i -= size;  // return to the beginning
 }

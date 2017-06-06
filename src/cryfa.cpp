@@ -35,11 +35,11 @@ int main (int argc, char* argv[])
 {
     // start timer
     high_resolution_clock::time_point startTime = high_resolution_clock::now();
-    
+
     EnDecrypto cryptObj;
     cryptObj.inFileName = argv[argc-1];  // input file name
     cryptObj.n_threads = DEFAULT_N_THR;  // initialize number of threads
-    
+
     static int h_flag, a_flag, v_flag, d_flag;
     int c;                               // deal with getopt_long()
     int option_index;                    // option index stored by getopt_long()
@@ -55,7 +55,7 @@ int main (int argc, char* argv[])
         {"thread",  required_argument,       0,       't'},   // #threads >= 1
         {0,                         0,       0,         0}
     };
-    
+
     while (1)
     {
         option_index = 0;
@@ -89,27 +89,27 @@ int main (int argc, char* argv[])
             case 'd':   // decompress mode
                 d_flag = 1;
                 break;
-                
+
             case 'k':   // needs key filename
                 cryptObj.keyFileName = (string) optarg;
                 break;
-            
+
             case 't':   // number of threads
                 cryptObj.n_threads = (byte) stoi((string) optarg);
                 break;
-                
+
             default:
                 cerr << "Option '" << (char) optopt << "' is invalid.\n";
                 break;
         }
     }
-    
+
     if (v_flag)  cerr << "Verbose mode on.\n";
     if (d_flag)
     {
         cerr << "Decrypting...\n";
         cryptObj.decompress();
-        
+
         // stop timer
         high_resolution_clock::time_point finishTime =
                 high_resolution_clock::now();
@@ -117,10 +117,10 @@ int main (int argc, char* argv[])
         std::chrono::duration<double> elapsed = finishTime - startTime;
         cerr << "done in " << std::fixed << setprecision(4) << elapsed.count()
              << " seconds.\n";
-        
+
         return 0;
     }
-    
+
     cerr << "Encrypting...\n";
     (fileType(cryptObj.inFileName)=='A') ? cryptObj.compressFA()    // FASTA
                                          : cryptObj.compressFQ();   // FASTQ
@@ -130,6 +130,6 @@ int main (int argc, char* argv[])
     std::chrono::duration<double> elapsed = finishTime - startTime;
     cerr << "done in " << std::fixed << setprecision(4) << elapsed.count()
          << " seconds.\n";
-    
+
     return 0;
 }
