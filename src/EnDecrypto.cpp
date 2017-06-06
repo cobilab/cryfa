@@ -32,6 +32,25 @@ using CryptoPP::StreamTransformationFilter;
 
 std::mutex mutx;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+#include <chrono>       // time
+#include <iomanip>      // setw, setprecision
+using std::chrono::high_resolution_clock;
+using std::setprecision;
+
+
 /*******************************************************************************
     constructor
 *******************************************************************************/
@@ -754,8 +773,19 @@ inline void EnDecrypto::decompFQ (string decText)
                 ++i;                                             // jump over (char) 254
 
                 chunkSize = stoull(chunkSizeStr);
+                
+                //todo. remove timer
+                // start timer
+                high_resolution_clock::time_point startTime = high_resolution_clock::now();
+                
                 unshufflePkd(i, chunkSize);
                 
+                // stop timer
+                high_resolution_clock::time_point finishTime = high_resolution_clock::now();
+                // duration in seconds
+                std::chrono::duration<double> elapsed = finishTime - startTime;
+                cerr << "unshuffling takes " << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
+
 //                cerr<<*i<<*(i+1)<<*(i+2)<<*(i+3)<<*(i+4)<<*(i+5)<<*(i+6);
             }
             
