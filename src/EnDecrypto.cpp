@@ -751,7 +751,7 @@ inline void EnDecrypto::decompFQ (string decText)
                 for (; *i != (char) 254; ++i)
 //                for (; *i != 'X'; ++i)
                     chunkSizeStr += *i; // chunk size str
-                ++i;                                               // jump over (char) 254
+                ++i;                                             // jump over (char) 254
 
                 chunkSize = stoull(chunkSizeStr);
                 unshufflePkd(i, chunkSize);
