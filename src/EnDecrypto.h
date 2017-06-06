@@ -46,6 +46,7 @@ private:
     
     
     inline void shufflePkd (string&)         const;     // shuffle packed
+//    inline string shufflePkd (string)         const;     // shuffle packed
     inline void unshufflePkd (string::iterator &, const ull)         const;     // unshufflePkd packed
     inline ull un_shuffleSeedGen ()         const;       // (un)shuffle seed gen
     

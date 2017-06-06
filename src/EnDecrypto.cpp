@@ -299,44 +299,45 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
     
     if (in.peek()==EOF) { isInEmpty = true;    return; }
     
-//    for (ull l = 0; l != LINE_BUFFER; l+=4)     // process 4 lines by 4 lines
-//    {
-//        if (getline(in, line).good())           // header -- ignore '@'
-//            context += packHdr(line.substr(1), HdrMap) + (char) 254;
-//
-//        if (getline(in, line).good())           // sequence
-//            context += packSeq_3to1(line) + (char) 254;
-//
-//        in.ignore(LARGE_NUMBER, '\n');          // +. ignore
-//
-//        if (getline(in, line).good())           // quality score
-//            context += packQS(line, QsMap) + (char) 254;
-//    }
+    for (ull l = 0; l != LINE_BUFFER; l+=4)     // process 4 lines by 4 lines
+    {
+        if (getline(in, line).good())           // header -- ignore '@'
+            context += packHdr(line.substr(1), HdrMap) + (char) 254;
+
+        if (getline(in, line).good())           // sequence
+            context += packSeq_3to1(line) + (char) 254;
+
+        in.ignore(LARGE_NUMBER, '\n');          // +. ignore
+
+        if (getline(in, line).good())           // quality score
+            context += packQS(line, QsMap) + (char) 254;
+    }
     
     
-    //TODO. test
-    context ="s";   context+=(char)254;
-    context+="m"; context+=(char)254;
-    context+="h";context+=(char)254;
+//    cerr<<"BEFORE SHUFFLING: "<<context;
+//    //TODO. test
+//    context ="s";   context+=(char)254;
+//    context+="m"; context+=(char)254;
+//    context+="h";context+=(char)254;
     
     //todo. khoroojie tabe' ro bebin
-//    mutx.lock();
+    mutx.lock();
     shufflePkd(context);
-//    mutx.unlock();
+//    context = shufflePkd(context);
+    mutx.unlock();
     
     
     //todo. change/maybe not needed
     // for unshuffling: insert the size of packed context in the beginning of it
     string contextSize;
-    contextSize += 'Z';//todo. test
-//    contextSize += (char) 253;
+//    contextSize += 'Z';//todo. test
+    contextSize += (char) 253;
     contextSize += to_string(context.size());
-//    contextSize += (char) 254;
-    contextSize += 'X';
+    contextSize += (char) 254;
+//    contextSize += 'X';
     context.insert(0, contextSize);
     
-    cerr<<context;
-
+//    cerr<<"AFTER SHUFFLING: "<<context;
     /*
     i = in.begin();
     while (i != in.end())
@@ -734,30 +735,28 @@ inline void EnDecrypto::decompFQ (string decText)
         hdrUnpack = buildUnpack(headers, keyLen_hdr);
         qsUnpack  = buildUnpack(qscores, keyLen_qs);
         
-        cerr<<decText;
+//        cerr<<decText<<"\n\n";
+        ull chunkSize;
         while (i != decText.end())
         {
-            
             //todo. unshufflePkd/reorder
-//            if (*i == (char) 253)
-            if (*i == 'Z')//todo.test
+            if (*i == (char) 253)
+//            if (*i == 'Z')//todo.test
             {
-//                cerr<<'y';//todo.test
+//                cerr<<"^^^^^^";//todo.test
                 
                 ++i;
                 
                 chunkSizeStr.clear();
-//                for (; *i != (char) 254; ++i)
-                for (; *i != 'X'; ++i)
+                for (; *i != (char) 254; ++i)
+//                for (; *i != 'X'; ++i)
                     chunkSizeStr += *i; // chunk size str
                 ++i;                                               // jump over (char) 254
 
-//                mutx.lock();
-                unshufflePkd(i, stoull(chunkSizeStr));
-//                mutx.unlock();
+                chunkSize = stoull(chunkSizeStr);
+                unshufflePkd(i, chunkSize);
                 
-//                cerr<<*i<<*(i+1)<<*(i+2)<<*(i+3)<<*(i+4)<<*(i+5)<<*(i+6)<<*(i+7)<<*(i+8)
-//                        <<*(i+9)<<*(i+10)<<*(i+11)<<*(i+12)<<*(i+13)<<*(i+14)<<*(i+15);
+//                cerr<<*i<<*(i+1)<<*(i+2)<<*(i+3)<<*(i+4)<<*(i+5)<<*(i+6);
             }
             
             cout << '@';
@@ -767,6 +766,15 @@ inline void EnDecrypto::decompFQ (string decText)
             cout << unpackQS(i, qsUnpack)                << '\n';         // qs
             // end of file
             if (*(++i) == (char) 252)   break;
+
+//        cerr << '@';
+//        cerr << (plusMore = unpackHdr(i, hdrUnpack)) << '\n';  ++i;   // hdr
+////            break;
+//        cerr << unpackSeqFQ_3to1(i)                  << '\n';         // seq
+//        cerr << (justPlus ? "+" : "+" + plusMore)    << '\n';  ++i;   // +
+//        cerr << unpackQS(i, qsUnpack)                << '\n';         // qs
+////             end of file
+//            if (*(++i) == (char) 252)   break;
         }
     }
 }
@@ -858,10 +866,12 @@ inline ull EnDecrypto::un_shuffleSeedGen () const
     shuffle
 *******************************************************************************/
 inline void EnDecrypto::shufflePkd (string &in) const
+//inline string EnDecrypto::shufflePkd (string in) const
 {
     const ull seed = un_shuffleSeedGen();    // shuffling seed
     std::shuffle(in.begin(), in.end(), std::default_random_engine(seed));
     
+//    return in;
 //    for (const char &c : in)    cerr << c;
 //    cerr<<'\n';
 }
@@ -890,26 +900,20 @@ inline void EnDecrypto::unshufflePkd (string::iterator &i, const ull size) const
     ull idx = 0;
     for (ull j = 0; j != size; ++j)
     {
-        for (ull k = 0; k != size; ++k)
-        {
-            if (vecPos[k] == j)
-            {
-                idx = k;
-                break;
-            }
-        }
+        for (ull k = 0; k != size; ++k)   if (vecPos[k]==j) { idx=k;    break; }
 
 //        unshuffledStr.push_back(shuffledStr[idx]);
 //        unshuffledStr += shuffledStr[idx];
         *i = shuffledStr[idx];
-    
+        
 //        cerr<< *i;
         
         
-    ++i;
+        ++i;
     }
     
     i -= size;
+    
     
 //    i -= size;
 //    for (string::iterator sI = unshuffledStr.begin(); sI != unshuffledStr.end(); ++sI)
