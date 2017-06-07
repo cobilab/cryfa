@@ -832,8 +832,6 @@ inline void EnDecrypto::shufflePkd (string &in) const
 inline void EnDecrypto::unshufflePkd (string::iterator &i, const ull size) const
 {
     shuffNode_s *node = new shuffNode_s[size];
-    string shuffledStr, unshuffledStr;
-//    for (string::iterator j = i; i != j+size; ++i)    shuffledStr += *i;
     
     // shuffle vector of positions
     vector<ull> vecPos;              vecPos.reserve(size);
@@ -853,18 +851,9 @@ inline void EnDecrypto::unshufflePkd (string::iterator &i, const ull size) const
               { return lhs.position < rhs.position; });
     
     for (ull j = 0; j != size; ++j, ++i)
-    {
         *i = node[j].character;
-    }
     
     delete[] node;
-    
-//    ull idx = 0;
-//    for (ull j = 0; j != size; ++j, ++i)
-//    {
-//        for (ull k = 0; k != size; ++k)   if (vecPos[k]==j) { idx = k;  break; }
-//        *i = shuffledStr[idx];
-//    }
     
     i -= size;  // return to the beginning
 }

@@ -3,7 +3,6 @@
 #todo. remove this
 rm CRYFA_ENC*
 
-
 cmake .
 make
 
