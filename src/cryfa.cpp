@@ -44,17 +44,17 @@ int main (int argc, char* argv[])
     int c;                               // deal with getopt_long()
     int option_index;                    // option index stored by getopt_long()
     opterr = 0;  // force getopt_long() to remain silent when it finds a problem
-
+    
     static struct option long_options[] =
     {
-        {"help",          no_argument, &h_flag, (int) 'h'},   // help
-        {"about",         no_argument, &a_flag, (int) 'a'},   // about
-        {"verbose",       no_argument, &v_flag, (int) 'v'},   // verbose
-        {"shuffle",       no_argument, &s_flag, (int) 's'},   // (un)shuffle
-        {"decrypt",       no_argument, &d_flag, (int) 'd'},   // decryption mode
-        {"key",     required_argument,       0,       'k'},   // key file
-        {"thread",  required_argument,       0,       't'},   // #threads >= 1
-        {0,                         0,       0,         0}
+        {"help",            no_argument, &h_flag, (int) 'h'},   // help
+        {"about",           no_argument, &a_flag, (int) 'a'},   // about
+        {"verbose",         no_argument, &v_flag, (int) 'v'},   // verbose
+        {"disable_shuffle", no_argument, &s_flag, (int) 's'},   // d (un)shuffle
+        {"decrypt",         no_argument, &d_flag, (int) 'd'},   // decrypt mode
+        {"key",       required_argument,       0,         'k'}, // key file
+        {"thread",    required_argument,       0,         't'}, // #threads >= 1
+        {0,                           0,       0,           0}
     };
 
     while (1)
@@ -87,9 +87,9 @@ int main (int argc, char* argv[])
                 cryptObj.verbose = true;
                 break;
                 
-            case 's':   // shuffle/unshuffle
+            case 's':   // disable shuffle/unshuffle
                 s_flag = 1;
-                cryptObj.shuffle = true;
+                cryptObj.disable_shuffle = true;
                 break;
                 
             case 'd':   // decompress mode

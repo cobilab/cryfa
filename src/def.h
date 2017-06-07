@@ -183,8 +183,8 @@ inline void Help ()    // usage guide
       << "    -v,  --verbose"                                         << '\n'
       << "         verbose mode (more information)"                   << '\n'
                                                                       << '\n'
-      << "    -s,  --shuffle"                                         << '\n'
-      << "         shuffle input. It should be used in both "
+      << "    -s,  --disable_shuffle"                                 << '\n'
+      << "         disable shuffling input. It should be used in both "
       <<                            "encryption and decryption sides" << '\n'
                                                                       << '\n'
       << "    -d,  --decrypt"                                         << '\n'

@@ -204,7 +204,7 @@ void EnDecrypto::compressFQ ()
                                   startLine, t, packHdr, packQS);
         }
         for (t = 0; t != n_threads; ++t)    arrThread[t].join();
-
+        
         ++i;
     }
 
@@ -307,7 +307,8 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
     }
     
     // shuffle
-    if (shuffle) { mutx.lock();    shufflePkd(context);    mutx.unlock(); }
+    if (!disable_shuffle)  shufflePkd(context);
+//    if (!disable_shuffle) { mutx.lock();  shufflePkd(context);  mutx.unlock(); }
     
     // for unshuffling: insert the size of packed context in the beginning of it
     string contextSize;
@@ -629,7 +630,7 @@ inline void EnDecrypto::decompFQ (string decText)
                 ++i;                                     // jump over (char) 254
     
                 // unshuffle
-                if (shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
+                if (!disable_shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
             }
 
             cout << '@';
@@ -663,7 +664,7 @@ inline void EnDecrypto::decompFQ (string decText)
                 ++i;                                     // jump over (char) 254
                 
                 // unshuffle
-                if (shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
+                if (!disable_shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
             }
             
             cout << '@';
@@ -697,7 +698,7 @@ inline void EnDecrypto::decompFQ (string decText)
                 ++i;                                     // jump over (char) 254
                 
                 // unshuffle
-                if (shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
+                if (!disable_shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
             }
 
             cout << '@';
@@ -725,7 +726,7 @@ inline void EnDecrypto::decompFQ (string decText)
                 ++i;                                     // jump over (char) 254
                 
                 // unshuffle
-                if (shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
+                if (!disable_shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
             }
             
             cout << '@';
