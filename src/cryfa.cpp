@@ -40,7 +40,7 @@ int main (int argc, char* argv[])
     cryptObj.inFileName = argv[argc-1];  // input file name
     cryptObj.n_threads = DEFAULT_N_THR;  // initialize number of threads
 
-    static int h_flag, a_flag, v_flag, d_flag;
+    static int h_flag, a_flag, v_flag, d_flag, s_flag;
     int c;                               // deal with getopt_long()
     int option_index;                    // option index stored by getopt_long()
     opterr = 0;  // force getopt_long() to remain silent when it finds a problem
@@ -50,6 +50,7 @@ int main (int argc, char* argv[])
         {"help",          no_argument, &h_flag, (int) 'h'},   // help
         {"about",         no_argument, &a_flag, (int) 'a'},   // about
         {"verbose",       no_argument, &v_flag, (int) 'v'},   // verbose
+        {"shuffle",       no_argument, &s_flag, (int) 's'},   // (un)shuffle
         {"decrypt",       no_argument, &d_flag, (int) 'd'},   // decryption mode
         {"key",     required_argument,       0,       'k'},   // key file
         {"thread",  required_argument,       0,       't'},   // #threads >= 1
@@ -59,7 +60,7 @@ int main (int argc, char* argv[])
     while (1)
     {
         option_index = 0;
-        if ((c = getopt_long(argc, argv, ":havdk:t:",
+        if ((c = getopt_long(argc, argv, ":havsdk:t:",
                              long_options, &option_index)) == -1)    break;
 
         switch (c)
@@ -85,7 +86,12 @@ int main (int argc, char* argv[])
                 v_flag = 1;
                 cryptObj.verbose = true;
                 break;
-
+                
+            case 's':   // shuffle/unshuffle
+                s_flag = 1;
+                cryptObj.shuffle = true;
+                break;
+                
             case 'd':   // decompress mode
                 d_flag = 1;
                 break;

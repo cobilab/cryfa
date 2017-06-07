@@ -13,5 +13,7 @@ out="CRYFA_OUT"
 
 ./cryfa -t8 -k pass.txt $in > CRYFA_ENCRYPTED
 ./cryfa -dk pass.txt CRYFA_ENCRYPTED > $out
+#./cryfa -t8 -sk pass.txt $in > CRYFA_ENCRYPTED
+#./cryfa -dsk pass.txt CRYFA_ENCRYPTED > $out
 
 cmp $in $out

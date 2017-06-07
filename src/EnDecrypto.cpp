@@ -307,7 +307,7 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
     }
     
     // shuffle
-    mutx.lock();    shufflePkd(context);    mutx.unlock();
+    if (shuffle) { mutx.lock();    shufflePkd(context);    mutx.unlock(); }
     
     // for unshuffling: insert the size of packed context in the beginning of it
     string contextSize;
@@ -365,7 +365,7 @@ inline string EnDecrypto::encrypt (const string &context)
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
     memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
     
-    const string pass = getPassFromFile();
+    const string pass = extractPass();
     buildKey(key, pass);
     buildIV(iv, pass);
 //    printIV(iv);      // debug
@@ -422,7 +422,7 @@ inline string EnDecrypto::decrypt ()
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
     memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
     
-    const string pass = getPassFromFile();
+    const string pass = extractPass();
     buildKey(key, pass);
     buildIV(iv, pass);
 //    printIV(iv);      // debug
@@ -619,7 +619,6 @@ inline void EnDecrypto::decompFQ (string decText)
         hdrUnpack = buildUnpack(decHeadersX, keyLen_hdr);
         qsUnpack  = buildUnpack(decQscoresX, keyLen_qs);
     
-//        ull pos_beg = 1;
         while (i != decText.end())
         {
             if (*i == (char) 253)
@@ -630,8 +629,7 @@ inline void EnDecrypto::decompFQ (string decText)
                 ++i;                                     // jump over (char) 254
     
                 // unshuffle
-                unshufflePkd(i, stoull(chunkSizeStr));
-//                pos_beg += stoull(chunkSizeStr);
+                if (shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
             }
 
             cout << '@';
@@ -655,7 +653,6 @@ inline void EnDecrypto::decompFQ (string decText)
         hdrUnpack = buildUnpack(decHeadersX, keyLen_hdr);
         qsUnpack  = buildUnpack(qscores,     keyLen_qs);
     
-//        ull pos_beg = 1;
         while (i != decText.end())
         {
             if (*i == (char) 253)
@@ -664,12 +661,11 @@ inline void EnDecrypto::decompFQ (string decText)
                 chunkSizeStr.clear();                    // chunk size
                 for (; *i != (char) 254; ++i)   chunkSizeStr += *i;
                 ++i;                                     // jump over (char) 254
-    
+                
                 // unshuffle
-                unshufflePkd(i, stoull(chunkSizeStr));
-//                pos_beg += stoull(chunkSizeStr);
+                if (shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
             }
-
+            
             cout << '@';
             cout << (plusMore = unpackLarge_read2B(i, XChar_hdr, hdrUnpack))
                                                       << '\n';    ++i;    // hdr
@@ -691,7 +687,6 @@ inline void EnDecrypto::decompFQ (string decText)
         hdrUnpack = buildUnpack(headers,     keyLen_hdr);
         qsUnpack  = buildUnpack(decQscoresX, keyLen_qs);
         
-//        ull pos_beg = 1;
         while (i != decText.end())
         {
             if (*i == (char) 253)
@@ -702,8 +697,7 @@ inline void EnDecrypto::decompFQ (string decText)
                 ++i;                                     // jump over (char) 254
                 
                 // unshuffle
-                unshufflePkd(i, stoull(chunkSizeStr));
-//                pos_beg += stoull(chunkSizeStr);
+                if (shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
             }
 
             cout << '@';
@@ -721,7 +715,6 @@ inline void EnDecrypto::decompFQ (string decText)
         hdrUnpack = buildUnpack(headers, keyLen_hdr);
         qsUnpack  = buildUnpack(qscores, keyLen_qs);
         
-//        ull pos_beg = 1;
         while (i != decText.end())
         {
             if (*i == (char) 253)
@@ -732,8 +725,7 @@ inline void EnDecrypto::decompFQ (string decText)
                 ++i;                                     // jump over (char) 254
                 
                 // unshuffle
-                unshufflePkd(i, stoull(chunkSizeStr));
-//                pos_beg += stoull(chunkSizeStr);
+                if (shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
             }
             
             cout << '@';
@@ -808,7 +800,7 @@ inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores) const
 *******************************************************************************/
 inline ull EnDecrypto::un_shuffleSeedGen (ui seedInit) const
 {
-    const string pass = getPassFromFile();
+    const string pass = extractPass();
     evalPassSize(pass);     // pass size must be >= 8
     
     ull passDigitsMult = 1; // multiplication of all pass digits
@@ -949,7 +941,7 @@ inline void EnDecrypto::printKey (byte *key) const
 /*******************************************************************************
     get password from a file
 *******************************************************************************/
-inline string EnDecrypto::getPassFromFile () const
+inline string EnDecrypto::extractPass () const
 {
     ifstream in(keyFileName);
     string l;   // each line of file
