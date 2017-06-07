@@ -190,7 +190,7 @@ void EnDecrypto::compressFQ ()
         else                                                   // qscoresLen = 1
         { QsMap = buildHashTable(QSs, 1);           packQS = &pack_1to1; }
     }
-
+    
     // distribute file among threads, for reading and packing
     ull i = 0;
     while (!isInEmpty)
@@ -554,7 +554,7 @@ inline void EnDecrypto::decompFQ (string decText)
         justPlus = false;                       // if 3rd line is just +
     ++i;                                        // jump over '\n' or (char) 253
     
-    const size_t qscoresLen  = qscores.length();
+    const size_t qscoresLen = qscores.length();
     const size_t headersLen = headers.length();
     us keyLen_hdr = 0,  keyLen_qs = 0;
     

@@ -114,7 +114,7 @@ int main (int argc, char* argv[])
     if (d_flag)
     {
         cerr << "Decrypting...\n";
-        cryptObj.decompress();
+        cryptObj.decompress();//todo. multithreading
 
         // stop timer
         high_resolution_clock::time_point finishTime =
