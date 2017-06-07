@@ -32,25 +32,6 @@ using CryptoPP::StreamTransformationFilter;
 
 std::mutex mutx;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-#include <chrono>       // time
-#include <iomanip>      // setw, setprecision
-using std::chrono::high_resolution_clock;
-using std::setprecision;
-
-
 /*******************************************************************************
     constructor
 *******************************************************************************/
@@ -306,8 +287,8 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
     
     for (ull l = 0; l != startLine; ++l)    in.ignore(LARGE_NUMBER, '\n');
     
-    // beginning of the part of file for this thread
-    pos_t pos_beg = in.tellg();
+//    // beginning of the part of file for this thread
+//    pos_t pos_beg = in.tellg();
     
     if (in.peek()==EOF) { isInEmpty = true;    return; }
     
@@ -326,8 +307,7 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
     }
     
     // shuffle
-    pos_beg += 1;
-    mutx.lock();    shufflePkd(context, (ui) pos_beg);    mutx.unlock();
+    mutx.lock();    shufflePkd(context);    mutx.unlock();
     
     // for unshuffling: insert the size of packed context in the beginning of it
     string contextSize;
@@ -639,7 +619,7 @@ inline void EnDecrypto::decompFQ (string decText)
         hdrUnpack = buildUnpack(decHeadersX, keyLen_hdr);
         qsUnpack  = buildUnpack(decQscoresX, keyLen_qs);
     
-        ull pos_beg = 1;
+//        ull pos_beg = 1;
         while (i != decText.end())
         {
             if (*i == (char) 253)
@@ -650,8 +630,8 @@ inline void EnDecrypto::decompFQ (string decText)
                 ++i;                                     // jump over (char) 254
     
                 // unshuffle
-                unshufflePkd(i, stoull(chunkSizeStr), (ui) pos_beg);
-                pos_beg += stoull(chunkSizeStr);
+                unshufflePkd(i, stoull(chunkSizeStr));
+//                pos_beg += stoull(chunkSizeStr);
             }
 
             cout << '@';
@@ -675,7 +655,7 @@ inline void EnDecrypto::decompFQ (string decText)
         hdrUnpack = buildUnpack(decHeadersX, keyLen_hdr);
         qsUnpack  = buildUnpack(qscores,     keyLen_qs);
     
-        ull pos_beg = 1;
+//        ull pos_beg = 1;
         while (i != decText.end())
         {
             if (*i == (char) 253)
@@ -686,8 +666,8 @@ inline void EnDecrypto::decompFQ (string decText)
                 ++i;                                     // jump over (char) 254
     
                 // unshuffle
-                unshufflePkd(i, stoull(chunkSizeStr), (ui) pos_beg);
-                pos_beg += stoull(chunkSizeStr);
+                unshufflePkd(i, stoull(chunkSizeStr));
+//                pos_beg += stoull(chunkSizeStr);
             }
 
             cout << '@';
@@ -711,7 +691,7 @@ inline void EnDecrypto::decompFQ (string decText)
         hdrUnpack = buildUnpack(headers,     keyLen_hdr);
         qsUnpack  = buildUnpack(decQscoresX, keyLen_qs);
         
-        ull pos_beg = 1;
+//        ull pos_beg = 1;
         while (i != decText.end())
         {
             if (*i == (char) 253)
@@ -722,8 +702,8 @@ inline void EnDecrypto::decompFQ (string decText)
                 ++i;                                     // jump over (char) 254
                 
                 // unshuffle
-                unshufflePkd(i, stoull(chunkSizeStr), (ui) pos_beg);
-                pos_beg += stoull(chunkSizeStr);
+                unshufflePkd(i, stoull(chunkSizeStr));
+//                pos_beg += stoull(chunkSizeStr);
             }
 
             cout << '@';
@@ -741,7 +721,7 @@ inline void EnDecrypto::decompFQ (string decText)
         hdrUnpack = buildUnpack(headers, keyLen_hdr);
         qsUnpack  = buildUnpack(qscores, keyLen_qs);
         
-        ull pos_beg = 1;
+//        ull pos_beg = 1;
         while (i != decText.end())
         {
             if (*i == (char) 253)
@@ -751,22 +731,9 @@ inline void EnDecrypto::decompFQ (string decText)
                 for (; *i != (char) 254; ++i)   chunkSizeStr += *i;
                 ++i;                                     // jump over (char) 254
                 
-                //todo. remove timer
-                // start timer
-                high_resolution_clock::time_point startTime =
-                        high_resolution_clock::now();
-                
                 // unshuffle
-                unshufflePkd(i, stoull(chunkSizeStr), (ui) pos_beg);
-                pos_beg += stoull(chunkSizeStr);
-                
-                // stop timer
-                high_resolution_clock::time_point finishTime =
-                        high_resolution_clock::now();
-                // duration in seconds
-                std::chrono::duration<double> elapsed = finishTime - startTime;
-                cerr << "unshuffling takes " << std::fixed << setprecision(4)
-                     << elapsed.count() << " seconds.\n";
+                unshufflePkd(i, stoull(chunkSizeStr));
+//                pos_beg += stoull(chunkSizeStr);
             }
             
             cout << '@';
@@ -837,9 +804,9 @@ inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores) const
 }
 
 /*******************************************************************************
-    shuffle/unshuffle seed generator --  generate unique seed for each chunk
+    shuffle/unshuffle seed generator -- for each chunk
 *******************************************************************************/
-inline ull EnDecrypto::un_shuffleSeedGen (ui unique) const
+inline ull EnDecrypto::un_shuffleSeedGen (ui seedInit) const
 {
     const string pass = getPassFromFile();
     evalPassSize(pass);     // pass size must be >= 8
@@ -848,7 +815,7 @@ inline ull EnDecrypto::un_shuffleSeedGen (ui unique) const
     for (ui i = 0; i != pass.size(); ++i)   passDigitsMult *= pass[i];
     
     // using old rand to generate the new rand seed
-    srand(20543 * unique * (ui) passDigitsMult + 81647);
+    srand(20543 * seedInit * (ui) passDigitsMult + 81647);
     ull seed = 0;
     for (byte i = (byte) pass.size(); i--;)
         seed += ((ull) pass[i] * rand()) + rand();
@@ -860,19 +827,17 @@ inline ull EnDecrypto::un_shuffleSeedGen (ui unique) const
 /*******************************************************************************
     shuffle
 *******************************************************************************/
-inline void EnDecrypto::shufflePkd (string &in, ui unique) const
+inline void EnDecrypto::shufflePkd (string &in) const
 {
-    const ull seed = un_shuffleSeedGen(unique);    // shuffling seed
+    const ull seed = un_shuffleSeedGen((ui) in.size());    // shuffling seed
     std::shuffle(in.begin(), in.end(), std::default_random_engine(seed));
 }
 
 /*******************************************************************************
     unshuffle
 *******************************************************************************/
-inline void EnDecrypto::unshufflePkd (string::iterator &i,
-                                      const ull size, ui unique) const
+inline void EnDecrypto::unshufflePkd (string::iterator &i, const ull size) const
 {
-    //todo. struct doesn't work properly
     shuffNode_s *node = new shuffNode_s[size];
     string shuffledStr, unshuffledStr;
 //    for (string::iterator j = i; i != j+size; ++i)    shuffledStr += *i;
@@ -880,7 +845,7 @@ inline void EnDecrypto::unshufflePkd (string::iterator &i,
     // shuffle vector of positions
     vector<ull> vecPos;              vecPos.reserve(size);
     for (ull p = 0; p != size; ++p)  vecPos.push_back(p);
-    const ull seed = un_shuffleSeedGen(unique);
+    const ull seed = un_shuffleSeedGen((ui) size);
     std::shuffle(vecPos.begin(),vecPos.end(), std::default_random_engine(seed));
     
     for (ull j = 0; j != size; ++j, ++i)
