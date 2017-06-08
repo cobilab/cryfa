@@ -823,7 +823,11 @@ inline ull EnDecrypto::un_shuffleSeedGen (ui seedInit) const
 inline void EnDecrypto::shufflePkd (string &in) const
 {
     const ull seed = un_shuffleSeedGen((ui) in.size());    // shuffling seed
+    //todo. std::default_random_engine should be changed to a specific one,
+    //todo. since this isn't portable. We encrypt in one machine, and decrypt
+    //todo. in another machine, which may have different implementations.
     std::shuffle(in.begin(), in.end(), std::default_random_engine(seed));
+//    std::mersenne_twister_engine
 }
 
 /*******************************************************************************
@@ -831,30 +835,72 @@ inline void EnDecrypto::shufflePkd (string &in) const
 *******************************************************************************/
 inline void EnDecrypto::unshufflePkd (string::iterator &i, const ull size) const
 {
-    shuffNode_s *node = new shuffNode_s[size];
+    string unshuffledStr(size, ' ');
+    string::iterator unIt = unshuffledStr.begin();
+//    string::iterator copyIter = i;
+    
+//    shuffNode_s *node = new shuffNode_s[size];
     
     // shuffle vector of positions
-    vector<ull> vecPos;              vecPos.reserve(size);
-    for (ull p = 0; p != size; ++p)  vecPos.push_back(p);
+    std::vector<ull> vecPos(size);
+    std::iota(vecPos.begin(), vecPos.end(), 0);
+
     const ull seed = un_shuffleSeedGen((ui) size);
-    std::shuffle(vecPos.begin(),vecPos.end(), std::default_random_engine(seed));
-    
-    for (ull j = 0; j != size; ++j, ++i)
+    //todo. std::default_random_engine should be changed to a specific one,
+    //todo. since this isn't portable. We encrypt in one machine, and decrypt
+    //todo. in another machine, which may have different implementations.
+    std::shuffle(vecPos.begin(), vecPos.end(), std::default_random_engine(seed));
+//    std::mersenne_twister_engine
+
+
+//    vector<ull> vecPos;              vecPos.reserve(size);
+//    for (ull p = 0; p != size; ++p)  vecPos.push_back(p);
+//    const ull seed = un_shuffleSeedGen((ui) size);
+//    //todo. std::default_random_engine should be changed to a specific one,
+//    //todo. since this isn't portable. We encrypt in one machine, and decrypt
+//    //todo. in another machine, which may have different implementations.
+//    std::shuffle(vecPos.begin(),vecPos.end(), std::default_random_engine(seed));
+//
+//    for (ull j = 0; j != size; ++j, ++i)
+//    {
+//        node[j].character = *i;
+//        node[j].position  = vecPos[j];
+//    }
+//    i -= size;  // return to the beginning
+//
+//    std::sort(node, node+size,
+//              [](const shuffNode_s& lhs, const shuffNode_s& rhs)
+//              { return lhs.position < rhs.position; });
+//
+//    for (ull j = 0; j != size; ++j, ++i)
+//        *i = node[j].character;
+//
+//    delete[] node;
+
+
+//    string magic(size, ' ');//    magic.reserve(size);
+//    for (ull j = 0; j != size; ++j, ++i)
+//    {
+//        *(unIt + vecPos[j]) = *i;
+//    }
+    for (vector<ull>::iterator vI=vecPos.begin(); vI != vecPos.end(); ++vI, ++i)
     {
-        node[j].character = *i;
-        node[j].position  = vecPos[j];
+        *(unIt + *vI) = *i;
     }
-    i -= size;  // return to the beginning
+    i -= size;
+    for (string::iterator uI = unshuffledStr.begin(); uI != unshuffledStr.end(); ++uI, ++i)
+    {
+        *i = *uI;
+    }
     
-    std::sort(node, node+size,
-              [](const shuffNode_s& lhs, const shuffNode_s& rhs)
-              { return lhs.position < rhs.position; });
     
-    for (ull j = 0; j != size; ++j, ++i)
-        *i = node[j].character;
-    
-    delete[] node;
-    
+//    for (string::iterator uI = unshuffledStr.end(); uI != unshuffledStr.begin() - 1; --uI, i--)
+//    {
+//        *i = *uI;
+//    }
+
+//    copyIter -= size;
+//    i = copyIter;
     i -= size;  // return to the beginning
 }
 
