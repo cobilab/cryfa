@@ -39,46 +39,6 @@ using std::setprecision;
 ////////////////////////////////////////////////////////////////////////////////
 int main (int argc, char* argv[])
 {
-//    string s="AGNT";
-//    ull seed=10;
-//    ull size = s.size();
-//    std::shuffle(s.begin(), s.end(), std::default_random_engine(seed));
-//    string::iterator i = s.begin();
-//
-////    string::iterator shItBk = i;
-//    string shuffledStr;
-//    for (ull j = 0; j != size; ++j, ++i)
-//    {
-//        shuffledStr += *i;
-//    }
-//    string::iterator shIt = shuffledStr.begin();
-//
-//cerr<<shuffledStr;
-////cerr<<*i;
-//
-//    // shuffle vector of positions
-//    std::vector<ull> vecPos(size);
-//    std::iota(vecPos.begin(), vecPos.end(), 0);
-//    std::shuffle(vecPos.begin(), vecPos.end(), std::default_random_engine(seed));
-//    std::vector<ull>::iterator vI = vecPos.begin();
-//
-//    for(auto a:vecPos)cerr<<a;
-//
-////    for (ull j = 0; j != size; ++j)
-////    {
-////        *(i + *(vI+j)) = *(shIt+j);
-////    }
-//    for (std::vector<ull>::iterator vI = vecPos.begin(); vI != vecPos.end(); ++vI, ++shIt)
-//        *(i + *vI) = *shIt;
-//
-////    cerr<<*i;
-//
-//    for (ull j = 0; j != size; ++j)
-//        cerr << *(i + j);
-//
-////    i=shItBk;
-    
-
     // start timer
     high_resolution_clock::time_point startTime = high_resolution_clock::now();
 
