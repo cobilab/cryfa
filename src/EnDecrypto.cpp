@@ -823,11 +823,7 @@ inline ull EnDecrypto::un_shuffleSeedGen (ui seedInit) const
 inline void EnDecrypto::shufflePkd (string &in) const
 {
     const ull seed = un_shuffleSeedGen((ui) in.size());    // shuffling seed
-    //todo. std::default_random_engine should be changed to a specific one,
-    //todo. since this isn't portable. We encrypt in one machine, and decrypt
-    //todo. in another machine, which may have different implementations.
-    std::shuffle(in.begin(), in.end(), std::default_random_engine(seed));
-//    std::mersenne_twister_engine
+    std::shuffle(in.begin(), in.end(), std::mt19937(seed));
 }
 
 /*******************************************************************************
@@ -851,13 +847,9 @@ inline void EnDecrypto::unshufflePkd (string::iterator &i, const ull size) const
     vector<ull> vPos(size);
     std::iota(vPos.begin(), vPos.end(), 0);     // insert 0 .. N-1
     const ull seed = un_shuffleSeedGen((ui) size);
-    //todo. std::default_random_engine should be changed to a specific one,
-    //todo. since this isn't portable. We encrypt in one machine, and decrypt
-    //todo. in another machine, which may have different implementations.
-    std::shuffle(vPos.begin(), vPos.end(), std::default_random_engine(seed));
-//    std::mersenne_twister_engine
-
-
+    std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed));
+    
+    
 //    for (ull j = 0; j != size; ++j, ++i)
 //    {
 //        node[j].character = *i;
