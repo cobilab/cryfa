@@ -39,47 +39,45 @@ using std::setprecision;
 ////////////////////////////////////////////////////////////////////////////////
 int main (int argc, char* argv[])
 {
-//    std::string st = "ACGNGC";
-//    int seed = 100;
-//    ull size = st.size();
-//    string::iterator i = st.begin();
+//    string s="AGNT";
+//    ull seed=10;
+//    ull size = s.size();
+//    std::shuffle(s.begin(), s.end(), std::default_random_engine(seed));
+//    string::iterator i = s.begin();
 //
-//    std::shuffle(st.begin(), st.end(), std::default_random_engine(seed));
-//    std::cerr << st << '\n';
+////    string::iterator shItBk = i;
+//    string shuffledStr;
+//    for (ull j = 0; j != size; ++j, ++i)
+//    {
+//        shuffledStr += *i;
+//    }
+//    string::iterator shIt = shuffledStr.begin();
 //
-//    std::string out = st;
-//    string::iterator outIter = out.begin();
+//cerr<<shuffledStr;
+////cerr<<*i;
 //
-//    std::vector<ull> vecPos(size);//              vecPos.reserve(4);
+//    // shuffle vector of positions
+//    std::vector<ull> vecPos(size);
 //    std::iota(vecPos.begin(), vecPos.end(), 0);
 //    std::shuffle(vecPos.begin(), vecPos.end(), std::default_random_engine(seed));
+//    std::vector<ull>::iterator vI = vecPos.begin();
 //
-//    for (auto a : vecPos)
-//        cerr << a;
-//    cerr<<'\n';
+//    for(auto a:vecPos)cerr<<a;
 //
-//
-////    string magic(size,' ');//="xxxx";
-//////    magic.reserve(size);
-////    for (int j = 0; j < size; ++j)
+////    for (ull j = 0; j != size; ++j)
 ////    {
-////        magic[vecPos[j]] = out[j];
+////        *(i + *(vI+j)) = *(shIt+j);
 ////    }
+//    for (std::vector<ull>::iterator vI = vecPos.begin(); vI != vecPos.end(); ++vI, ++shIt)
+//        *(i + *vI) = *shIt;
 //
-//    for (ull j = 0; j != size; ++j, ++outIter)
-//    {
-//        *(i + vecPos[j]) = *outIter;
-////        cerr<<*outIter;
-////        magic[vecPos[j]] = out[j];
-//    }
-////    i-=size;
-//////    copyIter -= size;
-//////    i = copyIter;
-////
+////    cerr<<*i;
+//
 //    for (ull j = 0; j != size; ++j)
 //        cerr << *(i + j);
-////cerr<<st;
-
+//
+////    i=shItBk;
+    
 
     // start timer
     high_resolution_clock::time_point startTime = high_resolution_clock::now();

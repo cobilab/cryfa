@@ -835,36 +835,33 @@ inline void EnDecrypto::shufflePkd (string &in) const
 *******************************************************************************/
 inline void EnDecrypto::unshufflePkd (string::iterator &i, const ull size) const
 {
-    string unshuffledStr(size, ' ');
-    string::iterator unIt = unshuffledStr.begin();
-//    string::iterator copyIter = i;
-    
+    string shuffledStr;     // copy of shuffled string
+    for (ull j = 0; j != size; ++j, ++i)    shuffledStr += *i;
+    string::iterator shIt = shuffledStr.begin();
+    i -= size;
+
+
 //    shuffNode_s *node = new shuffNode_s[size];
+
+
+//    string unshuffledStr(size, ' ');
+//    string::iterator unIt = unshuffledStr.begin();
     
     // shuffle vector of positions
-    std::vector<ull> vecPos(size);
-    std::iota(vecPos.begin(), vecPos.end(), 0);
-
+    vector<ull> vPos(size);
+    std::iota(vPos.begin(), vPos.end(), 0);     // insert 0 .. N-1
     const ull seed = un_shuffleSeedGen((ui) size);
     //todo. std::default_random_engine should be changed to a specific one,
     //todo. since this isn't portable. We encrypt in one machine, and decrypt
     //todo. in another machine, which may have different implementations.
-    std::shuffle(vecPos.begin(), vecPos.end(), std::default_random_engine(seed));
+    std::shuffle(vPos.begin(), vPos.end(), std::default_random_engine(seed));
 //    std::mersenne_twister_engine
 
 
-//    vector<ull> vecPos;              vecPos.reserve(size);
-//    for (ull p = 0; p != size; ++p)  vecPos.push_back(p);
-//    const ull seed = un_shuffleSeedGen((ui) size);
-//    //todo. std::default_random_engine should be changed to a specific one,
-//    //todo. since this isn't portable. We encrypt in one machine, and decrypt
-//    //todo. in another machine, which may have different implementations.
-//    std::shuffle(vecPos.begin(),vecPos.end(), std::default_random_engine(seed));
-//
 //    for (ull j = 0; j != size; ++j, ++i)
 //    {
 //        node[j].character = *i;
-//        node[j].position  = vecPos[j];
+//        node[j].position  = vPos[j];
 //    }
 //    i -= size;  // return to the beginning
 //
@@ -876,32 +873,20 @@ inline void EnDecrypto::unshufflePkd (string::iterator &i, const ull size) const
 //        *i = node[j].character;
 //
 //    delete[] node;
-
-
-//    string magic(size, ' ');//    magic.reserve(size);
-//    for (ull j = 0; j != size; ++j, ++i)
-//    {
-//        *(unIt + vecPos[j]) = *i;
-//    }
-    for (vector<ull>::iterator vI=vecPos.begin(); vI != vecPos.end(); ++vI, ++i)
-    {
-        *(unIt + *vI) = *i;
-    }
-    i -= size;
-    for (string::iterator uI = unshuffledStr.begin(); uI != unshuffledStr.end(); ++uI, ++i)
-    {
-        *i = *uI;
-    }
     
     
-//    for (string::iterator uI = unshuffledStr.end(); uI != unshuffledStr.begin() - 1; --uI, i--)
-//    {
-//        *i = *uI;
-//    }
+    // insert unshuffled data
+    for (vector<ull>::iterator vI= vPos.begin(); vI != vPos.end(); ++vI, ++shIt)
+        *(i + *vI) = *shIt;
 
-//    copyIter -= size;
-//    i = copyIter;
-    i -= size;  // return to the beginning
+    
+//    for (vector<ull>::iterator vI=vPos.begin(); vI != vPos.end(); ++vI, ++i)
+//        *(unIt + *vI) = *i;
+//    --i;
+//    for (string::reverse_iterator uRI = unshuffledStr.rbegin();
+//         uRI != unshuffledStr.rend(); ++uRI, --i)
+//        *i = *uRI;
+//    ++i;
 }
 
 /*******************************************************************************
