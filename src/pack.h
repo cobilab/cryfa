@@ -28,7 +28,7 @@ inline htable_t buildHashTable (const string &strIn, short keyLen)
     ull elementNo = 0;
     string element;
     htable_t map;
-
+    
     switch (keyLen)
     {
         case 3:
@@ -222,7 +222,8 @@ inline vector<string> buildUnpack (const string &strIn, us keyLen)
 inline us dnaPack (const string &dna)
 {
     htable_t::const_iterator got = DNA_MAP.find(dna);
-    if (got == DNA_MAP.end()) { cerr << "Error: key not found!\n"; return 0; }
+    if (got == DNA_MAP.end())
+    { cerr << "Error: key '" << dna << "'not found!\n"; return 0; }
     else  return got->second;
 }
 
@@ -232,7 +233,8 @@ inline us dnaPack (const string &dna)
 inline us largePack (const string &strIn, const htable_t &map)
 {
     htable_t::const_iterator got = map.find(strIn);
-    if (got == map.end()) { cerr << "Error: key not found!\n"; return 0; }
+    if (got == map.end())
+    { cerr << "Error: key '" << strIn << "' not found!\n"; return 0; }
     else  return got->second;
 }
 

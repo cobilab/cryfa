@@ -130,8 +130,8 @@ void EnDecrypto::compressFQ ()
     {
         Hdrs = headers.substr(headersLen - MAX_C5);
         // ASCII char after the last char in Hdrs -- always <= (char) 127
-        HdrsX = Hdrs;    HdrsX += (char) (Hdrs[Hdrs.size()-1] + 1);
-
+        HdrsX = Hdrs;    HdrsX += (char) (Hdrs.back() + 1);
+        
         HdrMap=buildHashTable(HdrsX, KEYLEN_C5);     packHdr=&packLargeHdr_3to2;
     }
     else
@@ -157,15 +157,21 @@ void EnDecrypto::compressFQ ()
         else                                                   // headersLen = 1
         { HdrMap = buildHashTable(Hdrs, 1);           packHdr = &pack_1to1; }
     }
-
+    
     // quality score
     if (qscoresLen > MAX_C5)           // if len > 39 filter the last 39 ones
     {
         QSs = qscores.substr(qscoresLen - MAX_C5);
         // ASCII char after last char in QUALITY_SCORES
-        QSsX = QSs;     QSsX +=(char) (QSs[QSs.size()-1] + 1);
-
+        QSsX = QSs;     QSsX += (char) (QSs.back() + 1);
+cerr<<qscores<<'\n'<<QSsX;
         QsMap = buildHashTable(QSsX, KEYLEN_C5);    packQS = &packLargeQs_3to2;
+        
+        ull c=0;
+        for (htable_t::iterator i = QsMap.begin(); i != QsMap.end(); ++i,++c)
+//        cerr << i->first << "\t" << i->second << '\n'
+                ;
+//    cerr<<c;
     }
     else
     {
@@ -175,7 +181,15 @@ void EnDecrypto::compressFQ ()
         { QsMap = buildHashTable(QSs, KEYLEN_C5);   packQS = &pack_3to2; }
 
         else if (qscoresLen > MAX_C3)                                   // cat 4
-        { QsMap = buildHashTable(QSs, KEYLEN_C4);   packQS = &pack_2to1; }
+        { QsMap = buildHashTable(QSs, KEYLEN_C4);
+    
+            ull c = 0;
+            for (htable_t::iterator i = QsMap.begin(); i != QsMap.end(); ++i, ++c)
+                cerr << i->first << "\t" << i->second << '\n';
+            cerr << c;
+    
+    
+            packQS = &pack_2to1; }
 
         else if (qscoresLen == MAX_C3 || qscoresLen == MID_C3
                  || qscoresLen == MIN_C3)                               // cat 3
@@ -191,64 +205,64 @@ void EnDecrypto::compressFQ ()
         { QsMap = buildHashTable(QSs, 1);           packQS = &pack_1to1; }
     }
     
-    // distribute file among threads, for reading and packing
-    ull i = 0;
-    while (!isInEmpty)
-    {
-        isInEmpty = false;
+//    // distribute file among threads, for reading and packing
+//    ull i = 0;
+//    while (!isInEmpty)
+//    {
+//        isInEmpty = false;
+//
+//        for (t = 0; t != n_threads; ++t)
+//        {
+//            startLine = (i*n_threads + t) * LINE_BUFFER;
+//            arrThread[t] = thread(&EnDecrypto::pack, this,
+//                                  startLine, t, packHdr, packQS);
+//        }
+//        for (t = 0; t != n_threads; ++t)    arrThread[t].join();
+//
+//        ++i;
+//    }
 
-        for (t = 0; t != n_threads; ++t)
-        {
-            startLine = (i*n_threads + t) * LINE_BUFFER;
-            arrThread[t] = thread(&EnDecrypto::pack, this,
-                                  startLine, t, packHdr, packQS);
-        }
-        for (t = 0; t != n_threads; ++t)    arrThread[t].join();
-        
-        ++i;
-    }
-
-    // join encrypted files
-    ifstream encFile[n_threads];
-    string context;
-
-    // watermark for encrypted file
-    cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
-                       + to_string(RELEASE_CRYFA) + "\n";
-
-    context += headers;                             // send headers to decryptor
-    context += (char) 254;                          // to detect headers in dec.
-    context += qscores;                             // send qscores to decryptor
-    context += (hasFQjustPlus() ? (char) 253 : '\n');   // if just '+'
-//    out << context ;//<< '\n';    //todo. too aes cbc mode nemishe
-
-    // open input files
-    for (t = 0; t != n_threads; ++t)
-        encFile[t].open(ENC_FILENAME + to_string(t));
-    
-    bool prevLineNotThrID;      // if previous line was "THR=" or not
-    while (!encFile[0].eof())
-    {
-        for (t = 0; t != n_threads; ++t)
-        {
-            prevLineNotThrID = false;
-
-            while (getline(encFile[t], line).good() &&
-                    line.compare(THR_ID_HDR+to_string(t)))
-            {
-                if (prevLineNotThrID)   context += '\n';
-                context += line;
-                prevLineNotThrID = true;
-            }
-        }
-    }
-    context += (char) 252;
-
-    // close input and output files
-    for (t = 0; t != n_threads; ++t)   encFile[t].close();
-
-    cout << encrypt(context);
-    cout << '\n';
+//    // join encrypted files
+//    ifstream encFile[n_threads];
+//    string context;
+//
+//    // watermark for encrypted file
+//    cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
+//                       + to_string(RELEASE_CRYFA) + "\n";
+//
+//    context += headers;                             // send headers to decryptor
+//    context += (char) 254;                          // to detect headers in dec.
+//    context += qscores;                             // send qscores to decryptor
+//    context += (hasFQjustPlus() ? (char) 253 : '\n');   // if just '+'
+////    out << context ;//<< '\n';    //todo. too aes cbc mode nemishe
+//
+//    // open input files
+//    for (t = 0; t != n_threads; ++t)
+//        encFile[t].open(ENC_FILENAME + to_string(t));
+//
+//    bool prevLineNotThrID;      // if previous line was "THR=" or not
+//    while (!encFile[0].eof())
+//    {
+//        for (t = 0; t != n_threads; ++t)
+//        {
+//            prevLineNotThrID = false;
+//
+//            while (getline(encFile[t], line).good() &&
+//                    line.compare(THR_ID_HDR+to_string(t)))
+//            {
+//                if (prevLineNotThrID)   context += '\n';
+//                context += line;
+//                prevLineNotThrID = true;
+//            }
+//        }
+//    }
+//    context += (char) 252;
+//
+//    // close input and output files
+//    for (t = 0; t != n_threads; ++t)   encFile[t].close();
+//
+//    cout << encrypt(context);
+//    cout << '\n';
     
     /*
     // get size of file

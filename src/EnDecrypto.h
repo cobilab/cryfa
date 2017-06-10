@@ -12,13 +12,6 @@
 #include "def.h"
 using std::string;
 
-// shuffled node
-struct shuffNode_s
-{
-    char character;
-    ull  position;
-};
-
 class EnDecrypto
 {
 public:
