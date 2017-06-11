@@ -132,7 +132,7 @@ int main (int argc, char* argv[])
 
         return 0;
     }
-//todo. for hdr/qs > 39, encryption doesn't work
+
     cerr << "Encrypting...\n";
     (fileType(cryptObj.inFileName)=='A') ? cryptObj.compressFA()    // FASTA
                                          : cryptObj.compressFQ();   // FASTQ

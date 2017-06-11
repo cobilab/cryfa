@@ -131,7 +131,6 @@ void EnDecrypto::compressFQ ()
         Hdrs = headers.substr(headersLen - MAX_C5);
         // ASCII char after the last char in Hdrs -- always <= (char) 127
         HdrsX = Hdrs;    HdrsX += (char) (Hdrs.back() + 1);
-        
         HdrMap=buildHashTable(HdrsX, KEYLEN_C5);     packHdr=&packLargeHdr_3to2;
     }
     else
@@ -164,32 +163,14 @@ void EnDecrypto::compressFQ ()
         QSs = qscores.substr(qscoresLen - MAX_C5);
         // ASCII char after last char in QUALITY_SCORES
         QSsX = QSs;     QSsX += (char) (QSs.back() + 1);
-cerr<<qscores<<'\n'<<QSsX;
         QsMap = buildHashTable(QSsX, KEYLEN_C5);    packQS = &packLargeQs_3to2;
-        
-        ull c=0;
-        for (htable_t::iterator i = QsMap.begin(); i != QsMap.end(); ++i,++c)
-//        cerr << i->first << "\t" << i->second << '\n'
-                ;
-//    cerr<<c;
     }
     else
     {
         QSs = qscores;
         
         if (qscoresLen > MAX_C4)                                        // cat 5
-        { QsMap = buildHashTable(QSs, KEYLEN_C5);
-    
-            ull c = 0;
-            for (htable_t::iterator i = QsMap.begin(); i != QsMap.end(); ++i, ++c)
-            {
-            cerr << i->first << "\t" << i->second << '\n';
-//                if (i->first == "ppp") cerr<<"ack";
-            }
-            cerr << c;
-            
-    
-            packQS = &pack_3to2; }
+        { QsMap = buildHashTable(QSs, KEYLEN_C5);   packQS = &pack_3to2; }
 
         else if (qscoresLen > MAX_C3)                                   // cat 4
         { QsMap = buildHashTable(QSs, KEYLEN_C4);   packQS = &pack_2to1; }
@@ -208,64 +189,64 @@ cerr<<qscores<<'\n'<<QSsX;
         { QsMap = buildHashTable(QSs, 1);           packQS = &pack_1to1; }
     }
     
-//    // distribute file among threads, for reading and packing
-//    ull i = 0;
-//    while (!isInEmpty)
-//    {
-//        isInEmpty = false;
-//
-//        for (t = 0; t != n_threads; ++t)
-//        {
-//            startLine = (i*n_threads + t) * LINE_BUFFER;
-//            arrThread[t] = thread(&EnDecrypto::pack, this,
-//                                  startLine, t, packHdr, packQS);
-//        }
-//        for (t = 0; t != n_threads; ++t)    arrThread[t].join();
-//
-//        ++i;
-//    }
+    // distribute file among threads, for reading and packing
+    ull i = 0;
+    while (!isInEmpty)
+    {
+        isInEmpty = false;
 
-//    // join encrypted files
-//    ifstream encFile[n_threads];
-//    string context;
-//
-//    // watermark for encrypted file
-//    cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
-//                       + to_string(RELEASE_CRYFA) + "\n";
-//
-//    context += headers;                             // send headers to decryptor
-//    context += (char) 254;                          // to detect headers in dec.
-//    context += qscores;                             // send qscores to decryptor
-//    context += (hasFQjustPlus() ? (char) 253 : '\n');   // if just '+'
-////    out << context ;//<< '\n';    //todo. too aes cbc mode nemishe
-//
-//    // open input files
-//    for (t = 0; t != n_threads; ++t)
-//        encFile[t].open(ENC_FILENAME + to_string(t));
-//
-//    bool prevLineNotThrID;      // if previous line was "THR=" or not
-//    while (!encFile[0].eof())
-//    {
-//        for (t = 0; t != n_threads; ++t)
-//        {
-//            prevLineNotThrID = false;
-//
-//            while (getline(encFile[t], line).good() &&
-//                    line.compare(THR_ID_HDR+to_string(t)))
-//            {
-//                if (prevLineNotThrID)   context += '\n';
-//                context += line;
-//                prevLineNotThrID = true;
-//            }
-//        }
-//    }
-//    context += (char) 252;
-//
-//    // close input and output files
-//    for (t = 0; t != n_threads; ++t)   encFile[t].close();
-//
-//    cout << encrypt(context);
-//    cout << '\n';
+        for (t = 0; t != n_threads; ++t)
+        {
+            startLine = (i*n_threads + t) * LINE_BUFFER;
+            arrThread[t] = thread(&EnDecrypto::pack, this,
+                                  startLine, t, packHdr, packQS);
+        }
+        for (t = 0; t != n_threads; ++t)    arrThread[t].join();
+
+        ++i;
+    }
+
+    // join encrypted files
+    ifstream encFile[n_threads];
+    string context;
+
+    // watermark for encrypted file
+    cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
+                       + to_string(RELEASE_CRYFA) + "\n";
+
+    context += headers;                             // send headers to decryptor
+    context += (char) 254;                          // to detect headers in dec.
+    context += qscores;                             // send qscores to decryptor
+    context += (hasFQjustPlus() ? (char) 253 : '\n');   // if just '+'
+//    out << context ;//<< '\n';    //todo. too aes cbc mode nemishe
+
+    // open input files
+    for (t = 0; t != n_threads; ++t)
+        encFile[t].open(ENC_FILENAME + to_string(t));
+
+    bool prevLineNotThrID;      // if previous line was "THR=" or not
+    while (!encFile[0].eof())
+    {
+        for (t = 0; t != n_threads; ++t)
+        {
+            prevLineNotThrID = false;
+
+            while (getline(encFile[t], line).good() &&
+                    line.compare(THR_ID_HDR+to_string(t)))
+            {
+                if (prevLineNotThrID)   context += '\n';
+                context += line;
+                prevLineNotThrID = true;
+            }
+        }
+    }
+    context += (char) 252;
+
+    // close input and output files
+    for (t = 0; t != n_threads; ++t)   encFile[t].close();
+
+    cout << encrypt(context);
+    cout << '\n';
     
     /*
     // get size of file
@@ -508,31 +489,31 @@ inline void EnDecrypto::decompFA (string decText)
         {
             tpl = DNA_UNPACK[s];
             
-            if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]!='X')            // ...
+            if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]!='X')                // ...
             { cout<<tpl; }
                 // using just one 'cout' makes trouble
-            else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]!='X')       // X..
+            else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]!='X')           // X..
             { cout<<penaltySym(*(++i));    cout<<tpl[1];    cout<<tpl[2]; }
             
-            else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]!='X')       // .X.
+            else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]!='X')           // .X.
             { cout<<tpl[0];    cout<<penaltySym(*(++i));    cout<<tpl[2]; }
             
-            else if (tpl[0]=='X' && tpl[1]=='X' && tpl[2]!='X')       // XX.
+            else if (tpl[0]=='X' && tpl[1]=='X' && tpl[2]!='X')           // XX.
             { cout<<penaltySym(*(++i));    cout<<penaltySym(*(++i));
-                cout<<tpl[2]; }
+              cout<<tpl[2]; }
             
-            else if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]=='X')       // ..X
+            else if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]=='X')           // ..X
             { cout<<tpl[0];    cout<<tpl[1];    cout<<penaltySym(*(++i)); }
             
-            else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]=='X')       // X.X
+            else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]=='X')           // X.X
             { cout<<penaltySym(*(++i));    cout<<tpl[1];
-                cout<<penaltySym(*(++i)); }
+              cout<<penaltySym(*(++i)); }
             
-            else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]=='X')       // .XX
+            else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]=='X')           // .XX
             { cout<<tpl[0];    cout<<penaltySym(*(++i));
-                cout<<penaltySym(*(++i)); }
+              cout<<penaltySym(*(++i)); }
             
-            else { cout<<penaltySym(*(++i));                          // XXX
+            else { cout<<penaltySym(*(++i));                              // XXX
                 cout<<penaltySym(*(++i));    cout<<penaltySym(*(++i)); }
         }
     }
@@ -579,7 +560,7 @@ inline void EnDecrypto::decompFQ (string decText)
     unpackHdrPointer unpackHdr;                              // function pointer
     using unpackQSPointer = string (*)(string::iterator&, vector<string>&);
     unpackQSPointer unpackQS;                                // function pointer
-
+    
     // header
     if (headersLen > MAX_C5)    keyLen_hdr = KEYLEN_C5;
 
@@ -852,13 +833,6 @@ inline void EnDecrypto::unshufflePkd (string::iterator &i, const ull size) const
     for (ull j = 0; j != size; ++j, ++i)    shuffledStr += *i;
     string::iterator shIt = shuffledStr.begin();
     i -= size;
-
-
-//    shuffNode_s *node = new shuffNode_s[size];
-
-
-//    string unshuffledStr(size, ' ');
-//    string::iterator unIt = unshuffledStr.begin();
     
     // shuffle vector of positions
     vector<ull> vPos(size);
@@ -866,36 +840,10 @@ inline void EnDecrypto::unshufflePkd (string::iterator &i, const ull size) const
     const ull seed = un_shuffleSeedGen((ui) size);
     std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed));
     
-    
-//    for (ull j = 0; j != size; ++j, ++i)
-//    {
-//        node[j].character = *i;
-//        node[j].position  = vPos[j];
-//    }
-//    i -= size;  // return to the beginning
-//
-//    std::sort(node, node+size,
-//              [](const shuffNode_s& lhs, const shuffNode_s& rhs)
-//              { return lhs.position < rhs.position; });
-//
-//    for (ull j = 0; j != size; ++j, ++i)
-//        *i = node[j].character;
-//
-//    delete[] node;
-    
-    
     // insert unshuffled data
-    for (vector<ull>::iterator vI= vPos.begin(); vI != vPos.end(); ++vI, ++shIt)
-        *(i + *vI) = *shIt;
-
-    
-//    for (vector<ull>::iterator vI=vPos.begin(); vI != vPos.end(); ++vI, ++i)
-//        *(unIt + *vI) = *i;
-//    --i;
-//    for (string::reverse_iterator uRI = unshuffledStr.rbegin();
-//         uRI != unshuffledStr.rend(); ++uRI, --i)
-//        *i = *uRI;
-//    ++i;
+//  for (vector<ull>::iterator vI= vPos.begin(); vI != vPos.end(); ++vI, ++shIt)
+//        *(i + *vI) = *shIt;
+    for (const ull& vI : vPos)  *(i + vI) = *shIt++; // first *shIt, then ++shIt
 }
 
 /*******************************************************************************

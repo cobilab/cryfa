@@ -25,8 +25,6 @@ public:
     string keyFileName;                                  // password file name
     bool   verbose = false;                              // for verbose mode
     bool   disable_shuffle = false;                      // disable shuffle
-    string Hdrs;                                         // max: 39 values
-    string QSs;                                          // max: 39 values
     
 private:
     inline string encrypt (const string&);               // encrypt

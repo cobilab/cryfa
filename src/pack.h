@@ -17,14 +17,14 @@ using std::cout;
 using std::cerr;
 using std::make_pair;
 
-EnDecrypto cryptObj;
+string Hdrs;    // max: 39 values -- global variable
+string QSs;     // max: 39 values -- global variable
 
 /*******************************************************************************
     build hash table
 *******************************************************************************/
 inline htable_t buildHashTable (const string &strIn, short keyLen)
 {
-    const byte strInLen = strIn.length();
     ull elementNo = 0;
     string element;
     htable_t map;
@@ -32,89 +32,77 @@ inline htable_t buildHashTable (const string &strIn, short keyLen)
     switch (keyLen)
     {
         case 3:
-            LOOP3(i, j, k, strInLen)
+            LOOP3(i, j, k, strIn)
             {
-                element  = strIn[i];  element += strIn[j];  element += strIn[k];
-                map.insert(make_pair(element, elementNo));
-                ++elementNo;
+                element=i;    element+=j;    element+=k;
+                map.insert(make_pair(element, elementNo++));
+////            map.insert({element, elementNo++});
+////            map[element] = elementNo++;
             }
             break;
     
         case 2:
-            LOOP2(i, j, strInLen)
+            LOOP2(i, j, strIn)
             {
-                element = strIn[i];   element += strIn[j];
-                map.insert(make_pair(element, elementNo));
-////            map.insert({element, elementNo});
-////            map[element] = elementNo;
-                ++elementNo;
+                element=i;    element+=j;
+                map.insert(make_pair(element, elementNo++));
             }
             break;
-    
+
         case 1:
-            LOOP(i, strInLen)
+            LOOP(i, strIn)
             {
-                element = strIn[i];
-                map.insert(make_pair(element, elementNo));
-                ++elementNo;
+                element=i;
+                map.insert(make_pair(element, elementNo++));
             }
             break;
             
         case 5:
-            LOOP5(i, j, k, l, m, strInLen)
+            LOOP5(i, j, k, l, m, strIn)
             {
-                element  = strIn[i];  element += strIn[j];  element += strIn[k];
-                element += strIn[l];  element += strIn[m];
-                map.insert(make_pair(element, elementNo));
-                ++elementNo;
+                element=i;  element+=j;  element+=k;  element+=l;  element+=m;
+                map.insert(make_pair(element, elementNo++));
             }
             break;
 
         case 7:
-            LOOP7(i, j, k, l, m, n, o, strInLen)
+            LOOP7(i, j, k, l, m, n, o, strIn)
             {
-                element  = strIn[i];  element += strIn[j];  element += strIn[k];
-                element += strIn[l];  element += strIn[m];  element += strIn[n];
-                element += strIn[o];
-                map.insert(make_pair(element, elementNo));
-                ++elementNo;
+                element =i;  element+=j;  element+=k;  element+=l;  element+=m;
+                element+=n;  element+=o;
+                map.insert(make_pair(element, elementNo++));
             }
             break;
 
         case 4:
-            LOOP4(i, j, k, l, strInLen)
+            LOOP4(i, j, k, l, strIn)
             {
-                element  = strIn[i];  element += strIn[j];  element += strIn[k];
-                element += strIn[l];
-                map.insert(make_pair(element, elementNo));
-                ++elementNo;
+                element=i;    element+=j;    element+=k;    element+=l;
+                map.insert(make_pair(element, elementNo++));
             }
             break;
 
         case 6:
-            LOOP6(i, j, k, l, m, n, strInLen)
+            LOOP6(i, j, k, l, m, n, strIn)
             {
-                element  = strIn[i];  element += strIn[j];  element += strIn[k];
-                element += strIn[l];  element += strIn[m];  element += strIn[n];
-                map.insert(make_pair(element, elementNo));
-                ++elementNo;
+                element =i;  element+=j;  element+=k;  element+=l;  element+=m;
+                element+=n;
+                map.insert(make_pair(element, elementNo++));
             }
             break;
 
         case 8:
-            LOOP8(i, j, k, l, m, n, o, p, strInLen)
+            LOOP8(i, j, k, l, m, n, o, p, strIn)
             {
-                element  = strIn[i];  element += strIn[j];  element += strIn[k];
-                element += strIn[l];  element += strIn[m];  element += strIn[n];
-                element += strIn[o];  element += strIn[p];
-                map.insert(make_pair(element, elementNo));
-                ++elementNo;
+                element =i;  element+=j;  element+=k;  element+=l;  element+=m;
+                element+=n;  element+=o;  element+=p;
+                map.insert(make_pair(element, elementNo++));
             }
             break;
-
+            
         default: break;
     }
-
+    
     return map;
     
     // TEST
@@ -128,80 +116,76 @@ inline htable_t buildHashTable (const string &strIn, short keyLen)
 *******************************************************************************/
 inline vector<string> buildUnpack (const string &strIn, us keyLen)
 {
-    const byte strLen = strIn.length();
     ull elementNo = 0;
     string element;
-    vector<string> unpack;
+    const ull unpackSize = std::pow(strIn.size(), keyLen);
+    vector<string> unpack;    unpack.reserve(unpackSize);
     
     switch (keyLen)
     {
         case 3:
-            LOOP3(i, j, k, strLen)
+            LOOP3(i, j, k, strIn)
             {
-                element  = strIn[i];  element += strIn[j];  element += strIn[k];
+                element=i;    element+=j;    element+=k;
                 unpack.push_back(element);
             }
             break;
 
         case 2:
-            LOOP2(i, j, strLen)
+            LOOP2(i, j, strIn)
             {
-                element = strIn[i];   element += strIn[j];
+                element=i;    element+=j;
                 unpack.push_back(element);
             }
             break;
-    
+
         case 1:
-            LOOP(i, strLen)
+            LOOP(i, strIn)
             {
-                element = strIn[i];
+                element=i;
                 unpack.push_back(element);
             }
             break;
-    
+
         case 5:
-            LOOP5(i, j, k, l, m, strLen)
+            LOOP5(i, j, k, l, m, strIn)
             {
-                element  = strIn[i];  element += strIn[j];  element += strIn[k];
-                element += strIn[l];  element += strIn[m];
+                element=i;  element+=j;  element+=k;  element+=l;  element+=m;
                 unpack.push_back(element);
             }
             break;
 
         case 7:
-            LOOP7(i, j, k, l, m, n, o, strLen)
+            LOOP7(i, j, k, l, m, n, o, strIn)
             {
-                element  = strIn[i];  element += strIn[j];  element += strIn[k];
-                element += strIn[l];  element += strIn[m];  element += strIn[n];
-                element += strIn[o];
+                element =i;  element+=j;  element+=k;  element+=l;  element+=m;
+                element+=n;  element+=o;
                 unpack.push_back(element);
             }
             break;
 
         case 4:
-            LOOP4(i, j, k, l, strLen)
+            LOOP4(i, j, k, l, strIn)
             {
-                element  = strIn[i];  element += strIn[j];  element += strIn[k];
-                element += strIn[l];
+                element=i;    element+=j;    element+=k;    element+=l;
                 unpack.push_back(element);
             }
             break;
-
+            
         case 6:
-            LOOP6(i, j, k, l, m, n, strLen)
+            LOOP6(i, j, k, l, m, n, strIn)
             {
-                element  = strIn[i];  element += strIn[j];  element += strIn[k];
-                element += strIn[l];  element += strIn[m];  element += strIn[n];
+                element =i;  element+=j;  element+=k;  element+=l;  element+=m;
+                element+=n;
                 unpack.push_back(element);
             }
             break;
             
         case 8:
-            LOOP8(i, j, k, l, m, n, o, p, strLen)
+            LOOP8(i, j, k, l, m, n, o, p, strIn)
             {
-                element  = strIn[i];  element += strIn[j];  element += strIn[k];
-                element += strIn[l];  element += strIn[m];  element += strIn[n];
-                element += strIn[o];  element += strIn[p];
+                element =i;  element+=j;  element+=k;  element+=l;  element+=m;
+                element+=n;  element+=o;  element+=p;
                 unpack.push_back(element);
             }
             break;
@@ -223,7 +207,7 @@ inline us dnaPack (const string &dna)
 {
     htable_t::const_iterator got = DNA_MAP.find(dna);
     if (got == DNA_MAP.end())
-    { cerr << "Error: key '" << dna << "'not found!\n"; return 0; }
+    { cerr << "Error: key '" << dna << "'not found!\n";    return 0; }
     else  return got->second;
 }
 
@@ -234,25 +218,24 @@ inline us largePack (const string &strIn, const htable_t &map)
 {
     htable_t::const_iterator got = map.find(strIn);
     if (got == map.end())
-    { cerr << "Error: key '" << strIn << "' not found!\n"; return 0; }
+    { cerr << "Error: key '" << strIn << "' not found!\n";    return 0; }
     else  return got->second;
 }
 
 /*******************************************************************************
     encapsulate each 3 DNA bases in 1 byte -- reduction: ~2/3
 *******************************************************************************/
-inline string packSeq_3to1 (string seq)
+inline string packSeq_3to1 (const string& seq)
 {
     string packedSeq;
-    const ll iterLen = seq.length() - 2;
-    ll x = 0;
     bool firstNotIn, secondNotIn, thirdNotIn;
     char s0, s1, s2;
     string tuple;
-
-    for (x = 0; x < iterLen; x += 3)
+    string::const_iterator i = seq.begin(),   iEnd = seq.end()-2;
+    
+    for (; i < iEnd; i += 3)
     {
-        s0 = seq[x], s1 = seq[x+1], s2 = seq[x+2];
+        s0 = *i,    s1 = *(i+1),    s2 = *(i+2);
 
         tuple.clear();
         tuple +=
@@ -275,12 +258,12 @@ inline string packSeq_3to1 (string seq)
     switch (seq.length() % 3)
     {
         case 1:
-            packedSeq += 255;   packedSeq += seq[x];
+            packedSeq += 255;   packedSeq += *i;
             break;
 
         case 2:
-            packedSeq += 255;   packedSeq += seq[x];
-            packedSeq += 255;   packedSeq += seq[x+1];
+            packedSeq += 255;   packedSeq += *i;
+            packedSeq += 255;   packedSeq += *(i+1);
             break;
 
         default: break;
@@ -295,18 +278,17 @@ inline string packSeq_3to1 (string seq)
 inline string packLargeHdr_3to2 (const string& strIn, const htable_t &map)
 {
     string tuple, packed;
-    const ll iterLen = strIn.length() - 2;
-    ll x = 0;
     bool firstNotIn, secondNotIn, thirdNotIn;
     char s0, s1, s2;
     us shortTuple;
-    string hdrs = cryptObj.Hdrs;
+    string hdrs = Hdrs;
     // ASCII char after the last char in HEADERS string
-    const char XChar = (char) (hdrs[hdrs.size()-1] + 1);
+    const char XChar = (char) (hdrs.back() + 1);
+    string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-2;
     
-    for (x = 0; x < iterLen; x += 3)
+    for (; i < iEnd; i += 3)
     {
-        s0 = strIn[x], s1 = strIn[x+1], s2 = strIn[x+2];
+        s0 = *i,    s1 = *(i+1),    s2 = *(i+2);
         
         tuple.clear();
         tuple  = (firstNotIn  = (hdrs.find(s0)==string::npos)) ? XChar : s0;
@@ -326,12 +308,12 @@ inline string packLargeHdr_3to2 (const string& strIn, const htable_t &map)
     switch (strIn.length() % 3)
     {
         case 1:
-            packed += 255;   packed += strIn[x];
+            packed += 255;   packed += *i;
             break;
         
         case 2:
-            packed += 255;   packed += strIn[x];
-            packed += 255;   packed += strIn[x+1];
+            packed += 255;   packed += *i;
+            packed += 255;   packed += *(i+1);
             break;
         
         default: break;
@@ -346,18 +328,17 @@ inline string packLargeHdr_3to2 (const string& strIn, const htable_t &map)
 inline string packLargeQs_3to2 (const string& strIn, const htable_t &map)
 {
     string tuple, packed;
-    const ll iterLen = strIn.length() - 2;
-    ll x = 0;
     bool firstNotIn, secondNotIn, thirdNotIn;
     char s0, s1, s2;
     us shortTuple;
-    string qss = cryptObj.QSs;
+    string qss = QSs;
     // ASCII char after the last char in QUALITY_SCORES string
-    const char XChar = (char) (qss[qss.size()-1] + 1);
+    const char XChar = (char) (qss.back() + 1);
+    string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-2;
     
-    for (x = 0; x < iterLen; x += 3)
+    for (; i < iEnd; i += 3)
     {
-        s0 = strIn[x], s1 = strIn[x+1], s2 = strIn[x+2];
+        s0 = *i,    s1 = *(i+1),  s2 = *(i+2);
         
         tuple.clear();
         tuple  = (firstNotIn  = (qss.find(s0) == string::npos)) ? XChar : s0;
@@ -377,12 +358,12 @@ inline string packLargeQs_3to2 (const string& strIn, const htable_t &map)
     switch (strIn.length() % 3)
     {
         case 1:
-            packed += 255;   packed += strIn[x];
+            packed += 255;   packed += *i;
             break;
         
         case 2:
-            packed += 255;   packed += strIn[x];
-            packed += 255;   packed += strIn[x+1];
+            packed += 255;   packed += *i;
+            packed += 255;   packed += *(i+1);
             break;
         
         default: break;
@@ -397,13 +378,12 @@ inline string packLargeQs_3to2 (const string& strIn, const htable_t &map)
 inline string pack_3to2 (const string& strIn, const htable_t &map)
 {
     string tuple, packed;
-    const ll iterLen = strIn.length() - 2;
-    ll x = 0;
     us shortTuple;
-
-    for (x = 0; x < iterLen; x += 3)
+    string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-2;
+    
+    for (; i < iEnd; i += 3)
     {
-        tuple.clear();   tuple=strIn[x];  tuple+=strIn[x+1];  tuple+=strIn[x+2];
+        tuple.clear();    tuple=*i;    tuple+=*(i+1);    tuple+=*(i+2);
         shortTuple = map.find(tuple)->second;
         packed += (byte) (shortTuple >> 8);      // left byte
         packed += (byte) (shortTuple & 0xFF);    // right byte
@@ -413,12 +393,12 @@ inline string pack_3to2 (const string& strIn, const htable_t &map)
     switch (strIn.length() % 3)
     {
         case 1:
-            packed += 255;   packed += strIn[x];
+            packed += 255;   packed += *i;
             break;
 
         case 2:
-            packed += 255;   packed += strIn[x];
-            packed += 255;   packed += strIn[x+1];
+            packed += 255;   packed += *i;
+            packed += 255;   packed += *(i+1);
             break;
 
         default: break;
@@ -433,17 +413,16 @@ inline string pack_3to2 (const string& strIn, const htable_t &map)
 inline string pack_2to1 (const string& strIn, const htable_t &map)
 {
     string tuple, packed;
-    const ll iterLen = strIn.length() - 1;
-    ll x = 0;
-
-    for (x = 0; x < iterLen; x += 2)
+    string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-1;
+    
+    for (; i < iEnd; i += 2)
     {
-        tuple.clear();   tuple = strIn[x];   tuple += strIn[x+1];
+        tuple.clear();    tuple = *i;    tuple += *(i+1);
         packed += (char) map.find(tuple)->second;
     }
-
+    
     // if len isn't multiple of 2 (it's odd), add (char) 255 before each sym
-    if (strIn.length() & 1) { packed += 255;    packed += strIn[x]; }
+    if (strIn.length() & 1) { packed += 255;    packed += *i; }
 
     return packed;
 }
@@ -454,12 +433,11 @@ inline string pack_2to1 (const string& strIn, const htable_t &map)
 inline string pack_3to1 (const string& strIn, const htable_t &map)
 {
     string tuple, packed;
-    const ll iterLen = strIn.length() - 2;
-    ll x = 0;
-
-    for (x = 0; x < iterLen; x += 3)
+    string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-2;
+    
+    for (; i < iEnd; i += 3)
     {
-        tuple.clear();   tuple=strIn[x];  tuple+=strIn[x+1];  tuple+=strIn[x+2];
+        tuple.clear();    tuple=*i;    tuple+=*(i+1);    tuple+=*(i+2);
         packed += (char) map.find(tuple)->second;
     }
 
@@ -467,12 +445,12 @@ inline string pack_3to1 (const string& strIn, const htable_t &map)
     switch (strIn.length() % 3)
     {
         case 1:
-            packed += 255;   packed += strIn[x];
+            packed += 255;   packed += *i;
             break;
 
         case 2:
-            packed += 255;   packed += strIn[x];
-            packed += 255;   packed += strIn[x+1];
+            packed += 255;   packed += *(i+1);
+            packed += 255;   packed += *(i+2);
             break;
 
         default: break;
@@ -487,13 +465,12 @@ inline string pack_3to1 (const string& strIn, const htable_t &map)
 inline string pack_5to1 (const string& strIn, const htable_t &map)
 {
     string tuple, packed;
-    const ll iterLen = strIn.length() - 4;
-    ll x = 0;
-
-    for (x = 0; x < iterLen; x += 5)
+    string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-4;
+    
+    for (; i < iEnd; i += 5)
     {
-        tuple.clear();        tuple  = strIn[x];    tuple += strIn[x+1];
-        tuple += strIn[x+2];  tuple += strIn[x+3];  tuple += strIn[x+4];
+        tuple.clear();    tuple=*i;         tuple+=*(i+1);
+        tuple+=*(i+2);    tuple+=*(i+3);    tuple+=*(i+4);
         packed += (char) map.find(tuple)->second;
     }
 
@@ -501,30 +478,30 @@ inline string pack_5to1 (const string& strIn, const htable_t &map)
     switch (strIn.length() % 5)
     {
         case 1:
-            packed += 255;   packed += strIn[x];
+            packed += 255;   packed += *i;
             break;
-
+            
         case 2:
-            packed += 255;   packed += strIn[x];
-            packed += 255;   packed += strIn[x+1];
+            packed += 255;   packed += *i;
+            packed += 255;   packed += *(i+1);
             break;
-
+            
         case 3:
-            packed += 255;   packed += strIn[x];
-            packed += 255;   packed += strIn[x+1];
-            packed += 255;   packed += strIn[x+2];
+            packed += 255;   packed += *i;
+            packed += 255;   packed += *(i+1);
+            packed += 255;   packed += *(i+2);
             break;
 
         case 4:
-            packed += 255;   packed += strIn[x];
-            packed += 255;   packed += strIn[x+1];
-            packed += 255;   packed += strIn[x+2];
-            packed += 255;   packed += strIn[x+3];
+            packed += 255;   packed += *i;
+            packed += 255;   packed += *(i+1);
+            packed += 255;   packed += *(i+2);
+            packed += 255;   packed += *(i+3);
             break;
 
         default: break;
     }
-
+    
     return packed;
 }
 
@@ -534,14 +511,12 @@ inline string pack_5to1 (const string& strIn, const htable_t &map)
 inline string pack_7to1 (const string& strIn, const htable_t &map)
 {
     string tuple, packed;
-    const ll iterLen = strIn.length() - 6;
-    ll x = 0;
-
-    for (x = 0; x < iterLen; x += 7)
+    string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-6;
+    
+    for (; i < iEnd; i += 7)
     {
-        tuple.clear();          tuple  = strIn[x];      tuple += strIn[x+1];
-        tuple += strIn[x+2];    tuple += strIn[x+3];    tuple += strIn[x+4];
-        tuple += strIn[x+5];    tuple += strIn[x+6];
+        tuple.clear();    tuple=*i;         tuple+=*(i+1);    tuple+=*(i+2);
+        tuple+=*(i+3);    tuple+=*(i+4);    tuple+=*(i+5);    tuple+=*(i+6);
         packed += (char) map.find(tuple)->second;
     }
 
@@ -549,42 +524,42 @@ inline string pack_7to1 (const string& strIn, const htable_t &map)
     switch (strIn.length() % 7)
     {
         case 1:
-            packed += 255;   packed += strIn[x];
+            packed += 255;   packed += *i;
             break;
 
         case 2:
-            packed += 255;   packed += strIn[x];
-            packed += 255;   packed += strIn[x+1];
+            packed += 255;   packed += *i;
+            packed += 255;   packed += *(i+1);
             break;
 
         case 3:
-            packed += 255;   packed += strIn[x];
-            packed += 255;   packed += strIn[x+1];
-            packed += 255;   packed += strIn[x+2];
+            packed += 255;   packed += *i;
+            packed += 255;   packed += *(i+1);
+            packed += 255;   packed += *(i+2);
             break;
 
         case 4:
-            packed += 255;   packed += strIn[x];
-            packed += 255;   packed += strIn[x+1];
-            packed += 255;   packed += strIn[x+2];
-            packed += 255;   packed += strIn[x+3];
+            packed += 255;   packed += *i;
+            packed += 255;   packed += *(i+1);
+            packed += 255;   packed += *(i+2);
+            packed += 255;   packed += *(i+3);
             break;
 
         case 5:
-            packed += 255;   packed += strIn[x];
-            packed += 255;   packed += strIn[x+1];
-            packed += 255;   packed += strIn[x+2];
-            packed += 255;   packed += strIn[x+3];
-            packed += 255;   packed += strIn[x+4];
+            packed += 255;   packed += *i;
+            packed += 255;   packed += *(i+1);
+            packed += 255;   packed += *(i+2);
+            packed += 255;   packed += *(i+3);
+            packed += 255;   packed += *(i+4);
             break;
 
         case 6:
-            packed += 255;   packed += strIn[x];
-            packed += 255;   packed += strIn[x+1];
-            packed += 255;   packed += strIn[x+2];
-            packed += 255;   packed += strIn[x+3];
-            packed += 255;   packed += strIn[x+4];
-            packed += 255;   packed += strIn[x+5];
+            packed += 255;   packed += *i;
+            packed += 255;   packed += *(i+1);
+            packed += 255;   packed += *(i+2);
+            packed += 255;   packed += *(i+3);
+            packed += 255;   packed += *(i+4);
+            packed += 255;   packed += *(i+5);
             break;
 
         default: break;
@@ -598,17 +573,15 @@ inline string pack_7to1 (const string& strIn, const htable_t &map)
 *******************************************************************************/
 inline string pack_1to1 (const string& strIn, const htable_t &map)
 {
-    string single;
-    string packed;
-    const ll iterLen = strIn.length();
-    ll x = 0;
-
-    for (x = 0; x < iterLen; ++x)
+    string single, packed;
+    string::const_iterator i = strIn.begin(),   iEnd = strIn.end();
+    
+    for (; i < iEnd; ++i)
     {
-        single.clear();   single = strIn[x];
+        single.clear();   single = *i;
         packed += (char) map.find(single)->second;
     }
-
+    
     return packed;
 }
 
@@ -617,7 +590,7 @@ inline string pack_1to1 (const string& strIn, const htable_t &map)
 *******************************************************************************/
 inline char penaltySym (char c)
 {
-    return (c != (char) 254 && c != (char) 252) ? c : (char) 10;
+    return (c!=(char) 254 && c!=(char) 252) ? c : (char) 10;
 }
 
 /*******************************************************************************
@@ -626,7 +599,7 @@ inline char penaltySym (char c)
 inline string unpackSeqFQ_3to1 (string::iterator &i)
 {
     string tpl, out;
-
+    
     for (; *i != (char) 254; ++i)
     {
         //seq len not multiple of 3
