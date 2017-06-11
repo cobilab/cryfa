@@ -176,20 +176,23 @@ cerr<<qscores<<'\n'<<QSsX;
     else
     {
         QSs = qscores;
-
+        
         if (qscoresLen > MAX_C4)                                        // cat 5
-        { QsMap = buildHashTable(QSs, KEYLEN_C5);   packQS = &pack_3to2; }
-
-        else if (qscoresLen > MAX_C3)                                   // cat 4
-        { QsMap = buildHashTable(QSs, KEYLEN_C4);
+        { QsMap = buildHashTable(QSs, KEYLEN_C5);
     
             ull c = 0;
             for (htable_t::iterator i = QsMap.begin(); i != QsMap.end(); ++i, ++c)
-                cerr << i->first << "\t" << i->second << '\n';
+            {
+            cerr << i->first << "\t" << i->second << '\n';
+//                if (i->first == "ppp") cerr<<"ack";
+            }
             cerr << c;
+            
     
-    
-            packQS = &pack_2to1; }
+            packQS = &pack_3to2; }
+
+        else if (qscoresLen > MAX_C3)                                   // cat 4
+        { QsMap = buildHashTable(QSs, KEYLEN_C4);   packQS = &pack_2to1; }
 
         else if (qscoresLen == MAX_C3 || qscoresLen == MID_C3
                  || qscoresLen == MIN_C3)                               // cat 3
