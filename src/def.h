@@ -51,7 +51,8 @@ struct POWER<B, 0>
 /*******************************************************************************
     macros
 *******************************************************************************/
-#define LOOP(c,S)            for(const char& (c) : (S))
+//#define LOOP(i,S)            for(byte (i)=0; i!=(S); ++i)
+#define LOOP(i,S)            for(const char& (i) : (S))
 #define LOOP2(i,j,S)         LOOP(i,S) LOOP(j,S)
 #define LOOP3(i,j,k,S)       LOOP(i,S) LOOP(j,S) LOOP(k,S)
 #define LOOP4(i,j,k,l,S)     LOOP(i,S) LOOP(j,S) LOOP(k,S) LOOP(l,S)

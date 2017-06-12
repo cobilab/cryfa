@@ -25,7 +25,7 @@ public:
     string keyFileName;                                  // password file name
     bool   verbose = false;                              // for verbose mode
     bool   disable_shuffle = false;                      // disable shuffle
-    
+
 private:
     inline string encrypt (const string&);               // encrypt
     inline string decrypt ();                            // decrypt
@@ -47,6 +47,8 @@ private:
     inline void unshufflePkd (string::iterator&,         // unshuffle packed
                               const ull)        const;
     
+    string   Hdrs;                                       // max: 39 values
+    string   QSs;                                        // max: 39 values
     string   HdrsX;                                      // extended Hdrs
     string   QSsX;                                       // extended QSs
     htable_t HdrMap;                                     // Hdrs hash table

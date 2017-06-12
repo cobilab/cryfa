@@ -129,6 +129,7 @@ void EnDecrypto::compressFQ ()
     if (headersLen > MAX_C5)          // if len > 39 filter the last 39 ones
     {
         Hdrs = headers.substr(headersLen - MAX_C5);
+        Hdrs_g = Hdrs;
         // ASCII char after the last char in Hdrs -- always <= (char) 127
         HdrsX = Hdrs;    HdrsX += (char) (Hdrs.back() + 1);
         HdrMap=buildHashTable(HdrsX, KEYLEN_C5);     packHdr=&packLargeHdr_3to2;
@@ -136,6 +137,7 @@ void EnDecrypto::compressFQ ()
     else
     {
         Hdrs = headers;
+        Hdrs_g = Hdrs;
 
         if (headersLen > MAX_C4)                                        // cat 5
         { HdrMap = buildHashTable(Hdrs, KEYLEN_C5);   packHdr = &pack_3to2; }
@@ -161,6 +163,7 @@ void EnDecrypto::compressFQ ()
     if (qscoresLen > MAX_C5)           // if len > 39 filter the last 39 ones
     {
         QSs = qscores.substr(qscoresLen - MAX_C5);
+        QSs_g = QSs;
         // ASCII char after last char in QUALITY_SCORES
         QSsX = QSs;     QSsX += (char) (QSs.back() + 1);
         QsMap = buildHashTable(QSsX, KEYLEN_C5);    packQS = &packLargeQs_3to2;
@@ -168,6 +171,7 @@ void EnDecrypto::compressFQ ()
     else
     {
         QSs = qscores;
+        QSs_g = QSs;
         
         if (qscoresLen > MAX_C4)                                        // cat 5
         { QsMap = buildHashTable(QSs, KEYLEN_C5);   packQS = &pack_3to2; }
@@ -841,9 +845,9 @@ inline void EnDecrypto::unshufflePkd (string::iterator &i, const ull size) const
     std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed));
     
     // insert unshuffled data
+    for (const ull& vI : vPos)  *(i + vI) = *shIt++; // first *shIt, then ++shIt
 //  for (vector<ull>::iterator vI= vPos.begin(); vI != vPos.end(); ++vI, ++shIt)
 //        *(i + *vI) = *shIt;
-    for (const ull& vI : vPos)  *(i + vI) = *shIt++; // first *shIt, then ++shIt
 }
 
 /*******************************************************************************

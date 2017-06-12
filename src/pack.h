@@ -17,8 +17,8 @@ using std::cout;
 using std::cerr;
 using std::make_pair;
 
-string Hdrs;    // max: 39 values -- global variable
-string QSs;     // max: 39 values -- global variable
+string Hdrs_g;    // max: 39 values -- global
+string QSs_g;     // max: 39 values -- global
 
 /*******************************************************************************
     build hash table
@@ -28,7 +28,7 @@ inline htable_t buildHashTable (const string &strIn, short keyLen)
     ull elementNo = 0;
     string element;
     htable_t map;
-    
+
     switch (keyLen)
     {
         case 3:
@@ -56,7 +56,7 @@ inline htable_t buildHashTable (const string &strIn, short keyLen)
                 map.insert(make_pair(element, elementNo++));
             }
             break;
-            
+
         case 5:
             LOOP5(i, j, k, l, m, strIn)
             {
@@ -120,7 +120,7 @@ inline vector<string> buildUnpack (const string &strIn, us keyLen)
     string element;
     const ull unpackSize = std::pow(strIn.size(), keyLen);
     vector<string> unpack;    unpack.reserve(unpackSize);
-    
+
     switch (keyLen)
     {
         case 3:
@@ -171,7 +171,7 @@ inline vector<string> buildUnpack (const string &strIn, us keyLen)
                 unpack.push_back(element);
             }
             break;
-            
+
         case 6:
             LOOP6(i, j, k, l, m, n, strIn)
             {
@@ -180,7 +180,7 @@ inline vector<string> buildUnpack (const string &strIn, us keyLen)
                 unpack.push_back(element);
             }
             break;
-            
+
         case 8:
             LOOP8(i, j, k, l, m, n, o, p, strIn)
             {
@@ -281,7 +281,7 @@ inline string packLargeHdr_3to2 (const string& strIn, const htable_t &map)
     bool firstNotIn, secondNotIn, thirdNotIn;
     char s0, s1, s2;
     us shortTuple;
-    string hdrs = Hdrs;
+    string hdrs = Hdrs_g;
     // ASCII char after the last char in HEADERS string
     const char XChar = (char) (hdrs.back() + 1);
     string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-2;
@@ -331,7 +331,7 @@ inline string packLargeQs_3to2 (const string& strIn, const htable_t &map)
     bool firstNotIn, secondNotIn, thirdNotIn;
     char s0, s1, s2;
     us shortTuple;
-    string qss = QSs;
+    string qss = QSs_g;
     // ASCII char after the last char in QUALITY_SCORES string
     const char XChar = (char) (qss.back() + 1);
     string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-2;
