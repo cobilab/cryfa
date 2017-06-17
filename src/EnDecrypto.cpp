@@ -194,8 +194,7 @@ void EnDecrypto::compressFQ ()
     }
     
     // distribute file among threads, for reading and packing
-    ull i = 0;
-    while (!isInEmpty)
+    for (ull i = 0; !isInEmpty; ++i)
     {
         isInEmpty = false;
 
@@ -206,10 +205,8 @@ void EnDecrypto::compressFQ ()
                                   startLine, t, packHdr, packQS);
         }
         for (t = 0; t != n_threads; ++t)    arrThread[t].join();
-
-        ++i;
     }
-
+    
     // join encrypted files
     ifstream encFile[n_threads];
     string context;

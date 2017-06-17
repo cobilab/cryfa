@@ -121,7 +121,7 @@ int main (int argc, char* argv[])
     {
         cerr << "Decrypting...\n";
         cryptObj.decompress();//todo. multithreading
-
+        
         // stop timer
         high_resolution_clock::time_point finishTime =
                 high_resolution_clock::now();
@@ -129,10 +129,10 @@ int main (int argc, char* argv[])
         std::chrono::duration<double> elapsed = finishTime - startTime;
         cerr << "done in " << std::fixed << setprecision(4) << elapsed.count()
              << " seconds.\n";
-
+        
         return 0;
     }
-
+    
     cerr << "Encrypting...\n";
     (fileType(cryptObj.inFileName)=='A') ? cryptObj.compressFA()    // FASTA
                                          : cryptObj.compressFQ();   // FASTQ
