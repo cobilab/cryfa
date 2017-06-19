@@ -27,6 +27,12 @@ public:
     bool   disable_shuffle = false;                      // disable shuffle
 
 private:
+    
+    inline void testEncrypt ();               // encrypt
+    
+    
+    
+    
     inline string encrypt (const string&);               // encrypt
     inline string decrypt ();                            // decrypt
     inline void pack (const ull, const byte,             // pack

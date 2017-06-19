@@ -209,44 +209,74 @@ void EnDecrypto::compressFQ ()
     
     // join encrypted files
     ifstream encFile[n_threads];
-    string context;
+//    string context;
 
     // watermark for encrypted file
     cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
                        + to_string(RELEASE_CRYFA) + "\n";
+    
+//    context += headers;                             // send headers to decryptor
+//    context += (char) 254;                          // to detect headers in dec.
+//    context += qscores;                             // send qscores to decryptor
+//    context += (hasFQjustPlus() ? (char) 253 : '\n');             // if just '+'
+    
+    
+    cout << headers;                             // send headers to decryptor
+    cout << (char) 254;                          // to detect headers in dec.
+    cout << qscores;                             // send qscores to decryptor
+    cout << (hasFQjustPlus() ? (char) 253 : '\n');             // if just '+'
 
-    context += headers;                             // send headers to decryptor
-    context += (char) 254;                          // to detect headers in dec.
-    context += qscores;                             // send qscores to decryptor
-    context += (hasFQjustPlus() ? (char) 253 : '\n');   // if just '+'
 //    out << context ;//<< '\n';    //todo. too aes cbc mode nemishe
 
     // open input files
     for (t = 0; t != n_threads; ++t)
         encFile[t].open(ENC_FILENAME + to_string(t));
-
-    bool prevLineNotThrID;      // if previous line was "THR=" or not
+    
+    
+    // open packed file
+    ofstream pkdFile;
+    pkdFile.open(PKD_FILENAME);
+    
+    
+    
+    bool prevLineNotThrID;                 // if previous line was "THR=" or not
     while (!encFile[0].eof())
     {
         for (t = 0; t != n_threads; ++t)
         {
             prevLineNotThrID = false;
-
+            
             while (getline(encFile[t], line).good() &&
                     line.compare(THR_ID_HDR+to_string(t)))
             {
-                if (prevLineNotThrID)   context += '\n';
-                context += line;
+//                if (prevLineNotThrID)   context += '\n';
+//                context += line;
+                if (prevLineNotThrID)   pkdFile << '\n';
+                pkdFile << line;
+                
+                
                 prevLineNotThrID = true;
             }
         }
     }
-    context += (char) 252;
-
+//    context += (char) 252;
+    pkdFile << (char) 252;
+    
     // close input and output files
     for (t = 0; t != n_threads; ++t)   encFile[t].close();
-
-    cout << encrypt(context);
+    
+    
+    
+    // close packed file
+    pkdFile.close();
+    
+    
+    
+    
+//    cout << encrypt(context);
+//    cout << '\n';
+    
+    testEncrypt();
     cout << '\n';
     
     /*
@@ -352,6 +382,80 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
     encfile.close();
     in.close();
 }
+
+
+
+
+
+
+
+/*******************************************************************************
+    encrypt.
+    AES encryption uses a secret key of a variable length (128, 196 or 256 bit).
+    This key is secretly exchanged between two parties before communication
+    begins. DEFAULT_KEYLENGTH = 16 bytes.
+*******************************************************************************/
+inline void EnDecrypto::testEncrypt ()
+{
+    byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
+    memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
+    memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
+    
+    const string pass = extractPass();
+    buildKey(key, pass);
+    buildIV(iv, pass);
+//    printIV(iv);      // debug
+//    printKey(key);    // debug
+    
+    string cipherText;
+    AES::Encryption aesEncryption(key, (size_t) AES::DEFAULT_KEYLENGTH);
+    CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
+    StreamTransformationFilter stfEncryptor(cbcEncryption,
+                                            new CryptoPP::StringSink(cipherText));
+    stfEncryptor.Put(reinterpret_cast<const byte*>
+                     (context.c_str()), context.length() + 1);
+    stfEncryptor.MessageEnd();
+
+//    if (verbose)
+//    {
+//        cerr << "   sym size: " << context.size()    << '\n';
+//        cerr << "cipher size: " << cipherText.size() << '\n';
+//        cerr << " block size: " << AES::BLOCKSIZE    << '\n';
+//    }
+    
+    for (const char &c : cipherText)
+        cout << (char) (c & 0xFF);
+////        encryptedText += (char) (0xFF & static_cast<byte> (c));
+
+
+
+
+
+
+
+//    string encryptedText;
+//    for (const char &c : cipherText)
+//        encryptedText += (char) (c & 0xFF);
+//////        encryptedText += (char) (0xFF & static_cast<byte> (c));
+//
+//////    encryptedText+='\n';
+//
+//    return encryptedText;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 /*******************************************************************************
     encrypt.

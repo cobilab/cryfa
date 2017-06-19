@@ -71,6 +71,14 @@ struct POWER<B, 0>
 *******************************************************************************/
 #define THR_ID_HDR      "THR="      // thread ID header
 #define ENC_FILENAME    "CRYFA_ENC" // encrypted file name
+
+
+
+#define PKD_FILENAME    "CRYFA_PKD" // packed file name
+
+
+
+
 #define DEFAULT_N_THR   1           // default number of threads
 #define LINE_BUFFER     600000//4//6000//      // buffer size (lines) to separate files for
                                     // multithreading. MUST be multiple of 4
