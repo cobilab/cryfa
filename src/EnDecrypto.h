@@ -25,21 +25,18 @@ public:
     string keyFileName;                                  // password file name
     bool   verbose = false;                              // for verbose mode
     bool   disable_shuffle = false;                      // disable shuffle
-
+    
 private:
-    
-    inline void testEncrypt ();               // encrypt
-    
-    
-    
-    
-    inline string encrypt (const string&);               // encrypt
-    inline string decrypt ();                            // decrypt
+    inline void encrypt ();                              // encrypt
+//    inline string decrypt ();                            // decrypt
+    inline void decrypt ();                            // decrypt
     inline void pack (const ull, const byte,             // pack
                       string (*)(const string&, const htable_t&),
                       string (*)(const string&, const htable_t&));
-    inline void decompFA (string);                       // decomp. FA
-    inline void decompFQ (string);                       // decomp. FQ
+    inline void decompFA ();                       // decomp. FA
+    inline void decompFQ ();                       // decomp. FQ
+//    inline void decompFA (string);                       // decomp. FA
+//    inline void decompFQ (string);                       // decomp. FQ
     inline void buildIV  (byte*, const string&);         // build IV
     inline void buildKey (byte*, const string&);         // build key
     inline void printIV  (byte*)                const;   // print IV

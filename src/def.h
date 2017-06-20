@@ -76,6 +76,7 @@ struct POWER<B, 0>
 
 #define PKD_FILENAME    "CRYFA_PKD" // packed file name
 
+#define DEC_FILENAME    "CRYFA_DEC" // decrypted file name
 
 
 
