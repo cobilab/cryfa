@@ -13,10 +13,11 @@
 #include <algorithm>
 #include "EnDecrypto.h"
 #include "pack.h"
-#include "cryptopp/modes.h"
 #include "cryptopp/aes.h"
-#include "cryptopp/filters.h"
 #include "cryptopp/eax.h"
+#include "cryptopp/files.h"
+#include "cryptopp/filters.h"
+#include "cryptopp/modes.h"
 using std::vector;
 using std::cout;
 using std::cerr;
@@ -31,6 +32,17 @@ using CryptoPP::CBC_Mode_ExternalCipher;
 using CryptoPP::StreamTransformationFilter;
 
 std::mutex mutx;
+
+
+
+
+
+
+
+//#include <cryptopp/hex.h>
+
+
+
 
 /*******************************************************************************
     constructor
@@ -209,35 +221,30 @@ void EnDecrypto::compressFQ ()
     
     // join encrypted files
     ifstream encFile[n_threads];
-//    string context;
-
+    string context;
+    
     // watermark for encrypted file
     cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
                        + to_string(RELEASE_CRYFA) + "\n";
-    
-//    context += headers;                             // send headers to decryptor
-//    context += (char) 254;                          // to detect headers in dec.
-//    context += qscores;                             // send qscores to decryptor
-//    context += (hasFQjustPlus() ? (char) 253 : '\n');             // if just '+'
-    
-    
-    cout << headers;                             // send headers to decryptor
-    cout << (char) 254;                          // to detect headers in dec.
-    cout << qscores;                             // send qscores to decryptor
-    cout << (hasFQjustPlus() ? (char) 253 : '\n');             // if just '+'
-
-//    out << context ;//<< '\n';    //todo. too aes cbc mode nemishe
-
-    // open input files
-    for (t = 0; t != n_threads; ++t)
-        encFile[t].open(ENC_FILENAME + to_string(t));
-    
     
     // open packed file
     ofstream pkdFile;
     pkdFile.open(PKD_FILENAME);
     
+    pkdFile << headers;                             // send headers to decryptor
+    pkdFile << (char) 254;                          // to detect headers in dec.
+    pkdFile << qscores;                             // send qscores to decryptor
+    pkdFile << (hasFQjustPlus() ? (char) 253 : '\n');             // if just '+'
     
+//    context += headers;                             // send headers to decryptor
+//    context += (char) 254;                          // to detect headers in dec.
+//    context += qscores;                             // send qscores to decryptor
+//    context += (hasFQjustPlus() ? (char) 253 : '\n');             // if just '+'
+////    out << context ;//<< '\n';    //todo. too aes cbc mode nemishe
+    
+    // open input files
+    for (t = 0; t != n_threads; ++t)
+        encFile[t].open(ENC_FILENAME + to_string(t));
     
     bool prevLineNotThrID;                 // if previous line was "THR=" or not
     while (!encFile[0].eof())
@@ -249,33 +256,25 @@ void EnDecrypto::compressFQ ()
             while (getline(encFile[t], line).good() &&
                     line.compare(THR_ID_HDR+to_string(t)))
             {
-//                if (prevLineNotThrID)   context += '\n';
-//                context += line;
                 if (prevLineNotThrID)   pkdFile << '\n';
                 pkdFile << line;
-                
+//                if (prevLineNotThrID)   context += '\n';
+//                context += line;
                 
                 prevLineNotThrID = true;
             }
         }
     }
-//    context += (char) 252;
     pkdFile << (char) 252;
+//    context += (char) 252;
     
     // close input and output files
     for (t = 0; t != n_threads; ++t)   encFile[t].close();
     
-    
-    
     // close packed file
     pkdFile.close();
-    
-    
-    
-    
+
 //    cout << encrypt(context);
-//    cout << '\n';
-    
     testEncrypt();
     cout << '\n';
     
@@ -387,8 +386,6 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
 
 
 
-
-
 /*******************************************************************************
     encrypt.
     AES encryption uses a secret key of a variable length (128, 196 or 256 bit).
@@ -397,6 +394,16 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
 *******************************************************************************/
 inline void EnDecrypto::testEncrypt ()
 {
+//    string context;
+//    char c;
+//    ifstream inFile;
+//    inFile.open(PKD_FILENAME);
+//    while (inFile.get(c))   context += c;
+//    inFile.close();
+    const char* inFile = PKD_FILENAME;
+    
+    
+    
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
     memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
@@ -406,15 +413,35 @@ inline void EnDecrypto::testEncrypt ()
     buildIV(iv, pass);
 //    printIV(iv);      // debug
 //    printKey(key);    // debug
+
+
+
+//    key = CryptoPP::HexDecode(key);
+//    iv = CryptoPP::HexDecode(iv);
     
-    string cipherText;
-    AES::Encryption aesEncryption(key, (size_t) AES::DEFAULT_KEYLENGTH);
-    CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
-    StreamTransformationFilter stfEncryptor(cbcEncryption,
-                                            new CryptoPP::StringSink(cipherText));
-    stfEncryptor.Put(reinterpret_cast<const byte*>
-                     (context.c_str()), context.length() + 1);
-    stfEncryptor.MessageEnd();
+    CryptoPP::CBC_Mode<CryptoPP::AES>::Encryption e1(key,
+                                           (size_t) AES::DEFAULT_KEYLENGTH, iv);
+    // encrypt
+//    ofstream outFile;
+//    outFile.open("CRYFA_ENCRYPTED");
+    const char* outFile = "CRYFA_ENCRYPTED";
+    CryptoPP::FileSource(inFile, true,
+           new StreamTransformationFilter(e1, new CryptoPP::FileSink(outFile)));
+
+//    outFile.close();
+//    inFile.close();
+
+//    string cipherText;
+//    AES::Encryption aesEncryption(key, (size_t) AES::DEFAULT_KEYLENGTH);
+//    CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
+//    StreamTransformationFilter stfEncryptor(cbcEncryption,
+//                                            new CryptoPP::FileSink(outFile));
+////    StreamTransformationFilter stfEncryptor(cbcEncryption,
+////                                            new CryptoPP::StringSink(cipherText));
+//    stfEncryptor.Put(reinterpret_cast<const byte*>
+//                     (context.c_str()), context.length() + 1);
+//
+//    stfEncryptor.MessageEnd();
 
 //    if (verbose)
 //    {
@@ -422,10 +449,10 @@ inline void EnDecrypto::testEncrypt ()
 //        cerr << "cipher size: " << cipherText.size() << '\n';
 //        cerr << " block size: " << AES::BLOCKSIZE    << '\n';
 //    }
-    
-    for (const char &c : cipherText)
-        cout << (char) (c & 0xFF);
-////        encryptedText += (char) (0xFF & static_cast<byte> (c));
+
+//    for (const char &c : cipherText)
+//        cout << (char) (c & 0xFF);
+//////        encryptedText += (char) (0xFF & static_cast<byte> (c));
 
 
 
@@ -442,12 +469,6 @@ inline void EnDecrypto::testEncrypt ()
 //
 //    return encryptedText;
 }
-
-
-
-
-
-
 
 
 
