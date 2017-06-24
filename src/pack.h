@@ -714,15 +714,28 @@ inline string unpack_read2B (string::iterator &i, vector<string> &unpack)
 inline string unpack_read1B (string::iterator &i, vector<string> &unpack)
 {
     string out;
-
+    
     for (; *i != (char) 254; ++i)
     {
         // hdr len not multiple of keyLen
         if (*i == (char) 255) { out += penaltySym(*(++i));    continue; }
         out += unpack[(byte) *i];
     }
-
+    
     return out;
 }
+//inline string unpack_read1B (string::iterator &i, vector<string> &unpack)
+//{
+//    string out;
+//
+//    for (; *i != (char) 254; ++i)
+//    {
+//        // hdr len not multiple of keyLen
+//        if (*i == (char) 255) { out += penaltySym(*(++i));    continue; }
+//        out += unpack[(byte) *i];
+//    }
+//
+//    return out;
+//}
 
 #endif //CRYFA_PACK_H

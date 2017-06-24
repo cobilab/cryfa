@@ -60,7 +60,7 @@ void EnDecrypto::compressFA ()
     // watermark for encrypted file
     cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
                        + to_string(RELEASE_CRYFA) + "\n";
-
+    
     // to tell decryptor this isn't FASTQ
     context += (char) 127;      // context += "\n";
     while (getline(in, line).good())
@@ -252,21 +252,21 @@ void EnDecrypto::compressFQ ()
                 pkdFile << line;
 //                if (prevLineNotThrID)   context += '\n';
 //                context += line;
-
+                
                 prevLineNotThrID = true;
             }
         }
     }
     pkdFile << (char) 252;
 //    context += (char) 252;
-
+    
     // close input and output files
     for (t = 0; t != n_threads; ++t)   encFile[t].close();
     // close packed file
     pkdFile.close();
     
     encrypt();      // cout encrypted content
-    cout << '\n';
+//    cout << '\n';
     
     /*
     // get size of file
@@ -439,13 +439,9 @@ inline void EnDecrypto::encrypt ()
 *******************************************************************************/
 void EnDecrypto::decompress ()
 {
-    decrypt();                                        //decrypt
-//    ifstream inFile(DEC_FILENAME);
-//    char c;
-//    inFile.get(c);
-//    (c == (char) 127) ? decompFA() : decompFQ();//decomp
-//    string decText = decrypt();                                        //decrypt
-//    (decText[0] == (char) 127) ? decompFA(decText) : decompFQ(decText);//decomp
+    decrypt();                                                        // decrypt
+    ifstream in(DEC_FILENAME);    char c;  in.get(c);    in.close();
+    (c == (char) 127) ? decompFA() : decompFQ();                      // decomp
 }
 
 /*******************************************************************************
@@ -454,14 +450,31 @@ void EnDecrypto::decompress ()
     This key is secretly exchanged between two parties before communication
     begins. DEFAULT_KEYLENGTH = 16 bytes.
 *******************************************************************************/
-//inline string EnDecrypto::decrypt ()
 inline void EnDecrypto::decrypt ()
 {
-    string decText;
     ifstream in(inFileName);
     if (!in.good())
     { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
     
+    // watermark
+    string watermark = "#cryfa v" + to_string(VERSION_CRYFA) + "."
+                                  + to_string(RELEASE_CRYFA) + "\n";
+    string line;    getline(in, line);
+    if ((line+"\n") != watermark)
+    { cerr << "Error: invalid encrypted file!\n";    exit(1); }
+    
+    ofstream encnw(ENW_FILENAME);
+    char c;     while (in.get(c)) encnw << c;
+    
+    // close open files -- is a MUST (for encnw)
+    encnw.close();
+    in.close();
+    
+////    string::size_type watermarkIdx = cipherText.find(watermark);
+////    if (watermarkIdx == string::npos)
+////    { cerr << "Error: invalid encrypted file!\n";    exit(1); }
+////    else  cipherText.erase(watermarkIdx, watermark.length());
+
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
     memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
@@ -471,48 +484,22 @@ inline void EnDecrypto::decrypt ()
     buildIV(iv, pass);
 //    printIV(iv);      // debug
 //    printKey(key);    // debug
+
+//    string cipherText( (std::istreambuf_iterator<char> (in)),
+//                       std::istreambuf_iterator<char> () );
+
+//    if (verbose)
+//    {
+//        cerr << "cipher size: " << cipherText.size()-1 << '\n';
+//        cerr << " block size: " << AES::BLOCKSIZE        << '\n';
+//    }
     
-    string cipherText( (std::istreambuf_iterator<char> (in)),
-                       std::istreambuf_iterator<char> () );
-    
-    // watermark
-    string watermark = "#cryfa v" + to_string(VERSION_CRYFA) + "."
-                                  + to_string(RELEASE_CRYFA) + "\n";
-    
-    string::size_type watermarkIdx = cipherText.find(watermark);
-    if (watermarkIdx == string::npos)
-    { cerr << "Error: invalid encrypted file!\n";    exit(1); }
-    else  cipherText.erase(watermarkIdx, watermark.length());
-    
-    if (verbose)
-    {
-        cerr << "cipher size: " << cipherText.size()-1 << '\n';
-        cerr << " block size: " << AES::BLOCKSIZE        << '\n';
-    }
-    
-    
-    in.close();
+    const char* inFile  = ENW_FILENAME;
     const char* outFile = DEC_FILENAME;
     CBC_Mode<CryptoPP::AES>::Decryption
             cbcDec(key, (size_t) AES::DEFAULT_KEYLENGTH, iv);
-    FileSource(inFileName.c_str(), true,
+    FileSource(inFile, true,
                new StreamTransformationFilter(cbcDec, new FileSink(outFile)));
-
-    ofstream ofs(inFileName);
-    ofs << '\n';
-    
-    
-    
-    
-//    CBC_Mode<CryptoPP::AES>::Decryption
-//            cbcDec(key, (size_t) AES::DEFAULT_KEYLENGTH, iv);
-//    StreamTransformationFilter stfDecryptor(cbcDec,
-//                                            new CryptoPP::StringSink(decText));
-//    stfDecryptor.Put(reinterpret_cast<const byte*>
-//                     (cipherText.c_str()), cipherText.size()-1);
-//    stfDecryptor.MessageEnd();
-//
-//    return decText;
 }
 
 /*******************************************************************************
@@ -596,14 +583,19 @@ inline void EnDecrypto::decompFA ()
 //inline void EnDecrypto::decompFQ (string decText)
 inline void EnDecrypto::decompFQ ()
 {
-//    vector<string> hdrUnpack;   // for unpacking header
-//    vector<string> qsUnpack;    // for unpacking quality score
-//    string line;
+    char c;
+    vector<string> hdrUnpack;   // for unpacking header
+    vector<string> qsUnpack;    // for unpacking quality score
 //    string::iterator i = decText.begin();
-//    string qscores, headers;
-//    bool justPlus = true;
-//    string chunkSizeStr;        // chunk size (string) -- for unshuffling
-//
+    string headers, qscores;
+    bool justPlus = true;
+    string chunkSizeStr;        // chunk size (string) -- for unshuffling
+    
+    ifstream in(DEC_FILENAME);
+    while (in.get(c) && c != (char) 254)                 headers += c;
+    while (in.get(c) && c != '\n' && c != (char) 253)    qscores += c;
+    if (c == '\n')    justPlus = false;                       // if 3rd line is just +
+    
 //    for (; *i != (char) 254; ++i)
 //        headers += *i;                          // all hdrs
 //    ++i;                                        // jump over (char) 254
@@ -612,24 +604,24 @@ inline void EnDecrypto::decompFQ ()
 //    if (*i == '\n')
 //        justPlus = false;                       // if 3rd line is just +
 //    ++i;                                        // jump over '\n' or (char) 253
-//
-//    const size_t qscoresLen = qscores.length();
-//    const size_t headersLen = headers.length();
-//    us keyLen_hdr = 0,  keyLen_qs = 0;
-//
-//    using unpackHdrPointer = string (*)(string::iterator&, vector<string>&);
-//    unpackHdrPointer unpackHdr;                              // function pointer
+    
+    const size_t headersLen = headers.length();
+    const size_t qscoresLen = qscores.length();
+    us keyLen_hdr = 0,  keyLen_qs = 0;
+    
+    using unpackHdrPointer = string (*)(string::iterator&, vector<string>&);
+    unpackHdrPointer unpackHdr;                              // function pointer
 //    using unpackQSPointer = string (*)(string::iterator&, vector<string>&);
 //    unpackQSPointer unpackQS;                                // function pointer
-//
-//    // header
-//    if (headersLen > MAX_C5)    keyLen_hdr = KEYLEN_C5;
-//
+    
+    // header
+    if (headersLen > MAX_C5)    keyLen_hdr = KEYLEN_C5;
+    
 //    else if (headersLen > MAX_C4)                               // cat 5
 //    { keyLen_hdr = KEYLEN_C5;   unpackHdr = &unpack_read2B; }
-//
-//    else if (headersLen > MAX_C3)                               // cat 4
-//    { keyLen_hdr = KEYLEN_C4;   unpackHdr = &unpack_read1B; }
+
+    else if (headersLen > MAX_C3)                               // cat 4
+    { keyLen_hdr = KEYLEN_C4;   unpackHdr = &unpack_read1B; }
 //
 //    else if (headersLen == MAX_C3 || headersLen == MID_C3       // cat 3
 //             || headersLen == MIN_C3)
@@ -769,11 +761,11 @@ inline void EnDecrypto::decompFQ ()
 //            if (*(++i) == (char) 252)   break;
 //        }
 //    }
-//    else if (headersLen <= MAX_C5 && qscoresLen <= MAX_C5)
-//    {
-//        // tables for unpacking
-//        hdrUnpack = buildUnpack(headers, keyLen_hdr);
-//        qsUnpack  = buildUnpack(qscores, keyLen_qs);
+    else if (headersLen <= MAX_C5 && qscoresLen <= MAX_C5)
+    {
+        // tables for unpacking
+        hdrUnpack = buildUnpack(headers, keyLen_hdr);
+        qsUnpack  = buildUnpack(qscores, keyLen_qs);
 //
 //        while (i != decText.end())
 //        {
@@ -796,8 +788,216 @@ inline void EnDecrypto::decompFQ ()
 //            // end of file
 //            if (*(++i) == (char) 252)   break;
 //        }
-//    }
+    }
 }
+
+
+/** OLD
+inline void EnDecrypto::decompFQ (string decText)
+{
+    vector<string> hdrUnpack;   // for unpacking header
+    vector<string> qsUnpack;    // for unpacking quality score
+    string line;
+    string::iterator i = decText.begin();
+    string qscores, headers;
+    bool justPlus = true;
+    string chunkSizeStr;        // chunk size (string) -- for unshuffling
+
+    for (; *i != (char) 254; ++i)
+        headers += *i;                          // all hdrs
+    ++i;                                        // jump over (char) 254
+    for (; *i != '\n' && *i != (char) 253; ++i)
+        qscores += *i;                          // all qss
+    if (*i == '\n')
+        justPlus = false;                       // if 3rd line is just +
+    ++i;                                        // jump over '\n' or (char) 253
+
+    const size_t qscoresLen = qscores.length();
+    const size_t headersLen = headers.length();
+    us keyLen_hdr = 0,  keyLen_qs = 0;
+
+    using unpackHdrPointer = string (*)(string::iterator&, vector<string>&);
+    unpackHdrPointer unpackHdr;                              // function pointer
+    using unpackQSPointer = string (*)(string::iterator&, vector<string>&);
+    unpackQSPointer unpackQS;                                // function pointer
+
+    // header
+    if (headersLen > MAX_C5)    keyLen_hdr = KEYLEN_C5;
+
+    else if (headersLen > MAX_C4)                               // cat 5
+    { keyLen_hdr = KEYLEN_C5;   unpackHdr = &unpack_read2B; }
+
+    else if (headersLen > MAX_C3)                               // cat 4
+    { keyLen_hdr = KEYLEN_C4;   unpackHdr = &unpack_read1B; }
+
+    else if (headersLen == MAX_C3 || headersLen == MID_C3       // cat 3
+             || headersLen == MIN_C3)
+    { keyLen_hdr = KEYLEN_C3;   unpackHdr = &unpack_read1B; }
+
+    else if (headersLen == C2)                                  // cat 2
+    { keyLen_hdr = KEYLEN_C2;   unpackHdr = &unpack_read1B; }
+
+    else if (headersLen == C1)                                  // cat 1
+    { keyLen_hdr = KEYLEN_C1;   unpackHdr = &unpack_read1B; }
+
+    else { keyLen_hdr = 1;      unpackHdr = &unpack_read1B; }   // = 1
+
+    // quality score
+    if (qscoresLen > MAX_C5)    keyLen_qs = KEYLEN_C5;
+
+    else if (qscoresLen > MAX_C4)                               // cat 5
+    { keyLen_qs = KEYLEN_C5;    unpackQS = &unpack_read2B; }
+
+    else if (qscoresLen > MAX_C3)                               // cat 4
+    { keyLen_qs = KEYLEN_C4;    unpackQS = &unpack_read1B; }
+
+    else if (qscoresLen == MAX_C3 || qscoresLen == MID_C3       // cat 3
+             || qscoresLen == MIN_C3)
+    { keyLen_qs = KEYLEN_C3;    unpackQS = &unpack_read1B; }
+
+    else if (qscoresLen == C2)                                  // cat 2
+    { keyLen_qs = KEYLEN_C2;    unpackQS = &unpack_read1B; }
+
+    else if (qscoresLen == C1)                                  // cat 1
+    { keyLen_qs = KEYLEN_C1;    unpackQS = &unpack_read1B; }
+
+    else { keyLen_qs = 1;       unpackQS = &unpack_read1B; }    // = 1
+
+    string plusMore;
+    if (headersLen > MAX_C5 && qscoresLen > MAX_C5)
+    {
+        const string decHeaders = headers.substr(headersLen - MAX_C5);
+        const string decQscores = qscores.substr(qscoresLen-MAX_C5);
+        // ASCII char after the last char in headers & quality_scores string
+        const char XChar_hdr = (char) (decHeaders[decHeaders.size()-1] + 1);
+        const char XChar_qs  = (char) (decQscores[decQscores.size()-1] + 1);
+        string decHeadersX = decHeaders;    decHeadersX += XChar_hdr;
+        string decQscoresX = decQscores;    decQscoresX += XChar_qs;
+
+        // tables for unpacking
+        hdrUnpack = buildUnpack(decHeadersX, keyLen_hdr);
+        qsUnpack  = buildUnpack(decQscoresX, keyLen_qs);
+
+        while (i != decText.end())
+        {
+            if (*i == (char) 253)
+            {
+                ++i;
+                chunkSizeStr.clear();                    // chunk size
+                for (; *i != (char) 254; ++i)   chunkSizeStr += *i;
+                ++i;                                     // jump over (char) 254
+
+                // unshuffle
+                if (!disable_shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
+            }
+
+            cout << '@';
+            cout << (plusMore = unpackLarge_read2B(i, XChar_hdr, hdrUnpack))
+                 << '\n';                                         ++i;    // hdr
+            cout << unpackSeqFQ_3to1(i) << '\n';                          // seq
+            cout << (justPlus ? "+" : "+" + plusMore) << '\n';    ++i;    // +
+            cout << unpackLarge_read2B(i, XChar_qs, qsUnpack) << '\n';   // qs
+            // end of file
+            if (*(++i) == (char) 252)   break;
+        }
+    }
+    else if (headersLen > MAX_C5 && qscoresLen <= MAX_C5)
+    {
+        const string decHeaders = headers.substr(headersLen - MAX_C5);
+        // ASCII char after the last char in headers string
+        const char XChar_hdr = (char) (decHeaders[decHeaders.size()-1] + 1);
+        string decHeadersX = decHeaders;     decHeadersX += XChar_hdr;
+
+        // tables for unpacking
+        hdrUnpack = buildUnpack(decHeadersX, keyLen_hdr);
+        qsUnpack  = buildUnpack(qscores,     keyLen_qs);
+
+        while (i != decText.end())
+        {
+            if (*i == (char) 253)
+            {
+                ++i;
+                chunkSizeStr.clear();                    // chunk size
+                for (; *i != (char) 254; ++i)   chunkSizeStr += *i;
+                ++i;                                     // jump over (char) 254
+
+                // unshuffle
+                if (!disable_shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
+            }
+
+            cout << '@';
+            cout << (plusMore = unpackLarge_read2B(i, XChar_hdr, hdrUnpack))
+                                                      << '\n';    ++i;    // hdr
+            cout << unpackSeqFQ_3to1(i)               << '\n';            // seq
+            cout << (justPlus ? "+" : "+" + plusMore) << '\n';    ++i;    // +
+            cout << unpackQS(i, qsUnpack)             << '\n';            // qs
+            // end of file
+            if (*(++i) == (char) 252)   break;
+        }
+    }
+    else if (headersLen <= MAX_C5 && qscoresLen > MAX_C5)
+    {
+        const string decQscores = qscores.substr(qscoresLen - MAX_C5);
+        // ASCII char after the last char in decQscores string
+        const char XChar_qs=(char)(decQscores[decQscores.size()-1] + 1);
+        string decQscoresX = decQscores;    decQscoresX += XChar_qs;
+
+        // tables for unpacking
+        hdrUnpack = buildUnpack(headers,     keyLen_hdr);
+        qsUnpack  = buildUnpack(decQscoresX, keyLen_qs);
+
+        while (i != decText.end())
+        {
+            if (*i == (char) 253)
+            {
+                ++i;
+                chunkSizeStr.clear();                    // chunk size
+                for (; *i != (char) 254; ++i)   chunkSizeStr += *i;
+                ++i;                                     // jump over (char) 254
+
+                // unshuffle
+                if (!disable_shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
+            }
+
+            cout << '@';
+            cout << (plusMore = unpackHdr(i, hdrUnpack))  << '\n';  ++i;  // hdr
+            cout << unpackSeqFQ_3to1(i)                   << '\n';        // seq
+            cout << (justPlus ? "+" : "+" + plusMore)     << '\n';  ++i;  // +
+            cout << unpackLarge_read2B(i, XChar_qs, qsUnpack) << '\n';    // qs
+            // end of file
+            if (*(++i) == (char) 252)   break;
+        }
+    }
+    else if (headersLen <= MAX_C5 && qscoresLen <= MAX_C5)
+    {
+        // tables for unpacking
+        hdrUnpack = buildUnpack(headers, keyLen_hdr);
+        qsUnpack  = buildUnpack(qscores, keyLen_qs);
+
+        while (i != decText.end())
+        {
+            if (*i == (char) 253)
+            {
+                ++i;
+                chunkSizeStr.clear();                    // chunk size
+                for (; *i != (char) 254; ++i)   chunkSizeStr += *i;
+                ++i;                                     // jump over (char) 254
+
+                // unshuffle
+                if (!disable_shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
+            }
+
+            cout << '@';
+            cout << (plusMore = unpackHdr(i, hdrUnpack)) << '\n';  ++i;   // hdr
+            cout << unpackSeqFQ_3to1(i)                  << '\n';         // seq
+            cout << (justPlus ? "+" : "+" + plusMore)    << '\n';  ++i;   // +
+            cout << unpackQS(i, qsUnpack)                << '\n';         // qs
+            // end of file
+            if (*(++i) == (char) 252)   break;
+        }
+    }
+}
+*/
 
 /*******************************************************************************
     check if the third line contains only +
