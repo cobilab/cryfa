@@ -235,8 +235,7 @@ void EnDecrypto::compressFQ ()
 ////    out << context ;//<< '\n';    //todo. too aes cbc mode nemishe
     
     // open input files
-    for (t = 0; t != n_threads; ++t)
-        encFile[t].open(ENC_FILENAME + to_string(t));
+    for (t = n_threads; t--;)   encFile[t].open(ENC_FILENAME + to_string(t));
     
     bool prevLineNotThrID;                 // if previous line was "THR=" or not
     while (!encFile[0].eof())
@@ -261,7 +260,7 @@ void EnDecrypto::compressFQ ()
 //    context += (char) 252;
     
     // close input and output files
-    for (t = 0; t != n_threads; ++t)   encFile[t].close();
+    for (t = n_threads; t--;)   encFile[t].close();
     // close packed file
     pkdFile.close();
     
@@ -611,16 +610,17 @@ inline void EnDecrypto::decompFQ ()
     
     using unpackHdrPointer = string (*)(string::iterator&, vector<string>&);
     unpackHdrPointer unpackHdr;                              // function pointer
-//    using unpackQSPointer = string (*)(string::iterator&, vector<string>&);
-//    unpackQSPointer unpackQS;                                // function pointer
+    using unpackQSPointer = string (*)(string::iterator&, vector<string>&);
+    unpackQSPointer unpackQS;                                // function pointer
     
     // header
-    if (headersLen > MAX_C5)    keyLen_hdr = KEYLEN_C5;
-    
+//    if (headersLen > MAX_C5)    keyLen_hdr = KEYLEN_C5;
+//
 //    else if (headersLen > MAX_C4)                               // cat 5
 //    { keyLen_hdr = KEYLEN_C5;   unpackHdr = &unpack_read2B; }
-
-    else if (headersLen > MAX_C3)                               // cat 4
+//
+//    else
+    if (headersLen > MAX_C3)                               // cat 4
     { keyLen_hdr = KEYLEN_C4;   unpackHdr = &unpack_read1B; }
 //
 //    else if (headersLen == MAX_C3 || headersLen == MID_C3       // cat 3
@@ -635,14 +635,15 @@ inline void EnDecrypto::decompFQ ()
 //
 //    else { keyLen_hdr = 1;      unpackHdr = &unpack_read1B; }   // = 1
 //
-//    // quality score
+    // quality score
 //    if (qscoresLen > MAX_C5)    keyLen_qs = KEYLEN_C5;
 //
 //    else if (qscoresLen > MAX_C4)                               // cat 5
 //    { keyLen_qs = KEYLEN_C5;    unpackQS = &unpack_read2B; }
 //
-//    else if (qscoresLen > MAX_C3)                               // cat 4
-//    { keyLen_qs = KEYLEN_C4;    unpackQS = &unpack_read1B; }
+//    else
+    if (qscoresLen > MAX_C3)                               // cat 4
+    { keyLen_qs = KEYLEN_C4;    unpackQS = &unpack_read1B; }
 //
 //    else if (qscoresLen == MAX_C3 || qscoresLen == MID_C3       // cat 3
 //             || qscoresLen == MIN_C3)
