@@ -704,7 +704,7 @@ inline string unpack_read2B (string::iterator &i, vector<string> &unpack)
         
         out += unpack[doubleB];
     }
-
+    
     return out;
 }
 

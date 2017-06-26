@@ -192,7 +192,7 @@ void EnDecrypto::compressFQ ()
 
         else if (qscoresLen == C1)                                      // cat 1
         { QsMap = buildHashTable(QSs, KEYLEN_C1);   packQS = &pack_7to1; }
-
+        
         else                                                   // qscoresLen = 1
         { QsMap = buildHashTable(QSs, 1);           packQS = &pack_1to1; }
     }
@@ -201,7 +201,7 @@ void EnDecrypto::compressFQ ()
     for (ull i = 0; !isInEmpty; ++i)
     {
         isInEmpty = false;
-
+        
         for (t = 0; t != n_threads; ++t)
         {
             startLine = (i*n_threads + t) * LINE_BUFFER;
@@ -309,7 +309,7 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
     
     if (in.peek()==EOF) { isInEmpty = true;    return; }
     
-    for (ull l = 0; l != LINE_BUFFER; l+=4)     // process 4 lines by 4 lines
+    for (ull l = 0; l != LINE_BUFFER; l += 4)     // process 4 lines by 4 lines
     {
         if (getline(in, line).good())           // header -- ignore '@'
             context += packHdr(line.substr(1), HdrMap) + (char) 254;
@@ -331,6 +331,8 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
     string contextSize;
     contextSize += (char) 253;
     contextSize += to_string(context.size());
+    //todo. test
+    cerr<<to_string(context.size());
     contextSize += (char) 254;
     context.insert(0, contextSize);
     
@@ -439,8 +441,9 @@ inline void EnDecrypto::encrypt ()
 void EnDecrypto::decompress ()
 {
     decrypt();                                                        // decrypt
-    ifstream in(DEC_FILENAME);    char c;  in.get(c);    in.close();
-    (c == (char) 127) ? decompFA() : decompFQ();                      // decomp
+    ifstream in(DEC_FILENAME);
+    (in.peek() == (char) 127) ? decompFA() : decompFQ();              // decomp
+    in.close();
 }
 
 /*******************************************************************************
@@ -582,10 +585,15 @@ inline void EnDecrypto::decompFA ()
 //inline void EnDecrypto::decompFQ (string decText)
 inline void EnDecrypto::decompFQ ()
 {
+    string decText;
+    string::iterator i;// = decText.begin();
+    ull chunkSize;
     char c;
+
+
+
     vector<string> hdrUnpack;   // for unpacking header
     vector<string> qsUnpack;    // for unpacking quality score
-//    string::iterator i = decText.begin();
     string headers, qscores;
     bool justPlus = true;
     string chunkSizeStr;        // chunk size (string) -- for unshuffling
@@ -595,6 +603,8 @@ inline void EnDecrypto::decompFQ ()
     while (in.get(c) && c != '\n' && c != (char) 253)    qscores += c;
     if (c == '\n')    justPlus = false;                       // if 3rd line is just +
     
+//    cerr << headers << ' ' << qscores;//todo. test
+    
 //    for (; *i != (char) 254; ++i)
 //        headers += *i;                          // all hdrs
 //    ++i;                                        // jump over (char) 254
@@ -603,61 +613,59 @@ inline void EnDecrypto::decompFQ ()
 //    if (*i == '\n')
 //        justPlus = false;                       // if 3rd line is just +
 //    ++i;                                        // jump over '\n' or (char) 253
-    
+
     const size_t headersLen = headers.length();
     const size_t qscoresLen = qscores.length();
     us keyLen_hdr = 0,  keyLen_qs = 0;
-    
+
     using unpackHdrPointer = string (*)(string::iterator&, vector<string>&);
     unpackHdrPointer unpackHdr;                              // function pointer
     using unpackQSPointer = string (*)(string::iterator&, vector<string>&);
     unpackQSPointer unpackQS;                                // function pointer
     
     // header
-//    if (headersLen > MAX_C5)    keyLen_hdr = KEYLEN_C5;
-//
-//    else if (headersLen > MAX_C4)                               // cat 5
-//    { keyLen_hdr = KEYLEN_C5;   unpackHdr = &unpack_read2B; }
-//
-//    else
-    if (headersLen > MAX_C3)                               // cat 4
+    if (headersLen > MAX_C5)    keyLen_hdr = KEYLEN_C5;
+
+    else if (headersLen > MAX_C4)                               // cat 5
+    { keyLen_hdr = KEYLEN_C5;   unpackHdr = &unpack_read2B; }
+
+    else if (headersLen > MAX_C3)                               // cat 4
     { keyLen_hdr = KEYLEN_C4;   unpackHdr = &unpack_read1B; }
-//
-//    else if (headersLen == MAX_C3 || headersLen == MID_C3       // cat 3
-//             || headersLen == MIN_C3)
-//    { keyLen_hdr = KEYLEN_C3;   unpackHdr = &unpack_read1B; }
-//
-//    else if (headersLen == C2)                                  // cat 2
-//    { keyLen_hdr = KEYLEN_C2;   unpackHdr = &unpack_read1B; }
-//
-//    else if (headersLen == C1)                                  // cat 1
-//    { keyLen_hdr = KEYLEN_C1;   unpackHdr = &unpack_read1B; }
-//
-//    else { keyLen_hdr = 1;      unpackHdr = &unpack_read1B; }   // = 1
-//
+
+    else if (headersLen == MAX_C3 || headersLen == MID_C3       // cat 3
+             || headersLen == MIN_C3)
+    { keyLen_hdr = KEYLEN_C3;   unpackHdr = &unpack_read1B; }
+
+    else if (headersLen == C2)                                  // cat 2
+    { keyLen_hdr = KEYLEN_C2;   unpackHdr = &unpack_read1B; }
+
+    else if (headersLen == C1)                                  // cat 1
+    { keyLen_hdr = KEYLEN_C1;   unpackHdr = &unpack_read1B; }
+
+    else { keyLen_hdr = 1;      unpackHdr = &unpack_read1B; }   // = 1
+    
     // quality score
-//    if (qscoresLen > MAX_C5)    keyLen_qs = KEYLEN_C5;
-//
-//    else if (qscoresLen > MAX_C4)                               // cat 5
-//    { keyLen_qs = KEYLEN_C5;    unpackQS = &unpack_read2B; }
-//
-//    else
-    if (qscoresLen > MAX_C3)                               // cat 4
+    if (qscoresLen > MAX_C5)    keyLen_qs = KEYLEN_C5;
+
+    else if (qscoresLen > MAX_C4)                               // cat 5
+    { keyLen_qs = KEYLEN_C5;    unpackQS = &unpack_read2B; }
+
+    else if (qscoresLen > MAX_C3)                               // cat 4
     { keyLen_qs = KEYLEN_C4;    unpackQS = &unpack_read1B; }
-//
-//    else if (qscoresLen == MAX_C3 || qscoresLen == MID_C3       // cat 3
-//             || qscoresLen == MIN_C3)
-//    { keyLen_qs = KEYLEN_C3;    unpackQS = &unpack_read1B; }
-//
-//    else if (qscoresLen == C2)                                  // cat 2
-//    { keyLen_qs = KEYLEN_C2;    unpackQS = &unpack_read1B; }
-//
-//    else if (qscoresLen == C1)                                  // cat 1
-//    { keyLen_qs = KEYLEN_C1;    unpackQS = &unpack_read1B; }
-//
-//    else { keyLen_qs = 1;       unpackQS = &unpack_read1B; }    // = 1
-//
-//    string plusMore;
+
+    else if (qscoresLen == MAX_C3 || qscoresLen == MID_C3       // cat 3
+             || qscoresLen == MIN_C3)
+    { keyLen_qs = KEYLEN_C3;    unpackQS = &unpack_read1B; }
+
+    else if (qscoresLen == C2)                                  // cat 2
+    { keyLen_qs = KEYLEN_C2;    unpackQS = &unpack_read1B; }
+
+    else if (qscoresLen == C1)                                  // cat 1
+    { keyLen_qs = KEYLEN_C1;    unpackQS = &unpack_read1B; }
+
+    else { keyLen_qs = 1;       unpackQS = &unpack_read1B; }    // = 1
+
+    string plusMore;
 //    if (headersLen > MAX_C5 && qscoresLen > MAX_C5)
 //    {
 //        const string decHeaders = headers.substr(headersLen - MAX_C5);
@@ -762,34 +770,50 @@ inline void EnDecrypto::decompFQ ()
 //            if (*(++i) == (char) 252)   break;
 //        }
 //    }
-    else if (headersLen <= MAX_C5 && qscoresLen <= MAX_C5)
-    {
+//    else
+    if (headersLen <= MAX_C5 && qscoresLen <= MAX_C5)//todo. vase max 8 khat file voroodi javab mide
+    {//ofstream o("morti");//todo. test
         // tables for unpacking
         hdrUnpack = buildUnpack(headers, keyLen_hdr);
         qsUnpack  = buildUnpack(qscores, keyLen_qs);
-//
-//        while (i != decText.end())
-//        {
-//            if (*i == (char) 253)
-//            {
+        
+        while (!in.eof())
+        {
+            in.get(c);
+            if (c == (char) 253)
+            {
+                decText.clear();
 //                ++i;
-//                chunkSizeStr.clear();                    // chunk size
-//                for (; *i != (char) 254; ++i)   chunkSizeStr += *i;
+                chunkSizeStr.clear();                    // chunk size
+                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
 //                ++i;                                     // jump over (char) 254
-//
-//                // unshuffle
-//                if (!disable_shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
-//            }
-//
-//            cout << '@';
-//            cout << (plusMore = unpackHdr(i, hdrUnpack)) << '\n';  ++i;   // hdr
-//            cout << unpackSeqFQ_3to1(i)                  << '\n';         // seq
-//            cout << (justPlus ? "+" : "+" + plusMore)    << '\n';  ++i;   // +
-//            cout << unpackQS(i, qsUnpack)                << '\n';         // qs
-//            // end of file
-//            if (*(++i) == (char) 252)   break;
-//        }
+                chunkSize = stoull(chunkSizeStr);
+                for (ull u = chunkSize; u--;) { in.get(c);    decText += c; }
+                i = decText.begin();
+                
+                // unshuffle
+                if (!disable_shuffle)    unshufflePkd(i, chunkSize);//todo. remove passing chunkSize
+                
+                
+                //o<<decText;
+            }
+
+            cout << '@';
+            cout << (plusMore = unpackHdr(i, hdrUnpack)) << '\n';  ++i;   // hdr
+            cout << unpackSeqFQ_3to1(i)                  << '\n';         // seq
+            cout << (justPlus ? "+" : "+" + plusMore)    << '\n';  ++i;   // +
+            cout << unpackQS(i, qsUnpack)                << '\n';         // qs
+            // end of file
+            //todo. moshkel az khatte payeene
+//            if (in.peek() == (char) 252)   break;//todo. *(++i) was instead of in.peek()
+            if ((*(++i) == (char) 252) || (in.peek() == (char) 252))   break;//todo. *(++i) was instead of in.peek()
+        
+        }
     }
+    
+    
+    
+    in.close();
 }
 
 
@@ -1104,9 +1128,23 @@ inline void EnDecrypto::unshufflePkd (string::iterator &i, const ull size) const
     
     // insert unshuffled data
     for (const ull& vI : vPos)  *(i + vI) = *shIt++; // first *shIt, then ++shIt
-//  for (vector<ull>::iterator vI= vPos.begin(); vI != vPos.end(); ++vI, ++shIt)
-//        *(i + *vI) = *shIt;
 }
+//inline void EnDecrypto::unshufflePkd (string::iterator &i, const ull size) const
+//{
+//    string shuffledStr;     // copy of shuffled string
+//    for (ull j = 0; j != size; ++j, ++i)    shuffledStr += *i;
+//    string::iterator shIt = shuffledStr.begin();
+//    i -= size;
+//
+//    // shuffle vector of positions
+//    vector<ull> vPos(size);
+//    std::iota(vPos.begin(), vPos.end(), 0);     // insert 0 .. N-1
+//    const ull seed = un_shuffleSeedGen((ui) size);
+//    std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed));
+//
+//    // insert unshuffled data
+//    for (const ull& vI : vPos)  *(i + vI) = *shIt++; // first *shIt, then ++shIt
+//}
 
 /*******************************************************************************
     build IV
