@@ -10,7 +10,7 @@ make
 in=$1
 out="CRYFA_OUT"
 
-#for i in {1..10}; do
+#for i in {1..20}; do
 ./cryfa -t8 -k pass.txt $in > CRYFA_ENCRYPTED
 ./cryfa -dk pass.txt CRYFA_ENCRYPTED > $out
 cmp $in $out

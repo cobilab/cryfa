@@ -325,6 +325,8 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
     
     // shuffle
 //    if (!disable_shuffle)  shufflePkd(context);
+    //todo. change it untill mutex is not needed. (each thread can have a copy)
+    //todo. at the moment mutex is a MUST
     if (!disable_shuffle) { mutx.lock();  shufflePkd(context);  mutx.unlock(); }
     
     // for unshuffling: insert the size of packed context in the beginning of it
@@ -769,58 +771,54 @@ inline void EnDecrypto::decompFQ ()
 //        }
 //    }
 //    else
-    if (headersLen <= MAX_C5 && qscoresLen <= MAX_C5)//todo. vase max 8 khat file voroodi javab mide
-    {//todo. irad az enc/dec nist
+    if (headersLen <= MAX_C5 && qscoresLen <= MAX_C5)
+    {
 //        ofstream o("morti");//todo. test
-//        ll tellg;
         
         // tables for unpacking
         hdrUnpack = buildUnpack(headers, keyLen_hdr);
         qsUnpack  = buildUnpack(qscores, keyLen_qs);
     
-//        in.get(c);
-        while (!in.eof())
-//        while (in.get(c))
+//        while (!in.eof())
+            while (!in.eof() && in.get(c))
         {
-            in.get(c);
+//            in.get(c);
             if (c == (char) 252)    break;
             
             if (c == (char) 253)
             {
                 decText.clear();
-//                ++i;
                 chunkSizeStr.clear();                    // chunk size
                 while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
-//                ++i;                                     // jump over (char) 254
                 chunkSize = stoull(chunkSizeStr);
                 for (ull u = chunkSize; u--;) { in.get(c);    decText += c; }
-//                tellg = in.tellg();
-//                in.seekg(-1, std::ios_base::cur);
                 i = decText.begin();
                 
                 // unshuffle
                 if (!disable_shuffle)    unshufflePkd(i, chunkSize);
+//                if (!disable_shuffle)
+//                {
+//                    mutx.lock();
+//                    unshufflePkd(i, chunkSize);
+//                    mutx.unlock();
+//                }
                 
-    
-//                o << decText;
+//                o << decText;//todo. test
             }
             
-            cout << '@';
-            cout << (plusMore = unpackHdr(i, hdrUnpack)) << '\n';  ++i;   // hdr
-            cout << unpackSeqFQ_3to1(i)                  << '\n';         // seq
-            cout << (justPlus ? "+" : "+" + plusMore)    << '\n';  ++i;   // +
-            cout << unpackQS(i, qsUnpack)                << '\n';         // qs
-            // end of file
-            //todo. moshkel az khatte payeene
-//            in.seekg(tellg-1);
-//            if (in.peek() == (char) 252)   break;//todo. *(++i) was instead of in.peek()
-
-//            break;
+            do {
+                cout << '@';
+                cout << (plusMore = unpackHdr(i, hdrUnpack)) <<'\n';  ++i; //hdr
+                cout << unpackSeqFQ_3to1(i)                  <<'\n';       //seq
+                cout << (justPlus ? "+" : "+" + plusMore)    <<'\n';  ++i; //+
+                cout << unpackQS(i, qsUnpack)                <<'\n';       //qs
+            } while (++i != decText.end());    // if trouble: change "!=" to "<"
         }
         
-//        o.close();
+//        o.close();//todo. test
     }
     
+    // close decrypted file
     in.close();
 }
 
