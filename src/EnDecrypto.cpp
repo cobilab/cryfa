@@ -334,20 +334,28 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
         ull passDigitsMult = 1; // multiplication of all pass digits
         for (ui i = (ui) pass.size(); i--;)   passDigitsMult *= pass[i];
     
-        ull seed = 0;
-        mutx.lock();
-        
-        // using old rand to generate the new rand seed
-        srand(20543 * (ui) context.size() * (ui) passDigitsMult + 81647);
-        for (byte i = (byte) pass.size(); i--;)
-            seed += ((ull) pass[i] * rand()) + rand();
-        
-        mutx.unlock();
-        
-        seed %= 53113233473;
-        
-        
-        std::shuffle(context.begin(), context.end(), std::mt19937(seed));
+//        ull seed = 0;
+//        mutx.lock();
+//
+//        // using old rand to generate the new rand seed
+//        srand(20543 * (ui) context.size() * (ui) passDigitsMult + 81647);
+//        for (byte i = (byte) pass.size(); i--;)
+////            seed += ((ull) pass[i] * rand()) + rand();
+//        seed += ((ull) pass[i] * rand()) + rand();
+//
+//        mutx.unlock();
+//
+//        seed %= 53113233473;
+    
+    
+                mutx.lock();
+    
+        static thread_local std::mt19937 generator;
+        std::uniform_int_distribution<int> distribution(0,99);
+    
+//        std::shuffle(context.begin(), context.end(), std::mt19937(seed));
+        std::shuffle(context.begin(), context.end(), std::mt19937(distribution(generator)));
+                mutx.unlock();
     }
     
     
