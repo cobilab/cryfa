@@ -323,11 +323,42 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
             context += packQS(line, QsMap) + (char) 254;
     }
     
-    // shuffle
-//    if (!disable_shuffle)  shufflePkd(context);
-    //todo. change it untill mutex is not needed. (each thread can have a copy)
-    //todo. at the moment mutex is a MUST
-    if (!disable_shuffle) { mutx.lock();  shufflePkd(context);  mutx.unlock(); }
+    // shuffle//todo. seems rand()/srand need mutex
+    if (!disable_shuffle)
+    {
+//        const ull seed = un_shuffleSeedGen((ui) context.size());    // shuffling seed
+        
+        const string pass = extractPass();
+        evalPassSize(pass);     // pass size must be >= 8
+        
+        ull passDigitsMult = 1; // multiplication of all pass digits
+        for (ui i = (ui) pass.size(); i--;)   passDigitsMult *= pass[i];
+    
+        ull seed = 0;
+        mutx.lock();
+        
+        // using old rand to generate the new rand seed
+        srand(20543 * (ui) context.size() * (ui) passDigitsMult + 81647);
+        for (byte i = (byte) pass.size(); i--;)
+            seed += ((ull) pass[i] * rand()) + rand();
+        
+        mutx.unlock();
+        
+        seed %= 53113233473;
+        
+        
+        std::shuffle(context.begin(), context.end(), std::mt19937(seed));
+    }
+    
+    
+//    string::iterator i = context.begin();
+//    ull s = context.size();
+//    //todo. change it untill mutex is not needed. (each thread can have a copy)
+////    if (!disable_shuffle) { mutx.lock();  shufflePkd(context);  mutx.unlock(); }
+////    if (!disable_shuffle) { mutx.lock();  context = shufflePkd(context);  mutx.unlock(); }
+//    if (!disable_shuffle) { context = shufflePkd(context); }
+    
+    
     
     // for unshuffling: insert the size of packed context in the beginning of it
     string contextSize;
@@ -582,16 +613,12 @@ inline void EnDecrypto::decompFA ()
            7 <= cat 4 <= 15
           16 <= cat 5 <= 39
 *******************************************************************************/
-//inline void EnDecrypto::decompFQ (string decText)
 inline void EnDecrypto::decompFQ ()
 {
     string decText;
-    string::iterator i;// = decText.begin();
-    ull chunkSize;
-    char c;
-
-
-
+    string::iterator i;         // iterator in decText
+    ull chunkSize;              // size of each chunk of file
+    char c;                     // chars in file
     vector<string> hdrUnpack;   // for unpacking header
     vector<string> qsUnpack;    // for unpacking quality score
     string headers, qscores;
@@ -601,19 +628,8 @@ inline void EnDecrypto::decompFQ ()
     ifstream in(DEC_FILENAME);
     while (in.get(c) && c != (char) 254)                 headers += c;
     while (in.get(c) && c != '\n' && c != (char) 253)    qscores += c;
-    if (c == '\n')    justPlus = false;                       // if 3rd line is just +
+    if (c == '\n')    justPlus = false;                 // if 3rd line is just +
     
-//    cerr << headers << ' ' << qscores;//todo. test
-    
-//    for (; *i != (char) 254; ++i)
-//        headers += *i;                          // all hdrs
-//    ++i;                                        // jump over (char) 254
-//    for (; *i != '\n' && *i != (char) 253; ++i)
-//        qscores += *i;                          // all qss
-//    if (*i == '\n')
-//        justPlus = false;                       // if 3rd line is just +
-//    ++i;                                        // jump over '\n' or (char) 253
-
     const size_t headersLen = headers.length();
     const size_t qscoresLen = qscores.length();
     us keyLen_hdr = 0,  keyLen_qs = 0;
@@ -666,131 +682,158 @@ inline void EnDecrypto::decompFQ ()
     else { keyLen_qs = 1;       unpackQS = &unpack_read1B; }    // = 1
 
     string plusMore;
-//    if (headersLen > MAX_C5 && qscoresLen > MAX_C5)
-//    {
-//        const string decHeaders = headers.substr(headersLen - MAX_C5);
-//        const string decQscores = qscores.substr(qscoresLen-MAX_C5);
-//        // ASCII char after the last char in headers & quality_scores string
-//        const char XChar_hdr = (char) (decHeaders[decHeaders.size()-1] + 1);
-//        const char XChar_qs  = (char) (decQscores[decQscores.size()-1] + 1);
-//        string decHeadersX = decHeaders;    decHeadersX += XChar_hdr;
-//        string decQscoresX = decQscores;    decQscoresX += XChar_qs;
-//
-//        // tables for unpacking
-//        hdrUnpack = buildUnpack(decHeadersX, keyLen_hdr);
-//        qsUnpack  = buildUnpack(decQscoresX, keyLen_qs);
-//
-//        while (i != decText.end())
-//        {
-//            if (*i == (char) 253)
-//            {
-//                ++i;
-//                chunkSizeStr.clear();                    // chunk size
-//                for (; *i != (char) 254; ++i)   chunkSizeStr += *i;
-//                ++i;                                     // jump over (char) 254
-//
-//                // unshuffle
-//                if (!disable_shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
-//            }
-//
-//            cout << '@';
-//            cout << (plusMore = unpackLarge_read2B(i, XChar_hdr, hdrUnpack))
-//                 << '\n';                                         ++i;    // hdr
-//            cout << unpackSeqFQ_3to1(i) << '\n';                          // seq
-//            cout << (justPlus ? "+" : "+" + plusMore) << '\n';    ++i;    // +
-//            cout << unpackLarge_read2B(i, XChar_qs, qsUnpack) << '\n';   // qs
-//            // end of file
-//            if (*(++i) == (char) 252)   break;
-//        }
-//    }
-//    else if (headersLen > MAX_C5 && qscoresLen <= MAX_C5)
-//    {
-//        const string decHeaders = headers.substr(headersLen - MAX_C5);
-//        // ASCII char after the last char in headers string
-//        const char XChar_hdr = (char) (decHeaders[decHeaders.size()-1] + 1);
-//        string decHeadersX = decHeaders;     decHeadersX += XChar_hdr;
-//
-//        // tables for unpacking
-//        hdrUnpack = buildUnpack(decHeadersX, keyLen_hdr);
-//        qsUnpack  = buildUnpack(qscores,     keyLen_qs);
-//
-//        while (i != decText.end())
-//        {
-//            if (*i == (char) 253)
-//            {
-//                ++i;
-//                chunkSizeStr.clear();                    // chunk size
-//                for (; *i != (char) 254; ++i)   chunkSizeStr += *i;
-//                ++i;                                     // jump over (char) 254
-//
-//                // unshuffle
-//                if (!disable_shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
-//            }
-//
-//            cout << '@';
-//            cout << (plusMore = unpackLarge_read2B(i, XChar_hdr, hdrUnpack))
-//                                                      << '\n';    ++i;    // hdr
-//            cout << unpackSeqFQ_3to1(i)               << '\n';            // seq
-//            cout << (justPlus ? "+" : "+" + plusMore) << '\n';    ++i;    // +
-//            cout << unpackQS(i, qsUnpack)             << '\n';            // qs
-//            // end of file
-//            if (*(++i) == (char) 252)   break;
-//        }
-//    }
-//    else if (headersLen <= MAX_C5 && qscoresLen > MAX_C5)
-//    {
-//        const string decQscores = qscores.substr(qscoresLen - MAX_C5);
-//        // ASCII char after the last char in decQscores string
-//        const char XChar_qs=(char)(decQscores[decQscores.size()-1] + 1);
-//        string decQscoresX = decQscores;    decQscoresX += XChar_qs;
-//
-//        // tables for unpacking
-//        hdrUnpack = buildUnpack(headers,     keyLen_hdr);
-//        qsUnpack  = buildUnpack(decQscoresX, keyLen_qs);
-//
-//        while (i != decText.end())
-//        {
-//            if (*i == (char) 253)
-//            {
-//                ++i;
-//                chunkSizeStr.clear();                    // chunk size
-//                for (; *i != (char) 254; ++i)   chunkSizeStr += *i;
-//                ++i;                                     // jump over (char) 254
-//
-//                // unshuffle
-//                if (!disable_shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
-//            }
-//
-//            cout << '@';
-//            cout << (plusMore = unpackHdr(i, hdrUnpack))  << '\n';  ++i;  // hdr
-//            cout << unpackSeqFQ_3to1(i)                   << '\n';        // seq
-//            cout << (justPlus ? "+" : "+" + plusMore)     << '\n';  ++i;  // +
-//            cout << unpackLarge_read2B(i, XChar_qs, qsUnpack) << '\n';    // qs
-//            // end of file
-//            if (*(++i) == (char) 252)   break;
-//        }
-//    }
-//    else
-    if (headersLen <= MAX_C5 && qscoresLen <= MAX_C5)
+    if (headersLen > MAX_C5 && qscoresLen > MAX_C5)
     {
-//        ofstream o("morti");//todo. test
-        
+        const string decHeaders = headers.substr(headersLen - MAX_C5);
+        const string decQscores = qscores.substr(qscoresLen-MAX_C5);
+        // ASCII char after the last char in headers & quality_scores string
+        const char XChar_hdr = (char) (decHeaders[decHeaders.size()-1] + 1);
+        const char XChar_qs  = (char) (decQscores[decQscores.size()-1] + 1);
+        string decHeadersX = decHeaders;    decHeadersX += XChar_hdr;
+        string decQscoresX = decQscores;    decQscoresX += XChar_qs;
+
         // tables for unpacking
-        hdrUnpack = buildUnpack(headers, keyLen_hdr);
-        qsUnpack  = buildUnpack(qscores, keyLen_qs);
+        hdrUnpack = buildUnpack(decHeadersX, keyLen_hdr);
+        qsUnpack  = buildUnpack(decQscoresX, keyLen_qs);
     
-//        while (!in.eof())
-            while (!in.eof() && in.get(c))
+        while (in.get(c) && c != (char) 252)
         {
-//            in.get(c);
-            if (c == (char) 252)    break;
-            
             if (c == (char) 253)
             {
                 decText.clear();
-                chunkSizeStr.clear();                    // chunk size
+                chunkSizeStr.clear();   // chunk size
                 while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
                 chunkSize = stoull(chunkSizeStr);
+            
+                // take a chunk of decrypted file
+                for (ull u = chunkSize; u--;) { in.get(c);    decText += c; }
+                i = decText.begin();
+            
+                // unshuffle
+                if (!disable_shuffle)    unshufflePkd(i, chunkSize);
+//                if (!disable_shuffle)
+//                {
+//                    mutx.lock();
+//                    unshufflePkd(i, chunkSize);
+//                    mutx.unlock();
+//                }
+            }
+        
+            do {
+                cout << '@';
+                cout << (plusMore = unpackLarge_read2B(i, XChar_hdr, hdrUnpack))
+                     <<'\n';  ++i; //hdr
+            
+                cout << unpackSeqFQ_3to1(i)                  <<'\n';       //seq
+                cout << (justPlus ? "+" : "+" + plusMore)    <<'\n';  ++i; //+
+                cout << unpackLarge_read2B(i, XChar_qs, qsUnpack) <<'\n';  //qs
+            } while (++i != decText.end());    // if trouble: change "!=" to "<"
+        }
+    }
+    else if (headersLen > MAX_C5 && qscoresLen <= MAX_C5)
+    {
+        const string decHeaders = headers.substr(headersLen - MAX_C5);
+        // ASCII char after the last char in headers string
+        const char XChar_hdr = (char) (decHeaders[decHeaders.size()-1] + 1);
+        string decHeadersX = decHeaders;     decHeadersX += XChar_hdr;
+
+        // tables for unpacking
+        hdrUnpack = buildUnpack(decHeadersX, keyLen_hdr);
+        qsUnpack  = buildUnpack(qscores,     keyLen_qs);
+    
+        while (in.get(c) && c != (char) 252)
+        {
+            if (c == (char) 253)
+            {
+                decText.clear();
+                chunkSizeStr.clear();   // chunk size
+                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
+                chunkSize = stoull(chunkSizeStr);
+            
+                // take a chunk of decrypted file
+                for (ull u = chunkSize; u--;) { in.get(c);    decText += c; }
+                i = decText.begin();
+            
+                // unshuffle
+                if (!disable_shuffle)    unshufflePkd(i, chunkSize);
+//                if (!disable_shuffle)
+//                {
+//                    mutx.lock();
+//                    unshufflePkd(i, chunkSize);
+//                    mutx.unlock();
+//                }
+            }
+        
+            do {
+                cout << '@';
+                cout << (plusMore = unpackLarge_read2B(i, XChar_hdr, hdrUnpack))
+                                                             <<'\n';  ++i; //hdr
+
+                cout << unpackSeqFQ_3to1(i)                  <<'\n';       //seq
+                cout << (justPlus ? "+" : "+" + plusMore)    <<'\n';  ++i; //+
+                cout << unpackQS(i, qsUnpack)                <<'\n';       //qs
+            } while (++i != decText.end());    // if trouble: change "!=" to "<"
+        }
+    }
+    else if (headersLen <= MAX_C5 && qscoresLen > MAX_C5)
+    {
+        const string decQscores = qscores.substr(qscoresLen - MAX_C5);
+        // ASCII char after the last char in decQscores string
+        const char XChar_qs=(char)(decQscores[decQscores.size()-1] + 1);
+        string decQscoresX = decQscores;    decQscoresX += XChar_qs;
+
+        // tables for unpacking
+        hdrUnpack = buildUnpack(headers,     keyLen_hdr);
+        qsUnpack  = buildUnpack(decQscoresX, keyLen_qs);
+    
+        while (in.get(c) && c != (char) 252)
+        {
+            if (c == (char) 253)
+            {
+                decText.clear();
+                chunkSizeStr.clear();   // chunk size
+                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
+                chunkSize = stoull(chunkSizeStr);
+            
+                // take a chunk of decrypted file
+                for (ull u = chunkSize; u--;) { in.get(c);    decText += c; }
+                i = decText.begin();
+            
+                // unshuffle
+                if (!disable_shuffle)    unshufflePkd(i, chunkSize);
+//                if (!disable_shuffle)
+//                {
+//                    mutx.lock();
+//                    unshufflePkd(i, chunkSize);
+//                    mutx.unlock();
+//                }
+            }
+        
+            do {
+                cout << '@';
+                cout << (plusMore = unpackHdr(i, hdrUnpack)) <<'\n';  ++i; //hdr
+                cout << unpackSeqFQ_3to1(i)                  <<'\n';       //seq
+                cout << (justPlus ? "+" : "+" + plusMore)    <<'\n';  ++i; //+
+                cout << unpackLarge_read2B(i, XChar_qs, qsUnpack) <<'\n';  // qs
+            } while (++i != decText.end());    // if trouble: change "!=" to "<"
+        }
+    }
+    else if (headersLen <= MAX_C5 && qscoresLen <= MAX_C5)
+    {
+        // tables for unpacking
+        hdrUnpack = buildUnpack(headers, keyLen_hdr);
+        qsUnpack  = buildUnpack(qscores, keyLen_qs);
+        
+        while (in.get(c) && c != (char) 252)
+        {
+            if (c == (char) 253)
+            {
+                decText.clear();
+                chunkSizeStr.clear();   // chunk size
+                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
+                chunkSize = stoull(chunkSizeStr);
+                
+                // take a chunk of decrypted file
                 for (ull u = chunkSize; u--;) { in.get(c);    decText += c; }
                 i = decText.begin();
                 
@@ -802,8 +845,6 @@ inline void EnDecrypto::decompFQ ()
 //                    unshufflePkd(i, chunkSize);
 //                    mutx.unlock();
 //                }
-                
-//                o << decText;//todo. test
             }
             
             do {
@@ -814,8 +855,6 @@ inline void EnDecrypto::decompFQ ()
                 cout << unpackQS(i, qsUnpack)                <<'\n';       //qs
             } while (++i != decText.end());    // if trouble: change "!=" to "<"
         }
-        
-//        o.close();//todo. test
     }
     
     // close decrypted file
@@ -1110,11 +1149,25 @@ inline ull EnDecrypto::un_shuffleSeedGen (ui seedInit) const
 /*******************************************************************************
     shuffle
 *******************************************************************************/
-inline void EnDecrypto::shufflePkd (string &in) const
-{
-    const ull seed = un_shuffleSeedGen((ui) in.size());    // shuffling seed
-    std::shuffle(in.begin(), in.end(), std::mt19937(seed));
-}
+////inline void EnDecrypto::shufflePkd (string &in) const
+////inline string EnDecrypto::shufflePkd (string &st) const
+//inline void EnDecrypto::shufflePkd (string st) const
+//{
+//    string in=st;
+////    in.clear();
+////    for (int j = 0; j < st.; ++j)
+////    {
+////        in += *(i + j);
+////    }
+//
+//    const ull seed = un_shuffleSeedGen((ui) in.size());    // shuffling seed
+//    std::shuffle(in.begin(), in.end(), std::mt19937(seed));
+////    const ull seed = un_shuffleSeedGen((ui) in.size());    // shuffling seed
+////    std::shuffle(in.begin(), in.end(), std::mt19937(seed));
+//
+//
+//    return in;
+//}
 
 /*******************************************************************************
     unshuffle

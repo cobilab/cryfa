@@ -28,15 +28,13 @@ public:
     
 private:
     inline void encrypt ();                              // encrypt
-//    inline string decrypt ();                            // decrypt
-    inline void decrypt ();                            // decrypt
+    inline void decrypt ();                              // decrypt
     inline void pack (const ull, const byte,             // pack
                       string (*)(const string&, const htable_t&),
                       string (*)(const string&, const htable_t&));
     inline void decompFA ();                       // decomp. FA
     inline void decompFQ ();                       // decomp. FQ
 //    inline void decompFA (string);                       // decomp. FA
-//    inline void decompFQ (string);                       // decomp. FQ
     inline void buildIV  (byte*, const string&);         // build IV
     inline void buildKey (byte*, const string&);         // build key
     inline void printIV  (byte*)                const;   // print IV
@@ -46,7 +44,13 @@ private:
     inline bool hasFQjustPlus ()                const;   // check '+' line
     inline void gatherHdrQs (string&, string&)  const;   // gather hdrs & qss
     inline ull  un_shuffleSeedGen (ui)          const;   // (un)shuffle seed gen
-    inline void shufflePkd (string&)            const;   // shuffle packed
+    
+    
+//    inline void shufflePkd (string&)            const;   // shuffle packed
+//    inline string shufflePkd (string&)            const;   // shuffle packed
+//    inline void shufflePkd (string)            const;   // shuffle packed
+    
+    
     inline void unshufflePkd (string::iterator&,         // unshuffle packed
                               const ull)        const;
     
