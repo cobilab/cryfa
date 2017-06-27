@@ -613,10 +613,10 @@ inline string unpackSeqFQ_3to1 (string::iterator &i)
         { out+=penaltySym(*(++i));    out+=tpl[1];    out+=tpl[2]; }
 
         else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]!='X')               // .X.
-        {out+=tpl[0];    out+=penaltySym(*(++i));    out+=tpl[2]; }
+        { out+=tpl[0];    out+=penaltySym(*(++i));    out+=tpl[2]; }
 
         else if (tpl[0]=='X' && tpl[1]=='X' && tpl[2]!='X')               // XX.
-        {out+=penaltySym(*(++i));    out+=penaltySym(*(++i));    out+=tpl[2]; }
+        { out+=penaltySym(*(++i));    out+=penaltySym(*(++i));    out+=tpl[2]; }
 
         else if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]=='X')               // ..X
         { out+=tpl[0];    out+=tpl[1];    out+=penaltySym(*(++i)); }
@@ -724,18 +724,5 @@ inline string unpack_read1B (string::iterator &i, vector<string> &unpack)
     
     return out;
 }
-//inline string unpack_read1B (string::iterator &i, vector<string> &unpack)
-//{
-//    string out;
-//
-//    for (; *i != (char) 254; ++i)
-//    {
-//        // hdr len not multiple of keyLen
-//        if (*i == (char) 255) { out += penaltySym(*(++i));    continue; }
-//        out += unpack[(byte) *i];
-//    }
-//
-//    return out;
-//}
 
 #endif //CRYFA_PACK_H

@@ -324,15 +324,13 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
     }
     
     // shuffle
-    if (!disable_shuffle)  shufflePkd(context);
-//    if (!disable_shuffle) { mutx.lock();  shufflePkd(context);  mutx.unlock(); }
+//    if (!disable_shuffle)  shufflePkd(context);
+    if (!disable_shuffle) { mutx.lock();  shufflePkd(context);  mutx.unlock(); }
     
     // for unshuffling: insert the size of packed context in the beginning of it
     string contextSize;
     contextSize += (char) 253;
     contextSize += to_string(context.size());
-    //todo. test
-    cerr<<to_string(context.size());
     contextSize += (char) 254;
     context.insert(0, contextSize);
     
@@ -772,14 +770,21 @@ inline void EnDecrypto::decompFQ ()
 //    }
 //    else
     if (headersLen <= MAX_C5 && qscoresLen <= MAX_C5)//todo. vase max 8 khat file voroodi javab mide
-    {//ofstream o("morti");//todo. test
+    {//todo. irad az enc/dec nist
+//        ofstream o("morti");//todo. test
+//        ll tellg;
+        
         // tables for unpacking
         hdrUnpack = buildUnpack(headers, keyLen_hdr);
         qsUnpack  = buildUnpack(qscores, keyLen_qs);
-        
+    
+//        in.get(c);
         while (!in.eof())
+//        while (in.get(c))
         {
             in.get(c);
+            if (c == (char) 252)    break;
+            
             if (c == (char) 253)
             {
                 decText.clear();
@@ -789,15 +794,17 @@ inline void EnDecrypto::decompFQ ()
 //                ++i;                                     // jump over (char) 254
                 chunkSize = stoull(chunkSizeStr);
                 for (ull u = chunkSize; u--;) { in.get(c);    decText += c; }
+//                tellg = in.tellg();
+//                in.seekg(-1, std::ios_base::cur);
                 i = decText.begin();
                 
                 // unshuffle
-                if (!disable_shuffle)    unshufflePkd(i, chunkSize);//todo. remove passing chunkSize
+                if (!disable_shuffle)    unshufflePkd(i, chunkSize);
                 
-                
-                //o<<decText;
+    
+//                o << decText;
             }
-
+            
             cout << '@';
             cout << (plusMore = unpackHdr(i, hdrUnpack)) << '\n';  ++i;   // hdr
             cout << unpackSeqFQ_3to1(i)                  << '\n';         // seq
@@ -805,13 +812,14 @@ inline void EnDecrypto::decompFQ ()
             cout << unpackQS(i, qsUnpack)                << '\n';         // qs
             // end of file
             //todo. moshkel az khatte payeene
+//            in.seekg(tellg-1);
 //            if (in.peek() == (char) 252)   break;//todo. *(++i) was instead of in.peek()
-            if ((*(++i) == (char) 252) || (in.peek() == (char) 252))   break;//todo. *(++i) was instead of in.peek()
-        
+
+//            break;
         }
+        
+//        o.close();
     }
-    
-    
     
     in.close();
 }
@@ -1129,22 +1137,6 @@ inline void EnDecrypto::unshufflePkd (string::iterator &i, const ull size) const
     // insert unshuffled data
     for (const ull& vI : vPos)  *(i + vI) = *shIt++; // first *shIt, then ++shIt
 }
-//inline void EnDecrypto::unshufflePkd (string::iterator &i, const ull size) const
-//{
-//    string shuffledStr;     // copy of shuffled string
-//    for (ull j = 0; j != size; ++j, ++i)    shuffledStr += *i;
-//    string::iterator shIt = shuffledStr.begin();
-//    i -= size;
-//
-//    // shuffle vector of positions
-//    vector<ull> vPos(size);
-//    std::iota(vPos.begin(), vPos.end(), 0);     // insert 0 .. N-1
-//    const ull seed = un_shuffleSeedGen((ui) size);
-//    std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed));
-//
-//    // insert unshuffled data
-//    for (const ull& vI : vPos)  *(i + vI) = *shIt++; // first *shIt, then ++shIt
-//}
 
 /*******************************************************************************
     build IV
