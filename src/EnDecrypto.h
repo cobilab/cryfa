@@ -44,13 +44,7 @@ private:
     inline bool hasFQjustPlus ()                const;   // check '+' line
     inline void gatherHdrQs (string&, string&)  const;   // gather hdrs & qss
     inline ull  un_shuffleSeedGen (ui)          const;   // (un)shuffle seed gen
-    
-    
-//    inline void shufflePkd (string&)            const;   // shuffle packed
-//    inline string shufflePkd (string&)            const;   // shuffle packed
-//    inline void shufflePkd (string)            const;   // shuffle packed
-    
-    
+    inline void shufflePkd (string&)            const;   // shuffle packed
     inline void unshufflePkd (string::iterator&,         // unshuffle packed
                               const ull)        const;
     

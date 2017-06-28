@@ -290,6 +290,20 @@ void EnDecrypto::compressFQ ()
     */
 }
 
+
+
+
+
+
+
+
+// from standard c++11 documnet: N3551 -- emulate
+std::minstd_rand0 &my_engine () { static std::minstd_rand0 e{};    return e; }
+#define RAND_MAX (my_engine().max() - my_engine().min())
+void my_srand( unsigned s = 1u ) { my_engine().seed(s); }
+int my_rand() { return (int) (my_engine()() - my_engine().min()); }
+
+
 /*******************************************************************************
     pack -- '@' at the beginning of headers is not packed
 *******************************************************************************/
@@ -323,48 +337,60 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
             context += packQS(line, QsMap) + (char) 254;
     }
     
-    // shuffle//todo. seems rand()/srand need mutex
+    // shuffle//todo. rand()/srand need mutex
     if (!disable_shuffle)
     {
-//        const ull seed = un_shuffleSeedGen((ui) context.size());    // shuffling seed
-        
         const string pass = extractPass();
         evalPassSize(pass);     // pass size must be >= 8
-        
+
         ull passDigitsMult = 1; // multiplication of all pass digits
         for (ui i = (ui) pass.size(); i--;)   passDigitsMult *= pass[i];
-    
-//        ull seed = 0;
-//        mutx.lock();
-//
-//        // using old rand to generate the new rand seed
+
+//        static
+        ull seed = 0;
+
+        mutx.lock();
+        
+        // using old rand to generate the new rand seed
 //        srand(20543 * (ui) context.size() * (ui) passDigitsMult + 81647);
-//        for (byte i = (byte) pass.size(); i--;)
-////            seed += ((ull) pass[i] * rand()) + rand();
-//        seed += ((ull) pass[i] * rand()) + rand();
-//
-//        mutx.unlock();
-//
-//        seed %= 53113233473;
+        my_srand(20543 * (ui) context.size() * (ui) passDigitsMult + 81647);
+//        static std::mt19937 my_engine{};
+//        my_engine.seed(20543 * (ui) context.size() * (ui) passDigitsMult + 81647);
+        for (byte i = (byte) pass.size(); i--;)
+//            seed += ((ull) pass[i] * rand()) + rand();
+        seed += ((ull) pass[i] * my_rand()) + my_rand();
+//            seed += (ull) pass[i] * 20543 * (ui) context.size() * (ui) passDigitsMult + 81647;
+
+//        seed += (ull) pass[i] * (my_engine()() - my_engine.min()) + (my_engine()() - my_engine.min());
+        
     
+//        static thread_local
+//        std::mt19937 generator;
+////        static
+//        std::uniform_int_distribution<int> distribution(0,generator.max());
+//        seed = (ull) distribution(generator);
     
-                mutx.lock();
+        mutx.unlock();
+        
+        seed %= 53113233473;
+//        const ull seed = un_shuffleSeedGen((ui) context.size());    // shuffling seed
+        std::shuffle(context.begin(), context.end(), std::mt19937(seed));
+//        std::shuffle(context.begin(), context.end(), std::mt19937(20543 * (ui) context.size() * (ui) passDigitsMult + 81647));
     
-        static thread_local std::mt19937 generator;
-        std::uniform_int_distribution<int> distribution(0,99);
-    
-//        std::shuffle(context.begin(), context.end(), std::mt19937(seed));
-        std::shuffle(context.begin(), context.end(), std::mt19937(distribution(generator)));
-                mutx.unlock();
     }
     
     
 //    string::iterator i = context.begin();
 //    ull s = context.size();
-//    //todo. change it untill mutex is not needed. (each thread can have a copy)
-////    if (!disable_shuffle) { mutx.lock();  shufflePkd(context);  mutx.unlock(); }
-////    if (!disable_shuffle) { mutx.lock();  context = shufflePkd(context);  mutx.unlock(); }
-//    if (!disable_shuffle) { context = shufflePkd(context); }
+    //todo. change it untill mutex is not needed. (each thread can have a copy)
+//    if (!disable_shuffle) { mutx.lock();  shufflePkd(context);  mutx.unlock(); }
+//    if (!disable_shuffle)
+//    {
+//        mutx.lock();
+//        const ull seed = un_shuffleSeedGen((ui) context.size());    // shuffling seed
+//        mutx.unlock();
+//        std::shuffle(context.begin(), context.end(), std::mt19937(seed));
+//    }
     
     
     
@@ -846,13 +872,63 @@ inline void EnDecrypto::decompFQ ()
                 i = decText.begin();
                 
                 // unshuffle
-                if (!disable_shuffle)    unshufflePkd(i, chunkSize);
-//                if (!disable_shuffle)
-//                {
+//                if (!disable_shuffle)    unshufflePkd(i, chunkSize);
+////                if (!disable_shuffle)
+////                {
+////                    mutx.lock();
+////                    unshufflePkd(i, chunkSize);
+////                    mutx.unlock();
+////                }
+                if (!disable_shuffle)
+                {
+                    string shuffledStr;     // copy of shuffled string
+                    for (ull j = 0; j != chunkSize; ++j, ++i)    shuffledStr += *i;
+                    string::iterator shIt = shuffledStr.begin();
+                    i -= chunkSize;
+    
+                    // shuffle vector of positions
+                    vector<ull> vPos(chunkSize);
+                    std::iota(vPos.begin(), vPos.end(), 0);     // insert 0 .. N-1
+    
+    
+                    const string pass = extractPass();
+                    evalPassSize(pass);     // pass size must be >= 8
+    
+                    ull passDigitsMult = 1; // multiplication of all pass digits
+                    for (ui j = (ui) pass.size(); j--;)   passDigitsMult *= pass[j];
+    
+                    ull seed = 0;
+    
 //                    mutx.lock();
-//                    unshufflePkd(i, chunkSize);
+    
+                    // using old rand to generate the new rand seed
+                    my_srand(20543 * (ui) chunkSize * (ui) passDigitsMult + 81647);
+//        static std::mt19937 my_engine{};
+//        my_engine.seed(20543 * (ui) context.size() * (ui) passDigitsMult + 81647);
+//        srand(20543 * (ui) context.size() * (ui) passDigitsMult + 81647);
+                    for (byte i = (byte) pass.size(); i--;)
+//            seed += ((ull) pass[i] * rand()) + rand();
+//                        seed += (ull) pass[i] * 20543 * (ui) chunkSize * (ui) passDigitsMult + 81647;
+            seed += ((ull) pass[i] * my_rand()) + my_rand();
+
+//        seed += (ull) pass[i] * (my_engine()() - my_engine.min()) + (my_engine()() - my_engine.min());
+    
+    
+                    seed %= 53113233473;
+//        const ull seed = un_shuffleSeedGen((ui) context.size());    // shuffling seed
+                    std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed));
+    
 //                    mutx.unlock();
-//                }
+
+
+
+//                    const ull seed = un_shuffleSeedGen((ui) chunkSize);
+//                    std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed));
+                    
+                    
+                    // insert unshuffled data
+                    for (const ull& vI : vPos)  *(i + vI) = *shIt++; // first *shIt, then ++shIt
+                }
             }
             
             do {
@@ -1142,13 +1218,15 @@ inline ull EnDecrypto::un_shuffleSeedGen (ui seedInit) const
     evalPassSize(pass);     // pass size must be >= 8
     
     ull passDigitsMult = 1; // multiplication of all pass digits
-    for (ui i = 0; i != pass.size(); ++i)   passDigitsMult *= pass[i];
+    for (ui i = (ui) pass.size(); i--;)    passDigitsMult *= pass[i];
     
     // using old rand to generate the new rand seed
-    srand(20543 * seedInit * (ui) passDigitsMult + 81647);
+    my_srand(20543 * seedInit * (ui) passDigitsMult + 81647);
+//    srand(20543 * seedInit * (ui) passDigitsMult + 81647);
     ull seed = 0;
     for (byte i = (byte) pass.size(); i--;)
-        seed += ((ull) pass[i] * rand()) + rand();
+        seed += ((ull) pass[i] * my_rand()) + my_rand();
+//    seed += ((ull) pass[i] * rand()) + rand();
     seed %= 53113233473;
     
     return seed;
@@ -1157,25 +1235,11 @@ inline ull EnDecrypto::un_shuffleSeedGen (ui seedInit) const
 /*******************************************************************************
     shuffle
 *******************************************************************************/
-////inline void EnDecrypto::shufflePkd (string &in) const
-////inline string EnDecrypto::shufflePkd (string &st) const
-//inline void EnDecrypto::shufflePkd (string st) const
-//{
-//    string in=st;
-////    in.clear();
-////    for (int j = 0; j < st.; ++j)
-////    {
-////        in += *(i + j);
-////    }
-//
-//    const ull seed = un_shuffleSeedGen((ui) in.size());    // shuffling seed
-//    std::shuffle(in.begin(), in.end(), std::mt19937(seed));
-////    const ull seed = un_shuffleSeedGen((ui) in.size());    // shuffling seed
-////    std::shuffle(in.begin(), in.end(), std::mt19937(seed));
-//
-//
-//    return in;
-//}
+inline void EnDecrypto::shufflePkd (string &in) const
+{
+    const ull seed = un_shuffleSeedGen((ui) in.size());    // shuffling seed
+    std::shuffle(in.begin(), in.end(), std::mt19937(seed));
+}
 
 /*******************************************************************************
     unshuffle
