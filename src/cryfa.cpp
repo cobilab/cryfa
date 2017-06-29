@@ -28,6 +28,25 @@ using std::cerr;
 using std::chrono::high_resolution_clock;
 using std::setprecision;
 
+
+
+
+
+
+//int isduplicate (const char *str,char c)
+//{
+//    int hash[8] = {0, 0, 0, 0, 0, 0, 0, 0};
+//    while (*str)
+//    {
+//        int pos = c;
+//        if (hash[pos / 16] & (1 << (pos % 16)))
+//            return 1;
+//        hash[pos / 16] |= (1 << (pos % 16));
+//        str++;
+//    }
+//    return 0;
+//}
+
 ////////////////////////////////////////////////////////////////////////////////
 ///////////////////                 M A I N                 ////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -35,11 +54,51 @@ int main (int argc, char* argv[])
 {
     // start timer
     high_resolution_clock::time_point startTime = high_resolution_clock::now();
-
+    
     EnDecrypto cryptObj;
     cryptObj.inFileName = argv[argc-1];  // input file name
     cryptObj.n_threads = DEFAULT_N_THR;  // initialize number of threads
-
+    
+    
+    
+//    const char* s="hello";
+//    cerr<<isduplicate(s,'l');
+//
+//
+//    string headers, qscores;
+//    ifstream in(cryptObj.inFileName);
+//    string line;
+//
+////    while (!in.eof())
+////    {
+////        if (getline(in, line).good())               // header
+////        {
+////            for (const char &c : line)
+////                if (headers.find(c) == string::npos)
+////                    headers += c;
+////        }
+////        in.ignore(LARGE_NUMBER, '\n');              // ignore sequence
+////        in.ignore(LARGE_NUMBER, '\n');              // ignore +
+////
+////        in.ignore(LARGE_NUMBER, '\n');              // ignore +
+//////        if (getline(in, line).good())               // quality score
+//////        {
+//////            for (const char &c : line)
+//////                if (qscores.find(c) == string::npos)
+//////                    qscores += c;
+//////        }
+////    }
+//    in.close();
+////
+//////    headers.erase(headers.begin());                 // ignore '@'
+//////    std::sort(headers.begin(), headers.end());      // sort values
+//////    std::sort(qscores.begin(), qscores.end());      // sort ASCII values
+////
+////    cerr << headers << '\n'
+////         << qscores << '\n';
+    
+    
+    
     static int h_flag, a_flag, v_flag, d_flag, s_flag;
     int c;                               // deal with getopt_long()
     int option_index;                    // option index stored by getopt_long()
@@ -115,7 +174,7 @@ int main (int argc, char* argv[])
     {
         cerr << "Decrypting...\n";
         cryptObj.decompress();//todo. multithreading
-        
+
         // stop timer
         high_resolution_clock::time_point finishTime =
                 high_resolution_clock::now();
@@ -123,13 +182,14 @@ int main (int argc, char* argv[])
         std::chrono::duration<double> elapsed = finishTime - startTime;
         cerr << "done in " << std::fixed << setprecision(4) << elapsed.count()
              << " seconds.\n";
-        
+
         return 0;
     }
-    
+
     cerr << "Encrypting...\n";
     (fileType(cryptObj.inFileName)=='A') ? cryptObj.compressFA()    // FASTA
                                          : cryptObj.compressFQ();   // FASTQ
+    
     // stop timer
     high_resolution_clock::time_point finishTime = high_resolution_clock::now();
     // duration in seconds
