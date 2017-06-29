@@ -803,214 +803,6 @@ inline void EnDecrypto::decompFQ ()
     in.close();
 }
 
-
-/** OLD
-inline void EnDecrypto::decompFQ (string decText)
-{
-    vector<string> hdrUnpack;   // for unpacking header
-    vector<string> qsUnpack;    // for unpacking quality score
-    string line;
-    string::iterator i = decText.begin();
-    string qscores, headers;
-    bool justPlus = true;
-    string chunkSizeStr;        // chunk size (string) -- for unshuffling
-
-    for (; *i != (char) 254; ++i)
-        headers += *i;                          // all hdrs
-    ++i;                                        // jump over (char) 254
-    for (; *i != '\n' && *i != (char) 253; ++i)
-        qscores += *i;                          // all qss
-    if (*i == '\n')
-        justPlus = false;                       // if 3rd line is just +
-    ++i;                                        // jump over '\n' or (char) 253
-
-    const size_t qscoresLen = qscores.length();
-    const size_t headersLen = headers.length();
-    us keyLen_hdr = 0,  keyLen_qs = 0;
-
-    using unpackHdrPointer = string (*)(string::iterator&, vector<string>&);
-    unpackHdrPointer unpackHdr;                              // function pointer
-    using unpackQSPointer = string (*)(string::iterator&, vector<string>&);
-    unpackQSPointer unpackQS;                                // function pointer
-
-    // header
-    if (headersLen > MAX_C5)    keyLen_hdr = KEYLEN_C5;
-
-    else if (headersLen > MAX_C4)                               // cat 5
-    { keyLen_hdr = KEYLEN_C5;   unpackHdr = &unpack_read2B; }
-
-    else if (headersLen > MAX_C3)                               // cat 4
-    { keyLen_hdr = KEYLEN_C4;   unpackHdr = &unpack_read1B; }
-
-    else if (headersLen == MAX_C3 || headersLen == MID_C3       // cat 3
-             || headersLen == MIN_C3)
-    { keyLen_hdr = KEYLEN_C3;   unpackHdr = &unpack_read1B; }
-
-    else if (headersLen == C2)                                  // cat 2
-    { keyLen_hdr = KEYLEN_C2;   unpackHdr = &unpack_read1B; }
-
-    else if (headersLen == C1)                                  // cat 1
-    { keyLen_hdr = KEYLEN_C1;   unpackHdr = &unpack_read1B; }
-
-    else { keyLen_hdr = 1;      unpackHdr = &unpack_read1B; }   // = 1
-
-    // quality score
-    if (qscoresLen > MAX_C5)    keyLen_qs = KEYLEN_C5;
-
-    else if (qscoresLen > MAX_C4)                               // cat 5
-    { keyLen_qs = KEYLEN_C5;    unpackQS = &unpack_read2B; }
-
-    else if (qscoresLen > MAX_C3)                               // cat 4
-    { keyLen_qs = KEYLEN_C4;    unpackQS = &unpack_read1B; }
-
-    else if (qscoresLen == MAX_C3 || qscoresLen == MID_C3       // cat 3
-             || qscoresLen == MIN_C3)
-    { keyLen_qs = KEYLEN_C3;    unpackQS = &unpack_read1B; }
-
-    else if (qscoresLen == C2)                                  // cat 2
-    { keyLen_qs = KEYLEN_C2;    unpackQS = &unpack_read1B; }
-
-    else if (qscoresLen == C1)                                  // cat 1
-    { keyLen_qs = KEYLEN_C1;    unpackQS = &unpack_read1B; }
-
-    else { keyLen_qs = 1;       unpackQS = &unpack_read1B; }    // = 1
-
-    string plusMore;
-    if (headersLen > MAX_C5 && qscoresLen > MAX_C5)
-    {
-        const string decHeaders = headers.substr(headersLen - MAX_C5);
-        const string decQscores = qscores.substr(qscoresLen-MAX_C5);
-        // ASCII char after the last char in headers & quality_scores string
-        const char XChar_hdr = (char) (decHeaders[decHeaders.size()-1] + 1);
-        const char XChar_qs  = (char) (decQscores[decQscores.size()-1] + 1);
-        string decHeadersX = decHeaders;    decHeadersX += XChar_hdr;
-        string decQscoresX = decQscores;    decQscoresX += XChar_qs;
-
-        // tables for unpacking
-        hdrUnpack = buildUnpack(decHeadersX, keyLen_hdr);
-        qsUnpack  = buildUnpack(decQscoresX, keyLen_qs);
-
-        while (i != decText.end())
-        {
-            if (*i == (char) 253)
-            {
-                ++i;
-                chunkSizeStr.clear();                    // chunk size
-                for (; *i != (char) 254; ++i)   chunkSizeStr += *i;
-                ++i;                                     // jump over (char) 254
-
-                // unshuffle
-                if (!disable_shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
-            }
-
-            cout << '@';
-            cout << (plusMore = unpackLarge_read2B(i, XChar_hdr, hdrUnpack))
-                 << '\n';                                         ++i;    // hdr
-            cout << unpackSeqFQ_3to1(i) << '\n';                          // seq
-            cout << (justPlus ? "+" : "+" + plusMore) << '\n';    ++i;    // +
-            cout << unpackLarge_read2B(i, XChar_qs, qsUnpack) << '\n';   // qs
-            // end of file
-            if (*(++i) == (char) 252)   break;
-        }
-    }
-    else if (headersLen > MAX_C5 && qscoresLen <= MAX_C5)
-    {
-        const string decHeaders = headers.substr(headersLen - MAX_C5);
-        // ASCII char after the last char in headers string
-        const char XChar_hdr = (char) (decHeaders[decHeaders.size()-1] + 1);
-        string decHeadersX = decHeaders;     decHeadersX += XChar_hdr;
-
-        // tables for unpacking
-        hdrUnpack = buildUnpack(decHeadersX, keyLen_hdr);
-        qsUnpack  = buildUnpack(qscores,     keyLen_qs);
-
-        while (i != decText.end())
-        {
-            if (*i == (char) 253)
-            {
-                ++i;
-                chunkSizeStr.clear();                    // chunk size
-                for (; *i != (char) 254; ++i)   chunkSizeStr += *i;
-                ++i;                                     // jump over (char) 254
-
-                // unshuffle
-                if (!disable_shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
-            }
-
-            cout << '@';
-            cout << (plusMore = unpackLarge_read2B(i, XChar_hdr, hdrUnpack))
-                                                      << '\n';    ++i;    // hdr
-            cout << unpackSeqFQ_3to1(i)               << '\n';            // seq
-            cout << (justPlus ? "+" : "+" + plusMore) << '\n';    ++i;    // +
-            cout << unpackQS(i, qsUnpack)             << '\n';            // qs
-            // end of file
-            if (*(++i) == (char) 252)   break;
-        }
-    }
-    else if (headersLen <= MAX_C5 && qscoresLen > MAX_C5)
-    {
-        const string decQscores = qscores.substr(qscoresLen - MAX_C5);
-        // ASCII char after the last char in decQscores string
-        const char XChar_qs=(char)(decQscores[decQscores.size()-1] + 1);
-        string decQscoresX = decQscores;    decQscoresX += XChar_qs;
-
-        // tables for unpacking
-        hdrUnpack = buildUnpack(headers,     keyLen_hdr);
-        qsUnpack  = buildUnpack(decQscoresX, keyLen_qs);
-
-        while (i != decText.end())
-        {
-            if (*i == (char) 253)
-            {
-                ++i;
-                chunkSizeStr.clear();                    // chunk size
-                for (; *i != (char) 254; ++i)   chunkSizeStr += *i;
-                ++i;                                     // jump over (char) 254
-
-                // unshuffle
-                if (!disable_shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
-            }
-
-            cout << '@';
-            cout << (plusMore = unpackHdr(i, hdrUnpack))  << '\n';  ++i;  // hdr
-            cout << unpackSeqFQ_3to1(i)                   << '\n';        // seq
-            cout << (justPlus ? "+" : "+" + plusMore)     << '\n';  ++i;  // +
-            cout << unpackLarge_read2B(i, XChar_qs, qsUnpack) << '\n';    // qs
-            // end of file
-            if (*(++i) == (char) 252)   break;
-        }
-    }
-    else if (headersLen <= MAX_C5 && qscoresLen <= MAX_C5)
-    {
-        // tables for unpacking
-        hdrUnpack = buildUnpack(headers, keyLen_hdr);
-        qsUnpack  = buildUnpack(qscores, keyLen_qs);
-
-        while (i != decText.end())
-        {
-            if (*i == (char) 253)
-            {
-                ++i;
-                chunkSizeStr.clear();                    // chunk size
-                for (; *i != (char) 254; ++i)   chunkSizeStr += *i;
-                ++i;                                     // jump over (char) 254
-
-                // unshuffle
-                if (!disable_shuffle)    unshufflePkd(i, stoull(chunkSizeStr));
-            }
-
-            cout << '@';
-            cout << (plusMore = unpackHdr(i, hdrUnpack)) << '\n';  ++i;   // hdr
-            cout << unpackSeqFQ_3to1(i)                  << '\n';         // seq
-            cout << (justPlus ? "+" : "+" + plusMore)    << '\n';  ++i;   // +
-            cout << unpackQS(i, qsUnpack)                << '\n';         // qs
-            // end of file
-            if (*(++i) == (char) 252)   break;
-        }
-    }
-}
-*/
-
 /*******************************************************************************
     check if the third line contains only +
 *******************************************************************************/
@@ -1100,19 +892,22 @@ inline ull EnDecrypto::un_shuffleSeedGen (const ui seedInit)
     const string pass = extractPass();
     evalPassSize(pass);     // pass size must be >= 8
     
-    ull passDigitsMult = 1; // multiplication of all pass digits
-    for (ui i = (ui) pass.size(); i--;)    passDigitsMult *= pass[i];
+//    ull passDigitsMult = 1; // multiplication of all pass digits
+//    for (ui i = (ui) pass.size(); i--;)    passDigitsMult *= pass[i];
     
     // using old rand to generate the new rand seed
     ull seed = 0;
     
-    mutx.lock();
-    my_srand(20543 * seedInit * (ui) passDigitsMult + 81647);
+    mutx.lock();//--------------------------------------------------------------
+//    my_srand(20543 * seedInit * (ui) passDigitsMult + 81647);
+//    for (byte i = (byte) pass.size(); i--;)
+//        seed += ((ull) pass[i] * my_rand()) + my_rand();
+    my_srand(20543 * seedInit + 81647);
     for (byte i = (byte) pass.size(); i--;)
-        seed += ((ull) pass[i] * my_rand()) + my_rand();
-    mutx.unlock();
+        seed += (ull) pass[i] * my_rand();
+    mutx.unlock();//------------------------------------------------------------
     
-    seed %= 53113233473;
+    seed %= 2106945901;
     
     return seed;
 }

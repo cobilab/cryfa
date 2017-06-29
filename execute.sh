@@ -3,8 +3,8 @@
 #todo. remove this
 rm CRYFA_ENC*
 
-cmake .
-make
+#cmake .
+#make
 
 #in="in.fa"
 in=$1
