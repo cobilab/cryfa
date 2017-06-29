@@ -119,8 +119,6 @@ void EnDecrypto::compressFQ ()
     string headers, qscores;
     
     gatherHdrQs(headers, qscores);  // gather all headers and quality scores
-//    char* _h, _q;
-//    gatherHdrQs(_h, _q);  // gather all headers and quality scores
     
     // function pointers
     using packHdrPointer = string (*)(const string&, const htable_t&);
@@ -833,11 +831,28 @@ inline bool EnDecrypto::hasFQjustPlus () const
     gather all headers and quality scores. ignore '@' from headers and sort them
 *******************************************************************************/
 inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores) const
-//inline void EnDecrypto::gatherHdrQs (char headers, char qscores) const
 {
+    bool hChars[127], qChars[127];
+    std::memset(hChars+32, false, 95);
+    std::memset(qChars+32, false, 95);
+    
     ifstream in(inFileName);
     string line;
+    while (!in.eof())
+    {
+        if (getline(in, line))    for (const char &c : line)  hChars[c] = true;
+        in.ignore(LARGE_NUMBER, '\n');                  // ignore sequence
+        in.ignore(LARGE_NUMBER, '\n');                  // ignore +
+        if (getline(in, line))    for (const char &c : line)  qChars[c] = true;
+    }
+    in.close();
     
+    // gather the characters -- ignore '@'=64 for headers
+    for (byte i = 32; i != 64;  ++i)    if (*(hChars+i))  headers += i;
+    for (byte i = 65; i != 126; ++i)    if (*(hChars+i))  headers += i;
+    for (byte i = 32; i != 126; ++i)    if (*(qChars+i))  qscores += i;
+    
+    /** OLD
     while (!in.eof())
     {
         if (getline(in, line).good())               // header
@@ -856,10 +871,11 @@ inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores) const
         }
     }
     in.close();
-    
+
     headers.erase(headers.begin());                 // ignore '@'
     std::sort(headers.begin(), headers.end());      // sort values
     std::sort(qscores.begin(), qscores.end());      // sort ASCII values
+    */
 }
 
 /*******************************************************************************
@@ -890,34 +906,34 @@ inline int EnDecrypto::my_rand ()
 /*******************************************************************************
     shuffle/unshuffle seed generator -- for each chunk
 *******************************************************************************/
-//inline ull EnDecrypto::un_shuffleSeedGen (const ui seedInit)
-inline void EnDecrypto::un_shuffleSeedGen ()
+inline ull EnDecrypto::un_shuffleSeedGen (const ui seedInit)
+//inline void EnDecrypto::un_shuffleSeedGen ()
 {//todo. can't we generate this seed once?
     const string pass = extractPass();
     evalPassSize(pass);     // pass size must be >= 8
     
-    ull passDigitsMult = 1; // multiplication of all pass digits
-    for (ui i = (ui) pass.size(); i--;)    passDigitsMult *= pass[i];
+//    ull passDigitsMult = 1; // multiplication of all pass digits
+//    for (ui i = (ui) pass.size(); i--;)    passDigitsMult *= pass[i];
     
     // using old rand to generate the new rand seed
     ull seed = 0;
     
-//    mutx.lock();//--------------------------------------------------------------
+    mutx.lock();//--------------------------------------------------------------
 //    my_srand(20543 * seedInit * (ui) passDigitsMult + 81647);
 //    for (byte i = (byte) pass.size(); i--;)
 //        seed += ((ull) pass[i] * my_rand()) + my_rand();
-//    my_srand(20543 * seedInit + 81647);
-//    for (byte i = (byte) pass.size(); i--;)
-//        seed += (ull) pass[i] * my_rand();
-    my_srand(20543 * (ui) passDigitsMult + 81647);
+    my_srand(20543 * seedInit + 81647);
     for (byte i = (byte) pass.size(); i--;)
         seed += (ull) pass[i] * my_rand();
-//    mutx.unlock();//------------------------------------------------------------
+//    my_srand(20543 * (ui) passDigitsMult + 81647);
+//    for (byte i = (byte) pass.size(); i--;)
+//        seed += (ull) pass[i] * my_rand();
+    mutx.unlock();//------------------------------------------------------------
     
     seed %= 2106945901;
  
-    seed_shared = seed;
-//    return seed;
+//    seed_shared = seed;
+    return seed;
 }
 
 /*******************************************************************************
@@ -925,11 +941,10 @@ inline void EnDecrypto::un_shuffleSeedGen ()
 *******************************************************************************/
 inline void EnDecrypto::shufflePkd (string &in)
 {
-//    const ull seed = un_shuffleSeedGen((ui) in.size());    // shuffling seed
-//    std::shuffle(in.begin(), in.end(), std::mt19937(seed));
-    
-    un_shuffleSeedGen();    // shuffling seed
-    std::shuffle(in.begin(), in.end(), std::mt19937(seed_shared));
+    const ull seed = un_shuffleSeedGen((ui) in.size());    // shuffling seed
+    std::shuffle(in.begin(), in.end(), std::mt19937(seed));
+//    un_shuffleSeedGen();    // shuffling seed
+//    std::shuffle(in.begin(), in.end(), std::mt19937(seed_shared));
 }
 
 /*******************************************************************************
@@ -945,8 +960,10 @@ inline void EnDecrypto::unshufflePkd (string::iterator &i, const ull size)
     // shuffle vector of positions
     vector<ull> vPos(size);
     std::iota(vPos.begin(), vPos.end(), 0);     // insert 0 .. N-1
-//    const ull seed = un_shuffleSeedGen((ui) size);
-//    std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed));
+    const ull seed = un_shuffleSeedGen((ui) size);
+    std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed));
+//    un_shuffleSeedGen();
+//    std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed_shared));
     
     // insert unshuffled data
     for (const ull& vI : vPos)  *(i + vI) = *shIt++; // first *shIt, then ++shIt

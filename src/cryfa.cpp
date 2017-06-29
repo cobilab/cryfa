@@ -47,6 +47,9 @@ using std::setprecision;
 //    return 0;
 //}
 
+#include <algorithm>
+#include <cstring>
+
 ////////////////////////////////////////////////////////////////////////////////
 ///////////////////                 M A I N                 ////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -58,46 +61,6 @@ int main (int argc, char* argv[])
     EnDecrypto cryptObj;
     cryptObj.inFileName = argv[argc-1];  // input file name
     cryptObj.n_threads = DEFAULT_N_THR;  // initialize number of threads
-    
-    
-    
-//    const char* s="hello";
-//    cerr<<isduplicate(s,'l');
-//
-//
-//    string headers, qscores;
-//    ifstream in(cryptObj.inFileName);
-//    string line;
-//
-////    while (!in.eof())
-////    {
-////        if (getline(in, line).good())               // header
-////        {
-////            for (const char &c : line)
-////                if (headers.find(c) == string::npos)
-////                    headers += c;
-////        }
-////        in.ignore(LARGE_NUMBER, '\n');              // ignore sequence
-////        in.ignore(LARGE_NUMBER, '\n');              // ignore +
-////
-////        in.ignore(LARGE_NUMBER, '\n');              // ignore +
-//////        if (getline(in, line).good())               // quality score
-//////        {
-//////            for (const char &c : line)
-//////                if (qscores.find(c) == string::npos)
-//////                    qscores += c;
-//////        }
-////    }
-//    in.close();
-////
-//////    headers.erase(headers.begin());                 // ignore '@'
-//////    std::sort(headers.begin(), headers.end());      // sort values
-//////    std::sort(qscores.begin(), qscores.end());      // sort ASCII values
-////
-////    cerr << headers << '\n'
-////         << qscores << '\n';
-    
-    
     
     static int h_flag, a_flag, v_flag, d_flag, s_flag;
     int c;                               // deal with getopt_long()

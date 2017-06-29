@@ -39,12 +39,11 @@ private:
     inline void evalPassSize (const string&)    const;   // evaluate pass size
     inline bool hasFQjustPlus ()                const;   // check '+' line
     inline void gatherHdrQs (string&, string&)  const;   // gather hdrs & qss
-//    inline void gatherHdrQs (char, char)  const;   // gather hdrs & qss
     inline std::minstd_rand0 &randomEngine ();           // random no. engine
     inline void my_srand (const ui);                     // random no. seed
     inline int  my_rand ();                              // random no generate
-//    inline ull  un_shuffleSeedGen (const ui);            // (un)shuffle seed gen
-    inline void un_shuffleSeedGen ();            // (un)shuffle seed gen
+    inline ull  un_shuffleSeedGen (const ui);            // (un)shuffle seed gen
+//    inline void un_shuffleSeedGen ();            // (un)shuffle seed gen
     inline void shufflePkd (string&);                    // shuffle packed
     inline void unshufflePkd (string::iterator&, const ull); // unshuffle packed
     inline void pack (const ull, const byte,             // pack
