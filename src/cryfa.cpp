@@ -131,11 +131,11 @@ int main (int argc, char* argv[])
                 break;
         }
     }
-
+    
     if (v_flag)  cerr << "Verbose mode on.\n";
     if (d_flag)
     {
-        cerr << "Decrypting...\n";
+        cerr << "Decrypting...\n";//todo. modify decompFA function
         cryptObj.decompress();//todo. multithreading
 
         // stop timer
@@ -149,7 +149,7 @@ int main (int argc, char* argv[])
         return 0;
     }
 
-    cerr << "Encrypting...\n";
+    cerr << "Encrypting...\n";//todo. modify compressFA function
     (fileType(cryptObj.inFileName)=='A') ? cryptObj.compressFA()    // FASTA
                                          : cryptObj.compressFQ();   // FASTQ
     

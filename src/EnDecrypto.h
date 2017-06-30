@@ -42,8 +42,8 @@ private:
     inline std::minstd_rand0 &randomEngine ();           // random no. engine
     inline void my_srand (const ui);                     // random no. seed
     inline int  my_rand ();                              // random no generate
-    inline ull  un_shuffleSeedGen (const ui);            // (un)shuffle seed gen
-//    inline void un_shuffleSeedGen ();            // (un)shuffle seed gen
+//    inline ull  un_shuffleSeedGen (const ui);            // (un)shuffle seed gen
+    inline void un_shuffleSeedGen ();            // (un)shuffle seed gen
     inline void shufflePkd (string&);                    // shuffle packed
     inline void unshufflePkd (string::iterator&, const ull); // unshuffle packed
     inline void pack (const ull, const byte,             // pack
@@ -58,7 +58,6 @@ private:
     htable_t QsMap;                                      // QSs hash table
     // check if reading input file reached to the end. MUST be initialized
     bool     isInEmpty = false;
-    
     
     
     ull seed_shared;

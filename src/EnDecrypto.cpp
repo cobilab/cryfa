@@ -51,49 +51,49 @@ EnDecrypto::EnDecrypto () {}
 *******************************************************************************/
 void EnDecrypto::compressFA ()
 {
-    ifstream in(inFileName);
-    if (!in.good())
-    { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
-    
-    string line, seq, context;  // FASTA: context = header + seq (+ empty lines)
-    
-    // watermark for encrypted file
-    cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
-                       + to_string(RELEASE_CRYFA) + "\n";
-    
-    // to tell decryptor this isn't FASTQ
-    context += (char) 127;      // context += "\n";
-    while (getline(in, line).good())
-    {
-        // header
-        if (line[0] == '>')
-        {
-            if (!seq.empty())   context += packSeq_3to1(seq);   // previous seq
-            seq.clear();
-            
-            // header line. (char) 253 instead of '>'
-            context += (char) 253 + line.substr(1) + "\n";
-        }
-        
-        // empty line. (char) 252 instead of line feed
-        else if (line.empty())    seq += (char) 252;
-            
-        // sequence
-        else
-        {
-            if (line.find(' ') != string::npos)
-            { cerr << "Invalid sequence -- spaces not allowed.\n";    exit(1); }
-            // (char) 254 instead of '\n' at the end of each seq line
-            seq += line + (char) 254;
-        }
-    }
-    if (!seq.empty())   context += packSeq_3to1(seq);           // the last seq
-    
-    in.close();
-    
-    // encryption
-    encrypt();      // cout encrypted content
-    cout << '\n';
+//    ifstream in(inFileName);
+//    if (!in.good())
+//    { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
+//
+//    string line, seq, context;  // FASTA: context = header + seq (+ empty lines)
+//
+//    // watermark for encrypted file
+//    cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
+//                       + to_string(RELEASE_CRYFA) + "\n";
+//
+//    // to tell decryptor this isn't FASTQ
+//    context += (char) 127;      // context += "\n";
+//    while (getline(in, line).good())
+//    {
+//        // header
+//        if (line[0] == '>')
+//        {
+//            if (!seq.empty())   context += packSeq_3to1(seq);   // previous seq
+//            seq.clear();
+//
+//            // header line. (char) 253 instead of '>'
+//            context += (char) 253 + line.substr(1) + "\n";
+//        }
+//
+//        // empty line. (char) 252 instead of line feed
+//        else if (line.empty())    seq += (char) 252;
+//
+//        // sequence
+//        else
+//        {
+//            if (line.find(' ') != string::npos)
+//            { cerr << "Invalid sequence -- spaces not allowed.\n";    exit(1); }
+//            // (char) 254 instead of '\n' at the end of each seq line
+//            seq += line + (char) 254;
+//        }
+//    }
+//    if (!seq.empty())   context += packSeq_3to1(seq);           // the last seq
+//
+//    in.close();
+//
+//    // encryption
+//    encrypt();      // cout encrypted content
+//    cout << '\n';   //todo. probably should comment this
 }
 
 /*******************************************************************************
@@ -118,7 +118,8 @@ void EnDecrypto::compressFQ ()
     ull startLine;  // for each thread
     string headers, qscores;
     
-    gatherHdrQs(headers, qscores);  // gather all headers and quality scores
+    // gather all headers and quality scores
+    gatherHdrQs(headers, qscores);
     
     // function pointers
     using packHdrPointer = string (*)(const string&, const htable_t&);
@@ -259,10 +260,8 @@ void EnDecrypto::compressFQ ()
     pkdFile << (char) 252;
 //    context += (char) 252;
     
-    // close input and output files
-    for (t = n_threads; t--;)   encFile[t].close();
-    // close packed file
-    pkdFile.close();
+    for (t = n_threads; t--;)  encFile[t].close(); // close input & output files
+    pkdFile.close();                               // close packed file
     
     encrypt();      // cout encrypted content
 //    cout << '\n';
@@ -599,7 +598,7 @@ inline void EnDecrypto::decompFQ ()
     const size_t headersLen = headers.length();
     const size_t qscoresLen = qscores.length();
     us keyLen_hdr = 0,  keyLen_qs = 0;
-
+    
     using unpackHdrPointer = string (*)(string::iterator&, vector<string>&);
     unpackHdrPointer unpackHdr;                              // function pointer
     using unpackQSPointer = string (*)(string::iterator&, vector<string>&);
@@ -835,14 +834,14 @@ inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores) const
     bool hChars[127], qChars[127];
     std::memset(hChars+32, false, 95);
     std::memset(qChars+32, false, 95);
-    
+
     ifstream in(inFileName);
     string line;
     while (!in.eof())
     {
         if (getline(in, line))    for (const char &c : line)  hChars[c] = true;
-        in.ignore(LARGE_NUMBER, '\n');                  // ignore sequence
-        in.ignore(LARGE_NUMBER, '\n');                  // ignore +
+        in.ignore(LARGE_NUMBER, '\n');                        // ignore sequence
+        in.ignore(LARGE_NUMBER, '\n');                        // ignore +
         if (getline(in, line))    for (const char &c : line)  qChars[c] = true;
     }
     in.close();
@@ -906,14 +905,14 @@ inline int EnDecrypto::my_rand ()
 /*******************************************************************************
     shuffle/unshuffle seed generator -- for each chunk
 *******************************************************************************/
-inline ull EnDecrypto::un_shuffleSeedGen (const ui seedInit)
-//inline void EnDecrypto::un_shuffleSeedGen ()
+//inline ull EnDecrypto::un_shuffleSeedGen (const ui seedInit)
+inline void EnDecrypto::un_shuffleSeedGen ()
 {//todo. can't we generate this seed once?
     const string pass = extractPass();
     evalPassSize(pass);     // pass size must be >= 8
     
-//    ull passDigitsMult = 1; // multiplication of all pass digits
-//    for (ui i = (ui) pass.size(); i--;)    passDigitsMult *= pass[i];
+    ull passDigitsMult = 1; // multiplication of all pass digits
+    for (ui i = (ui) pass.size(); i--;)    passDigitsMult *= pass[i];
     
     // using old rand to generate the new rand seed
     ull seed = 0;
@@ -922,18 +921,19 @@ inline ull EnDecrypto::un_shuffleSeedGen (const ui seedInit)
 //    my_srand(20543 * seedInit * (ui) passDigitsMult + 81647);
 //    for (byte i = (byte) pass.size(); i--;)
 //        seed += ((ull) pass[i] * my_rand()) + my_rand();
-    my_srand(20543 * seedInit + 81647);
-    for (byte i = (byte) pass.size(); i--;)
-        seed += (ull) pass[i] * my_rand();
-//    my_srand(20543 * (ui) passDigitsMult + 81647);
+
+//    my_srand(20543 * seedInit + 81647);
 //    for (byte i = (byte) pass.size(); i--;)
 //        seed += (ull) pass[i] * my_rand();
+    my_srand(20543 * (ui) passDigitsMult + 81647);
+    for (byte i = (byte) pass.size(); i--;)
+        seed += (ull) pass[i] * my_rand();
     mutx.unlock();//------------------------------------------------------------
     
     seed %= 2106945901;
  
-//    seed_shared = seed;
-    return seed;
+    seed_shared = seed;
+//    return seed;
 }
 
 /*******************************************************************************
@@ -941,10 +941,10 @@ inline ull EnDecrypto::un_shuffleSeedGen (const ui seedInit)
 *******************************************************************************/
 inline void EnDecrypto::shufflePkd (string &in)
 {
-    const ull seed = un_shuffleSeedGen((ui) in.size());    // shuffling seed
-    std::shuffle(in.begin(), in.end(), std::mt19937(seed));
-//    un_shuffleSeedGen();    // shuffling seed
-//    std::shuffle(in.begin(), in.end(), std::mt19937(seed_shared));
+//    const ull seed = un_shuffleSeedGen((ui) in.size());    // shuffling seed
+//    std::shuffle(in.begin(), in.end(), std::mt19937(seed));
+    un_shuffleSeedGen();    // shuffling seed
+    std::shuffle(in.begin(), in.end(), std::mt19937(seed_shared));
 }
 
 /*******************************************************************************
@@ -960,10 +960,10 @@ inline void EnDecrypto::unshufflePkd (string::iterator &i, const ull size)
     // shuffle vector of positions
     vector<ull> vPos(size);
     std::iota(vPos.begin(), vPos.end(), 0);     // insert 0 .. N-1
-    const ull seed = un_shuffleSeedGen((ui) size);
-    std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed));
-//    un_shuffleSeedGen();
-//    std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed_shared));
+//    const ull seed = un_shuffleSeedGen((ui) size);
+//    std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed));
+    un_shuffleSeedGen();
+    std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed_shared));
     
     // insert unshuffled data
     for (const ull& vI : vPos)  *(i + vI) = *shIt++; // first *shIt, then ++shIt

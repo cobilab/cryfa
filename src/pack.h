@@ -28,7 +28,7 @@ inline htable_t buildHashTable (const string &strIn, short keyLen)
     ull elementNo = 0;
     string element;
     htable_t map;
-
+    
     switch (keyLen)
     {
         case 3:
@@ -90,7 +90,7 @@ inline htable_t buildHashTable (const string &strIn, short keyLen)
                 map.insert(make_pair(element, elementNo++));
             }
             break;
-
+            
         case 8:
             LOOP8(i, j, k, l, m, n, o, p, strIn)
             {
@@ -189,12 +189,12 @@ inline vector<string> buildUnpack (const string &strIn, us keyLen)
                 unpack.push_back(element);
             }
             break;
-
+            
         default: break;
     }
-
+    
     return unpack;
-
+    
     // test
 //    for (int i = 0; i != arrSize; ++i)
 //        cerr << unpack[i] << '\n';
@@ -253,7 +253,7 @@ inline string packSeq_3to1 (const string& seq)
         if (secondNotIn) packedSeq += s1;
         if (thirdNotIn)  packedSeq += s2;
     }
-
+    
     // if seq len isn't multiple of 3, add (char) 255 before each sym
     switch (seq.length() % 3)
     {
@@ -341,9 +341,9 @@ inline string packLargeQs_3to2 (const string& strIn, const htable_t &map)
         s0 = *i,    s1 = *(i+1),  s2 = *(i+2);
         
         tuple.clear();
-        tuple  = (firstNotIn  = (qss.find(s0) == string::npos)) ? XChar : s0;
-        tuple += (secondNotIn = (qss.find(s1) == string::npos)) ? XChar : s1;
-        tuple += (thirdNotIn  = (qss.find(s2) == string::npos)) ? XChar : s2;
+        tuple  = (firstNotIn  = (qss.find(s0)==string::npos)) ? XChar : s0;
+        tuple += (secondNotIn = (qss.find(s1)==string::npos)) ? XChar : s1;
+        tuple += (thirdNotIn  = (qss.find(s2)==string::npos)) ? XChar : s2;
         
         shortTuple = largePack(tuple, map);
         packed += (unsigned char) (shortTuple >> 8);      // left byte
@@ -388,7 +388,7 @@ inline string pack_3to2 (const string& strIn, const htable_t &map)
         packed += (byte) (shortTuple >> 8);      // left byte
         packed += (byte) (shortTuple & 0xFF);    // right byte
     }
-
+    
     // if len isn't multiple of 3, add (char) 255 before each sym
     switch (strIn.length() % 3)
     {
