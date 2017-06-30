@@ -755,7 +755,7 @@ inline void EnDecrypto::decompFQ ()
                 // unshuffle
                 if (!disable_shuffle)    unshufflePkd(i, chunkSize);
             }
-        
+            
             do {
                 cout << '@';
                 cout << (plusMore = unpackHdr(i, hdrUnpack)) <<'\n';  ++i; //hdr
@@ -839,10 +839,10 @@ inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores) const
     string line;
     while (!in.eof())
     {
-        if (getline(in, line))    for (const char &c : line)  hChars[c] = true;
+        if (getline(in,line).good())  for(const char &c : line)  hChars[c]=true;
         in.ignore(LARGE_NUMBER, '\n');                        // ignore sequence
         in.ignore(LARGE_NUMBER, '\n');                        // ignore +
-        if (getline(in, line))    for (const char &c : line)  qChars[c] = true;
+        if (getline(in,line).good())  for(const char &c : line)  qChars[c]=true;
     }
     in.close();
     
@@ -930,7 +930,7 @@ inline void EnDecrypto::un_shuffleSeedGen ()
         seed += (ull) pass[i] * my_rand();
     mutx.unlock();//------------------------------------------------------------
     
-    seed %= 2106945901;
+//    seed %= 2106945901;
  
     seed_shared = seed;
 //    return seed;

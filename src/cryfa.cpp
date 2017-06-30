@@ -57,11 +57,11 @@ int main (int argc, char* argv[])
 {
     // start timer
     high_resolution_clock::time_point startTime = high_resolution_clock::now();
-    
+
     EnDecrypto cryptObj;
     cryptObj.inFileName = argv[argc-1];  // input file name
     cryptObj.n_threads = DEFAULT_N_THR;  // initialize number of threads
-    
+
     static int h_flag, a_flag, v_flag, d_flag, s_flag;
     int c;                               // deal with getopt_long()
     int option_index;                    // option index stored by getopt_long()
@@ -131,7 +131,7 @@ int main (int argc, char* argv[])
                 break;
         }
     }
-    
+
     if (v_flag)  cerr << "Verbose mode on.\n";
     if (d_flag)
     {
@@ -152,7 +152,7 @@ int main (int argc, char* argv[])
     cerr << "Encrypting...\n";//todo. modify compressFA function
     (fileType(cryptObj.inFileName)=='A') ? cryptObj.compressFA()    // FASTA
                                          : cryptObj.compressFQ();   // FASTQ
-    
+
     // stop timer
     high_resolution_clock::time_point finishTime = high_resolution_clock::now();
     // duration in seconds
