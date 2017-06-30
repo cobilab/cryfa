@@ -831,15 +831,40 @@ inline bool EnDecrypto::hasFQjustPlus () const
 *******************************************************************************/
 inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores) const
 {
+//    bool hChars[127], qChars[127];
+//    std::memset(hChars+32, false, 95);
+//    std::memset(qChars+32, false, 95);
+//
+//    ifstream in(inFileName);
+//    string line;
+//    while (!in.eof())
+//    {
+//        if (getline(in,line).good())  for(const char &c : line)  hChars[c]=true;
+//        in.ignore(LARGE_NUMBER, '\n');                        // ignore sequence
+//        in.ignore(LARGE_NUMBER, '\n');                        // ignore +
+//        if (getline(in,line).good())  for(const char &c : line)  qChars[c]=true;
+//    }
+//    in.close();
+//
+//    // gather the characters -- ignore '@'=64 for headers
+//    for (byte i = 32; i != 64;  ++i)    if (*(hChars+i))  headers += i;
+//    for (byte i = 65; i != 126; ++i)    if (*(hChars+i))  headers += i;
+//    for (byte i = 32; i != 126; ++i)    if (*(qChars+i))  qscores += i;
+    
+    
+    ull L=0, H=0;
     bool hChars[127], qChars[127];
     std::memset(hChars+32, false, 95);
     std::memset(qChars+32, false, 95);
-
+    
     ifstream in(inFileName);
     string line;
     while (!in.eof())
     {
-        if (getline(in,line).good())  for(const char &c : line)  hChars[c]=true;
+//        if (getline(in,line).good())  for(const char &c : line)  hChars[c]=true;
+        if (getline(in, line).good())
+            for (const char &c : line)
+                c < 64 ? L |= 1 << c : H |= 1 << (c - 64);
         in.ignore(LARGE_NUMBER, '\n');                        // ignore sequence
         in.ignore(LARGE_NUMBER, '\n');                        // ignore +
         if (getline(in,line).good())  for(const char &c : line)  qChars[c]=true;
@@ -847,9 +872,18 @@ inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores) const
     in.close();
     
     // gather the characters -- ignore '@'=64 for headers
-    for (byte i = 32; i != 64;  ++i)    if (*(hChars+i))  headers += i;
-    for (byte i = 65; i != 126; ++i)    if (*(hChars+i))  headers += i;
+//    for (byte i = 32; i != 64;  ++i)    if (*(hChars+i))  headers += i;
+//    for (byte i = 65; i != 126; ++i)    if (*(hChars+i))  headers += i;
+//    for (byte i = 32; i != 126; ++i)    if (*(qChars+i))  qscores += i;
+    for (byte i = 32; i != 64; ++i)
+        if (L >> i | 1)
+            headers += i;
+    for (byte i = 65; i != 126; ++i)
+        if (H >> (i - 64) | 1)
+            headers += i;
     for (byte i = 32; i != 126; ++i)    if (*(qChars+i))  qscores += i;
+    
+    
     
     /** OLD
     while (!in.eof())
