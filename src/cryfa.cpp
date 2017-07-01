@@ -36,6 +36,9 @@ using std::setprecision;
 //#include <algorithm>
 //#include <cstring>
 //#include <bitset>
+
+
+
 ////////////////////////////////////////////////////////////////////////////////
 ///////////////////                 M A I N                 ////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,16 +46,16 @@ int main (int argc, char* argv[])
 {
     // start timer
     high_resolution_clock::time_point startTime = high_resolution_clock::now();
-
+    
     EnDecrypto cryptObj;
     cryptObj.inFileName = argv[argc-1];  // input file name
     cryptObj.n_threads = DEFAULT_N_THR;  // initialize number of threads
-    
+
     static int h_flag, a_flag, v_flag, d_flag, s_flag;
     int c;                               // deal with getopt_long()
     int option_index;                    // option index stored by getopt_long()
     opterr = 0;  // force getopt_long() to remain silent when it finds a problem
-    
+
     static struct option long_options[] =
     {
         {"help",            no_argument, &h_flag, (int) 'h'},   // help

@@ -15,6 +15,12 @@ using std::string;
 class EnDecrypto
 {
 public:
+    byte   n_threads;                                    // number of threads
+    string inFileName;                                   // input file name
+    string keyFileName;                                  // password file name
+    bool   disable_shuffle = false;                      // disable shuffle
+    bool   verbose = false;                              // for verbose mode
+    
     EnDecrypto();                                        // constructor
     void compressFA ();                                  // compress FASTA
     void compressFQ ();                                  // compress FASTQ
@@ -22,13 +28,19 @@ public:
     void decompressFA ();                                // decompress FA
     void decompressFQ ();                                // decompress FQ
     
-    byte   n_threads;                                    // number of threads
-    string inFileName;                                   // input file name
-    string keyFileName;                                  // password file name
-    bool   verbose = false;                              // for verbose mode
-    bool   disable_shuffle = false;                      // disable shuffle
-    
 private:
+    ull seed_shared;
+    
+    
+    string   Hdrs;                                       // max: 39 values
+    string   QSs;                                        // max: 39 values
+    htable_t HdrMap;                                     // Hdrs hash table
+    htable_t QsMap;                                      // QSs hash table
+    // check if reading input file reached to the end. MUST be initialized
+    bool     isInEmpty = false;
+    string   HdrsX;                                      // extended Hdrs
+    string   QSsX;                                       // extended QSs
+    
     inline void encrypt  ();                             // encrypt
     inline void buildIV  (byte*, const string&);         // build IV
     inline void buildKey (byte*, const string&);         // build key
@@ -48,18 +60,6 @@ private:
     inline void pack (const ull, const byte,             // pack
                       string (*)(const string&, const htable_t&),
                       string (*)(const string&, const htable_t&));
-    
-    string   Hdrs;                                       // max: 39 values
-    string   QSs;                                        // max: 39 values
-    string   HdrsX;                                      // extended Hdrs
-    string   QSsX;                                       // extended QSs
-    htable_t HdrMap;                                     // Hdrs hash table
-    htable_t QsMap;                                      // QSs hash table
-    // check if reading input file reached to the end. MUST be initialized
-    bool     isInEmpty = false;
-    
-    
-    ull seed_shared;
 };
 
 #endif //CRYFA_ENDECRYPTO_H
