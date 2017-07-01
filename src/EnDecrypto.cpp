@@ -187,10 +187,10 @@ void EnDecrypto::compressFQ ()
         else if (qscoresLen == MAX_C3 || qscoresLen == MID_C3
                  || qscoresLen == MIN_C3)                               // cat 3
         { QsMap = buildHashTable(QSs, KEYLEN_C3);   packQS = &pack_3to1; }
-
+        
         else if (qscoresLen == C2)                                      // cat 2
         { QsMap = buildHashTable(QSs, KEYLEN_C2);   packQS = &pack_5to1; }
-
+        
         else if (qscoresLen == C1)                                      // cat 1
         { QsMap = buildHashTable(QSs, KEYLEN_C1);   packQS = &pack_7to1; }
         
@@ -432,23 +432,12 @@ inline void EnDecrypto::encrypt ()
 }
 
 /*******************************************************************************
-    decompress
-*******************************************************************************/
-void EnDecrypto::decompress ()
-{
-    decrypt();                                                        // decrypt
-    ifstream in(DEC_FILENAME);
-    (in.peek() == (char) 127) ? decompFA() : decompFQ();              // decomp
-    in.close();
-}
-
-/*******************************************************************************
     decrypt.
     AES encryption uses a secret key of a variable length (128, 196 or 256 bit).
     This key is secretly exchanged between two parties before communication
     begins. DEFAULT_KEYLENGTH = 16 bytes.
 *******************************************************************************/
-inline void EnDecrypto::decrypt ()
+void EnDecrypto::decrypt ()
 {
     ifstream in(inFileName);
     if (!in.good())
@@ -508,8 +497,8 @@ inline void EnDecrypto::decrypt ()
           (char) 253:  instead of '>' in header
           (char) 252:  instead of empty line
 *******************************************************************************/
-//inline void EnDecrypto::decompFA (string decText)
-inline void EnDecrypto::decompFA ()
+//inline void EnDecrypto::decompressFA (string decText)
+void EnDecrypto::decompressFA ()
 {
 //    string line;
 //    string tpl;     // tuplet
@@ -578,7 +567,7 @@ inline void EnDecrypto::decompFA ()
            7 <= cat 4 <= 15
           16 <= cat 5 <= 39
 *******************************************************************************/
-inline void EnDecrypto::decompFQ ()
+void EnDecrypto::decompressFQ ()
 {
     string decText;
     string::iterator i;         // iterator in decText
@@ -787,7 +776,7 @@ inline void EnDecrypto::decompFQ ()
                 // unshuffle
                 if (!disable_shuffle)    unshufflePkd(i, chunkSize);
             }
-            
+    
             do {
                 cout << '@';
                 cout << (plusMore = unpackHdr(i, hdrUnpack)) <<'\n';  ++i; //hdr

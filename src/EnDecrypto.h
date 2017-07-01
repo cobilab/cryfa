@@ -18,7 +18,9 @@ public:
     EnDecrypto();                                        // constructor
     void compressFA ();                                  // compress FASTA
     void compressFQ ();                                  // compress FASTQ
-    void decompress ();                                  // decompress
+    void decrypt ();                                     // decrypt
+    void decompressFA ();                                // decompress FA
+    void decompressFQ ();                                // decompress FQ
     
     byte   n_threads;                                    // number of threads
     string inFileName;                                   // input file name
@@ -28,9 +30,6 @@ public:
     
 private:
     inline void encrypt  ();                             // encrypt
-    inline void decrypt  ();                             // decrypt
-    inline void decompFA ();                             // decomp. FA
-    inline void decompFQ ();                             // decomp. FQ
     inline void buildIV  (byte*, const string&);         // build IV
     inline void buildKey (byte*, const string&);         // build key
     inline void printIV  (byte*)                const;   // print IV

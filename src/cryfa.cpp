@@ -120,9 +120,13 @@ int main (int argc, char* argv[])
 
     if (v_flag)  cerr << "Verbose mode on.\n";
     if (d_flag)
-    {
-        cerr << "Decrypting...\n";//todo. modify decompFA function
-        cryptObj.decompress();//todo. multithreading
+    {//todo. modify decompressFA function.  //todo. multithreading
+        cerr << "Decrypting...\n";
+        cryptObj.decrypt();                                         // decrypt
+        ifstream in(DEC_FILENAME);
+        (in.peek() == (char) 127) ? cryptObj.decompressFA()         // FASTA
+                                  : cryptObj.decompressFQ();        // FASTQ
+        in.close();
 
         // stop timer
         high_resolution_clock::time_point finishTime =
@@ -138,7 +142,7 @@ int main (int argc, char* argv[])
     cerr << "Encrypting...\n";//todo. modify compressFA function
     (fileType(cryptObj.inFileName)=='A') ? cryptObj.compressFA()    // FASTA
                                          : cryptObj.compressFQ();   // FASTQ
-
+    
     // stop timer
     high_resolution_clock::time_point finishTime = high_resolution_clock::now();
     // duration in seconds
