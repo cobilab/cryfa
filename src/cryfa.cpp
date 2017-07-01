@@ -33,23 +33,9 @@ using std::setprecision;
 
 
 
-//int isduplicate (const char *str,char c)
-//{
-//    int hash[8] = {0, 0, 0, 0, 0, 0, 0, 0};
-//    while (*str)
-//    {
-//        int pos = c;
-//        if (hash[pos / 16] & (1 << (pos % 16)))
-//            return 1;
-//        hash[pos / 16] |= (1 << (pos % 16));
-//        str++;
-//    }
-//    return 0;
-//}
-
-#include <algorithm>
-#include <cstring>
-
+//#include <algorithm>
+//#include <cstring>
+//#include <bitset>
 ////////////////////////////////////////////////////////////////////////////////
 ///////////////////                 M A I N                 ////////////////////
 ////////////////////////////////////////////////////////////////////////////////
@@ -62,130 +48,96 @@ int main (int argc, char* argv[])
     cryptObj.inFileName = argv[argc-1];  // input file name
     cryptObj.n_threads = DEFAULT_N_THR;  // initialize number of threads
     
+    static int h_flag, a_flag, v_flag, d_flag, s_flag;
+    int c;                               // deal with getopt_long()
+    int option_index;                    // option index stored by getopt_long()
+    opterr = 0;  // force getopt_long() to remain silent when it finds a problem
     
-    
-    string headers, qscores;
-    ull L=0, H=0;
-    bool hChars[127], qChars[127];
-    std::memset(hChars+32, false, 95);
-    std::memset(qChars+32, false, 95);
-    
-    ifstream in(cryptObj.inFileName);
-    string line;
-    while (!in.eof())
+    static struct option long_options[] =
     {
-//        if (getline(in,line).good())  for(const char &c : line)  hChars[c]=true;
-if (getline(in, line).good())   for (const char &c : line)
-        (c & 0xC0) ? (H |= 1<<(c-64)) : (L |= 1<<c);
-        in.ignore(LARGE_NUMBER, '\n');                        // ignore sequence
-        in.ignore(LARGE_NUMBER, '\n');                        // ignore +
-        if (getline(in,line).good())  for(const char &c : line)  qChars[c]=true;
+        {"help",            no_argument, &h_flag, (int) 'h'},   // help
+        {"about",           no_argument, &a_flag, (int) 'a'},   // about
+        {"verbose",         no_argument, &v_flag, (int) 'v'},   // verbose
+        {"disable_shuffle", no_argument, &s_flag, (int) 's'},   // d (un)shuffle
+        {"decrypt",         no_argument, &d_flag, (int) 'd'},   // decrypt mode
+        {"key",       required_argument,       0,       'k'},   // key file
+        {"thread",    required_argument,       0,       't'},   // #threads >= 1
+        {0,                           0,       0,         0}
+    };
+
+    while (1)
+    {
+        option_index = 0;
+        if ((c = getopt_long(argc, argv, ":havsdk:t:",
+                             long_options, &option_index)) == -1)    break;
+
+        switch (c)
+        {
+            case 0:
+                // If this option set a flag, do nothing else now.
+                if (long_options[option_index].flag != 0)   break;
+                cout << "option '" << long_options[option_index].name << "'\n";
+                if (optarg)     cout << " with arg " << optarg << '\n';
+                break;
+
+            case 'h':   // show usage guide
+                h_flag = 1;
+                Help();
+                break;
+
+            case 'a':   // show about
+                a_flag = 1;
+                About();
+                break;
+
+            case 'v':   // verbose mode
+                v_flag = 1;
+                cryptObj.verbose = true;
+                break;
+
+            case 's':   // disable shuffle/unshuffle
+                s_flag = 1;
+                cryptObj.disable_shuffle = true;
+                break;
+
+            case 'd':   // decompress mode
+                d_flag = 1;
+                break;
+
+            case 'k':   // needs key filename
+                cryptObj.keyFileName = (string) optarg;
+                break;
+
+            case 't':   // number of threads
+                cryptObj.n_threads = (byte) stoi((string) optarg);
+                break;
+
+            default:
+                cerr << "Option '" << (char) optopt << "' is invalid.\n";
+                break;
+        }
     }
-    in.close();
-    
-    // gather the characters -- ignore '@'=64 for headers
-//    for (byte i = 32; i != 64;  ++i)    if (*(hChars+i))  headers += i;
-//    for (byte i = 65; i != 126; ++i)    if (*(hChars+i))  headers += i;
-//    for (byte i = 32; i != 126; ++i)    if (*(qChars+i))  qscores += i;
-    for (byte i = 32; i != 64; ++i)     if (L>>i & 1) headers += i;
-    for (byte i = 65; i != 126; ++i)    if (H>>(i-64) & 1)  headers += i;
-    for (byte i = 32; i != 126; ++i)    if (*(qChars+i))  qscores += i;
 
-    cerr<<headers<<'\n'<<qscores<<'\n';
+    if (v_flag)  cerr << "Verbose mode on.\n";
+    if (d_flag)
+    {
+        cerr << "Decrypting...\n";//todo. modify decompFA function
+        cryptObj.decompress();//todo. multithreading
 
+        // stop timer
+        high_resolution_clock::time_point finishTime =
+                high_resolution_clock::now();
+        // duration in seconds
+        std::chrono::duration<double> elapsed = finishTime - startTime;
+        cerr << "done in " << std::fixed << setprecision(4) << elapsed.count()
+             << " seconds.\n";
 
+        return 0;
+    }
 
-
-//    static int h_flag, a_flag, v_flag, d_flag, s_flag;
-//    int c;                               // deal with getopt_long()
-//    int option_index;                    // option index stored by getopt_long()
-//    opterr = 0;  // force getopt_long() to remain silent when it finds a problem
-//
-//    static struct option long_options[] =
-//    {
-//        {"help",            no_argument, &h_flag, (int) 'h'},   // help
-//        {"about",           no_argument, &a_flag, (int) 'a'},   // about
-//        {"verbose",         no_argument, &v_flag, (int) 'v'},   // verbose
-//        {"disable_shuffle", no_argument, &s_flag, (int) 's'},   // d (un)shuffle
-//        {"decrypt",         no_argument, &d_flag, (int) 'd'},   // decrypt mode
-//        {"key",       required_argument,       0,         'k'}, // key file
-//        {"thread",    required_argument,       0,         't'}, // #threads >= 1
-//        {0,                           0,       0,           0}
-//    };
-//
-//    while (1)
-//    {
-//        option_index = 0;
-//        if ((c = getopt_long(argc, argv, ":havsdk:t:",
-//                             long_options, &option_index)) == -1)    break;
-//
-//        switch (c)
-//        {
-//            case 0:
-//                // If this option set a flag, do nothing else now.
-//                if (long_options[option_index].flag != 0)   break;
-//                cout << "option '" << long_options[option_index].name << "'\n";
-//                if (optarg)     cout << " with arg " << optarg << '\n';
-//                break;
-//
-//            case 'h':   // show usage guide
-//                h_flag = 1;
-//                Help();
-//                break;
-//
-//            case 'a':   // show about
-//                a_flag = 1;
-//                About();
-//                break;
-//
-//            case 'v':   // verbose mode
-//                v_flag = 1;
-//                cryptObj.verbose = true;
-//                break;
-//
-//            case 's':   // disable shuffle/unshuffle
-//                s_flag = 1;
-//                cryptObj.disable_shuffle = true;
-//                break;
-//
-//            case 'd':   // decompress mode
-//                d_flag = 1;
-//                break;
-//
-//            case 'k':   // needs key filename
-//                cryptObj.keyFileName = (string) optarg;
-//                break;
-//
-//            case 't':   // number of threads
-//                cryptObj.n_threads = (byte) stoi((string) optarg);
-//                break;
-//
-//            default:
-//                cerr << "Option '" << (char) optopt << "' is invalid.\n";
-//                break;
-//        }
-//    }
-//
-//    if (v_flag)  cerr << "Verbose mode on.\n";
-//    if (d_flag)
-//    {
-//        cerr << "Decrypting...\n";//todo. modify decompFA function
-//        cryptObj.decompress();//todo. multithreading
-//
-//        // stop timer
-//        high_resolution_clock::time_point finishTime =
-//                high_resolution_clock::now();
-//        // duration in seconds
-//        std::chrono::duration<double> elapsed = finishTime - startTime;
-//        cerr << "done in " << std::fixed << setprecision(4) << elapsed.count()
-//             << " seconds.\n";
-//
-//        return 0;
-//    }
-//
-//    cerr << "Encrypting...\n";//todo. modify compressFA function
-//    (fileType(cryptObj.inFileName)=='A') ? cryptObj.compressFA()    // FASTA
-//                                         : cryptObj.compressFQ();   // FASTQ
+    cerr << "Encrypting...\n";//todo. modify compressFA function
+    (fileType(cryptObj.inFileName)=='A') ? cryptObj.compressFA()    // FASTA
+                                         : cryptObj.compressFQ();   // FASTQ
 
     // stop timer
     high_resolution_clock::time_point finishTime = high_resolution_clock::now();

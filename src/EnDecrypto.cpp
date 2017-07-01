@@ -831,28 +831,6 @@ inline bool EnDecrypto::hasFQjustPlus () const
 *******************************************************************************/
 inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores) const
 {
-//    bool hChars[127], qChars[127];
-//    std::memset(hChars+32, false, 95);
-//    std::memset(qChars+32, false, 95);
-//
-//    ifstream in(inFileName);
-//    string line;
-//    while (!in.eof())
-//    {
-//        if (getline(in,line).good())  for(const char &c : line)  hChars[c]=true;
-//        in.ignore(LARGE_NUMBER, '\n');                        // ignore sequence
-//        in.ignore(LARGE_NUMBER, '\n');                        // ignore +
-//        if (getline(in,line).good())  for(const char &c : line)  qChars[c]=true;
-//    }
-//    in.close();
-//
-//    // gather the characters -- ignore '@'=64 for headers
-//    for (byte i = 32; i != 64;  ++i)    if (*(hChars+i))  headers += i;
-//    for (byte i = 65; i != 126; ++i)    if (*(hChars+i))  headers += i;
-//    for (byte i = 32; i != 126; ++i)    if (*(qChars+i))  qscores += i;
-    
-    
-    ull L=0, H=0;
     bool hChars[127], qChars[127];
     std::memset(hChars+32, false, 95);
     std::memset(qChars+32, false, 95);
@@ -861,10 +839,7 @@ inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores) const
     string line;
     while (!in.eof())
     {
-//        if (getline(in,line).good())  for(const char &c : line)  hChars[c]=true;
-        if (getline(in, line).good())
-            for (const char &c : line)
-                c < 64 ? L |= 1 << c : H |= 1 << (c - 64);
+        if (getline(in,line).good())  for(const char &c : line)  hChars[c]=true;
         in.ignore(LARGE_NUMBER, '\n');                        // ignore sequence
         in.ignore(LARGE_NUMBER, '\n');                        // ignore +
         if (getline(in,line).good())  for(const char &c : line)  qChars[c]=true;
@@ -872,18 +847,36 @@ inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores) const
     in.close();
     
     // gather the characters -- ignore '@'=64 for headers
-//    for (byte i = 32; i != 64;  ++i)    if (*(hChars+i))  headers += i;
-//    for (byte i = 65; i != 126; ++i)    if (*(hChars+i))  headers += i;
-//    for (byte i = 32; i != 126; ++i)    if (*(qChars+i))  qscores += i;
-    for (byte i = 32; i != 64; ++i)
-        if (L >> i | 1)
-            headers += i;
-    for (byte i = 65; i != 126; ++i)
-        if (H >> (i - 64) | 1)
-            headers += i;
-    for (byte i = 32; i != 126; ++i)    if (*(qChars+i))  qscores += i;
+    for (byte i = 32; i != 64;  ++i)    if (*(hChars+i))  headers += i;
+    for (byte i = 65; i != 127; ++i)    if (*(hChars+i))  headers += i;
+    for (byte i = 32; i != 127; ++i)    if (*(qChars+i))  qscores += i;
     
     
+    /** IDEA
+    ui  hL=0, qL=0;
+    ull hH=0, qH=0;
+    string headers, qscores;
+    ifstream in(inFileName);
+    string line;
+    while (!in.eof())
+    {
+        if (getline(in, line).good())
+            for (const char &c : line)
+                (c & 0xC0) ? (hH |= 1ULL<<(c-64)) : (hL |= 1U<<(c-32));
+        in.ignore(LARGE_NUMBER, '\n');                        // ignore sequence
+        in.ignore(LARGE_NUMBER, '\n');                        // ignore +
+        if (getline(in, line).good())
+            for (const char &c : line)
+                (c & 0xC0) ? (qH |= 1ULL<<(c-64)) : (qL |= 1U<<(c-32));
+    }
+    in.close();
+
+    // gather the characters -- ignore '@'=64 for headers
+    for (byte i = 0; i != 32; ++i)    if (hL>>i & 1)  headers += i+32;
+    for (byte i = 1; i != 62; ++i)    if (hH>>i & 1)  headers += i+64;
+    for (byte i = 0; i != 32; ++i)    if (qL>>i & 1)  qscores += i+32;
+    for (byte i = 1; i != 62; ++i)    if (qH>>i & 1)  qscores += i+64;
+    */
     
     /** OLD
     while (!in.eof())
@@ -991,16 +984,38 @@ inline void EnDecrypto::unshufflePkd (string::iterator &i, const ull size)
     string::iterator shIt = shuffledStr.begin();
     i -= size;
     
-    // shuffle vector of positions
+//    // shuffle vector of positions
+//    vector<ull> vPos(size);
+//    std::iota(vPos.begin(), vPos.end(), 0);     // insert 0 .. N-1
+////    const ull seed = un_shuffleSeedGen((ui) size);
+////    std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed));
+//    un_shuffleSeedGen();
+//    std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed_shared));
+//
+//    // insert unshuffled data
+//    for (const ull& vI : vPos)  *(i + vI) = *shIt++; // first *shIt, then ++shIt
+    
+    
+        // shuffle vector of positions
     vector<ull> vPos(size);
     std::iota(vPos.begin(), vPos.end(), 0);     // insert 0 .. N-1
+    
+    ull *vPos2 = new ull[size];
+    std::iota(vPos2, (vPos2+size), 0);     // insert 0 .. N-1
+
 //    const ull seed = un_shuffleSeedGen((ui) size);
 //    std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed));
     un_shuffleSeedGen();
     std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed_shared));
-    
+
     // insert unshuffled data
     for (const ull& vI : vPos)  *(i + vI) = *shIt++; // first *shIt, then ++shIt
+    
+    
+//    std::shuffle(&vPos[0], &vPos[size-1], std::mt19937(seed_shared));
+//
+//    // insert unshuffled data
+//    for (int j=0;j!=size;++j)  *(i + vPos[j]) = *shIt++; // first *shIt, then ++shIt
 }
 
 /*******************************************************************************

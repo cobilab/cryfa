@@ -27,15 +27,15 @@ public:
     bool   disable_shuffle = false;                      // disable shuffle
     
 private:
-    inline void encrypt ();                              // encrypt
-    inline void decrypt ();                              // decrypt
+    inline void encrypt  ();                             // encrypt
+    inline void decrypt  ();                             // decrypt
     inline void decompFA ();                             // decomp. FA
     inline void decompFQ ();                             // decomp. FQ
     inline void buildIV  (byte*, const string&);         // build IV
     inline void buildKey (byte*, const string&);         // build key
     inline void printIV  (byte*)                const;   // print IV
     inline void printKey (byte*)                const;   // print key
-    inline string extractPass ()                const;   // get password
+    inline string extractPass ()                const;   // extract password
     inline void evalPassSize (const string&)    const;   // evaluate pass size
     inline bool hasFQjustPlus ()                const;   // check '+' line
     inline void gatherHdrQs (string&, string&)  const;   // gather hdrs & qss
