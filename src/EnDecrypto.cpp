@@ -984,38 +984,16 @@ inline void EnDecrypto::unshufflePkd (string::iterator &i, const ull size)
     string::iterator shIt = shuffledStr.begin();
     i -= size;
     
-//    // shuffle vector of positions
-//    vector<ull> vPos(size);
-//    std::iota(vPos.begin(), vPos.end(), 0);     // insert 0 .. N-1
-////    const ull seed = un_shuffleSeedGen((ui) size);
-////    std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed));
-//    un_shuffleSeedGen();
-//    std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed_shared));
-//
-//    // insert unshuffled data
-//    for (const ull& vI : vPos)  *(i + vI) = *shIt++; // first *shIt, then ++shIt
-    
-    
-        // shuffle vector of positions
+    // shuffle vector of positions
     vector<ull> vPos(size);
     std::iota(vPos.begin(), vPos.end(), 0);     // insert 0 .. N-1
-    
-    ull *vPos2 = new ull[size];
-    std::iota(vPos2, (vPos2+size), 0);     // insert 0 .. N-1
-
 //    const ull seed = un_shuffleSeedGen((ui) size);
 //    std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed));
     un_shuffleSeedGen();
     std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed_shared));
 
     // insert unshuffled data
-    for (const ull& vI : vPos)  *(i + vI) = *shIt++; // first *shIt, then ++shIt
-    
-    
-//    std::shuffle(&vPos[0], &vPos[size-1], std::mt19937(seed_shared));
-//
-//    // insert unshuffled data
-//    for (int j=0;j!=size;++j)  *(i + vPos[j]) = *shIt++; // first *shIt, then ++shIt
+    for (const ull& vI : vPos)  *(i + vI) = *shIt++;       // *shIt, then ++shIt
 }
 
 /*******************************************************************************
