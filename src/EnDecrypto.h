@@ -61,9 +61,9 @@ private:
     inline void pack (const ull, const byte,             // pack
                       string (*)(const string&, const htable_t&),
                       string (*)(const string&, const htable_t&));
-    inline void unpack (const ull, const ull, const byte,// unpack
-                      string (*)(const string&, vector<string>&),
-                      string (*)(const string&, vector<string>&));
+    inline void unpack (const pos_t, const ull, const byte,// unpack
+                      string (*)(string::iterator&, vector<string>&),
+                      string (*)(string::iterator&, vector<string>&));
 };
 
 #endif //CRYFA_ENDECRYPTO_H

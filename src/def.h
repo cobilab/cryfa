@@ -74,6 +74,7 @@ struct POWER<B, 0>
 #define PKD_FILENAME    "CRYFA_PKD" // packed file name
 #define ENW_FILENAME    "CRYFA_ENW" // encrypted without watermark file name
 #define DEC_FILENAME    "CRYFA_DEC" // decrypted file name
+#define UPK_FILENAME    "CRYFA_UPK" // unpacked file name
 #define DEFAULT_N_THR   1           // default number of threads
 #define LINE_BUFFER     600000//12//8//4//6000//
                                     // buffer size (lines) to separate files for
