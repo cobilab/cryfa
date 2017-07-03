@@ -11,6 +11,7 @@
 
 #include "def.h"
 using std::string;
+using std::vector;
 
 class EnDecrypto
 {
@@ -60,6 +61,9 @@ private:
     inline void pack (const ull, const byte,             // pack
                       string (*)(const string&, const htable_t&),
                       string (*)(const string&, const htable_t&));
+    inline void unpack (const ull, const ull, const byte,// unpack
+                      string (*)(const string&, vector<string>&),
+                      string (*)(const string&, vector<string>&));
 };
 
 #endif //CRYFA_ENDECRYPTO_H
