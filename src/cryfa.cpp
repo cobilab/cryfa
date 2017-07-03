@@ -72,49 +72,25 @@ int main (int argc, char* argv[])
     {
         option_index = 0;
         if ((c = getopt_long(argc, argv, ":havsdk:t:",
-                             long_options, &option_index)) == -1)    break;
-
+                             long_options, &option_index)) == -1)         break;
+        
         switch (c)
         {
             case 0:
                 // If this option set a flag, do nothing else now.
-                if (long_options[option_index].flag != 0)   break;
+                if (long_options[option_index].flag != 0)                 break;
                 cout << "option '" << long_options[option_index].name << "'\n";
-                if (optarg)     cout << " with arg " << optarg << '\n';
+                if (optarg)    cout << " with arg " << optarg << '\n';
                 break;
 
-            case 'h':   // show usage guide
-                h_flag = 1;
-                Help();
-                break;
-
-            case 'a':   // show about
-                a_flag = 1;
-                About();
-                break;
-
-            case 'v':   // verbose mode
-                v_flag = 1;
-                cryptObj.verbose = true;
-                break;
-
-            case 's':   // disable shuffle/unshuffle
-                s_flag = 1;
-                cryptObj.disable_shuffle = true;
-                break;
-
-            case 'd':   // decompress mode
-                d_flag = 1;
-                break;
-
-            case 'k':   // needs key filename
-                cryptObj.keyFileName = (string) optarg;
-                break;
-
-            case 't':   // number of threads
-                cryptObj.n_threads = (byte) stoi((string) optarg);
-                break;
-
+            case 'h': h_flag = 1;    Help();                              break;
+            case 'a': a_flag = 1;    About();                             break;
+            case 'v': v_flag = 1;    cryptObj.verbose = true;             break;
+            case 's': s_flag = 1;    cryptObj.disable_shuffle = true;     break;
+            case 'd': d_flag = 1;                                         break;
+            case 'k': cryptObj.keyFileName = (string) optarg;             break;
+            case 't': cryptObj.n_threads = (byte) stoi((string) optarg);  break;
+            
             default:
                 cerr << "Option '" << (char) optopt << "' is invalid.\n";
                 break;

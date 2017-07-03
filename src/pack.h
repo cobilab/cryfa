@@ -588,8 +588,7 @@ inline string pack_1to1 (const string& strIn, const htable_t &map)
 /*******************************************************************************
     penalty symbol -- returns either input char or (char)10='\n'
 *******************************************************************************/
-inline constexpr
-char penaltySym (char c)
+inline constexpr char penaltySym (char c)
 {
     return (c != (char) 254 && c != (char) 252) ? c : (char) 10;
 }

@@ -149,9 +149,8 @@ void EnDecrypto::compressFQ ()
 
         else if (headersLen > MAX_C3)                                   // cat 4
         { HdrMap = buildHashTable(Hdrs, KEYLEN_C4);   packHdr = &pack_2to1; }
-
-        else if (headersLen == MAX_C3 || headersLen == MID_C3
-                 || headersLen == MIN_C3)                               // cat 3
+                                                                        // cat 3
+        else if (headersLen==MAX_C3 || headersLen==MID_C3 || headersLen==MIN_C3)
         { HdrMap = buildHashTable(Hdrs, KEYLEN_C3);   packHdr = &pack_3to1; }
 
         else if (headersLen == C2)                                      // cat 2
@@ -171,7 +170,7 @@ void EnDecrypto::compressFQ ()
         QSs_g = QSs;
         // ASCII char after last char in QUALITY_SCORES
         QSsX = QSs;     QSsX += (char) (QSs.back() + 1);
-        QsMap = buildHashTable(QSsX, KEYLEN_C5);    packQS = &packLargeQs_3to2;
+        QsMap = buildHashTable(QSsX, KEYLEN_C5);     packQS = &packLargeQs_3to2;
     }
     else
     {
@@ -179,23 +178,22 @@ void EnDecrypto::compressFQ ()
         QSs_g = QSs;
         
         if (qscoresLen > MAX_C4)                                        // cat 5
-        { QsMap = buildHashTable(QSs, KEYLEN_C5);   packQS = &pack_3to2; }
+        { QsMap = buildHashTable(QSs, KEYLEN_C5);    packQS = &pack_3to2; }
 
         else if (qscoresLen > MAX_C3)                                   // cat 4
-        { QsMap = buildHashTable(QSs, KEYLEN_C4);   packQS = &pack_2to1; }
-
-        else if (qscoresLen == MAX_C3 || qscoresLen == MID_C3
-                 || qscoresLen == MIN_C3)                               // cat 3
-        { QsMap = buildHashTable(QSs, KEYLEN_C3);   packQS = &pack_3to1; }
+        { QsMap = buildHashTable(QSs, KEYLEN_C4);    packQS = &pack_2to1; }
+                                                                        // cat 3
+        else if (qscoresLen==MAX_C3 || qscoresLen==MID_C3 || qscoresLen==MIN_C3)
+        { QsMap = buildHashTable(QSs, KEYLEN_C3);    packQS = &pack_3to1; }
         
         else if (qscoresLen == C2)                                      // cat 2
-        { QsMap = buildHashTable(QSs, KEYLEN_C2);   packQS = &pack_5to1; }
+        { QsMap = buildHashTable(QSs, KEYLEN_C2);    packQS = &pack_5to1; }
         
         else if (qscoresLen == C1)                                      // cat 1
-        { QsMap = buildHashTable(QSs, KEYLEN_C1);   packQS = &pack_7to1; }
+        { QsMap = buildHashTable(QSs, KEYLEN_C1);    packQS = &pack_7to1; }
         
         else                                                   // qscoresLen = 1
-        { QsMap = buildHashTable(QSs, 1);           packQS = &pack_1to1; }
+        { QsMap = buildHashTable(QSs, 1);            packQS = &pack_1to1; }
     }
     
     // distribute file among threads, for reading and packing
@@ -594,46 +592,34 @@ void EnDecrypto::decompressFQ ()
     unpackQSPointer unpackQS;                                // function pointer
     
     // header
-    if (headersLen > MAX_C5)    keyLen_hdr = KEYLEN_C5;
-
-    else if (headersLen > MAX_C4)                               // cat 5
-    { keyLen_hdr = KEYLEN_C5;   unpackHdr = &unpack_read2B; }
-
-    else if (headersLen > MAX_C3)                               // cat 4
-    { keyLen_hdr = KEYLEN_C4;   unpackHdr = &unpack_read1B; }
-
-    else if (headersLen == MAX_C3 || headersLen == MID_C3       // cat 3
-             || headersLen == MIN_C3)
-    { keyLen_hdr = KEYLEN_C3;   unpackHdr = &unpack_read1B; }
-
-    else if (headersLen == C2)                                  // cat 2
-    { keyLen_hdr = KEYLEN_C2;   unpackHdr = &unpack_read1B; }
-
-    else if (headersLen == C1)                                  // cat 1
-    { keyLen_hdr = KEYLEN_C1;   unpackHdr = &unpack_read1B; }
-
-    else { keyLen_hdr = 1;      unpackHdr = &unpack_read1B; }   // = 1
+    if      (headersLen > MAX_C5)           keyLen_hdr = KEYLEN_C5;
+    else if (headersLen > MAX_C4)                                       // cat 5
+    { unpackHdr = &unpack_read2B;           keyLen_hdr = KEYLEN_C5; }
+    else
+    {   unpackHdr = &unpack_read1B;
+        
+        if      (headersLen > MAX_C3)       keyLen_hdr = KEYLEN_C4;     // cat 4
+        else if (headersLen==MAX_C3 || headersLen==MID_C3 || headersLen==MIN_C3)
+                                            keyLen_hdr = KEYLEN_C3;     // cat 3
+        else if (headersLen == C2)          keyLen_hdr = KEYLEN_C2;     // cat 2
+        else if (headersLen == C1)          keyLen_hdr = KEYLEN_C1;     // cat 1
+        else                                keyLen_hdr = 1;             // = 1
+    }
     
     // quality score
-    if (qscoresLen > MAX_C5)    keyLen_qs = KEYLEN_C5;
-
-    else if (qscoresLen > MAX_C4)                               // cat 5
-    { keyLen_qs = KEYLEN_C5;    unpackQS = &unpack_read2B; }
-
-    else if (qscoresLen > MAX_C3)                               // cat 4
-    { keyLen_qs = KEYLEN_C4;    unpackQS = &unpack_read1B; }
-
-    else if (qscoresLen == MAX_C3 || qscoresLen == MID_C3       // cat 3
-             || qscoresLen == MIN_C3)
-    { keyLen_qs = KEYLEN_C3;    unpackQS = &unpack_read1B; }
-
-    else if (qscoresLen == C2)                                  // cat 2
-    { keyLen_qs = KEYLEN_C2;    unpackQS = &unpack_read1B; }
-
-    else if (qscoresLen == C1)                                  // cat 1
-    { keyLen_qs = KEYLEN_C1;    unpackQS = &unpack_read1B; }
-
-    else { keyLen_qs = 1;       unpackQS = &unpack_read1B; }    // = 1
+    if      (qscoresLen > MAX_C5)           keyLen_qs = KEYLEN_C5;
+    else if (qscoresLen > MAX_C4)                                       // cat 5
+    { unpackQS = &unpack_read2B;            keyLen_qs = KEYLEN_C5; }
+    else {
+        unpackQS = &unpack_read1B;
+        
+        if      (qscoresLen > MAX_C3)       keyLen_qs = KEYLEN_C4;      // cat 4
+        else if (qscoresLen==MAX_C3 || qscoresLen==MID_C3 || qscoresLen==MIN_C3)
+                                            keyLen_qs = KEYLEN_C3;      // cat 3
+        else if (qscoresLen == C2)          keyLen_qs = KEYLEN_C2;      // cat 2
+        else if (qscoresLen == C1)          keyLen_qs = KEYLEN_C1;      // cat 1
+        else                                keyLen_qs = 1;              // = 1
+    }
 
     string plusMore;
     if (headersLen > MAX_C5 && qscoresLen > MAX_C5)
@@ -768,6 +754,8 @@ void EnDecrypto::decompressFQ ()
                 chunkSizeStr.clear();   // chunk size
                 while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
                 chunkSize = stoull(chunkSizeStr);
+                
+                
                 
                 // take a chunk of decrypted file
                 for (ull u = chunkSize; u--;) { in.get(c);    decText += c; }
