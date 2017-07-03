@@ -207,7 +207,7 @@ void EnDecrypto::compressFQ ()
             arrThread[t] = thread(&EnDecrypto::pack, this,
                                   startLine, t, packHdr, packQS);
         }
-        for (t = 0; t != n_threads; ++t)    arrThread[t].join();
+        for (t = n_threads; t--;)    arrThread[t].join();
     }
     
     // join encrypted files
@@ -755,8 +755,6 @@ void EnDecrypto::decompressFQ ()
                 while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
                 chunkSize = stoull(chunkSizeStr);
                 
-                
-                
                 // take a chunk of decrypted file
                 for (ull u = chunkSize; u--;) { in.get(c);    decText += c; }
                 i = decText.begin();
@@ -764,7 +762,7 @@ void EnDecrypto::decompressFQ ()
                 // unshuffle
                 if (!disable_shuffle)    unshufflePkd(i, chunkSize);
             }
-    
+            
             do {
                 cout << '@';
                 cout << (plusMore = unpackHdr(i, hdrUnpack)) <<'\n';  ++i; //hdr
