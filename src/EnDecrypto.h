@@ -55,15 +55,16 @@ private:
     inline void my_srand (const ui);                     // random no. seed
     inline int  my_rand ();                              // random no generate
 //    inline ull  un_shuffleSeedGen (const ui);            // (un)shuffle seed gen
-    inline void un_shuffleSeedGen ();            // (un)shuffle seed gen
+    inline void un_shuffleSeedGen ();                    // (un)shuffle seed gen
     inline void shufflePkd (string&);                    // shuffle packed
     inline void unshufflePkd (string::iterator&, const ull); // unshuffle packed
-    inline void pack (const ull, const byte,             // pack
+    inline void pack (const ull, const byte,                           // pack
                       string (*)(const string&, const htable_t&),
                       string (*)(const string&, const htable_t&));
-    inline void unpack (const pos_t, const ull, const byte,// unpack
-                      string (*)(string::iterator&, vector<string>&),
-                      string (*)(string::iterator&, vector<string>&));
+    inline void unpack (const pos_t, const ull, vector<string>&, // unpack
+                        vector<string>&, const bool, const byte,
+                        string (*)(string::iterator&, vector<string>&),
+                        string (*)(string::iterator&, vector<string>&));
 };
 
 #endif //CRYFA_ENDECRYPTO_H

@@ -756,7 +756,6 @@ void EnDecrypto::decompressFQ ()
         qsUnpack  = buildUnpack(qscores, keyLen_qs);
         
         
-        
         in.get(c);
         if (c == (char) 253)
         {
@@ -767,7 +766,7 @@ void EnDecrypto::decompressFQ ()
             chunkSize = stoull(chunkSizeStr);
             startPoint = in.tellg();
             
-            unpack(startPoint,chunkSize,0,unpackHdr,unpackQS);
+            unpack(startPoint,chunkSize,hdrUnpack,qsUnpack,justPlus,0,unpackHdr,unpackQS);
         }
         
         
@@ -826,33 +825,38 @@ void EnDecrypto::decompressFQ ()
 /*******************************************************************************
     pack -- '@' at the beginning of headers is not packed
 *******************************************************************************/
-inline void EnDecrypto::unpack (const pos_t startPoint, const ull chunkSize,
-                                const byte threadID,
-                        string (*unpackHdr)(string::iterator&, vector<string>&),
-                        string (*unpackQS)(string::iterator&, vector<string>&))
+inline void EnDecrypto::unpack //todo. hdrUnpack ba const vector<string>& test she
+  (const pos_t startPoint, const ull chunkSize, vector<string> &hdrUnpack,
+   vector<string> &qsUnpack, const bool justPlus, const byte threadID,
+   string (*unpackHdr)(string::iterator&, vector<string>&),
+   string (*unpackQS)(string::iterator&, vector<string>&))
 {
     ifstream in(DEC_FILENAME);
+    string decText;
+    string::iterator i;
+    char c;
+    string plusMore;
 //    string context; // output string
 //    string inTempStr;
 //    string line;
 
-//todo. bepar be jayee ke tellg gofte
-//in.seekg(0,startPoint);
+    
+    in.seekg(startPoint);
 
-//    // take a chunk of decrypted file
-//    for (ull u = chunkSize; u--;) { in.get(c);    decText += c; }
-//    i = decText.begin();
-//
-//    // unshuffle
-//    if (!disable_shuffle)    unshufflePkd(i, chunkSize);
-//
-//    do {
-//        cout << '@';
-//        cout << (plusMore = unpackHdr(i, hdrUnpack)) <<'\n';  ++i; //hdr
-//        cout << unpackSeqFQ_3to1(i)                  <<'\n';       //seq
-//        cout << (justPlus ? "+" : "+" + plusMore)    <<'\n';  ++i; //+
-//        cout << unpackQS(i, qsUnpack)                <<'\n';       //qs
-//    } while (++i != decText.end());    // if trouble: change "!=" to "<"
+    // take a chunk of decrypted file
+    for (ull u = chunkSize; u--;) { in.get(c);    decText += c; }
+    i = decText.begin();
+
+    // unshuffle
+    if (!disable_shuffle)    unshufflePkd(i, chunkSize);
+
+    do {
+        cout << '@';
+        cout << (plusMore = unpackHdr(i, hdrUnpack)) <<'\n';  ++i; //hdr
+        cout << unpackSeqFQ_3to1(i)                  <<'\n';       //seq
+        cout << (justPlus ? "+" : "+" + plusMore)    <<'\n';  ++i; //+
+        cout << unpackQS(i, qsUnpack)                <<'\n';       //qs
+    } while (++i != decText.end());    // if trouble: change "!=" to "<"
 
 
 

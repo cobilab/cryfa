@@ -106,7 +106,7 @@ int main (int argc, char* argv[])
         (in.peek() == (char) 127) ? cryptObj.decompressFA()         // FASTA
                                   : cryptObj.decompressFQ();        // FASTQ
         in.close();
-
+        
         // stop timer
         high_resolution_clock::time_point finishTime =
                 high_resolution_clock::now();
