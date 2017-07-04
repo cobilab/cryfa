@@ -55,17 +55,17 @@ private:
     inline std::minstd_rand0 &randomEngine ();           // random no. engine
     inline void my_srand (const ui);                     // random no. seed
     inline int  my_rand ();                              // random no generate
-//    inline ull  un_shuffleSeedGen (const ui);            // (un)shuffle seed gen
+//    inline ull  un_shuffleSeedGen (const ui);          // (un)shuffle seed gen
     inline void un_shuffleSeedGen ();                    // (un)shuffle seed gen
     inline void shufflePkd (string&);                    // shuffle packed
     inline void unshufflePkd (string::iterator&, const ull); // unshuffle packed
-    inline void pack (const ull, const byte,                           // pack
+    inline void pack (const ull, const byte,             // pack
                       string (*)(const string&, const htable_t&),
                       string (*)(const string&, const htable_t&));
-    inline void unpack (const pos_t, const ull, const vector<string>&, // unpack
-                        const vector<string>&, const byte,
-                        string (*)(string::iterator&, const vector<string>&),
-                        string (*)(string::iterator&, const vector<string>&));
+    inline void unpackHSQS (const pos_t, const ull,      // unpack H:Small, Q:S
+                       const vector<string>&, const vector<string>&, const byte,
+                       string (*) (string::iterator&, const vector<string>&),
+                       string (*) (string::iterator&, const vector<string>&));
 };
 
 #endif //CRYFA_ENDECRYPTO_H

@@ -764,9 +764,9 @@ void EnDecrypto::decompressFQ ()
             while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
             chunkSize = stoull(chunkSizeStr);
             startPoint = in.tellg();
-            
-            unpack(startPoint, chunkSize, hdrUnpack, qsUnpack, 0,
-                   unpackHdr, unpackQS);
+    
+            unpackHSQS(startPoint, chunkSize, hdrUnpack, qsUnpack, 0,
+                       unpackHdr, unpackQS);
         }
         
         
@@ -825,11 +825,11 @@ void EnDecrypto::decompressFQ ()
 /*******************************************************************************
     pack -- '@' at the beginning of headers is not packed
 *******************************************************************************/
-inline void EnDecrypto::unpack
-  (const pos_t startPoint, const ull chunkSize, const vector<string> &hdrUnpack,
-   const vector<string> &qsUnpack, const byte threadID,
-   string (*unpackHdr)(string::iterator&, const vector<string>&),
-   string (*unpackQS)(string::iterator&, const vector<string>&))
+inline void EnDecrypto::unpackHSQS (const pos_t startPoint, const ull chunkSize,
+                const vector<string> &hdrUnpack, const vector<string> &qsUnpack,
+                const byte threadID,
+                string (*unpackHdr) (string::iterator&, const vector<string>&),
+                string (*unpackQS) (string::iterator&, const vector<string>&))
 {
     ifstream in(DEC_FILENAME);
     string decText;
