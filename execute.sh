@@ -2,6 +2,7 @@
 
 #todo. remove this
 rm CRYFA_ENC*
+rm CRYFA_UPK*
 
 cmake .
 make

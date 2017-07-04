@@ -37,6 +37,7 @@ private:
     string   QSs;                                        // max: 39 values
     htable_t HdrMap;                                     // Hdrs hash table
     htable_t QsMap;                                      // QSs hash table
+    bool     justPlus = true;                            // if line 3 is just +
     // check if reading input file reached to the end. MUST be initialized
     bool     isInEmpty = false;
     string   HdrsX;                                      // extended Hdrs
@@ -61,10 +62,10 @@ private:
     inline void pack (const ull, const byte,                           // pack
                       string (*)(const string&, const htable_t&),
                       string (*)(const string&, const htable_t&));
-    inline void unpack (const pos_t, const ull, vector<string>&, // unpack
-                        vector<string>&, const bool, const byte,
-                        string (*)(string::iterator&, vector<string>&),
-                        string (*)(string::iterator&, vector<string>&));
+    inline void unpack (const pos_t, const ull, const vector<string>&, // unpack
+                        const vector<string>&, const byte,
+                        string (*)(string::iterator&, const vector<string>&),
+                        string (*)(string::iterator&, const vector<string>&));
 };
 
 #endif //CRYFA_ENDECRYPTO_H

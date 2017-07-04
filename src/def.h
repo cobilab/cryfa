@@ -69,7 +69,7 @@ struct POWER<B, 0>
 /*******************************************************************************
     constants
 *******************************************************************************/
-#define THR_ID_HDR      "THR="      // thread ID header
+#define THR_ID_HDR      "THRD="      // thread ID header
 #define ENC_FILENAME    "CRYFA_ENC" // encrypted file name
 #define PKD_FILENAME    "CRYFA_PKD" // packed file name
 #define ENW_FILENAME    "CRYFA_ENW" // encrypted without watermark file name

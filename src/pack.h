@@ -120,7 +120,7 @@ inline vector<string> buildUnpack (const string &strIn, us keyLen)
     string element;
     const ull unpackSize = std::pow(strIn.size(), keyLen);
     vector<string> unpack;    unpack.reserve(unpackSize);
-
+    
     switch (keyLen)
     {
         case 3:
@@ -638,7 +638,7 @@ inline string unpackSeqFQ_3to1 (string::iterator &i)
     unpack by reading 2 byte by 2 byte, when # > 39
 *******************************************************************************/
 inline string unpackLarge_read2B (string::iterator &i, const char XChar,
-                                  vector<string> &unpack)
+                                  const vector<string> &unpack)
 {
     byte leftB, rightB;
     us doubleB;     // double byte
@@ -680,14 +680,14 @@ inline string unpackLarge_read2B (string::iterator &i, const char XChar,
         else { out+=penaltySym(*(i+2));    out+=penaltySym(*(i+3));       // XXX
                out+=penaltySym(*(i+4));                                  i+=5; }
     }
-
+    
     return out;
 }
 
 /*******************************************************************************
     unpack by reading 2 byte by 2 byte
 *******************************************************************************/
-inline string unpack_read2B (string::iterator &i, vector<string> &unpack)
+inline string unpack_read2B (string::iterator &i, const vector<string> &unpack)
 {
     byte leftB, rightB;
     us doubleB;     // double byte
@@ -711,7 +711,7 @@ inline string unpack_read2B (string::iterator &i, vector<string> &unpack)
 /*******************************************************************************
     unpack by reading 1 byte by 1 byte
 *******************************************************************************/
-inline string unpack_read1B (string::iterator &i, vector<string> &unpack)
+inline string unpack_read1B (string::iterator &i, const vector<string> &unpack)
 {
     string out;
     

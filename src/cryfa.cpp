@@ -46,7 +46,7 @@ int main (int argc, char* argv[])
 {
     // start timer
     high_resolution_clock::time_point startTime = high_resolution_clock::now();
-    
+
     EnDecrypto cryptObj;
     cryptObj.inFileName = argv[argc-1];  // input file name
     cryptObj.n_threads = DEFAULT_N_THR;  // initialize number of threads
@@ -73,7 +73,7 @@ int main (int argc, char* argv[])
         option_index = 0;
         if ((c = getopt_long(argc, argv, ":havsdk:t:",
                              long_options, &option_index)) == -1)         break;
-        
+
         switch (c)
         {
             case 0:
@@ -90,7 +90,7 @@ int main (int argc, char* argv[])
             case 'd': d_flag = 1;                                         break;
             case 'k': cryptObj.keyFileName = (string) optarg;             break;
             case 't': cryptObj.n_threads = (byte) stoi((string) optarg);  break;
-            
+
             default:
                 cerr << "Option '" << (char) optopt << "' is invalid.\n";
                 break;
@@ -106,7 +106,7 @@ int main (int argc, char* argv[])
         (in.peek() == (char) 127) ? cryptObj.decompressFA()         // FASTA
                                   : cryptObj.decompressFQ();        // FASTQ
         in.close();
-        
+
         // stop timer
         high_resolution_clock::time_point finishTime =
                 high_resolution_clock::now();
