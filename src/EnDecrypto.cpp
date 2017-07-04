@@ -120,7 +120,7 @@ void EnDecrypto::compressFQ ()
     
     // gather all headers and quality scores
     gatherHdrQs(headers, qscores);
-    
+
     // function pointers
     using packHdrPointer = string (*)(const string&, const htable_t&);
     packHdrPointer packHdr;
@@ -756,6 +756,7 @@ void EnDecrypto::decompressFQ ()
         qsUnpack  = buildUnpack(qscores, keyLen_qs);
 
 
+        
         in.get(c);
         if (c == (char) 253)
         {
