@@ -745,10 +745,11 @@ void EnDecrypto::decompressFQ ()
     {
 //        string decText;
 //        string::iterator i;         // iterator in decText
-        ull *chunkSize=new ull[n_threads];              // size of each chunk of file
+//        ull *chunkSize=new ull[n_threads];              // size of each chunk of file
+//        ull chunkSize;              // size of each chunk of file
         thread arrThread[n_threads];
         byte t;         // for threads
-        pos_t *startPoint=new pos_t[n_threads];
+//        pos_t *startPoint=new pos_t[n_threads];
         pos_t offset;
 
 
@@ -766,20 +767,22 @@ void EnDecrypto::decompressFQ ()
                 chunkSizeStr.clear();   // chunk size
                 while (in.get(c) && c != (char) 254)
                     chunkSizeStr += c;
-                chunkSize[t] = stoull(chunkSizeStr);
-                offset = startPoint[t] = in.tellg();
+//                chunkSize[t] = stoull(chunkSizeStr);
+//                chunkSize = stoull(chunkSizeStr);
+//                offset = startPoint[t] = in.tellg();
+                offset = in.tellg();
+    
+                arrThread[t] = thread(&EnDecrypto::unpackHSQS, this,
+                                      offset, stoull(chunkSizeStr),
+                                      hdrUnpack, qsUnpack, t,
+                                      unpackHdr, unpackQS);
+                
                 offset -= 1;
                 in.seekg(offset, std::ios_base::cur);
             }
         }
-
-        for (t = 0; t != n_threads; ++t)
-        {
-            cerr << chunkSize[t]
-                 << ' '
-                 << startPoint[t]
-                    ;
-        }
+        for (t = n_threads; t--;)    arrThread[t].join();
+        
 //        delete[] chunkSize;
 
 //        unpackHSQS(startPoint, chunkSize, hdrUnpack, qsUnpack, 0,
