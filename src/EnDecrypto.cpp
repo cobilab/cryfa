@@ -129,7 +129,7 @@ void EnDecrypto::compressFQ ()
 
     const size_t headersLen = headers.length();
     const size_t qscoresLen = qscores.length();
-
+    
     // header
     if (headersLen > MAX_C5)          // if len > 39 filter the last 39 ones
     {
@@ -306,7 +306,7 @@ inline void EnDecrypto::pack (const ull startLine, const byte threadID,
     
     if (in.peek()==EOF) { isInEmpty = true;    return; }
     
-    for (ull l = 0; l != LINE_BUFFER; l += 4)     // process 4 lines by 4 lines
+    for (ull l = 0; l != LINE_BUFFER; l += 4)   // process 4 lines by 4 lines
     {
         if (getline(in, line).good())           // header -- ignore '@'
             context += packHdr(line.substr(1), HdrMap) + (char) 254;
@@ -590,7 +590,7 @@ void EnDecrypto::decompressFQ ()
     unpackHdrPointer unpackHdr;                              // function pointer
     using unpackQSPointer = string (*)(string::iterator&, const vector<string>&);
     unpackQSPointer unpackQS;                                // function pointer
-    
+
     // header
     if      (headersLen > MAX_C5)           keyLen_hdr = KEYLEN_C5;
     else if (headersLen > MAX_C4)                                       // cat 5
@@ -610,8 +610,8 @@ void EnDecrypto::decompressFQ ()
     if      (qscoresLen > MAX_C5)           keyLen_qs = KEYLEN_C5;
     else if (qscoresLen > MAX_C4)                                       // cat 5
     {   unpackQS = &unpack_read2B;          keyLen_qs = KEYLEN_C5; }
-    else {
-        unpackQS = &unpack_read1B;
+    else
+    {   unpackQS = &unpack_read1B;
         
         if      (qscoresLen > MAX_C3)       keyLen_qs = KEYLEN_C4;      // cat 4
         else if (qscoresLen==MAX_C3 || qscoresLen==MID_C3 || qscoresLen==MIN_C3)
@@ -765,11 +765,10 @@ void EnDecrypto::decompressFQ ()
             while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
             chunkSize = stoull(chunkSizeStr);
             startPoint = in.tellg();
-
+            
             unpackHSQS(startPoint, chunkSize, hdrUnpack, qsUnpack, 0,
                        unpackHdr, unpackQS);
         }
-        
         
         
 
@@ -846,8 +845,10 @@ inline void EnDecrypto::unpackHSQS (const pos_t startPoint, const ull chunkSize,
     for (ull u = chunkSize; u--;) { in.get(c);    decText += c; }
     i = decText.begin();
     
+//    upkfile<<decText<<'\n';
     // unshuffle
     if (!disable_shuffle)    unshufflePkd(i, chunkSize);
+//    upkfile<<decText<<'\n';
     
     upkfile << THR_ID_HDR + to_string(threadID) << '\n';
     do {

@@ -103,12 +103,14 @@ inline htable_t buildHashTable (const string &strIn, short keyLen)
         default: break;
     }
     
-    return map;
     
-    // TEST
+//    // TEST
 //    for (htable_t::iterator i = map.begin(); i != map.end(); ++i)
 //        cerr << i->first << "\t" << i->second << '\n';
-//    cerr << elementNo << '\n';
+//    cerr << "elementNo = " << elementNo << '\n';
+    
+    
+    return map;
 }
 
 /*******************************************************************************
@@ -434,7 +436,7 @@ inline string pack_3to1 (const string& strIn, const htable_t &map)
 {
     string tuple, packed;
     string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-2;
-    
+
     for (; i < iEnd; i += 3)
     {
         tuple.clear();    tuple=*i;    tuple+=*(i+1);    tuple+=*(i+2);
@@ -449,8 +451,8 @@ inline string pack_3to1 (const string& strIn, const htable_t &map)
             break;
 
         case 2:
+            packed += 255;   packed += *i;
             packed += 255;   packed += *(i+1);
-            packed += 255;   packed += *(i+2);
             break;
 
         default: break;
