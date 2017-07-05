@@ -592,8 +592,8 @@ void EnDecrypto::decompressFQ ()
     unpackQSPointer unpackQS;                                // function pointer
 
     // header
-    if      (headersLen > MAX_C5)           keyLen_hdr = KEYLEN_C5;
-    else if (headersLen > MAX_C4)                                       // cat 5
+    if          (headersLen > MAX_C5)       keyLen_hdr = KEYLEN_C5;
+    else if     (headersLen > MAX_C4)                                   // cat 5
     {   unpackHdr = &unpack_read2B;         keyLen_hdr = KEYLEN_C5; }
     else
     {   unpackHdr = &unpack_read1B;
@@ -607,8 +607,8 @@ void EnDecrypto::decompressFQ ()
     }
     
     // quality score
-    if      (qscoresLen > MAX_C5)           keyLen_qs = KEYLEN_C5;
-    else if (qscoresLen > MAX_C4)                                       // cat 5
+    if          (qscoresLen > MAX_C5)       keyLen_qs = KEYLEN_C5;
+    else if     (qscoresLen > MAX_C4)                                   // cat 5
     {   unpackQS = &unpack_read2B;          keyLen_qs = KEYLEN_C5; }
     else
     {   unpackQS = &unpack_read1B;
@@ -743,35 +743,50 @@ void EnDecrypto::decompressFQ ()
 //    else
     if (headersLen <= MAX_C5 && qscoresLen <= MAX_C5)
     {
-        string decText;
-        string::iterator i;         // iterator in decText
-        ull chunkSize;              // size of each chunk of file
+//        string decText;
+//        string::iterator i;         // iterator in decText
+        ull *chunkSize=new ull[n_threads];              // size of each chunk of file
         thread arrThread[n_threads];
         byte t;         // for threads
-        pos_t startPoint;
+        pos_t *startPoint=new pos_t[n_threads];
+        pos_t offset;
 
 
         // tables for unpacking
         hdrUnpack = buildUnpack(headers, keyLen_hdr);
         qsUnpack  = buildUnpack(qscores, keyLen_qs);
-
-
-        
-        in.get(c);
-        if (c == (char) 253)
+    
+    
+        for (t = 0; t != n_threads; ++t)
         {
+            in.get(c);
+            if (c == (char) 253)
+            {
 //            decText.clear();
-            chunkSizeStr.clear();   // chunk size
-            while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
-            chunkSize = stoull(chunkSizeStr);
-            startPoint = in.tellg();
-            
-            unpackHSQS(startPoint, chunkSize, hdrUnpack, qsUnpack, 0,
-                       unpackHdr, unpackQS);
+                chunkSizeStr.clear();   // chunk size
+                while (in.get(c) && c != (char) 254)
+                    chunkSizeStr += c;
+                chunkSize[t] = stoull(chunkSizeStr);
+                offset = startPoint[t] = in.tellg();
+                offset -= 1;
+                in.seekg(offset, std::ios_base::cur);
+            }
         }
-        
-        
 
+        for (t = 0; t != n_threads; ++t)
+        {
+            cerr << chunkSize[t]
+                 << ' '
+                 << startPoint[t]
+                    ;
+        }
+//        delete[] chunkSize;
+
+//        unpackHSQS(startPoint, chunkSize, hdrUnpack, qsUnpack, 0,
+//                   unpackHdr, unpackQS);
+    
+        
+        
 ////        for (t = 0; t != n_threads; ++t)
 ////        {
 //        while (in.get(c) && c != (char) 252)
@@ -845,10 +860,8 @@ inline void EnDecrypto::unpackHSQS (const pos_t startPoint, const ull chunkSize,
     for (ull u = chunkSize; u--;) { in.get(c);    decText += c; }
     i = decText.begin();
     
-//    upkfile<<decText<<'\n';
     // unshuffle
     if (!disable_shuffle)    unshufflePkd(i, chunkSize);
-//    upkfile<<decText<<'\n';
     
     upkfile << THR_ID_HDR + to_string(threadID) << '\n';
     do {
