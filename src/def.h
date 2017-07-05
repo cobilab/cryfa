@@ -76,7 +76,7 @@ struct POWER<B, 0>
 #define DEC_FILENAME    "CRYFA_DEC" // decrypted file name
 #define UPK_FILENAME    "CRYFA_UPK" // unpacked file name
 #define DEFAULT_N_THR   1           // default number of threads
-#define LINE_BUFFER     4//600000//12//8//6000//
+#define LINE_BUFFER     4//8//600000//12//6000//
                                     // buffer size (lines) to separate files for
                                     // multithreading. MUST be multiple of 4
 #define LARGE_NUMBER    std::numeric_limits<std::streamsize>::max()

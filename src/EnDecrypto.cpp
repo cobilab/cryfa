@@ -757,19 +757,15 @@ void EnDecrypto::decompressFQ ()
         hdrUnpack = buildUnpack(headers, keyLen_hdr);
         qsUnpack  = buildUnpack(qscores, keyLen_qs);
     
-    
+        
+        // distribute file among threads, for reading and packing
         for (t = 0; t != n_threads; ++t)
         {
             in.get(c);
             if (c == (char) 253)
             {
-//            decText.clear();
                 chunkSizeStr.clear();   // chunk size
-                while (in.get(c) && c != (char) 254)
-                    chunkSizeStr += c;
-//                chunkSize[t] = stoull(chunkSizeStr);
-//                chunkSize = stoull(chunkSizeStr);
-//                offset = startPoint[t] = in.tellg();
+                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
                 offset = in.tellg();
     
                 arrThread[t] = thread(&EnDecrypto::unpackHSQS, this,
@@ -783,13 +779,59 @@ void EnDecrypto::decompressFQ ()
         }
         for (t = n_threads; t--;)    arrThread[t].join();
         
-//        delete[] chunkSize;
-
-//        unpackHSQS(startPoint, chunkSize, hdrUnpack, qsUnpack, 0,
-//                   unpackHdr, unpackQS);
+        // close decrypted file
+        in.close();
+        
+        
+        
+        // join unpacked files
+        ifstream upkdFile[n_threads];
+        string line;
+        
+        // open unpacked files
+        for (t = n_threads; t--;)   upkdFile[t].open(UPK_FILENAME+to_string(t));
+        
+        bool prevLineNotThrID;            // if previous line was "THRD=" or not
+        bool endThrPiece;   // if the piece of code for each thread is finished
+        while (!upkdFile[0].eof())
+        {
+            endThrPiece = false;
+            
+            for (t = 0; t != n_threads; ++t)
+            {
+                prevLineNotThrID = false;
+            
+                while (getline(upkdFile[t], line).good())
+                {
+                    if (line.compare(THR_ID_HDR+to_string(t)))
+                    {
+                        if (prevLineNotThrID)    cout << '\n';
+                        cout << line;
     
+                        prevLineNotThrID = true;
+                    }
+                    else    endThrPiece=true;
+                }
+    
+                if (endThrPiece)    cout << '\n';
+            }
+        }
         
-        
+        for (t = n_threads; t--;)  upkdFile[t].close(); // close input & output files
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
 ////        for (t = 0; t != n_threads; ++t)
 ////        {
 //        while (in.get(c) && c != (char) 252)
@@ -837,8 +879,6 @@ void EnDecrypto::decompressFQ ()
     
     }
     
-    // close decrypted file
-    in.close();
 }
 
 /*******************************************************************************
