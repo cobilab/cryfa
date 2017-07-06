@@ -757,70 +757,143 @@ void EnDecrypto::decompressFQ ()
         hdrUnpack = buildUnpack(headers, keyLen_hdr);
         qsUnpack  = buildUnpack(qscores, keyLen_qs);
     
-        
-        // distribute file among threads, for reading and packing
-        for (t = 0; t != n_threads; ++t)
-        {
-            in.get(c);
-            if (c == (char) 253)
-            {
-                chunkSizeStr.clear();   // chunk size
-                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
-                offset = in.tellg();
+//        int m=0;
+//        // distribute file among threads, for reading and packing
+////        while (in.peek()!=EOF)
+//        while (m<2)
+//        {
+////            cerr<<++m;
+//
+//            for (t = 0; t != n_threads; ++t)
+//            {
+//                in.get(c);//cerr<<std::to_string(c);
+//                if (c == (char) 253)
+//                {
+//                    chunkSizeStr.clear();   // chunk size
+//                    while (in.get(c) && c != (char) 254)
+//                        chunkSizeStr += c;
+//                    offset = in.tellg();
+//
+//            cerr<<chunkSizeStr<<' ';
+//
+////                    arrThread[t] = thread(&EnDecrypto::unpackHSQS, this,
+////                                          offset, stoull(chunkSizeStr),
+////                                          hdrUnpack, qsUnpack, t,
+////                                          unpackHdr, unpackQS);
+//
+//                    offset -= 1;
+//                    in.seekg(offset, std::ios_base::cur);
+//                }
+//                else if (c == (char) 252)
+//                    break;
+//            }
+////            cerr<<in.peek();
+////            for (t = n_threads; t--;)    arrThread[t].join();
+//        }
     
-                arrThread[t] = thread(&EnDecrypto::unpackHSQS, this,
-                                      offset, stoull(chunkSizeStr),
-                                      hdrUnpack, qsUnpack, t,
-                                      unpackHdr, unpackQS);
-                
-                offset -= 1;
-                in.seekg(offset, std::ios_base::cur);
-            }
-        }
-        for (t = n_threads; t--;)    arrThread[t].join();
-        
+        in.get(c);cout<<c;
+//        if (c == (char) 253)
+//        {
+//            chunkSizeStr.clear();   // chunk size
+            while (in.get(c) && c != (char) 254)
+                chunkSizeStr += c;
+            offset = in.tellg();
+
+//            cerr<<chunkSizeStr<<' ';
+
+            offset -= 1;
+            in.seekg(offset, std::ios_base::cur);
+//        }
+        in.get(c);cout<<c;
+//        if (c == (char) 253)
+//        {
+//            chunkSizeStr.clear();   // chunk size
+//            while (in.get(c) && c != (char) 254)
+//                chunkSizeStr += c;
+//            offset = in.tellg();
+//
+////            cerr<<chunkSizeStr<<' ';
+//
+//            offset -= 1;
+//            in.seekg(offset, std::ios_base::cur);
+//        }
+        in.get(c);cout<<c;
+//        if (c == (char) 253)
+//        {
+//            chunkSizeStr.clear();   // chunk size
+//            while (in.get(c) && c != (char) 254)
+//                chunkSizeStr += c;
+//            offset = in.tellg();
+//
+////            cerr<<chunkSizeStr<<' ';
+//
+//            offset -= 1;
+//            in.seekg(offset, std::ios_base::cur);
+//        }
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
         // close decrypted file
         in.close();
         
         
         
-        // join unpacked files
-        ifstream upkdFile[n_threads];
-        string line;
-        
-        // open unpacked files
-        for (t = n_threads; t--;)   upkdFile[t].open(UPK_FILENAME+to_string(t));
-        
-        bool prevLineNotThrID;            // if previous line was "THRD=" or not
-        bool endThrPiece;   // if the piece of code for each thread is finished
-        while (!upkdFile[0].eof())
-        {
-            endThrPiece = false;
-            
-            for (t = 0; t != n_threads; ++t)
-            {
-                prevLineNotThrID = false;
-            
-                while (getline(upkdFile[t], line).good())
-                {
-                    if (line.compare(THR_ID_HDR+to_string(t)))
-                    {
-                        if (prevLineNotThrID)    cout << '\n';
-                        cout << line;
+//        // join unpacked files
+//        ifstream upkdFile[n_threads];
+//        string line;
+//
+//        // open unpacked files
+//        for (t = n_threads; t--;)   upkdFile[t].open(UPK_FILENAME+to_string(t));
+//
+//        bool prevLineNotThrID;            // if previous line was "THRD=" or not
+//        bool endThrPiece;   // if the piece of code for each thread is finished
+//        while (!upkdFile[0].eof())
+//        {
+//            endThrPiece = false;
+//
+//            for (t = 0; t != n_threads; ++t)
+//            {
+//                prevLineNotThrID = false;
+//
+//                while (getline(upkdFile[t], line).good())
+//                {
+//                    if (line.compare(THR_ID_HDR + to_string(t)))
+//                    {
+//                        if (prevLineNotThrID)
+//                            cout << '\n';
+//                        cout << line;
+//
+//                        prevLineNotThrID = true;
+//                    }
+//                    else
+//                        endThrPiece = true;
+//                }
+//
+//                if (endThrPiece)    cout << '\n';
+//            }
+//        }
+//
+//        for (t = n_threads; t--;)  upkdFile[t].close(); // close input & output files
     
-                        prevLineNotThrID = true;
-                    }
-                    else    endThrPiece=true;
-                }
-    
-                if (endThrPiece)    cout << '\n';
-            }
-        }
-        
-        for (t = n_threads; t--;)  upkdFile[t].close(); // close input & output files
-    
-
-
 
 
 
