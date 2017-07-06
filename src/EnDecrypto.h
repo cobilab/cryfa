@@ -39,7 +39,8 @@ private:
     htable_t QsMap;                                      // QSs hash table
     bool     justPlus = true;                            // if line 3 is just +
     // check if reading input file reached to the end. MUST be initialized
-    bool     isInEmpty = false;
+    bool     isEncInEmpty = false;
+//    bool     isDecInEmpty = false;
     string   HdrsX;                                      // extended Hdrs
     string   QSsX;                                       // extended QSs
     
