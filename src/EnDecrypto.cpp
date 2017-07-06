@@ -760,14 +760,16 @@ void EnDecrypto::decompressFQ ()
         
         int m = 0;
         // distribute file among threads, for reading and packing
-        
-        while (in.peek() != EOF)
-//        while (m<2)
+//        cerr<<in.peek();
+        bool isEOF= false;
+        while (!isEOF)
+//        while (m<1)
 //        while (!isDecInEmpty)
         {
 //            isDecInEmpty = false;
-            cerr << ++m;
-
+//            cerr << ++m<<' ';
+//            cerr << ++m<<' ';
+            
             for (t = 0; t != n_threads; ++t)
             {
                 in.get(c);//cerr<<std::to_string(c);
@@ -778,23 +780,30 @@ void EnDecrypto::decompressFQ ()
                         chunkSizeStr += c;
                     offset = (std::streamoff) stoull(chunkSizeStr);
 
-//            cerr<<chunkSizeStr<<' ';
+//            cerr<<chunkSizeStr<<' '<<in.tellg()<<' ';
 
-                    arrThread[t] = thread(&EnDecrypto::unpackHSQS, this,
-                                          in.tellg(), offset,
-                                          hdrUnpack, qsUnpack, t,
-                                          unpackHdr, unpackQS);
+//                    arrThread[t] = thread(&EnDecrypto::unpackHSQS, this,
+//                                          in.tellg(), offset,
+//                                          hdrUnpack, qsUnpack, t,
+//                                          unpackHdr, unpackQS);
     
 //                    unpackHSQS(in.tellg(), offset, hdrUnpack, qsUnpack, t, unpackHdr, unpackQS);
 
-
+//cerr<<in.peek()<<' ';
 //                    offset -= 1;
                     in.seekg(offset, std::ios_base::cur);
+//                    cerr<<in.peek();
+    
                 }
-//                else if (c == (char) 252)
-//                    break;
+                
                 if (in.peek() == (char) 252)
-                    break;
+                {
+                    isEOF=true;
+                        break;
+                }
+    
+                cerr << in.peek();
+                break;
             }
 //            for (t = n_threads; t--;)    arrThread[t].join();
         }
