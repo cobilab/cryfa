@@ -30,9 +30,7 @@ public:
     void decompressFQ ();                                // decompress FQ
     
 private:
-    ull seed_shared;
-    
-    
+    ull      seed_shared;                                // shared seed
     string   Hdrs;                                       // max: 39 values
     string   QSs;                                        // max: 39 values
     htable_t HdrMap;                                     // Hdrs hash table
@@ -67,17 +65,18 @@ private:
                        string (*) (string::iterator&, const vector<string>&),
                        string (*) (string::iterator&, const vector<string>&));
     inline void unpackHSQL (const pos_t, const ull,      // unpack H:S, Q:Large
-                       const vector<string>&, const char, const vector<string>&, const byte,
-                       string (*) (string::iterator&, const vector<string>&),
-                       string (*) (string::iterator&, const vector<string>&));
+           const vector<string>&, const char, const vector<string>&, const byte,
+           string (*) (string::iterator&, const vector<string>&),
+           string (*) (string::iterator&, const vector<string>&));
     inline void unpackHLQS (const pos_t, const ull,      // unpack H:Large, Q:S
-                            const char, const vector<string>&, const vector<string>&, const byte,
-                            string (*) (string::iterator&, const vector<string>&),
-                            string (*) (string::iterator&, const vector<string>&));
+           const char, const vector<string>&, const vector<string>&, const byte,
+           string (*) (string::iterator&, const vector<string>&),
+           string (*) (string::iterator&, const vector<string>&));
     inline void unpackHLQL (const pos_t, const ull,      // unpack H:Large, Q:L
-                            const char, const vector<string>&, const char, const vector<string>&, const byte,
-                            string (*) (string::iterator&, const vector<string>&),
-                            string (*) (string::iterator&, const vector<string>&));
+                         const char, const vector<string>&, const char,
+                         const vector<string>&, const byte,
+                         string (*) (string::iterator&, const vector<string>&),
+                         string (*) (string::iterator&, const vector<string>&));
 };
 
 #endif //CRYFA_ENDECRYPTO_H
