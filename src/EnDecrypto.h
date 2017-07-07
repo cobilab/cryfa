@@ -40,7 +40,6 @@ private:
     bool     justPlus = true;                            // if line 3 is just +
     // check if reading input file reached to the end. MUST be initialized
     bool     isEncInEmpty = false;
-//    bool     isDecInEmpty = false;
     string   HdrsX;                                      // extended Hdrs
     string   QSsX;                                       // extended QSs
     

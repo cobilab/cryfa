@@ -207,7 +207,7 @@ void EnDecrypto::compressFQ ()
             arrThread[t] = thread(&EnDecrypto::pack, this,
                                   startLine, t, packHdr, packQS);
         }
-        for (t = n_threads; t--;)    arrThread[t].join();
+        for (t = n_threads; t--;)    if(arrThread[t].joinable())    arrThread[t].join();
     }
     
     // join encrypted files
@@ -567,15 +567,14 @@ void EnDecrypto::decompressFA ()
 *******************************************************************************/
 void EnDecrypto::decompressFQ ()
 {
-//    string decText;
-//    string::iterator i;         // iterator in decText
-//    ull chunkSize;              // size of each chunk of file
-    char c;                     // chars in file
-    vector<string> hdrUnpack;   // for unpacking header
-    vector<string> qsUnpack;    // for unpacking quality score
+    char c;                         // chars in file
+    vector<string> hdrUnpack;       // for unpacking header
+    vector<string> qsUnpack;        // for unpacking quality score
     string headers, qscores;
-//    bool justPlus = true;
-    string chunkSizeStr;        // chunk size (string) -- for unshuffling
+    string chunkSizeStr;            // chunk size (string) -- for unshuffling
+    thread arrThread[n_threads];    // array of threads
+    byte t;                         // for threads
+    ull offset;                     // to traverse decompressed file
     
     ifstream in(DEC_FILENAME);
     while (in.get(c) && c != (char) 254)                 headers += c;
@@ -743,66 +742,38 @@ void EnDecrypto::decompressFQ ()
 //    else
     if (headersLen <= MAX_C5 && qscoresLen <= MAX_C5)
     {
-//        string decText;
-//        string::iterator i;         // iterator in decText
-//        ull *chunkSize=new ull[n_threads];              // size of each chunk of file
-//        ull chunkSize;              // size of each chunk of file
-        thread arrThread[n_threads];
-        byte t;         // for threads
-//        pos_t *startPoint=new pos_t[n_threads];
-//        pos_t offset;
-//        std::streamoff offset;
-        ull offset;
-        
-        
         // tables for unpacking
         hdrUnpack = buildUnpack(headers, keyLen_hdr);
         qsUnpack  = buildUnpack(qscores, keyLen_qs);
         
-        int m = 0;
         // distribute file among threads, for reading and packing
         bool isEOF = false;
         while (!isEOF)
-//        while (!isDecInEmpty)
-//        while (in.peek() != (char) 252)
-//        while (m++<2)
         {
-//            isDecInEmpty = false;
-//            cerr << ++m << ' ';
-            
             for (t = 0; t != n_threads; ++t)
             {
                 in.get(c);
-//                cerr << (short) c << ' ';
-                
                 if (c == (char) 253)
                 {
                     chunkSizeStr.clear();   // chunk size
                     while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
-//                    offset = (std::streamoff) stoull(chunkSizeStr);
                     offset = stoull(chunkSizeStr);
                     
-//                    cerr << chunkSizeStr << ' ' << in.tellg() << ' ';
-//                    cerr << chunkSizeStr << ' ' << (char)in.peek() << ' ';
-
                     arrThread[t] = thread(&EnDecrypto::unpackHSQS, this,
                                           in.tellg(), offset,
                                           hdrUnpack, qsUnpack, t,
                                           unpackHdr, unpackQS);
-//                    unpackHSQS(in.tellg(), offset, hdrUnpack, qsUnpack, t, unpackHdr, unpackQS);
 
                     in.seekg((std::streamoff) offset, std::ios_base::cur);
-//                    cerr<<in.peek()<<' ';
                 }
                 
                 if (in.peek() == 252) { isEOF=true;   break; }
             }
-            for (t = n_threads; t--;)    arrThread[t].join();
+            for (t = n_threads; t--;)    if(arrThread[t].joinable())    arrThread[t].join();
         }
         
         // close decrypted file
         in.close();
-        
         
         
         // join unpacked files
@@ -855,8 +826,6 @@ inline void EnDecrypto::unpackHSQS (const pos_t startPoint, const ull chunkSize,
     ofstream upkfile;
     upkfile.open(UPK_FILENAME + to_string(threadID), std::ios_base::app);
     
-//    if (in.peek()==EOF) { isDecInEmpty = true;    return; }
-    
     in.seekg(startPoint);   // read file from this position
     // take a chunk of decrypted file
     for (ull u = chunkSize; u--;) { in.get(c);    decText += c; }
@@ -873,7 +842,7 @@ inline void EnDecrypto::unpackHSQS (const pos_t startPoint, const ull chunkSize,
         upkfile << (justPlus ? "+" : "+" + plusMore)    <<'\n';  ++i; //+
         upkfile << unpackQS(i, qsUnpack)                <<'\n';       //qs
     } while (++i != decText.end());       // if trouble: change "!=" to "<"
-
+    
     upkfile.close();
     in.close();
 }
