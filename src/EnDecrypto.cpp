@@ -751,7 +751,8 @@ void EnDecrypto::decompressFQ ()
         byte t;         // for threads
 //        pos_t *startPoint=new pos_t[n_threads];
 //        pos_t offset;
-        std::streamoff offset;
+//        std::streamoff offset;
+        ull offset;
         
         
         // tables for unpacking
@@ -760,55 +761,45 @@ void EnDecrypto::decompressFQ ()
         
         int m = 0;
         // distribute file among threads, for reading and packing
-//        cerr<<in.peek();
-        bool isEOF= false;
+        bool isEOF = false;
         while (!isEOF)
-//        while (m<1)
 //        while (!isDecInEmpty)
+//        while (in.peek() != (char) 252)
+//        while (m++<2)
         {
 //            isDecInEmpty = false;
-//            cerr << ++m<<' ';
-//            cerr << ++m<<' ';
+//            cerr << ++m << ' ';
             
             for (t = 0; t != n_threads; ++t)
             {
-                in.get(c);//cerr<<std::to_string(c);
+                in.get(c);
+//                cerr << (short) c << ' ';
+                
                 if (c == (char) 253)
                 {
                     chunkSizeStr.clear();   // chunk size
-                    while (in.get(c) && c != (char) 254)
-                        chunkSizeStr += c;
-                    offset = (std::streamoff) stoull(chunkSizeStr);
+                    while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
+//                    offset = (std::streamoff) stoull(chunkSizeStr);
+                    offset = stoull(chunkSizeStr);
+                    
+//                    cerr << chunkSizeStr << ' ' << in.tellg() << ' ';
+//                    cerr << chunkSizeStr << ' ' << (char)in.peek() << ' ';
 
-//            cerr<<chunkSizeStr<<' '<<in.tellg()<<' ';
-
-//                    arrThread[t] = thread(&EnDecrypto::unpackHSQS, this,
-//                                          in.tellg(), offset,
-//                                          hdrUnpack, qsUnpack, t,
-//                                          unpackHdr, unpackQS);
-    
+                    arrThread[t] = thread(&EnDecrypto::unpackHSQS, this,
+                                          in.tellg(), offset,
+                                          hdrUnpack, qsUnpack, t,
+                                          unpackHdr, unpackQS);
 //                    unpackHSQS(in.tellg(), offset, hdrUnpack, qsUnpack, t, unpackHdr, unpackQS);
 
-//cerr<<in.peek()<<' ';
-//                    offset -= 1;
-                    in.seekg(offset, std::ios_base::cur);
-//                    cerr<<in.peek();
-    
+                    in.seekg((std::streamoff) offset, std::ios_base::cur);
+//                    cerr<<in.peek()<<' ';
                 }
                 
-                if (in.peek() == (char) 252)
-                {
-                    isEOF=true;
-                        break;
-                }
-    
-                cerr << in.peek();
-                break;
+                if (in.peek() == 252) { isEOF=true;   break; }
             }
-//            for (t = n_threads; t--;)    arrThread[t].join();
+            for (t = n_threads; t--;)    arrThread[t].join();
         }
         
-    
         // close decrypted file
         in.close();
         
@@ -817,31 +808,31 @@ void EnDecrypto::decompressFQ ()
         // join unpacked files
         ifstream upkdFile[n_threads];
         string line;
-        
+
         // open unpacked files
         for (t = n_threads; t--;)   upkdFile[t].open(UPK_FILENAME+to_string(t));
-        
+
         bool prevLineNotThrID;            // if previous line was "THRD=" or not
         while (!upkdFile[0].eof())
         {
             for (t = 0; t != n_threads; ++t)
             {
                 prevLineNotThrID = false;
-    
+
                 while (getline(upkdFile[t], line).good() &&
                        line.compare(THR_ID_HDR + to_string(t)))
                 {
                     if (prevLineNotThrID)
                         cout << '\n';
                     cout << line;
-        
+
                     prevLineNotThrID = true;
                 }
-    
+
                 if (prevLineNotThrID)    cout << '\n';
             }
         }
-        
+
         // close input & output files
         for (t = n_threads; t--;)  upkdFile[t].close();
     }
