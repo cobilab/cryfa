@@ -54,7 +54,7 @@ int main (int argc, char* argv[])
     int c;                               // deal with getopt_long()
     int option_index;                    // option index stored by getopt_long()
     opterr = 0;  // force getopt_long() to remain silent when it finds a problem
-
+    
     static struct option long_options[] =
     {
         {"help",            no_argument, &h_flag, (int) 'h'},   // help
@@ -98,14 +98,14 @@ int main (int argc, char* argv[])
 
     if (v_flag)  cerr << "Verbose mode on.\n";
     if (d_flag)
-    {//todo. modify decompressFA function.  //todo. multithreading
+    {//todo. modify decompressFA function.
         cerr << "Decrypting...\n";
         cryptObj.decrypt();                                         // decrypt
         ifstream in(DEC_FILENAME);
         (in.peek() == (char) 127) ? cryptObj.decompressFA()         // FASTA
                                   : cryptObj.decompressFQ();        // FASTQ
         in.close();
-
+        
         // stop timer
         high_resolution_clock::time_point finishTime =
                 high_resolution_clock::now();
@@ -113,10 +113,10 @@ int main (int argc, char* argv[])
         std::chrono::duration<double> elapsed = finishTime - startTime;
         cerr << "done in " << std::fixed << setprecision(4) << elapsed.count()
              << " seconds.\n";
-
+        
         return 0;
     }
-
+    
     cerr << "Encrypting...\n";//todo. modify compressFA function
     (fileType(cryptObj.inFileName)=='A') ? cryptObj.compressFA()    // FASTA
                                          : cryptObj.compressFQ();   // FASTQ

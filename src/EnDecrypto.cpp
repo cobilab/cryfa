@@ -258,8 +258,15 @@ void EnDecrypto::compressFQ ()
     pkdFile << (char) 252;
 //    context += (char) 252;
     
-    for (t = n_threads; t--;)  encFile[t].close(); // close input & output files
-    pkdFile.close();                               // close packed file
+    // close/delete input/output files
+    pkdFile.close();
+    string encFileName;
+    for (t = n_threads; t--;)
+    {
+        encFile[t].close();
+        encFileName = ENC_FILENAME + to_string(t);
+        std::remove(encFileName.c_str());
+    }
     
     encrypt();      // cout encrypted content
 //    cout << '\n';
