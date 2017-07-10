@@ -197,35 +197,41 @@ void EnDecrypto::compressFQ ()
     }
     
     // distribute file among threads, for reading and packing
-    for (ull i = 0; !isEncInEmpty; ++i)
-    {
-        isEncInEmpty = false;
-        
-        for (t = 0; t != n_threads; ++t)
-        {
-            startLine = (i*n_threads + t) * LINE_BUFFER;
-            arrThread[t] = thread(&EnDecrypto::pack, this,
-                                  startLine, t, packHdr, packQS);
-        }
-        for (t = n_threads; t--;)    if(arrThread[t].joinable())    arrThread[t].join();
-    }
+    for (t = 0; t != n_threads; ++t)
+        arrThread[t] = thread(&EnDecrypto::pack, this, t, packHdr, packQS);
+    for (t = n_threads; t--;)
+        if (arrThread[t].joinable())    arrThread[t].join();
+
+//    for (ull i = 0; !isEncInEmpty; ++i)
+//    {
+//        isEncInEmpty = false;
+//
+//        for (t = 0; t != n_threads; ++t)
+//        {
+//            startLine = (i*n_threads + t) * LINE_BUFFER;
+//            arrThread[t] = thread(&EnDecrypto::pack, this,
+//                                  startLine, t, packHdr, packQS);
+//        }
+//        for (t = n_threads; t--;)
+//            if(arrThread[t].joinable())    arrThread[t].join();
+//    }
     
     // join encrypted files
     ifstream encFile[n_threads];
     string context;
     
-//    // watermark for encrypted file
-//    cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
-//                       + to_string(RELEASE_CRYFA) + "\n";
+    // watermark for encrypted file
+    cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
+                       + to_string(RELEASE_CRYFA) + "\n";
     
     // open packed file
     ofstream pkdFile;
     pkdFile.open(PKD_FILENAME);
-    
-    pkdFile << headers;                             // send headers to decryptor
-    pkdFile << (char) 254;                          // to detect headers in dec.
-    pkdFile << qscores;                             // send qscores to decryptor
-    pkdFile << (hasFQjustPlus() ? (char) 253 : '\n');             // if just '+'
+    //todo. uncomment
+//    pkdFile << headers;                             // send headers to decryptor
+//    pkdFile << (char) 254;                          // to detect headers in dec.
+//    pkdFile << qscores;                             // send qscores to decryptor
+//    pkdFile << (hasFQjustPlus() ? (char) 253 : '\n');             // if just '+'
     
 //  context += headers;                             // send headers to decryptor
 //  context += (char) 254;                          // to detect headers in dec.
@@ -255,7 +261,7 @@ void EnDecrypto::compressFQ ()
             }
         }
     }
-    pkdFile << (char) 252;
+//    pkdFile << (char) 252;//todo. uncomment
 //    context += (char) 252;
     
     // close/delete input/output files
@@ -265,10 +271,10 @@ void EnDecrypto::compressFQ ()
     {
         encFile[t].close();
         encFileName = ENC_FILENAME + to_string(t);
-        std::remove(encFileName.c_str());
+//        std::remove(encFileName.c_str());//todo. uncomment
     }
     
-    encrypt();      // cout encrypted content
+//    encrypt();      // cout encrypted content//todo. uncomment
 //    cout << '\n';
     
     /*
@@ -297,82 +303,182 @@ void EnDecrypto::compressFQ ()
 /*******************************************************************************
     pack -- '@' at the beginning of headers is not packed
 *******************************************************************************/
-inline void EnDecrypto::pack (const ull startLine, const byte threadID,
+inline void EnDecrypto::pack (const byte threadID,
                               string (*packHdr)(const string&, const htable_t&),
                               string (*packQS)(const string&, const htable_t&))
 {
+    string encFileName;
+    for (byte t = n_threads; t--;)
+    {
+        encFileName = ENC_FILENAME + to_string(t);
+        std::remove(encFileName.c_str());//todo. uncomment
+    }
+
+
     ifstream in(inFileName);
     string context; // output string
     string inTempStr;
     string line;
-    
-    for (ull l = 0; l != startLine; ++l)    in.ignore(LARGE_NUMBER, '\n');
-    
+
+    for (ull l = 0; l != threadID*LINE_BUFFER; ++l)    in.ignore(LARGE_NUMBER, '\n');
+
 //    // beginning of the part of file for this thread
 //    pos_t pos_beg = in.tellg();
-    
-    if (in.peek()==EOF) { isEncInEmpty = true;    return; }
-    
-    for (ull l = 0; l != LINE_BUFFER; l += 4)   // process 4 lines by 4 lines
-    {
-        if (getline(in, line).good())           // header -- ignore '@'
-            context += packHdr(line.substr(1), HdrMap) + (char) 254;
 
-        if (getline(in, line).good())           // sequence
-            context += packSeq_3to1(line) + (char) 254;
+//    if (in.peek()==EOF) { isEncInEmpty = true;    return; }
 
-        in.ignore(LARGE_NUMBER, '\n');          // +. ignore
 
-        if (getline(in, line).good())           // quality score
-            context += packQS(line, QsMap) + (char) 254;
-    }
-    
-    // shuffle
-    if (!disable_shuffle)    shufflePkd(context);
-    
-    // for unshuffling: insert the size of packed context in the beginning of it
-    string contextSize;
-    contextSize += (char) 253;
-    contextSize += to_string(context.size());
-    contextSize += (char) 254;
-    context.insert(0, contextSize);
-    
-    /*
-    i = in.begin();
-    while (i != in.end())
-    {
-        // header -- ignore '@'
-        inTempStr.clear();
-        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-        context += packHdr(inTempStr, HEADERS, HDR_MAP) + (char) 254;
-
-        // sequence
-        inTempStr.clear();
-        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-        context += packSeq_3to1(inTempStr) + (char) 254;
-
-        // +. ignore
-        for (i += 1; *i != '\n'; ++i);
-
-        // quality score
-        inTempStr.clear();
-        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-        context += packQS(inTempStr, QUALITY_SCORES, QS_MAP) + (char) 254;
-
-        i += 1;
-    }
-    */
-    
     ofstream encfile;
     encfile.open(ENC_FILENAME+to_string(threadID), std::ios_base::app);
+
+    while(in.peek()!=EOF)
+    {
+        context.clear();
+
+        for (ull l = 0; l != LINE_BUFFER; l += 4)   // process 4 lines by 4 lines
+        {
+            if (getline(in, line).good())           // header -- ignore '@'
+                context += line+"\n";
+//            context += packHdr(line.substr(1), HdrMap) + (char) 254;
+
+            if (getline(in, line).good())           // sequence
+                context += line+"\n+\n";
+//            context += packSeq_3to1(line) + (char) 254;
     
-    // write header containing threadID for each
-    encfile << THR_ID_HDR + to_string(threadID) << '\n';
-    encfile << context << '\n';
-    
+            in.ignore(LARGE_NUMBER, '\n');          // +. ignore
+//            context += "+\n";
+
+            if (getline(in, line).good())           // quality score
+                context += line+"\n";
+//            context += packQS(line, QsMap) + (char) 254;
+        }
+
+//        // shuffle
+//        if (!disable_shuffle)
+//            shufflePkd(context);
+//
+//        // for unshuffling: insert the size of packed context in the beginning of it
+//        string contextSize;
+//        contextSize += (char) 253;
+//        contextSize += to_string(context.size());
+//        contextSize += (char) 254;
+//        context.insert(0, contextSize);
+
+        /*
+        i = in.begin();
+        while (i != in.end())
+        {
+            // header -- ignore '@'
+            inTempStr.clear();
+            for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
+            context += packHdr(inTempStr, HEADERS, HDR_MAP) + (char) 254;
+
+            // sequence
+            inTempStr.clear();
+            for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
+            context += packSeq_3to1(inTempStr) + (char) 254;
+
+            // +. ignore
+            for (i += 1; *i != '\n'; ++i);
+
+            // quality score
+            inTempStr.clear();
+            for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
+            context += packQS(inTempStr, QUALITY_SCORES, QS_MAP) + (char) 254;
+
+            i += 1;
+        }
+        */
+//
+//        ofstream encfile;
+//        encfile.open(ENC_FILENAME + to_string(threadID), std::ios_base::app);
+
+        // write header containing threadID for each
+        encfile << THR_ID_HDR + to_string(threadID) << '\n';
+        encfile << context << '\n';
+
+        for (ull l = (n_threads-1)*LINE_BUFFER; l--;)    in.ignore(LARGE_NUMBER, '\n');
+    }
     encfile.close();
     in.close();
 }
+
+//inline void EnDecrypto::pack (const ull startLine, const byte threadID,
+//                              string (*packHdr)(const string&, const htable_t&),
+//                              string (*packQS)(const string&, const htable_t&))
+//{
+//    ifstream in(inFileName);
+//    string context; // output string
+//    string inTempStr;
+//    string line;
+//
+//    for (ull l = 0; l != startLine; ++l)    in.ignore(LARGE_NUMBER, '\n');
+//
+////    // beginning of the part of file for this thread
+////    pos_t pos_beg = in.tellg();
+//
+//    if (in.peek()==EOF) { isEncInEmpty = true;    return; }
+//
+//    for (ull l = 0; l != LINE_BUFFER; l += 4)   // process 4 lines by 4 lines
+//    {
+//        if (getline(in, line).good())           // header -- ignore '@'
+//            context += packHdr(line.substr(1), HdrMap) + (char) 254;
+//
+//        if (getline(in, line).good())           // sequence
+//            context += packSeq_3to1(line) + (char) 254;
+//
+//        in.ignore(LARGE_NUMBER, '\n');          // +. ignore
+//
+//        if (getline(in, line).good())           // quality score
+//            context += packQS(line, QsMap) + (char) 254;
+//    }
+//
+//    // shuffle
+//    if (!disable_shuffle)    shufflePkd(context);
+//
+//    // for unshuffling: insert the size of packed context in the beginning of it
+//    string contextSize;
+//    contextSize += (char) 253;
+//    contextSize += to_string(context.size());
+//    contextSize += (char) 254;
+//    context.insert(0, contextSize);
+//
+//    /*
+//    i = in.begin();
+//    while (i != in.end())
+//    {
+//        // header -- ignore '@'
+//        inTempStr.clear();
+//        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
+//        context += packHdr(inTempStr, HEADERS, HDR_MAP) + (char) 254;
+//
+//        // sequence
+//        inTempStr.clear();
+//        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
+//        context += packSeq_3to1(inTempStr) + (char) 254;
+//
+//        // +. ignore
+//        for (i += 1; *i != '\n'; ++i);
+//
+//        // quality score
+//        inTempStr.clear();
+//        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
+//        context += packQS(inTempStr, QUALITY_SCORES, QS_MAP) + (char) 254;
+//
+//        i += 1;
+//    }
+//    */
+//
+//    ofstream encfile;
+//    encfile.open(ENC_FILENAME+to_string(threadID), std::ios_base::app);
+//
+//    // write header containing threadID for each
+//    encfile << THR_ID_HDR + to_string(threadID) << '\n';
+//    encfile << context << '\n';
+//
+//    encfile.close();
+//    in.close();
+//}
 
 /*******************************************************************************
     encrypt.
@@ -452,18 +558,18 @@ void EnDecrypto::decrypt ()
     if (!in.good())
     { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
     
-//    // watermark
-//    string watermark = "#cryfa v" + to_string(VERSION_CRYFA) + "."
-//                                  + to_string(RELEASE_CRYFA) + "\n";
-//    string line;    getline(in, line);
-//    if ((line+"\n") != watermark)
-//    { cerr << "Error: invalid encrypted file!\n";    exit(1); }
-//
-//    ofstream encnw(ENW_FILENAME);
-//    char c;     while (in.get(c)) encnw << c;
-//
-//    // close open files -- is a MUST (for encnw)
-//    encnw.close();
+    // watermark
+    string watermark = "#cryfa v" + to_string(VERSION_CRYFA) + "."
+                                  + to_string(RELEASE_CRYFA) + "\n";
+    string line;    getline(in, line);
+    if ((line+"\n") != watermark)
+    { cerr << "Error: invalid encrypted file!\n";    exit(1); }
+
+    ofstream encnw(ENW_FILENAME);
+    char c;     while (in.get(c)) encnw << c;
+
+    // close open files -- is a MUST (for encnw)
+    encnw.close();
     in.close();
     
 ////    string::size_type watermarkIdx = cipherText.find(watermark);
@@ -490,8 +596,8 @@ void EnDecrypto::decrypt ()
 //        cerr << " block size: " << AES::BLOCKSIZE        << '\n';
 //    }
 
-//    const char* inFile  = ENW_FILENAME;
-    const char* inFile  = "CRYFA_ENCRYPTED";
+    const char* inFile  = ENW_FILENAME;
+//    const char* inFile  = "CRYFA_ENCRYPTED";
     const char* outFile = DEC_FILENAME;
     CBC_Mode<CryptoPP::AES>::Decryption
             cbcDec(key, (size_t) AES::DEFAULT_KEYLENGTH, iv);

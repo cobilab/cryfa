@@ -57,9 +57,12 @@ private:
     inline void un_shuffleSeedGen ();                    // (un)shuffle seed gen
     inline void shufflePkd (string&);                    // shuffle packed
     inline void unshufflePkd (string::iterator&, const ull); // unshuffle packed
-    inline void pack (const ull, const byte,             // pack
+    inline void pack (const byte,             // pack
                       string (*)(const string&, const htable_t&),
                       string (*)(const string&, const htable_t&));
+//    inline void pack (const ull, const byte,             // pack
+//                      string (*)(const string&, const htable_t&),
+//                      string (*)(const string&, const htable_t&));
     inline void unpackHSQS (const pos_t, const ull,      // unpack H:Small, Q:S
                        const vector<string>&, const vector<string>&, const byte,
                        string (*) (string::iterator&, const vector<string>&),
