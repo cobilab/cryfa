@@ -199,7 +199,7 @@ void EnDecrypto::compressFQ ()
     // distribute file among threads, for reading and packing
     for (t = 0; t != n_threads; ++t)
         arrThread[t] = thread(&EnDecrypto::pack, this, t, packHdr, packQS);
-    for (t = n_threads; t--;)
+    for (t = 0; t != n_threads; ++t)
         if (arrThread[t].joinable())    arrThread[t].join();
 
 //    for (ull i = 0; !isEncInEmpty; ++i)
@@ -240,7 +240,7 @@ void EnDecrypto::compressFQ ()
 ////    out << context ;//<< '\n';    //todo. too aes cbc mode nemishe
     
     // open input files
-    for (t = n_threads; t--;)   encFile[t].open(ENC_FILENAME + to_string(t));
+    for (t = 0; t != n_threads; ++t)   encFile[t].open(ENC_FILENAME + to_string(t));
     
     bool prevLineNotThrID;                 // if previous line was "THR=" or not
     while (!encFile[0].eof())
@@ -267,7 +267,7 @@ void EnDecrypto::compressFQ ()
     // close/delete input/output files
     pkdFile.close();
     string encFileName;
-    for (t = n_threads; t--;)
+    for (t = 0; t != n_threads; ++t)
     {
         encFile[t].close();
         encFileName = ENC_FILENAME + to_string(t);
@@ -308,7 +308,7 @@ inline void EnDecrypto::pack (const byte threadID,
                               string (*packQS)(const string&, const htable_t&))
 {
     string encFileName;
-    for (byte t = n_threads; t--;)
+    for (byte t = 0; t != n_threads; ++t)
     {
         encFileName = ENC_FILENAME + to_string(t);
         std::remove(encFileName.c_str());//todo. uncomment
@@ -326,12 +326,12 @@ inline void EnDecrypto::pack (const byte threadID,
 //    pos_t pos_beg = in.tellg();
 
 //    if (in.peek()==EOF) { isEncInEmpty = true;    return; }
-
-
+    
+    
     ofstream encfile;
     encfile.open(ENC_FILENAME+to_string(threadID), std::ios_base::app);
-
-    while(in.peek()!=EOF)
+    
+    while (in.peek() != EOF)
     {
         context.clear();
 
@@ -397,7 +397,7 @@ inline void EnDecrypto::pack (const byte threadID,
         encfile << THR_ID_HDR + to_string(threadID) << '\n';
         encfile << context << '\n';
 
-        for (ull l = (n_threads-1)*LINE_BUFFER; l--;)    in.ignore(LARGE_NUMBER, '\n');
+        for (ull l=0; l!= (n_threads-1)*LINE_BUFFER; ++l)    in.ignore(LARGE_NUMBER, '\n');
     }
     encfile.close();
     in.close();
