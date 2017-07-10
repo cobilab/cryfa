@@ -214,9 +214,9 @@ void EnDecrypto::compressFQ ()
     ifstream encFile[n_threads];
     string context;
     
-    // watermark for encrypted file
-    cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
-                       + to_string(RELEASE_CRYFA) + "\n";
+//    // watermark for encrypted file
+//    cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
+//                       + to_string(RELEASE_CRYFA) + "\n";
     
     // open packed file
     ofstream pkdFile;
@@ -399,6 +399,10 @@ inline void EnDecrypto::encrypt ()
     FileSource(inFile, true,
                new StreamTransformationFilter(cbcEnc, new FileSink(cout)));
     
+    // delete packed file
+    const string pkdFileName = PKD_FILENAME;
+    std::remove(pkdFileName.c_str());
+    
     /*
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
@@ -448,18 +452,18 @@ void EnDecrypto::decrypt ()
     if (!in.good())
     { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
     
-    // watermark
-    string watermark = "#cryfa v" + to_string(VERSION_CRYFA) + "."
-                                  + to_string(RELEASE_CRYFA) + "\n";
-    string line;    getline(in, line);
-    if ((line+"\n") != watermark)
-    { cerr << "Error: invalid encrypted file!\n";    exit(1); }
-    
-    ofstream encnw(ENW_FILENAME);
-    char c;     while (in.get(c)) encnw << c;
-    
-    // close open files -- is a MUST (for encnw)
-    encnw.close();
+//    // watermark
+//    string watermark = "#cryfa v" + to_string(VERSION_CRYFA) + "."
+//                                  + to_string(RELEASE_CRYFA) + "\n";
+//    string line;    getline(in, line);
+//    if ((line+"\n") != watermark)
+//    { cerr << "Error: invalid encrypted file!\n";    exit(1); }
+//
+//    ofstream encnw(ENW_FILENAME);
+//    char c;     while (in.get(c)) encnw << c;
+//
+//    // close open files -- is a MUST (for encnw)
+//    encnw.close();
     in.close();
     
 ////    string::size_type watermarkIdx = cipherText.find(watermark);
@@ -486,12 +490,18 @@ void EnDecrypto::decrypt ()
 //        cerr << " block size: " << AES::BLOCKSIZE        << '\n';
 //    }
     
-    const char* inFile  = ENW_FILENAME;
+//    const char* inFile  = ENW_FILENAME;
+#define mori "CRYFA_ENCRYPTED"
+    const char* inFile  = mori;
     const char* outFile = DEC_FILENAME;
     CBC_Mode<CryptoPP::AES>::Decryption
             cbcDec(key, (size_t) AES::DEFAULT_KEYLENGTH, iv);
     FileSource(inFile, true,
                new StreamTransformationFilter(cbcDec, new FileSink(outFile)));
+    
+    // delete encrypted without watermark file
+    const string enwFileName = ENW_FILENAME;
+    std::remove(enwFileName.c_str());
 }
 
 /*******************************************************************************
@@ -574,9 +584,8 @@ void EnDecrypto::decompressFA ()
 *******************************************************************************/
 void EnDecrypto::decompressFQ ()
 {
-    char c;                         // chars in file
-    vector<string> hdrUnpack, qsUnpack;       // for unpacking header
-//    vector<string> qsUnpack;        // for unpacking quality score
+    char c;                             // chars in file
+    vector<string> hdrUnpack, qsUnpack; // for unpacking header & qscore
     string headers, qscores;
     string chunkSizeStr;            // chunk size (string) -- for unshuffling
     thread arrThread[n_threads];    // array of threads
@@ -593,13 +602,13 @@ void EnDecrypto::decompressFQ ()
     us keyLen_hdr = 0,  keyLen_qs = 0;
     
     using unpackHdrPtr = string (*) (string::iterator&, const vector<string>&);
-    unpackHdrPtr unpackHdr;                              // function pointer
+    unpackHdrPtr unpackHdr;                                  // function pointer
     using unpackQSPtr = string (*) (string::iterator&, const vector<string>&);
-    unpackQSPtr unpackQS;                                // function pointer
-
+    unpackQSPtr unpackQS;                                    // function pointer
+    
     // header
-    if          (headersLen > MAX_C5)       keyLen_hdr = KEYLEN_C5;
-    else if     (headersLen > MAX_C4)                                   // cat 5
+    if      (headersLen > MAX_C5)           keyLen_hdr = KEYLEN_C5;
+    else if (headersLen > MAX_C4)                                       // cat 5
     {   unpackHdr = &unpack_read2B;         keyLen_hdr = KEYLEN_C5; }
     else
     {   unpackHdr = &unpack_read1B;
@@ -783,8 +792,10 @@ void EnDecrypto::decompressFQ ()
         }
     }
     
-    // close decrypted file
+    // close/delete decrypted file
     in.close();
+    const string decFileName = DEC_FILENAME;
+    std::remove(decFileName.c_str());
     
     // join unpacked files
     ifstream upkdFile[n_threads];
@@ -812,8 +823,14 @@ void EnDecrypto::decompressFQ ()
         }
     }
     
-    // close input & output files
-    for (t = n_threads; t--;)    upkdFile[t].close();
+    // close/delete input/output files
+    string upkdFileName;
+    for (t = n_threads; t--;)
+    {
+        upkdFile[t].close();
+        upkdFileName = UPK_FILENAME + to_string(t);
+        std::remove(upkdFileName.c_str());
+    }
 }
 
 /*******************************************************************************
