@@ -489,10 +489,9 @@ void EnDecrypto::decrypt ()
 //        cerr << "cipher size: " << cipherText.size()-1 << '\n';
 //        cerr << " block size: " << AES::BLOCKSIZE        << '\n';
 //    }
-    
+
 //    const char* inFile  = ENW_FILENAME;
-#define mori "CRYFA_ENCRYPTED"
-    const char* inFile  = mori;
+    const char* inFile  = "CRYFA_ENCRYPTED";
     const char* outFile = DEC_FILENAME;
     CBC_Mode<CryptoPP::AES>::Decryption
             cbcDec(key, (size_t) AES::DEFAULT_KEYLENGTH, iv);
