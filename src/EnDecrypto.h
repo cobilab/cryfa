@@ -23,23 +23,21 @@ public:
     bool   verbose = false;                              // for verbose mode
     
     EnDecrypto();                                        // constructor
-    void compressFA ();                                  // compress FASTA
-    void compressFQ ();                                  // compress FASTQ
-    void decrypt ();                                     // decrypt
-    void decompressFA ();                                // decompress FA
-    void decompressFQ ();                                // decompress FQ
+    void   compressFA ();                                // compress FASTA
+    void   compressFQ ();                                // compress FASTQ
+    void   decrypt ();                                   // decrypt
+    void   decompressFA ();                              // decompress FA
+    void   decompressFQ ();                              // decompress FQ
     
 private:
-    ull      seed_shared;                                // shared seed
-    string   Hdrs;                                       // max: 39 values
-    string   QSs;                                        // max: 39 values
-    htable_t HdrMap;                                     // Hdrs hash table
-    htable_t QsMap;                                      // QSs hash table
-    bool     justPlus = true;                            // if line 3 is just +
-    // check if reading input file reached to the end. MUST be initialized
-    bool     isEncInEmpty = false;
-    string   HdrsX;                                      // extended Hdrs
-    string   QSsX;                                       // extended QSs
+    ull    seed_shared;                                  // shared seed
+    string Hdrs;                                         // max: 39 values
+    string QSs;                                          // max: 39 values
+    htbl_t HdrMap;                                       // Hdrs hash table
+    htbl_t QsMap;                                        // QSs hash table
+    bool   justPlus = true;                              // if line 3 is just +
+    string HdrsX;                                        // extended Hdrs
+    string QSsX;                                         // extended QSs
     
     inline void encrypt  ();                             // encrypt
     inline void buildIV  (byte*, const string&);         // build IV
@@ -57,8 +55,8 @@ private:
     inline void un_shuffleSeedGen ();                    // (un)shuffle seed gen
     inline void shufflePkd (string&);                    // shuffle packed
     inline void unshufflePkd (string::iterator&, const ull); // unshuffle packed
-    inline void pack (const byte, string (*)(const string&, const htable_t&),
-                      string (*)(const string&, const htable_t&));       // pack
+    inline void pack (const byte, string (*)(const string&, const htbl_t&),
+                      string (*)(const string&, const htbl_t&));       // pack
     inline void unpackHSQS (const pos_t, const ull,      // unpack H:Small, Q:S
                        const vector<string>&, const vector<string>&, const byte,
                        string (*) (string::iterator&, const vector<string>&),

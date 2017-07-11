@@ -122,9 +122,9 @@ void EnDecrypto::compressFQ ()
     gatherHdrQs(headers, qscores);
 
     // function pointers
-    using packHdrPointer = string (*)(const string&, const htable_t&);
+    using packHdrPointer = string (*)(const string&, const htbl_t&);
     packHdrPointer packHdr;
-    using packQSPointer  = string (*)(const string&, const htable_t&);
+    using packQSPointer  = string (*)(const string&, const htbl_t&);
     packQSPointer packQS;
 
     const size_t headersLen = headers.length();
@@ -293,17 +293,17 @@ void EnDecrypto::compressFQ ()
     pack -- '@' at the beginning of headers is not packed
 *******************************************************************************/
 inline void EnDecrypto::pack (const byte threadID,
-                              string (*packHdr)(const string&, const htable_t&),
-                              string (*packQS)(const string&, const htable_t&))
+                              string (*packHdr)(const string&, const htbl_t&),
+                              string (*packQS)(const string&, const htbl_t&))
 {
     ifstream in(inFileName);
     string context; // output string
     string inTempStr, line;
     ofstream encfile;
     encfile.open(PK_FILENAME+to_string(threadID), std::ios_base::app);
-
-    for (ull l = (ull) threadID*LINE_BUFFER; l--;)
-        in.ignore(LARGE_NUMBER, '\n');      // ignore the lines at the beginning
+    
+    // ignore the lines at the beginning
+    for (ull l=(ull) threadID*LINE_BUFFER; l--;)  in.ignore(LARGE_NUMBER, '\n');
     
     while (in.peek() != EOF)
     {
@@ -362,9 +362,10 @@ inline void EnDecrypto::pack (const byte threadID,
         // write header containing threadID for each
         encfile << THR_ID_HDR + to_string(threadID) << '\n';
         encfile << context << '\n';
-    
+        
+        // ignore to go to the next related chunk
         for (ull l = (ull) (n_threads-1)*LINE_BUFFER; l--;)
-            in.ignore(LARGE_NUMBER, '\n');        // to go to next related chunk
+            in.ignore(LARGE_NUMBER, '\n');
     }
     
     encfile.close();
@@ -455,12 +456,12 @@ void EnDecrypto::decrypt ()
     string line;    getline(in, line);
     if ((line+"\n") != watermark)
     { cerr << "Error: invalid encrypted file!\n";    exit(1); }
+    
+    ofstream compnw(CNW_FILENAME);
+    char c;     while (in.get(c)) compnw << c;
 
-    ofstream encnw(CNW_FILENAME);
-    char c;     while (in.get(c)) encnw << c;
-
-    // close open files -- is a MUST (for encnw)
-    encnw.close();
+    // close open files -- is a MUST (for compnw)
+    compnw.close();
     in.close();
     
 ////    string::size_type watermarkIdx = cipherText.find(watermark);
@@ -486,7 +487,7 @@ void EnDecrypto::decrypt ()
 //        cerr << "cipher size: " << cipherText.size()-1 << '\n';
 //        cerr << " block size: " << AES::BLOCKSIZE        << '\n';
 //    }
-
+    
     const char* inFile  = CNW_FILENAME;
     const char* outFile = DEC_FILENAME;
     CBC_Mode<CryptoPP::AES>::Decryption
@@ -662,7 +663,7 @@ void EnDecrypto::decompressFQ ()
                 if (in.peek() == 252) { isEOF = true;    break; }
             }
             
-            for (t = n_threads; t--;)
+            for (t = 0; t != n_threads; ++t)
                 if (arrThread[t].joinable())    arrThread[t].join();
         }
     }
@@ -701,7 +702,7 @@ void EnDecrypto::decompressFQ ()
                 if (in.peek() == 252) { isEOF = true;    break; }
             }
         
-            for (t = n_threads; t--;)
+            for (t = 0; t != n_threads; ++t)
                 if (arrThread[t].joinable())    arrThread[t].join();
         }
     }
@@ -743,7 +744,7 @@ void EnDecrypto::decompressFQ ()
                 if (in.peek() == 252) { isEOF = true;    break; }
             }
         
-            for (t = n_threads; t--;)
+            for (t = 0; t != n_threads; ++t)
                 if (arrThread[t].joinable())    arrThread[t].join();
         }
     }
@@ -782,7 +783,7 @@ void EnDecrypto::decompressFQ ()
                 if (in.peek() == 252) { isEOF = true;    break; }
             }
             
-            for (t = n_threads; t--;)
+            for (t = 0; t != n_threads; ++t)
                 if (arrThread[t].joinable())    arrThread[t].join();
         }
     }

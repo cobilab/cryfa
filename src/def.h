@@ -31,7 +31,7 @@ typedef unsigned int                      ui;
 typedef unsigned long long                ull;
 typedef long long                         ll;
 typedef std::mt19937                      rng_type;
-typedef std::unordered_map<string, ull>   htable_t;
+typedef std::unordered_map<string, ull>   htbl_t;
 typedef std::char_traits<char>::pos_type  pos_t;    // tellg(), tellp()
 
 /*******************************************************************************
@@ -76,7 +76,7 @@ struct POWER<B, 0>
 #define DEC_FILENAME    "CRYFA_DEC"  // decrypted file name
 #define UPK_FILENAME    "CRYFA_UPK"  // unpacked file name
 #define DEFAULT_N_THR   1            // default number of threads
-#define LINE_BUFFER     6000//600000//4//12//8//16//36000//
+#define LINE_BUFFER     4//6000//600000//12//8//16//36000//
                                      // buffer size (lines) to separate files
                                      // for multithreading. MUST be x4
 #define LARGE_NUMBER    std::numeric_limits<std::streamsize>::max()
@@ -122,7 +122,7 @@ const string DNA_UNPACK[] =     // 216 elements
     "XNX", "XXA", "XXC", "XXG", "XXT", "XXN", "XXX"
 };
 //..............................................................................
-const htable_t DNA_MAP =
+const htbl_t DNA_MAP =
 {
     {"AAA",   0}, {"AAC",   1}, {"AAG",   2}, {"AAT",   3}, {"AAN",   4},
     {"AAX",   5}, {"ACA",   6}, {"ACC",   7}, {"ACG",   8}, {"ACT",   9},
