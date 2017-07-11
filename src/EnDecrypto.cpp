@@ -197,6 +197,13 @@ void EnDecrypto::compressFQ ()
     }
     
     // distribute file among threads, for reading and packing
+    //todo. manage deleting extra files
+////        string encFileName;
+////    for (byte t = 0; t != n_threads; ++t)
+////    {
+////        encFileName = ENC_FILENAME + to_string(t);
+////        std::remove(encFileName.c_str());
+////    }
     for (t = 0; t != n_threads; ++t)
         arrThread[t] = thread(&EnDecrypto::pack, this, t, packHdr, packQS);
     for (t = 0; t != n_threads; ++t)
@@ -228,10 +235,10 @@ void EnDecrypto::compressFQ ()
     ofstream pkdFile;
     pkdFile.open(PKD_FILENAME);
     //todo. uncomment
-//    pkdFile << headers;                             // send headers to decryptor
-//    pkdFile << (char) 254;                          // to detect headers in dec.
-//    pkdFile << qscores;                             // send qscores to decryptor
-//    pkdFile << (hasFQjustPlus() ? (char) 253 : '\n');             // if just '+'
+    pkdFile << headers;                             // send headers to decryptor
+    pkdFile << (char) 254;                          // to detect headers in dec.
+    pkdFile << qscores;                             // send qscores to decryptor
+    pkdFile << (hasFQjustPlus() ? (char) 253 : '\n');             // if just '+'
     
 //  context += headers;                             // send headers to decryptor
 //  context += (char) 254;                          // to detect headers in dec.
@@ -240,7 +247,7 @@ void EnDecrypto::compressFQ ()
 ////    out << context ;//<< '\n';    //todo. too aes cbc mode nemishe
     
     // open input files
-    for (t = 0; t != n_threads; ++t)   encFile[t].open(ENC_FILENAME + to_string(t));
+    for (t = 0; t != n_threads; ++t)   encFile[t].open(ENC_FILENAME+to_string(t));
     
     bool prevLineNotThrID;                 // if previous line was "THR=" or not
     while (!encFile[0].eof())
@@ -261,7 +268,7 @@ void EnDecrypto::compressFQ ()
             }
         }
     }
-//    pkdFile << (char) 252;//todo. uncomment
+    pkdFile << (char) 252;//todo. uncomment
 //    context += (char) 252;
     
     // close/delete input/output files
@@ -271,10 +278,10 @@ void EnDecrypto::compressFQ ()
     {
         encFile[t].close();
         encFileName = ENC_FILENAME + to_string(t);
-//        std::remove(encFileName.c_str());//todo. uncomment
+//        std::remove(encFileName.c_str());
     }
     
-//    encrypt();      // cout encrypted content//todo. uncomment
+    encrypt();      // cout encrypted content//todo. uncomment
 //    cout << '\n';
     
     /*
@@ -307,14 +314,9 @@ inline void EnDecrypto::pack (const byte threadID,
                               string (*packHdr)(const string&, const htable_t&),
                               string (*packQS)(const string&, const htable_t&))
 {
-    string encFileName;
-    for (byte t = 0; t != n_threads; ++t)
-    {
-        encFileName = ENC_FILENAME + to_string(t);
-        std::remove(encFileName.c_str());//todo. uncomment
-    }
-
-
+    //todo. inja hargez file ha ro delete nakon, chon tu multithreading
+    //todo. moshkel ijad mikone
+    
     ifstream in(inFileName);
     string context; // output string
     string inTempStr;
@@ -326,11 +328,11 @@ inline void EnDecrypto::pack (const byte threadID,
 //    pos_t pos_beg = in.tellg();
 
 //    if (in.peek()==EOF) { isEncInEmpty = true;    return; }
-    
-    
+
+
     ofstream encfile;
     encfile.open(ENC_FILENAME+to_string(threadID), std::ios_base::app);
-    
+
     while (in.peek() != EOF)
     {
         context.clear();
@@ -338,31 +340,30 @@ inline void EnDecrypto::pack (const byte threadID,
         for (ull l = 0; l != LINE_BUFFER; l += 4)   // process 4 lines by 4 lines
         {
             if (getline(in, line).good())           // header -- ignore '@'
-                context += line+"\n";
-//            context += packHdr(line.substr(1), HdrMap) + (char) 254;
+//                context += line+"\n";
+            context += packHdr(line.substr(1), HdrMap) + (char) 254;
 
             if (getline(in, line).good())           // sequence
-                context += line+"\n+\n";
-//            context += packSeq_3to1(line) + (char) 254;
-    
+//                context += line+"\n+\n";
+            context += packSeq_3to1(line) + (char) 254;
+
             in.ignore(LARGE_NUMBER, '\n');          // +. ignore
-//            context += "+\n";
 
             if (getline(in, line).good())           // quality score
-                context += line+"\n";
-//            context += packQS(line, QsMap) + (char) 254;
+//                context += line+"\n";
+            context += packQS(line, QsMap) + (char) 254;
         }
 
-//        // shuffle
-//        if (!disable_shuffle)
-//            shufflePkd(context);
-//
-//        // for unshuffling: insert the size of packed context in the beginning of it
-//        string contextSize;
-//        contextSize += (char) 253;
-//        contextSize += to_string(context.size());
-//        contextSize += (char) 254;
-//        context.insert(0, contextSize);
+        // shuffle
+        if (!disable_shuffle)
+            shufflePkd(context);
+
+        // for unshuffling: insert the size of packed context in the beginning of it
+        string contextSize;
+        contextSize += (char) 253;
+        contextSize += to_string(context.size());
+        contextSize += (char) 254;
+        context.insert(0, contextSize);
 
         /*
         i = in.begin();
