@@ -197,18 +197,10 @@ void EnDecrypto::compressFQ ()
     }
     
     // distribute file among threads, for reading and packing
-    //todo. manage deleting extra files
-////        string encFileName;
-////    for (byte t = 0; t != n_threads; ++t)
-////    {
-////        encFileName = ENC_FILENAME + to_string(t);
-////        std::remove(encFileName.c_str());
-////    }
     for (t = 0; t != n_threads; ++t)
         arrThread[t] = thread(&EnDecrypto::pack, this, t, packHdr, packQS);
     for (t = 0; t != n_threads; ++t)
         if (arrThread[t].joinable())    arrThread[t].join();
-
 //    for (ull i = 0; !isEncInEmpty; ++i)
 //    {
 //        isEncInEmpty = false;
@@ -233,21 +225,14 @@ void EnDecrypto::compressFQ ()
     
     // open packed file
     ofstream pkdFile;
-    pkdFile.open(PKD_FILENAME);
-    //todo. uncomment
+    pkdFile.open(PCKD_FILENAME);
     pkdFile << headers;                             // send headers to decryptor
     pkdFile << (char) 254;                          // to detect headers in dec.
     pkdFile << qscores;                             // send qscores to decryptor
     pkdFile << (hasFQjustPlus() ? (char) 253 : '\n');             // if just '+'
     
-//  context += headers;                             // send headers to decryptor
-//  context += (char) 254;                          // to detect headers in dec.
-//  context += qscores;                             // send qscores to decryptor
-//  context += (hasFQjustPlus() ? (char) 253 : '\n');             // if just '+'
-////    out << context ;//<< '\n';    //todo. too aes cbc mode nemishe
-    
     // open input files
-    for (t = 0; t != n_threads; ++t)   encFile[t].open(ENC_FILENAME+to_string(t));
+    for (t = 0; t != n_threads; ++t)  encFile[t].open(PK_FILENAME+to_string(t));
     
     bool prevLineNotThrID;                 // if previous line was "THR=" or not
     while (!encFile[0].eof())
@@ -261,15 +246,12 @@ void EnDecrypto::compressFQ ()
             {
                 if (prevLineNotThrID)   pkdFile << '\n';
                 pkdFile << line;
-//                if (prevLineNotThrID)   context += '\n';
-//                context += line;
                 
                 prevLineNotThrID = true;
             }
         }
     }
-    pkdFile << (char) 252;//todo. uncomment
-//    context += (char) 252;
+    pkdFile << (char) 252;
     
     // close/delete input/output files
     pkdFile.close();
@@ -277,11 +259,11 @@ void EnDecrypto::compressFQ ()
     for (t = 0; t != n_threads; ++t)
     {
         encFile[t].close();
-        encFileName = ENC_FILENAME + to_string(t);
-//        std::remove(encFileName.c_str());
+        encFileName = PK_FILENAME + to_string(t);
+        std::remove(encFileName.c_str());
     }
     
-    encrypt();      // cout encrypted content//todo. uncomment
+    encrypt();      // cout encrypted content
 //    cout << '\n';
     
     /*
@@ -314,51 +296,37 @@ inline void EnDecrypto::pack (const byte threadID,
                               string (*packHdr)(const string&, const htable_t&),
                               string (*packQS)(const string&, const htable_t&))
 {
-    //todo. inja hargez file ha ro delete nakon, chon tu multithreading
-    //todo. moshkel ijad mikone
-    
     ifstream in(inFileName);
     string context; // output string
-    string inTempStr;
-    string line;
-
-    for (ull l = 0; l != threadID*LINE_BUFFER; ++l)    in.ignore(LARGE_NUMBER, '\n');
-
-//    // beginning of the part of file for this thread
-//    pos_t pos_beg = in.tellg();
-
-//    if (in.peek()==EOF) { isEncInEmpty = true;    return; }
-
-
+    string inTempStr, line;
     ofstream encfile;
-    encfile.open(ENC_FILENAME+to_string(threadID), std::ios_base::app);
+    encfile.open(PK_FILENAME+to_string(threadID), std::ios_base::app);
 
+    for (ull l = (ull) threadID*LINE_BUFFER; l--;)
+        in.ignore(LARGE_NUMBER, '\n');      // ignore the lines at the beginning
+    
     while (in.peek() != EOF)
     {
         context.clear();
 
-        for (ull l = 0; l != LINE_BUFFER; l += 4)   // process 4 lines by 4 lines
+        for (ull l = 0; l != LINE_BUFFER; l += 4)  // process 4 lines by 4 lines
         {
-            if (getline(in, line).good())           // header -- ignore '@'
-//                context += line+"\n";
-            context += packHdr(line.substr(1), HdrMap) + (char) 254;
+            if (getline(in, line).good())          // header -- ignore '@'
+                context += packHdr(line.substr(1), HdrMap) + (char) 254;
 
-            if (getline(in, line).good())           // sequence
-//                context += line+"\n+\n";
-            context += packSeq_3to1(line) + (char) 254;
+            if (getline(in, line).good())          // sequence
+                context += packSeq_3to1(line) + (char) 254;
 
-            in.ignore(LARGE_NUMBER, '\n');          // +. ignore
+            in.ignore(LARGE_NUMBER, '\n');         // +. ignore
 
-            if (getline(in, line).good())           // quality score
-//                context += line+"\n";
-            context += packQS(line, QsMap) + (char) 254;
+            if (getline(in, line).good())          // quality score
+                context += packQS(line, QsMap) + (char) 254;
         }
 
         // shuffle
-        if (!disable_shuffle)
-            shufflePkd(context);
+        if (!disable_shuffle)    shufflePkd(context);
 
-        // for unshuffling: insert the size of packed context in the beginning of it
+        // for unshuffling: insert the size of packed context in the beginning
         string contextSize;
         contextSize += (char) 253;
         contextSize += to_string(context.size());
@@ -390,96 +358,18 @@ inline void EnDecrypto::pack (const byte threadID,
             i += 1;
         }
         */
-//
-//        ofstream encfile;
-//        encfile.open(ENC_FILENAME + to_string(threadID), std::ios_base::app);
 
         // write header containing threadID for each
         encfile << THR_ID_HDR + to_string(threadID) << '\n';
         encfile << context << '\n';
-
-        for (ull l=0; l!= (n_threads-1)*LINE_BUFFER; ++l)    in.ignore(LARGE_NUMBER, '\n');
+    
+        for (ull l = (ull) (n_threads-1)*LINE_BUFFER; l--;)
+            in.ignore(LARGE_NUMBER, '\n');        // to go to next related chunk
     }
+    
     encfile.close();
     in.close();
 }
-
-//inline void EnDecrypto::pack (const ull startLine, const byte threadID,
-//                              string (*packHdr)(const string&, const htable_t&),
-//                              string (*packQS)(const string&, const htable_t&))
-//{
-//    ifstream in(inFileName);
-//    string context; // output string
-//    string inTempStr;
-//    string line;
-//
-//    for (ull l = 0; l != startLine; ++l)    in.ignore(LARGE_NUMBER, '\n');
-//
-////    // beginning of the part of file for this thread
-////    pos_t pos_beg = in.tellg();
-//
-//    if (in.peek()==EOF) { isEncInEmpty = true;    return; }
-//
-//    for (ull l = 0; l != LINE_BUFFER; l += 4)   // process 4 lines by 4 lines
-//    {
-//        if (getline(in, line).good())           // header -- ignore '@'
-//            context += packHdr(line.substr(1), HdrMap) + (char) 254;
-//
-//        if (getline(in, line).good())           // sequence
-//            context += packSeq_3to1(line) + (char) 254;
-//
-//        in.ignore(LARGE_NUMBER, '\n');          // +. ignore
-//
-//        if (getline(in, line).good())           // quality score
-//            context += packQS(line, QsMap) + (char) 254;
-//    }
-//
-//    // shuffle
-//    if (!disable_shuffle)    shufflePkd(context);
-//
-//    // for unshuffling: insert the size of packed context in the beginning of it
-//    string contextSize;
-//    contextSize += (char) 253;
-//    contextSize += to_string(context.size());
-//    contextSize += (char) 254;
-//    context.insert(0, contextSize);
-//
-//    /*
-//    i = in.begin();
-//    while (i != in.end())
-//    {
-//        // header -- ignore '@'
-//        inTempStr.clear();
-//        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-//        context += packHdr(inTempStr, HEADERS, HDR_MAP) + (char) 254;
-//
-//        // sequence
-//        inTempStr.clear();
-//        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-//        context += packSeq_3to1(inTempStr) + (char) 254;
-//
-//        // +. ignore
-//        for (i += 1; *i != '\n'; ++i);
-//
-//        // quality score
-//        inTempStr.clear();
-//        for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-//        context += packQS(inTempStr, QUALITY_SCORES, QS_MAP) + (char) 254;
-//
-//        i += 1;
-//    }
-//    */
-//
-//    ofstream encfile;
-//    encfile.open(ENC_FILENAME+to_string(threadID), std::ios_base::app);
-//
-//    // write header containing threadID for each
-//    encfile << THR_ID_HDR + to_string(threadID) << '\n';
-//    encfile << context << '\n';
-//
-//    encfile.close();
-//    in.close();
-//}
 
 /*******************************************************************************
     encrypt.
@@ -500,14 +390,14 @@ inline void EnDecrypto::encrypt ()
 //    printKey(key);    // debug
     
     // encrypt
-    const char* inFile = PKD_FILENAME;
+    const char* inFile = PCKD_FILENAME;
     CBC_Mode<CryptoPP::AES>::Encryption
             cbcEnc(key, (size_t) AES::DEFAULT_KEYLENGTH, iv);
     FileSource(inFile, true,
                new StreamTransformationFilter(cbcEnc, new FileSink(cout)));
     
     // delete packed file
-    const string pkdFileName = PKD_FILENAME;
+    const string pkdFileName = PCKD_FILENAME;
     std::remove(pkdFileName.c_str());
     
     /*
@@ -566,7 +456,7 @@ void EnDecrypto::decrypt ()
     if ((line+"\n") != watermark)
     { cerr << "Error: invalid encrypted file!\n";    exit(1); }
 
-    ofstream encnw(ENW_FILENAME);
+    ofstream encnw(CNW_FILENAME);
     char c;     while (in.get(c)) encnw << c;
 
     // close open files -- is a MUST (for encnw)
@@ -597,17 +487,16 @@ void EnDecrypto::decrypt ()
 //        cerr << " block size: " << AES::BLOCKSIZE        << '\n';
 //    }
 
-    const char* inFile  = ENW_FILENAME;
-//    const char* inFile  = "CRYFA_ENCRYPTED";
+    const char* inFile  = CNW_FILENAME;
     const char* outFile = DEC_FILENAME;
     CBC_Mode<CryptoPP::AES>::Decryption
             cbcDec(key, (size_t) AES::DEFAULT_KEYLENGTH, iv);
     FileSource(inFile, true,
                new StreamTransformationFilter(cbcDec, new FileSink(outFile)));
     
-    // delete encrypted without watermark file
-    const string enwFileName = ENW_FILENAME;
-    std::remove(enwFileName.c_str());
+    // delete compressed without watermark file
+    const string cnwFileName = CNW_FILENAME;
+    std::remove(cnwFileName.c_str());
 }
 
 /*******************************************************************************

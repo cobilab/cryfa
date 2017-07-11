@@ -70,30 +70,30 @@ struct POWER<B, 0>
     constants
 *******************************************************************************/
 #define THR_ID_HDR      "THRD="      // thread ID header
-#define ENC_FILENAME    "CRYFA_ENC" // encrypted file name
-#define PKD_FILENAME    "CRYFA_PKD" // packed file name
-#define ENW_FILENAME    "CRYFA_ENW" // encrypted without watermark file name
-#define DEC_FILENAME    "CRYFA_DEC" // decrypted file name
-#define UPK_FILENAME    "CRYFA_UPK" // unpacked file name
-#define DEFAULT_N_THR   1           // default number of threads
-#define LINE_BUFFER     600000//4//12//8//16//36000//6000//
-                                    // buffer size (lines) to separate files for
-                                    // multithreading. MUST be multiple of 4
+#define PK_FILENAME     "CRYFA_PK"   // packed file name
+#define PCKD_FILENAME   "CRYFA_PCKD" // packed file name -- joined
+#define CNW_FILENAME    "CRYFA_CNW"  // compressed without watermark file name
+#define DEC_FILENAME    "CRYFA_DEC"  // decrypted file name
+#define UPK_FILENAME    "CRYFA_UPK"  // unpacked file name
+#define DEFAULT_N_THR   1            // default number of threads
+#define LINE_BUFFER     6000//600000//4//12//8//16//36000//
+                                     // buffer size (lines) to separate files
+                                     // for multithreading. MUST be x4
 #define LARGE_NUMBER    std::numeric_limits<std::streamsize>::max()
-#define C1              2           //       cat 1  =  2
-#define C2              3           //       cat 2  =  3
-#define MIN_C3          4           //  4 <= cat 3 <=  6
+#define C1              2            //       cat 1  =  2
+#define C2              3            //       cat 2  =  3
+#define MIN_C3          4            //  4 <= cat 3 <=  6
 #define MID_C3          5
 #define MAX_C3          6
-#define MIN_C4          7           //  7 <= cat 4 <= 15
+#define MIN_C4          7            //  7 <= cat 4 <= 15
 #define MAX_C4          15
-#define MIN_C5          16          // 16 <= cat 5 <= 39
+#define MIN_C5          16           // 16 <= cat 5 <= 39
 #define MAX_C5          39
-#define KEYLEN_C1       7           // 7 to 1 byte.  for building hash table
-#define KEYLEN_C2       5           // 5 to 1 byte
-#define KEYLEN_C3       3           // 3 to 1 byte
-#define KEYLEN_C4       2           // 2 to 1 byte
-#define KEYLEN_C5       3           // 3 to 2 byte
+#define KEYLEN_C1       7            // 7 to 1 byte.  for building hash table
+#define KEYLEN_C2       5            // 5 to 1 byte
+#define KEYLEN_C3       3            // 3 to 1 byte
+#define KEYLEN_C4       2            // 2 to 1 byte
+#define KEYLEN_C5       3            // 3 to 2 byte
 
 /*******************************************************************************
     lookup tables
