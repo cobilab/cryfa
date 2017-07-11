@@ -57,10 +57,14 @@ private:
     inline void unshufflePkd (string::iterator&, const ull); // unshuffle packed
     inline void pack (const byte, string (*)(const string&, const htbl_t&),
                       string (*)(const string&, const htbl_t&));       // pack
-    inline void unpackHSQS (const pos_t, const ull,      // unpack H:Small, Q:S
-                       const vector<string>&, const vector<string>&, const byte,
-                       string (*) (string::iterator&, const vector<string>&),
-                       string (*) (string::iterator&, const vector<string>&));
+    inline void unpackHSQS (pos_t, ull,      // unpack H:Small, Q:S
+                            const vector<string>&, const vector<string>&, const byte,
+                            string (*) (string::iterator&, const vector<string>&),
+                            string (*) (string::iterator&, const vector<string>&));
+//    inline void unpackHSQS (const pos_t, const ull,      // unpack H:Small, Q:S
+//                       const vector<string>&, const vector<string>&, const byte,
+//                       string (*) (string::iterator&, const vector<string>&),
+//                       string (*) (string::iterator&, const vector<string>&));
     inline void unpackHSQL (const pos_t, const ull,      // unpack H:S, Q:Large
            const vector<string>&, const char, const vector<string>&, const byte,
            string (*) (string::iterator&, const vector<string>&),
