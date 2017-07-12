@@ -117,7 +117,7 @@ void EnDecrypto::compressFQ ()
     byte t;         // for threads
     ull startLine;  // for each thread
     string headers, qscores;
-    
+
     // gather all headers and quality scores
     gatherHdrQs(headers, qscores);
 
@@ -129,7 +129,7 @@ void EnDecrypto::compressFQ ()
 
     const size_t headersLen = headers.length();
     const size_t qscoresLen = qscores.length();
-    
+
     // header
     if (headersLen > MAX_C5)          // if len > 39 filter the last 39 ones
     {
@@ -162,7 +162,7 @@ void EnDecrypto::compressFQ ()
         else                                                   // headersLen = 1
         { HdrMap = buildHashTable(Hdrs, 1);           packHdr = &pack_1to1; }
     }
-    
+
     // quality score
     if (qscoresLen > MAX_C5)           // if len > 39 filter the last 39 ones
     {
@@ -176,7 +176,7 @@ void EnDecrypto::compressFQ ()
     {
         QSs = qscores;
         QSs_g = QSs;
-        
+
         if (qscoresLen > MAX_C4)                                        // cat 5
         { QsMap = buildHashTable(QSs, KEYLEN_C5);    packQS = &pack_3to2; }
 
@@ -185,87 +185,74 @@ void EnDecrypto::compressFQ ()
                                                                         // cat 3
         else if (qscoresLen==MAX_C3 || qscoresLen==MID_C3 || qscoresLen==MIN_C3)
         { QsMap = buildHashTable(QSs, KEYLEN_C3);    packQS = &pack_3to1; }
-        
+
         else if (qscoresLen == C2)                                      // cat 2
         { QsMap = buildHashTable(QSs, KEYLEN_C2);    packQS = &pack_5to1; }
-        
+
         else if (qscoresLen == C1)                                      // cat 1
         { QsMap = buildHashTable(QSs, KEYLEN_C1);    packQS = &pack_7to1; }
-        
+
         else                                                   // qscoresLen = 1
         { QsMap = buildHashTable(QSs, 1);            packQS = &pack_1to1; }
     }
-    
+
     // distribute file among threads, for reading and packing
     for (t = 0; t != n_threads; ++t)
         arrThread[t] = thread(&EnDecrypto::pack, this, t, packHdr, packQS);
     for (t = 0; t != n_threads; ++t)
         if (arrThread[t].joinable())    arrThread[t].join();
-//    for (ull i = 0; !isEncInEmpty; ++i)
-//    {
-//        isEncInEmpty = false;
+
+//    // join encrypted files
+//    ifstream encFile[n_threads];
+//    string context;
 //
+//    // watermark for encrypted file
+//    cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
+//                       + to_string(RELEASE_CRYFA) + "\n";
+//
+//    // open packed file
+//    ofstream pkdFile;
+//    pkdFile.open(PCKD_FILENAME);
+//    pkdFile << headers;                             // send headers to decryptor
+//    pkdFile << (char) 254;                          // to detect headers in dec.
+//    pkdFile << qscores;                             // send qscores to decryptor
+//    pkdFile << (hasFQjustPlus() ? (char) 253 : '\n');             // if just '+'
+//
+//    // open input files
+//    for (t = 0; t != n_threads; ++t)  encFile[t].open(PK_FILENAME+to_string(t));
+//
+//    bool prevLineNotThrID;                 // if previous line was "THR=" or not
+//    while (!encFile[0].eof())
+//    {
 //        for (t = 0; t != n_threads; ++t)
 //        {
-//            startLine = (i*n_threads + t) * LINE_BUFFER;
-//            arrThread[t] = thread(&EnDecrypto::pack, this,
-//                                  startLine, t, packHdr, packQS);
+//            prevLineNotThrID = false;
+//
+//            while (getline(encFile[t], line).good() &&
+//                    line.compare(THR_ID_HDR+to_string(t)))
+//            {
+//                if (prevLineNotThrID)   pkdFile << '\n';
+//                pkdFile << line;
+//
+//                prevLineNotThrID = true;
+//            }
 //        }
-//        for (t = n_threads; t--;)
-//            if(arrThread[t].joinable())    arrThread[t].join();
 //    }
-    
-    // join encrypted files
-    ifstream encFile[n_threads];
-    string context;
-    
-    // watermark for encrypted file
-    cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
-                       + to_string(RELEASE_CRYFA) + "\n";
-    
-    // open packed file
-    ofstream pkdFile;
-    pkdFile.open(PCKD_FILENAME);
-    pkdFile << headers;                             // send headers to decryptor
-    pkdFile << (char) 254;                          // to detect headers in dec.
-    pkdFile << qscores;                             // send qscores to decryptor
-    pkdFile << (hasFQjustPlus() ? (char) 253 : '\n');             // if just '+'
-    
-    // open input files
-    for (t = 0; t != n_threads; ++t)  encFile[t].open(PK_FILENAME+to_string(t));
-    
-    bool prevLineNotThrID;                 // if previous line was "THR=" or not
-    while (!encFile[0].eof())
-    {
-        for (t = 0; t != n_threads; ++t)
-        {
-            prevLineNotThrID = false;
-            
-            while (getline(encFile[t], line).good() &&
-                    line.compare(THR_ID_HDR+to_string(t)))
-            {
-                if (prevLineNotThrID)   pkdFile << '\n';
-                pkdFile << line;
-                
-                prevLineNotThrID = true;
-            }
-        }
-    }
-    pkdFile << (char) 252;
-    
-    // close/delete input/output files
-    pkdFile.close();
-    string encFileName;
-    for (t = 0; t != n_threads; ++t)
-    {
-        encFile[t].close();
-        encFileName = PK_FILENAME + to_string(t);
-        std::remove(encFileName.c_str());
-    }
-    
-    encrypt();      // cout encrypted content
-//    cout << '\n';
-    
+//    pkdFile << (char) 252;
+//
+//    // close/delete input/output files
+//    pkdFile.close();
+//    string pkFileName;
+//    for (t = 0; t != n_threads; ++t)
+//    {
+//        encFile[t].close();
+//        pkFileName = PK_FILENAME + to_string(t);
+//        std::remove(pkFileName.c_str());
+//    }
+//
+//    encrypt();      // cout encrypted content
+////    cout << '\n';
+
     /*
     // get size of file
     infile.seekg(0, infile.end);
@@ -296,80 +283,64 @@ inline void EnDecrypto::pack (const byte threadID,
                               string (*packHdr)(const string&, const htbl_t&),
                               string (*packQS)(const string&, const htbl_t&))
 {
-    ifstream in(inFileName);
-    string context; // output string
-    string inTempStr, line;
-    ofstream encfile;
-    encfile.open(PK_FILENAME+to_string(threadID), std::ios_base::app);
+    pos_t p=(pos_t) (threadID*5);cerr<<p<<' ';
+    ofstream of;
+    of.open("hehe");
+    of.seekp(p);
     
-    // ignore the lines at the beginning
-    for (ull l=(ull) threadID*LINE_BUFFER; l--;)  in.ignore(LARGE_NUMBER, '\n');
+    mutx.lock();
+    of<<"thr="<<(short)threadID;
+    of.close();
+    mutx.unlock();
     
-    while (in.peek() != EOF)
-    {
-        context.clear();
-
-        for (ull l = 0; l != LINE_BUFFER; l += 4)  // process 4 lines by 4 lines
-        {
-            if (getline(in, line).good())          // header -- ignore '@'
-                context += packHdr(line.substr(1), HdrMap) + (char) 254;
-
-            if (getline(in, line).good())          // sequence
-                context += packSeq_3to1(line) + (char) 254;
-
-            in.ignore(LARGE_NUMBER, '\n');         // +. ignore
-
-            if (getline(in, line).good())          // quality score
-                context += packQS(line, QsMap) + (char) 254;
-        }
-
-        // shuffle
-        if (!disable_shuffle)    shufflePkd(context);
-
-        // for unshuffling: insert the size of packed context in the beginning
-        string contextSize;
-        contextSize += (char) 253;
-        contextSize += to_string(context.size());
-        contextSize += (char) 254;
-        context.insert(0, contextSize);
-
-        /*
-        i = in.begin();
-        while (i != in.end())
-        {
-            // header -- ignore '@'
-            inTempStr.clear();
-            for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-            context += packHdr(inTempStr, HEADERS, HDR_MAP) + (char) 254;
-
-            // sequence
-            inTempStr.clear();
-            for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-            context += packSeq_3to1(inTempStr) + (char) 254;
-
-            // +. ignore
-            for (i += 1; *i != '\n'; ++i);
-
-            // quality score
-            inTempStr.clear();
-            for (i += 1; *i != '\n'; ++i)   inTempStr += *i;
-            context += packQS(inTempStr, QUALITY_SCORES, QS_MAP) + (char) 254;
-
-            i += 1;
-        }
-        */
-
-        // write header containing threadID for each
-        encfile << THR_ID_HDR + to_string(threadID) << '\n';
-        encfile << context << '\n';
-        
-        // ignore to go to the next related chunk
-        for (ull l = (ull) (n_threads-1)*LINE_BUFFER; l--;)
-            in.ignore(LARGE_NUMBER, '\n');
-    }
-    
-    encfile.close();
-    in.close();
+//    ifstream in(inFileName);
+//    string context; // output string
+//    string inTempStr, line;
+//    ofstream pkfile;
+//    pkfile.open(PK_FILENAME+to_string(threadID), std::ios_base::app);
+//
+//    // ignore the lines at the beginning
+//    for (ull l=(ull) threadID*LINE_BUFFER; l--;)  in.ignore(LARGE_NUMBER, '\n');
+//
+//    while (in.peek() != EOF)
+//    {
+//        context.clear();
+//
+//        for (ull l = 0; l != LINE_BUFFER; l += 4)  // process 4 lines by 4 lines
+//        {
+//            if (getline(in, line).good())          // header -- ignore '@'
+//                context += packHdr(line.substr(1), HdrMap) + (char) 254;
+//
+//            if (getline(in, line).good())          // sequence
+//                context += packSeq_3to1(line) + (char) 254;
+//
+//            in.ignore(LARGE_NUMBER, '\n');         // +. ignore
+//
+//            if (getline(in, line).good())          // quality score
+//                context += packQS(line, QsMap) + (char) 254;
+//        }
+//
+//        // shuffle
+//        if (!disable_shuffle)    shufflePkd(context);
+//
+//        // for unshuffling: insert the size of packed context in the beginning
+//        string contextSize;
+//        contextSize += (char) 253;
+//        contextSize += to_string(context.size());
+//        contextSize += (char) 254;
+//        context.insert(0, contextSize);
+//
+//        // write header containing threadID for each
+//        pkfile << THR_ID_HDR << to_string(threadID) << '\n';
+//        pkfile << context << '\n';
+//
+//        // ignore to go to the next related chunk
+//        for (ull l = (ull) (n_threads-1)*LINE_BUFFER; l--;)
+//            in.ignore(LARGE_NUMBER, '\n');
+//    }
+//
+//    pkfile.close();
+//    in.close();
 }
 
 /*******************************************************************************
@@ -906,7 +877,7 @@ inline void EnDecrypto::unpackHSQL (pos_t begPos, ull chunkSize,
             upkfile << (justPlus ? "+" : "+" + plusMore)    <<'\n';  ++i; // +
             upkfile << unpackLarge_read2B(i, XChar_qs, qsUnpack) << '\n'; // qs
         } while (++i != decText.end());        // if trouble: change "!=" to "<"
-    
+        
         // update the chunk size and positions (beg & end)
         for (byte t = n_threads; t--;)
         {
@@ -1121,31 +1092,6 @@ inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores) const
     for (byte i = 1; i != 62; ++i)    if (hH>>i & 1)  headers += i+64;
     for (byte i = 0; i != 32; ++i)    if (qL>>i & 1)  qscores += i+32;
     for (byte i = 1; i != 62; ++i)    if (qH>>i & 1)  qscores += i+64;
-    */
-    
-    /** OLD
-    while (!in.eof())
-    {
-        if (getline(in, line).good())               // header
-        {
-            for (const char &c : line)
-                if (headers.find(c) == string::npos)
-                    headers += c;
-        }
-        in.ignore(LARGE_NUMBER, '\n');              // ignore sequence
-        in.ignore(LARGE_NUMBER, '\n');              // ignore +
-        if (getline(in, line).good())               // quality score
-        {
-            for (const char &c : line)
-                if (qscores.find(c) == string::npos)
-                    qscores += c;
-        }
-    }
-    in.close();
-
-    headers.erase(headers.begin());                 // ignore '@'
-    std::sort(headers.begin(), headers.end());      // sort values
-    std::sort(qscores.begin(), qscores.end());      // sort ASCII values
     */
 }
 
