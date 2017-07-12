@@ -56,28 +56,19 @@ private:
     inline void shufflePkd (string&);                    // shuffle packed
     inline void unshufflePkd (string::iterator&, const ull); // unshuffle packed
     inline void pack (const byte, string (*)(const string&, const htbl_t&),
-                      string (*)(const string&, const htbl_t&));       // pack
-    inline void unpackHSQS (pos_t, ull,      // unpack H:Small, Q:S
-                            const vector<string>&, const vector<string>&, const byte,
-                            string (*) (string::iterator&, const vector<string>&),
-                            string (*) (string::iterator&, const vector<string>&));
-//    inline void unpackHSQS (const pos_t, const ull,      // unpack H:Small, Q:S
-//                       const vector<string>&, const vector<string>&, const byte,
-//                       string (*) (string::iterator&, const vector<string>&),
-//                       string (*) (string::iterator&, const vector<string>&));
-    inline void unpackHSQL (const pos_t, const ull,      // unpack H:S, Q:Large
+                      string (*)(const string&, const htbl_t&));         // pack
+    inline void unpackHSQS (pos_t, ull,                  // unpack H:Small, Q:S
+                      const vector<string>&, const vector<string>&, const byte,
+                      string (*) (string::iterator&, const vector<string>&),
+                      string (*) (string::iterator&, const vector<string>&));
+    inline void unpackHSQL (pos_t, ull,                  // unpack H:S, Q:Large
            const vector<string>&, const char, const vector<string>&, const byte,
-           string (*) (string::iterator&, const vector<string>&),
            string (*) (string::iterator&, const vector<string>&));
-    inline void unpackHLQS (const pos_t, const ull,      // unpack H:Large, Q:S
-           const char, const vector<string>&, const vector<string>&, const byte,
-           string (*) (string::iterator&, const vector<string>&),
+    inline void unpackHLQS (pos_t, ull, const char,      // unpack H:Large, Q:S
+           const vector<string>&, const vector<string>&, const byte,
            string (*) (string::iterator&, const vector<string>&));
-    inline void unpackHLQL (const pos_t, const ull,      // unpack H:Large, Q:L
-                       const char, const vector<string>&, const char,
-                       const vector<string>&, const byte,
-                       string (*) (string::iterator&, const vector<string>&),
-                       string (*) (string::iterator&, const vector<string>&));
+    inline void unpackHLQL (pos_t, ull, const char,      // unpack H:Large, Q:L
+          const vector<string>&, const char, const vector<string>&, const byte);
 };
 
 #endif //CRYFA_ENDECRYPTO_H
