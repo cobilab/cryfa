@@ -51,6 +51,9 @@ EnDecrypto::EnDecrypto () {}
 *******************************************************************************/
 void EnDecrypto::compressFA ()
 {
+//    cerr<<"compressFA";
+//    return;//todo. test
+    
     string line, seq, context;  // FASTA: context = header + seq (+ empty lines)
     ifstream in(inFileName);
     ofstream pkdFile(PCKD_FILENAME);
@@ -75,7 +78,7 @@ void EnDecrypto::compressFA ()
             // header line. (char) 253 instead of '>'
             pkdFile << (char) 253 + line.substr(1) + "\n";
         }
-
+        
         // empty line. (char) 252 instead of line feed
         else if (line.empty())    seq += (char) 252;
 
@@ -96,7 +99,7 @@ void EnDecrypto::compressFA ()
     in.close();
 
     // encryption
-//    encrypt();      // cout encrypted content
+    encrypt();      // cout encrypted content
 ////    cout << '\n';
 }
 
@@ -508,7 +511,7 @@ void EnDecrypto::decrypt ()
     
     // delete compressed without watermark file
     const string cnwFileName = CNW_FILENAME;
-    std::remove(cnwFileName.c_str());
+//    std::remove(cnwFileName.c_str());
 }
 
 /*******************************************************************************

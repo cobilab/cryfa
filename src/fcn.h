@@ -18,16 +18,14 @@ using std::cerr;
 *******************************************************************************/
 inline char fileType (const string& inFileName)
 {
+    char c;
     ifstream in(inFileName);
+    
     if (!in.good())
     { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
     
-    // FASTQ
-    string l;   // each line
-    while (getline(in, l).good())   if (l[0]=='@') { in.close();   return 'Q'; }
-    
-    // FASTA
-    in.close();   return 'A';
+    in.get(c);    in.close();
+    return (c=='@' ? 'Q' : 'A');
 }
 
 #endif //CRYFA_FCN_H
