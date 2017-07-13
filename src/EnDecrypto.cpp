@@ -90,12 +90,13 @@ void EnDecrypto::compressFA ()
     }
     if (!seq.empty())   pkdFile << packSeq_3to1(seq);           // the last seq
     
-    //todo. shuffle
+    //todo. shuffle. baraye shuffle bayad chunk dashte bashim, ke betoonim hajme
+    //todo. mahdoodi ro tu string berizim
 
     in.close();
 
     // encryption
-    encrypt();      // cout encrypted content
+//    encrypt();      // cout encrypted content
 ////    cout << '\n';
 }
 
@@ -409,7 +410,7 @@ inline void EnDecrypto::encrypt ()
     
     // delete packed file
     const string pkdFileName = PCKD_FILENAME;
-    std::remove(pkdFileName.c_str());
+//    std::remove(pkdFileName.c_str());
     
     /*
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
@@ -518,11 +519,11 @@ void EnDecrypto::decrypt ()
           (char) 253:  instead of '>' in header
           (char) 252:  instead of empty line
 *******************************************************************************/
-//inline void EnDecrypto::decompressFA (string decText)
 void EnDecrypto::decompressFA ()
 {
     string line;
     string tpl;     // tuplet
+    char c;
     ifstream in(DEC_FILENAME);
 //    string::iterator i = decText.begin();
 
@@ -532,48 +533,53 @@ void EnDecrypto::decompressFA ()
 //    ++i;    // jump over decText[0]
     in.ignore(1);
 //    for (; i != decText.end()-1; ++i)   // exclude last symbol of decText
-//    {
+    while (in.peek() != EOF)
+    {
+        in.get(c);
+        s = (byte) c;
 //        s = (byte) *i;
-//        //empty line OR end of each seq line
-//        if (s == 252 || (s == 254 && !isHeader)) { cout << '\n'; }
-//            //seq len not multiple of 3
-//        else if (s == 255) { cout << penaltySym(*(++i)); }
-//            // header
-//        else if (s == 253) { cout << '>';  isHeader = true; }
-//        else if (isHeader) { cout << s; if (s == '\n') isHeader = false; }
-//            // sequence
-//        else //if (!isHeader)
-//        {
-//            tpl = DNA_UNPACK[s];
-//
-//            if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]!='X')                // ...
-//            { cout<<tpl; }
-//                // using just one 'cout' makes trouble
-//            else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]!='X')           // X..
-//            { cout<<penaltySym(*(++i));    cout<<tpl[1];    cout<<tpl[2]; }
-//
-//            else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]!='X')           // .X.
-//            { cout<<tpl[0];    cout<<penaltySym(*(++i));    cout<<tpl[2]; }
-//
-//            else if (tpl[0]=='X' && tpl[1]=='X' && tpl[2]!='X')           // XX.
-//            { cout<<penaltySym(*(++i));    cout<<penaltySym(*(++i));
-//              cout<<tpl[2]; }
-//
-//            else if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]=='X')           // ..X
-//            { cout<<tpl[0];    cout<<tpl[1];    cout<<penaltySym(*(++i)); }
-//
-//            else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]=='X')           // X.X
-//            { cout<<penaltySym(*(++i));    cout<<tpl[1];
-//              cout<<penaltySym(*(++i)); }
-//
-//            else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]=='X')           // .XX
-//            { cout<<tpl[0];    cout<<penaltySym(*(++i));
-//              cout<<penaltySym(*(++i)); }
-//
-//            else { cout<<penaltySym(*(++i));                              // XXX
-//                cout<<penaltySym(*(++i));    cout<<penaltySym(*(++i)); }
-//        }
-//    }
+        //empty line OR end of each seq line
+        if (s == 252 || (s == 254 && !isHeader)) { cout << '\n'; }
+        //seq len not multiple of 3
+        else if (s == 255) { in.get(c);    cout << penaltySym(c); }
+        // header
+        else if (s == 253) { cout << '>';  isHeader = true; }
+        else if (isHeader) { cout << s; if (s == '\n') isHeader = false; }
+        // sequence
+        else //if (!isHeader)
+        {
+            tpl = DNA_UNPACK[s];
+
+            if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]!='X')                // ...
+            { cout<<tpl; }
+                // using just one 'cout' makes trouble
+            else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]!='X')           // X..
+            { in.get(c);  cout<<penaltySym(c);  cout<<tpl[1];  cout<<tpl[2]; }
+
+            else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]!='X')           // .X.
+            { cout<<tpl[0];  in.get(c);  cout<<penaltySym(c);  cout<<tpl[2]; }
+
+            else if (tpl[0]=='X' && tpl[1]=='X' && tpl[2]!='X')           // XX.
+            { in.get(c);  cout<<penaltySym(c);  in.get(c);  cout<<penaltySym(c);
+              cout<<tpl[2]; }
+
+            else if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]=='X')           // ..X
+            { cout<<tpl[0];  cout<<tpl[1];  in.get(c);  cout<<penaltySym(c); }
+
+            else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]=='X')           // X.X
+            { in.get(c);  cout<<penaltySym(c);  cout<<tpl[1];  in.get(c);
+              cout<<penaltySym(c); }
+
+            else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]=='X')           // .XX
+            { cout<<tpl[0];  in.get(c);  cout<<penaltySym(c);  in.get(c);
+              cout<<penaltySym(c); }
+
+            else { in.get(c);  cout<<penaltySym(c);  in.get(c);           // XXX
+                   cout<<penaltySym(c);  in.get(c);  cout<<penaltySym(c); }
+        }
+    }
+    
+    in.close();
 }
 
 ////inline void EnDecrypto::decompressFA (string decText)
