@@ -91,10 +91,10 @@ int main (int argc, char* argv[])
     {//todo. modify decompressFA function.
         cerr << "Decrypting...\n";
         cryptObj.decrypt();                                         // decrypt
-//        ifstream in(DEC_FILENAME);
-//        (in.peek() == (char) 127) ? cryptObj.decompressFA()         // FASTA
-//                                  : cryptObj.decompressFQ();        // FASTQ
-//        in.close();
+        ifstream in(DEC_FILENAME);
+        (in.peek() == (char) 127) ? cryptObj.decompressFA()         // FASTA
+                                  : cryptObj.decompressFQ();        // FASTQ
+        in.close();
         
         // stop timer
         high_resolution_clock::time_point finishTime =

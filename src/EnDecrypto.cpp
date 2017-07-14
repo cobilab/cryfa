@@ -502,6 +502,7 @@ void EnDecrypto::decrypt ()
 //        cerr << " block size: " << AES::BLOCKSIZE        << '\n';
 //    }
     
+    ////const char* inFile  = "CRYFA_COMPRESSED";   //for test
     const char* inFile  = CNW_FILENAME;
     const char* outFile = DEC_FILENAME;
     CBC_Mode<CryptoPP::AES>::Decryption
