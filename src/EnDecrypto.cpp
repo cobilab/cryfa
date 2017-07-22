@@ -16,8 +16,8 @@
 #include "cryptopp/aes.h"
 #include "cryptopp/eax.h"
 #include "cryptopp/files.h"
-#include "cryptopp/filters.h"
-#include "cryptopp/modes.h"
+//#include "cryptopp/filters.h"
+//#include "cryptopp/modes.h"
 using std::vector;
 using std::cout;
 using std::cerr;
@@ -35,11 +35,6 @@ using CryptoPP::FileSource;
 using CryptoPP::FileSink;
 
 std::mutex mutx;
-
-/*******************************************************************************
-    constructor
-*******************************************************************************/
-EnDecrypto::EnDecrypto () {}
 
 /*******************************************************************************
     compress FASTA.
@@ -170,7 +165,7 @@ void EnDecrypto::compressFQ ()
     string line;
     thread arrThread[n_threads];
     byte t;         // for threads
-    ull startLine;  // for each thread
+//    u64 startLine;  // for each thread
     string headers, qscores;
 
     // gather all headers and quality scores
@@ -250,7 +245,7 @@ void EnDecrypto::compressFQ ()
         else                                                   // qscoresLen = 1
         { QsMap = buildHashTable(QSs, 1);            packQS = &pack_1to1; }
     }
-
+    
     // distribute file among threads, for reading and packing
     for (t = 0; t != n_threads; ++t)
         arrThread[t] = thread(&EnDecrypto::pack, this, t, packHdr, packQS);
@@ -283,7 +278,7 @@ void EnDecrypto::compressFQ ()
             prevLineNotThrID = false;
 
             while (getline(encFile[t], line).good() &&
-                    line.compare(THR_ID_HDR+to_string(t)))
+                    line != THR_ID_HDR+to_string(t))
             {
                 if (prevLineNotThrID)   pkdFile << '\n';
                 pkdFile << line;
@@ -343,13 +338,13 @@ inline void EnDecrypto::pack (const byte threadID,
     ofstream pkfile(PK_FILENAME+to_string(threadID), std::ios_base::app);
 
     // ignore the lines at the beginning
-    for (ull l=(ull) threadID*LINE_BUFFER; l--;)  in.ignore(LARGE_NUMBER, '\n');
+    for (u64 l=(u64) threadID*LINE_BUFFER; l--;)  in.ignore(LARGE_NUMBER, '\n');
 
     while (in.peek() != EOF)
     {
         context.clear();
 
-        for (ull l = 0; l != LINE_BUFFER; l += 4)  // process 4 lines by 4 lines
+        for (u64 l = 0; l != LINE_BUFFER; l += 4)  // process 4 lines by 4 lines
         {
             if (getline(in, line).good())          // header -- ignore '@'
                 context += packHdr(line.substr(1), HdrMap) + (char) 254;
@@ -378,7 +373,7 @@ inline void EnDecrypto::pack (const byte threadID,
         pkfile << context << '\n';
 
         // ignore to go to the next related chunk
-        for (ull l = (ull) (n_threads-1)*LINE_BUFFER; l--;)
+        for (u64 l = (u64) (n_threads-1)*LINE_BUFFER; l--;)
             in.ignore(LARGE_NUMBER, '\n');
     }
     
@@ -664,7 +659,7 @@ void EnDecrypto::decompressFQ ()
     string chunkSizeStr;            // chunk size (string) -- for unshuffling
     thread arrThread[n_threads];    // array of threads
     byte t;                         // for threads
-    ull offset;                     // to traverse decompressed file
+    u64 offset;                     // to traverse decompressed file
     
     ifstream in(DEC_FILENAME);
     while (in.get(c) && c != (char) 254)                 headers += c;
@@ -673,7 +668,7 @@ void EnDecrypto::decompressFQ ()
     
     const size_t headersLen = headers.length();
     const size_t qscoresLen = qscores.length();
-    us keyLen_hdr = 0,  keyLen_qs = 0;
+    u16 keyLen_hdr = 0,  keyLen_qs = 0;
     
     using unpackHdrPtr = string (*) (string::iterator&, const vector<string>&);
     unpackHdrPtr unpackHdr;                                  // function pointer
@@ -864,7 +859,7 @@ void EnDecrypto::decompressFQ ()
             prevLineNotThrID = false;
 
             while (getline(upkdFile[t], line).good() &&
-                   line.compare(THR_ID_HDR+to_string(t)))
+                   line != THR_ID_HDR+to_string(t))
             {
                 if (prevLineNotThrID)
                     cout << '\n';
@@ -890,7 +885,7 @@ void EnDecrypto::decompressFQ ()
 /*******************************************************************************
     pack: small hdr, small qs -- '@' at the beginning of headers is not packed
 *******************************************************************************/
-inline void EnDecrypto::unpackHSQS (pos_t begPos, ull chunkSize,
+inline void EnDecrypto::unpackHSQS (pos_t begPos, u64 chunkSize,
                 const vector<string> &hdrUnpack, const vector<string> &qsUnpack,
                 const byte threadID,
                 string (*unpackHdr) (string::iterator&, const vector<string>&),
@@ -908,13 +903,13 @@ inline void EnDecrypto::unpackHSQS (pos_t begPos, ull chunkSize,
         in.seekg(begPos);      // read the file from this position
         // take a chunk of decrypted file
         decText.clear();
-        for (ull u = chunkSize; u--;) { in.get(c);    decText += c; }
+        for (u64 u = chunkSize; u--;) { in.get(c);    decText += c; }
         i = decText.begin();
         endPos = in.tellg();   // set the end position
         
         // unshuffle
         if (!disable_shuffle)    unshufflePkd(i, chunkSize);
-
+        
         upkfile << THR_ID_HDR + to_string(threadID) << '\n';
         do {
             upkfile << '@';
@@ -948,7 +943,7 @@ inline void EnDecrypto::unpackHSQS (pos_t begPos, ull chunkSize,
 /*******************************************************************************
     pack: small hdr, large qs -- '@' at the beginning of headers is not packed
 *******************************************************************************/
-inline void EnDecrypto::unpackHSQL (pos_t begPos, ull chunkSize,
+inline void EnDecrypto::unpackHSQL (pos_t begPos, u64 chunkSize,
                  const vector<string> &hdrUnpack, const char XChar_qs,
                  const vector<string> &qsUnpack, const byte threadID,
                  string (*unpackHdr) (string::iterator&, const vector<string>&))
@@ -965,7 +960,7 @@ inline void EnDecrypto::unpackHSQL (pos_t begPos, ull chunkSize,
         in.seekg(begPos);       // read file from this position
         // take a chunk of decrypted file
         decText.clear();
-        for (ull u = chunkSize; u--;) { in.get(c);    decText += c; }
+        for (u64 u = chunkSize; u--;) { in.get(c);    decText += c; }
         i = decText.begin();
         endPos = in.tellg();    // set the end position
         
@@ -1005,7 +1000,7 @@ inline void EnDecrypto::unpackHSQL (pos_t begPos, ull chunkSize,
 /*******************************************************************************
     pack: large hdr, small qs -- '@' at the beginning of headers is not packed
 *******************************************************************************/
-inline void EnDecrypto::unpackHLQS (pos_t begPos, ull chunkSize,
+inline void EnDecrypto::unpackHLQS (pos_t begPos, u64 chunkSize,
                   const char XChar_hdr, const vector<string> &hdrUnpack,
                   const vector<string> &qsUnpack, const byte threadID,
                   string (*unpackQS) (string::iterator&, const vector<string>&))
@@ -1022,7 +1017,7 @@ inline void EnDecrypto::unpackHLQS (pos_t begPos, ull chunkSize,
         in.seekg(begPos);       // read file from this position
         // take a chunk of decrypted file
         decText.clear();
-        for (ull u = chunkSize; u--;) { in.get(c);    decText += c; }
+        for (u64 u = chunkSize; u--;) { in.get(c);    decText += c; }
         i = decText.begin();
         endPos = in.tellg();    // set the end position
         
@@ -1063,7 +1058,7 @@ inline void EnDecrypto::unpackHLQS (pos_t begPos, ull chunkSize,
 /*******************************************************************************
     pack: large hdr, large qs -- '@' at the beginning of headers is not packed
 *******************************************************************************/
-inline void EnDecrypto::unpackHLQL (pos_t begPos, ull chunkSize,
+inline void EnDecrypto::unpackHLQL (pos_t begPos, u64 chunkSize,
        const char XChar_hdr, const vector<string> &hdrUnpack,
        const char XChar_qs, const vector<string> &qsUnpack, const byte threadID)
 {
@@ -1079,7 +1074,7 @@ inline void EnDecrypto::unpackHLQL (pos_t begPos, ull chunkSize,
         in.seekg(begPos);       // read file from this position
         // take a chunk of decrypted file
         decText.clear();
-        for (ull u = chunkSize; u--;) { in.get(c);    decText += c; }
+        for (u64 u = chunkSize; u--;) { in.get(c);    decText += c; }
         i = decText.begin();
         endPos = in.tellg();    // set the end position
         
@@ -1168,8 +1163,8 @@ inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores) const
     
     
     /** IDEA
-    ui  hL=0, qL=0;
-    ull hH=0, qH=0;
+    u32  hL=0, qL=0;
+    u64 hH=0, qH=0;
     string headers, qscores;
     ifstream in(inFileName);
     string line;
@@ -1206,7 +1201,7 @@ inline std::minstd_rand0 &EnDecrypto::randomEngine ()
 /*******************************************************************************
     random number seed -- emulate C srand()
 *******************************************************************************/
-inline void EnDecrypto::my_srand (const ui s)
+inline void EnDecrypto::my_srand (const u32 s)
 {
     randomEngine().seed(s);
 }
@@ -1222,29 +1217,29 @@ inline int EnDecrypto::my_rand ()
 /*******************************************************************************
     shuffle/unshuffle seed generator -- for each chunk
 *******************************************************************************/
-//inline ull EnDecrypto::un_shuffleSeedGen (const ui seedInit)
+//inline u64 EnDecrypto::un_shuffleSeedGen (const u32 seedInit)
 inline void EnDecrypto::un_shuffleSeedGen ()
 {//todo. can't we generate this seed once?
     const string pass = extractPass();
     evalPassSize(pass);     // pass size must be >= 8
     
-    ull passDigitsMult = 1; // multiplication of all pass digits
-    for (ui i = (ui) pass.size(); i--;)    passDigitsMult *= pass[i];
+    u64 passDigitsMult = 1; // multiplication of all pass digits
+    for (u32 i = (u32) pass.size(); i--;)    passDigitsMult *= pass[i];
     
     // using old rand to generate the new rand seed
-    ull seed = 0;
+    u64 seed = 0;
     
     mutx.lock();//--------------------------------------------------------------
-//    my_srand(20543 * seedInit * (ui) passDigitsMult + 81647);
+//    my_srand(20543 * seedInit * (u32) passDigitsMult + 81647);
 //    for (byte i = (byte) pass.size(); i--;)
-//        seed += ((ull) pass[i] * my_rand()) + my_rand();
+//        seed += ((u64) pass[i] * my_rand()) + my_rand();
 
 //    my_srand(20543 * seedInit + 81647);
 //    for (byte i = (byte) pass.size(); i--;)
-//        seed += (ull) pass[i] * my_rand();
-    my_srand(20543 * (ui) passDigitsMult + 81647);
+//        seed += (u64) pass[i] * my_rand();
+    my_srand(20543 * (u32) passDigitsMult + 81647);
     for (byte i = (byte) pass.size(); i--;)
-        seed += (ull) pass[i] * my_rand();
+        seed += (u64) pass[i] * my_rand();
     mutx.unlock();//------------------------------------------------------------
     
 //    seed %= 2106945901;
@@ -1258,7 +1253,7 @@ inline void EnDecrypto::un_shuffleSeedGen ()
 *******************************************************************************/
 inline void EnDecrypto::shufflePkd (string &in)
 {
-//    const ull seed = un_shuffleSeedGen((ui) in.size());    // shuffling seed
+//    const u64 seed = un_shuffleSeedGen((u32) in.size());    // shuffling seed
 //    std::shuffle(in.begin(), in.end(), std::mt19937(seed));
     un_shuffleSeedGen();    // shuffling seed
     std::shuffle(in.begin(), in.end(), std::mt19937(seed_shared));
@@ -1267,23 +1262,23 @@ inline void EnDecrypto::shufflePkd (string &in)
 /*******************************************************************************
     unshuffle
 *******************************************************************************/
-inline void EnDecrypto::unshufflePkd (string::iterator &i, const ull size)
+inline void EnDecrypto::unshufflePkd (string::iterator &i, const u64 size)
 {
     string shuffledStr;     // copy of shuffled string
-    for (ull j = 0; j != size; ++j, ++i)    shuffledStr += *i;
+    for (u64 j = 0; j != size; ++j, ++i)    shuffledStr += *i;
     string::iterator shIt = shuffledStr.begin();
     i -= size;
     
     // shuffle vector of positions
-    vector<ull> vPos(size);
+    vector<u64> vPos(size);
     std::iota(vPos.begin(), vPos.end(), 0);     // insert 0 .. N-1
-//    const ull seed = un_shuffleSeedGen((ui) size);
+//    const u64 seed = un_shuffleSeedGen((u32) size);
 //    std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed));
     un_shuffleSeedGen();
     std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed_shared));
 
     // insert unshuffled data
-    for (const ull& vI : vPos)  *(i + vI) = *shIt++;       // *shIt, then ++shIt
+    for (const u64& vI : vPos)  *(i + vI) = *shIt++;       // *shIt, then ++shIt
 }
 
 /*******************************************************************************
@@ -1297,16 +1292,18 @@ inline void EnDecrypto::buildIV (byte *iv, const string &pass)
     evalPassSize(pass);  // pass size must be >= 8
     
     // using old rand to generate the new rand seed
-    srand((ui) 7919 * pass[2] * pass[5] + 75653);
-    ull seed = 0;
+    srand((u32) 7919 * pass[2] * pass[5] + 75653);
+//    my_srand((u32) 7919 * pass[2] * pass[5] + 75653);
+    u64 seed = 0;
     for (byte i = (byte) pass.size(); i--;)
-        seed += ((ull) pass[i] * rand()) + rand();
+        seed += ((u64) pass[i] * my_rand()) + my_rand();
+//    seed += ((u64) pass[i] * rand()) + rand();
     seed %= 4294967295;
     
     const rng_type::result_type seedval = seed;
     rng.seed(seedval);
 
-    for (ui i = (ui) AES::BLOCKSIZE; i--;)
+    for (u32 i = (u32) AES::BLOCKSIZE; i--;)
         iv[i] = (byte) (udist(rng) % 255);
 }
 
@@ -1321,16 +1318,18 @@ inline void EnDecrypto::buildKey (byte *key, const string &pwd)
     evalPassSize(pwd);  // pass size must be >= 8
     
     // using old rand to generate the new rand seed
-    srand((ui) 24593 * (pwd[0] * pwd[2]) + 49157);
-    ull seed = 0;
+    my_srand((u32) 24593 * (pwd[0] * pwd[2]) + 49157);
+//    srand((u32) 24593 * (pwd[0] * pwd[2]) + 49157);
+    u64 seed = 0;
     for (byte i = (byte) pwd.size(); i--;)
-        seed += ((ull) pwd[i] * rand()) + rand();
+        seed += ((u64) pwd[i] * my_rand()) + my_rand();
+//    seed += ((u64) pwd[i] * rand()) + rand();
     seed %= 4294967295;
     
     const rng_type::result_type seedval = seed;
     rng.seed(seedval);
 
-    for (ui i = (ui) AES::DEFAULT_KEYLENGTH; i--;)
+    for (u32 i = (u32) AES::DEFAULT_KEYLENGTH; i--;)
         key[i] = (byte) (udist(rng) % 255);
 }
 
@@ -1340,7 +1339,7 @@ inline void EnDecrypto::buildKey (byte *key, const string &pwd)
 inline void EnDecrypto::printIV (byte *iv) const
 {
     cerr << "IV = [" << (int) iv[0];
-    for (ui i = 1; i != AES::BLOCKSIZE; ++i)
+    for (u32 i = 1; i != AES::BLOCKSIZE; ++i)
         cerr << " " << (int) iv[i];
     cerr << "]\n";
 }
@@ -1351,7 +1350,7 @@ inline void EnDecrypto::printIV (byte *iv) const
 inline void EnDecrypto::printKey (byte *key) const
 {
     cerr << "KEY: [" << (int) key[0];
-    for (ui i = 1; i != AES::DEFAULT_KEYLENGTH; ++i)
+    for (u32 i = 1; i != AES::DEFAULT_KEYLENGTH; ++i)
         cerr << " " << (int) key[i];
     cerr << "]\n";
 }

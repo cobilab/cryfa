@@ -22,7 +22,7 @@ public:
     bool   disable_shuffle = false;                      // disable shuffle
     bool   verbose = false;                              // for verbose mode
     
-    EnDecrypto();                                        // constructor
+    EnDecrypto () = default;                             // default constructor
     void   compressFA ();                                // compress FASTA
     void   compressFQ ();                                // compress FASTQ
     void   decrypt ();                                   // decrypt
@@ -30,7 +30,7 @@ public:
     void   decompressFQ ();                              // decompress FQ
     
 private:
-    ull    seed_shared;                                  // shared seed
+    u64    seed_shared;                                  // shared seed
     string Hdrs;                                         // max: 39 values
     string QSs;                                          // max: 39 values
     htbl_t HdrMap;                                       // Hdrs hash table
@@ -49,25 +49,25 @@ private:
     inline bool hasFQjustPlus ()                const;   // check '+' line
     inline void gatherHdrQs (string&, string&)  const;   // gather hdrs & qss
     inline std::minstd_rand0 &randomEngine ();           // random no. engine
-    inline void my_srand (const ui);                     // random no. seed
+    inline void my_srand (const u32);                    // random no. seed
     inline int  my_rand ();                              // random no generate
-//    inline ull  un_shuffleSeedGen (const ui);          // (un)shuffle seed gen
+//    inline u64  un_shuffleSeedGen (const u32);         // (un)shuffle seed gen
     inline void un_shuffleSeedGen ();                    // (un)shuffle seed gen
     inline void shufflePkd (string&);                    // shuffle packed
-    inline void unshufflePkd (string::iterator&, const ull); // unshuffle packed
+    inline void unshufflePkd (string::iterator&, const u64); // unshuffle packed
     inline void pack (const byte, string (*)(const string&, const htbl_t&),
                       string (*)(const string&, const htbl_t&));         // pack
-    inline void unpackHSQS (pos_t, ull,                  // unpack H:Small, Q:S
+    inline void unpackHSQS (pos_t, u64,                  // unpack H:Small, Q:S
                       const vector<string>&, const vector<string>&, const byte,
                       string (*) (string::iterator&, const vector<string>&),
                       string (*) (string::iterator&, const vector<string>&));
-    inline void unpackHSQL (pos_t, ull,                  // unpack H:S, Q:Large
+    inline void unpackHSQL (pos_t, u64,                  // unpack H:S, Q:Large
            const vector<string>&, const char, const vector<string>&, const byte,
            string (*) (string::iterator&, const vector<string>&));
-    inline void unpackHLQS (pos_t, ull, const char,      // unpack H:Large, Q:S
-           const vector<string>&, const vector<string>&, const byte,
+    inline void unpackHLQS (pos_t, u64, const char,      // unpack H:Large, Q:S
+           const vector<string>&, const vector<string>&, byte,
            string (*) (string::iterator&, const vector<string>&));
-    inline void unpackHLQL (pos_t, ull, const char,      // unpack H:Large, Q:L
+    inline void unpackHLQL (pos_t, u64, const char,      // unpack H:Large, Q:L
           const vector<string>&, const char, const vector<string>&, const byte);
 };
 

@@ -26,12 +26,12 @@ using std::unordered_map;
     typedefs
 *******************************************************************************/
 typedef unsigned char                     byte;
-typedef unsigned short                    us;
-typedef unsigned int                      ui;
-typedef unsigned long long                ull;
-typedef long long                         ll;
+typedef unsigned short                    u16;
+typedef unsigned int                      u32;
+typedef unsigned long long                u64;
+typedef long long                         i64;
 typedef std::mt19937                      rng_type;
-typedef std::unordered_map<string, ull>   htbl_t;
+typedef std::unordered_map<string, u64>   htbl_t;
 typedef std::char_traits<char>::pos_type  pos_t;    // tellg(), tellp()
 
 /*******************************************************************************
@@ -39,13 +39,13 @@ typedef std::char_traits<char>::pos_type  pos_t;    // tellg(), tellp()
 *******************************************************************************/
 // power (B^E) -- base (B) and exponent (E) MUST be known at compile time
 // usage: "cerr << POWER<3,2>::val;" which yields 9
-template<ui B, ui E>
+template<u32 B, u32 E>
 struct POWER
-{ static const ull val = B * POWER<B, E-1>::val; };
+{ static const u64 val = B * POWER<B, E-1>::val; };
 
-template<ui B>
+template<u32 B>
 struct POWER<B, 0>
-{ static const ull val = 1; };
+{ static const u64 val = 1; };
 //..............................................................................
 
 /*******************************************************************************

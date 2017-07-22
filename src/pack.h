@@ -25,7 +25,7 @@ string QSs_g;     // max: 39 values -- global
 *******************************************************************************/
 inline htbl_t buildHashTable (const string &strIn, short keyLen)
 {
-    ull elementNo = 0;
+    u64 elementNo = 0;
     string element;
     htbl_t map;
     
@@ -116,11 +116,11 @@ inline htbl_t buildHashTable (const string &strIn, short keyLen)
 /*******************************************************************************
     build table for unpacking
 *******************************************************************************/
-inline vector<string> buildUnpack (const string &strIn, us keyLen)
+inline vector<string> buildUnpack (const string &strIn, u16 keyLen)
 {
-    ull elementNo = 0;
+    u64 elementNo = 0;
     string element;
-    const ull unpackSize = std::pow(strIn.size(), keyLen);
+    const u64 unpackSize = std::pow(strIn.size(), keyLen);
     vector<string> unpack;    unpack.reserve(unpackSize);
     
     switch (keyLen)
@@ -205,7 +205,7 @@ inline vector<string> buildUnpack (const string &strIn, us keyLen)
 /*******************************************************************************
     index of each DNA bases pack
 *******************************************************************************/
-inline us dnaPack (const string &dna)
+inline u16 dnaPack (const string &dna)
 {
     htbl_t::const_iterator got = DNA_MAP.find(dna);
     if (got == DNA_MAP.end())
@@ -216,7 +216,7 @@ inline us dnaPack (const string &dna)
 /*******************************************************************************
     index of each pack, when # > 39
 *******************************************************************************/
-inline us largePack (const string &strIn, const htbl_t &map)
+inline u16 largePack (const string &strIn, const htbl_t &map)
 {
     htbl_t::const_iterator got = map.find(strIn);
     if (got == map.end())
@@ -282,7 +282,7 @@ inline string packLargeHdr_3to2 (const string& strIn, const htbl_t &map)
     string tuple, packed;
     bool firstNotIn, secondNotIn, thirdNotIn;
     char s0, s1, s2;
-    us shortTuple;
+    u16 shortTuple;
     string hdrs = Hdrs_g;
     // ASCII char after the last char in HEADERS string
     const char XChar = (char) (hdrs.back() + 1);
@@ -332,7 +332,7 @@ inline string packLargeQs_3to2 (const string& strIn, const htbl_t &map)
     string tuple, packed;
     bool firstNotIn, secondNotIn, thirdNotIn;
     char s0, s1, s2;
-    us shortTuple;
+    u16 shortTuple;
     string qss = QSs_g;
     // ASCII char after the last char in QUALITY_SCORES string
     const char XChar = (char) (qss.back() + 1);
@@ -380,7 +380,7 @@ inline string packLargeQs_3to2 (const string& strIn, const htbl_t &map)
 inline string pack_3to2 (const string& strIn, const htbl_t &map)
 {
     string tuple, packed;
-    us shortTuple;
+    u16 shortTuple;
     string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-2;
     
     for (; i < iEnd; i += 3)
@@ -643,7 +643,7 @@ inline string unpackLarge_read2B (string::iterator &i, const char XChar,
                                   const vector<string> &unpack)
 {
     byte leftB, rightB;
-    us doubleB;     // double byte
+    u16 doubleB;     // double byte
     string tpl;     // tuplet
     string out;
 
@@ -692,7 +692,7 @@ inline string unpackLarge_read2B (string::iterator &i, const char XChar,
 inline string unpack_read2B (string::iterator &i, const vector<string> &unpack)
 {
     byte leftB, rightB;
-    us doubleB;     // double byte
+    u16 doubleB;     // double byte
     string out;
     
     for (; *i != (char) 254; i += 2)
