@@ -1163,7 +1163,7 @@ inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores) const
     
     
     /** IDEA
-    u32  hL=0, qL=0;
+    u32 hL=0, qL=0;
     u64 hH=0, qH=0;
     string headers, qscores;
     ifstream in(inFileName);
