@@ -92,8 +92,8 @@ int main (int argc, char* argv[])
         cerr << "Decrypting...\n";
         cryptObj.decrypt();                                         // decrypt
         ifstream in(DEC_FILENAME);
-        (in.peek() == (char) 127) ? cryptObj.decompressFA()         // FASTA
-                                  : cryptObj.decompressFQ();        // FASTQ
+//        (in.peek() == (char) 127) ? cryptObj.decompressFA()         // FASTA
+//                                  : cryptObj.decompressFQ();        // FASTQ
         in.close();
         
         // stop timer

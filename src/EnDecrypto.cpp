@@ -60,7 +60,7 @@ void EnDecrypto::compressFA ()
     cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
                        + to_string(RELEASE_CRYFA) + "\n";
     
-    // to tell decryptor this isn't FASTQ
+    // let decryptor know this isn't FASTQ
     pkdFile << (char) 127;      // context += "\n";
     while (getline(in, line).good())
     {
@@ -76,7 +76,7 @@ void EnDecrypto::compressFA ()
         
         // empty line. (char) 252 instead of line feed
         else if (line.empty())    seq += (char) 252;
-
+        
         // sequence
         else
         {
