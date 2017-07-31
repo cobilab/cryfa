@@ -89,11 +89,11 @@ void EnDecrypto::compressFA ()
     //todo. mahdoodi ro tu string berizim
 
     
-    pkdFile.close();
+    pkdFile.close();    // is a MUST
     in.close();
 
     // encryption
-    encrypt();      // cout encrypted content
+    encrypt();          // cout encrypted content
 ////    cout << '\n';
 }
 
