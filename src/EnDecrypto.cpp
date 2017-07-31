@@ -46,9 +46,6 @@ std::mutex mutx;
 *******************************************************************************/
 void EnDecrypto::compressFA ()
 {
-//    cerr<<"compressFA";
-//    return;//todo. test
-    
     string line, seq, context;  // FASTA: context = header + seq (+ empty lines)
     ifstream in(inFileName);
     ofstream pkdFile(PCKD_FILENAME);
@@ -73,10 +70,10 @@ void EnDecrypto::compressFA ()
             // header line. (char) 253 instead of '>'
             pkdFile << (char) 253 + line.substr(1) + "\n";
         }
-        
+
         // empty line. (char) 252 instead of line feed
         else if (line.empty())    seq += (char) 252;
-        
+
         // sequence
         else
         {
@@ -87,64 +84,18 @@ void EnDecrypto::compressFA ()
         }
     }
     if (!seq.empty())   pkdFile << packSeq_3to1(seq);           // the last seq
-    
+
     //todo. shuffle. baraye shuffle bayad chunk dashte bashim, ke betoonim hajme
     //todo. mahdoodi ro tu string berizim
 
+    
+    pkdFile.close();
     in.close();
 
     // encryption
     encrypt();      // cout encrypted content
 ////    cout << '\n';
 }
-
-//todo. delete
-//void EnDecrypto::compressFA ()
-//{
-//    ifstream in(inFileName);
-//    if (!in.good())
-//    { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
-//
-//    string line, seq, context;  // FASTA: context = header + seq (+ empty lines)
-//
-//    // watermark for encrypted file
-//    cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
-//                       + to_string(RELEASE_CRYFA) + "\n";
-//
-//    // to tell decryptor this isn't FASTQ
-//    context += (char) 127;      // context += "\n";
-//    while (getline(in, line).good())
-//    {
-//        // header
-//        if (line[0] == '>')
-//        {
-//            if (!seq.empty())   context += packSeq_3to1(seq);   // previous seq
-//            seq.clear();
-//
-//            // header line. (char) 253 instead of '>'
-//            context += (char) 253 + line.substr(1) + "\n";
-//        }
-//
-//        // empty line. (char) 252 instead of line feed
-//        else if (line.empty())    seq += (char) 252;
-//
-//        // sequence
-//        else
-//        {
-//            if (line.find(' ') != string::npos)
-//            { cerr << "Invalid sequence -- spaces not allowed.\n";    exit(1); }
-//            // (char) 254 instead of '\n' at the end of each seq line
-//            seq += line + (char) 254;
-//        }
-//    }
-//    if (!seq.empty())   context += packSeq_3to1(seq);           // the last seq
-//
-//    in.close();
-//
-//    // encryption
-//    encrypt();      // cout encrypted content
-//    cout << '\n';   //todo. probably should comment this
-//}
 
 /*******************************************************************************
     compress FASTQ.
@@ -259,7 +210,7 @@ void EnDecrypto::compressFQ ()
     // watermark for encrypted file
     cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
                        + to_string(RELEASE_CRYFA) + "\n";
-
+    
     // open packed file
     ofstream pkdFile(PCKD_FILENAME);
     pkdFile << headers;                             // send headers to decryptor
