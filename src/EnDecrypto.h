@@ -47,6 +47,7 @@ private:
     inline string extractPass ()                const;   // extract password
     inline void evalPassSize (const string&)    const;   // evaluate pass size
     inline bool hasFQjustPlus ()                const;   // check '+' line
+    inline void gatherHdr (string&)             const;   // gather hdrs
     inline void gatherHdrQs (string&, string&)  const;   // gather hdrs & qss
     inline std::minstd_rand0 &randomEngine ();           // random no. engine
     inline void my_srand (const u32);                    // random no. seed
@@ -55,8 +56,10 @@ private:
     inline void un_shuffleSeedGen ();                    // (un)shuffle seed gen
     inline void shufflePkd (string&);                    // shuffle packed
     inline void unshufflePkd (string::iterator&, const u64); // unshuffle packed
-    inline void pack (const byte, string (*)(const string&, const htbl_t&),
-                      string (*)(const string&, const htbl_t&));         // pack
+    inline void packFA (const byte,
+                        string (*) (const string &, const htbl_t &)); // pack FA
+    inline void packFQ (const byte, string (*) (const string &, const htbl_t &),
+                        string (*) (const string &, const htbl_t &)); // pack FQ
     inline void unpackHSQS (pos_t, u64,                  // unpack H:Small, Q:S
                       const vector<string>&, const vector<string>&, const byte,
                       string (*) (string::iterator&, const vector<string>&),
