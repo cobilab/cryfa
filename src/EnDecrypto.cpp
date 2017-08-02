@@ -95,17 +95,17 @@ void EnDecrypto::compressFA ()
     
     
     
-    //todo.test
-    for (byte i = 0; i < 1; ++i)
-    {
-        packFA(i,packHdr);
-    }
-//    // distribute file among threads, for reading and packing
-//    for (t = 0; t != n_threads; ++t)
-//        arrThread[t] = thread(&EnDecrypto::packFA, this, t, packHdr);
-//    for (t = 0; t != n_threads; ++t)
-//        if (arrThread[t].joinable())    arrThread[t].join();
-//
+//    //todo.test
+//    for (byte i = 0; i < 1; ++i)
+//    {
+//        packFA(i,packHdr);
+//    }
+    // distribute file among threads, for reading and packing
+    for (t = 0; t != n_threads; ++t)
+        arrThread[t] = thread(&EnDecrypto::packFA, this, t, packHdr);
+    for (t = 0; t != n_threads; ++t)
+        if (arrThread[t].joinable())    arrThread[t].join();
+
 //    // join partially packed files
 //    ifstream pkFile[n_threads];
 //    string context;
@@ -247,10 +247,10 @@ inline void EnDecrypto::packFA (const byte threadID,
 {
     ifstream in(inFileName);
 //     FASTA: context = extra + header + seq (+ empty lines)    todo.delete
-    string line, context, extra, seq;
+    string line, context, seq;
 
 //    string inTempStr, line;
-//    ofstream pkfile(PK_FILENAME+to_string(threadID), std::ios_base::app);
+    ofstream pkfile(PK_FILENAME+to_string(threadID), std::ios_base::app);
     
     
 //    // jump to multiple of CHAR_BUFFER position. If it's in the middle of
@@ -264,68 +264,78 @@ inline void EnDecrypto::packFA (const byte threadID,
 
     // lines ignored at the beginning
     for (u64 l=(u64) threadID*LINE_BUFFER; l--;)  in.ignore(LARGE_NUMBER, '\n');
-
+    
     while (in.peek() != EOF)
     {
         context.clear();
+        seq.clear();
 
         // let decryptor know this isn't FASTQ
 //    pckdFile << (char) 127;      // context += "\n";
         for (u64 l = LINE_BUFFER; l-- && getline(in, line).good();)
         {
+//            cerr<<l;//todo.test
             // header
             if (line[0] == '>')
             {
                 // previous seq
-//                if (!seq.empty())   context += packSeq_3to1(seq) + (char) 254;
-                if (!seq.empty())   context += (seq) + (char) 254;   // previous seq
+                if (!seq.empty())
+                {
+                    seq.pop_back();                      // remove the last '\n'
+//                    context += packSeq_3to1(seq) + (char) 254;   // previous seq
+                    context += (seq) + (char) 254;   // previous seq
+                }
                 seq.clear();
-        
+                
                 // header line. (char) 253 instead of '>'
                 // -- ignore '@'
 //                pckdFile << (char) 253 + line.substr(1) + "\n";
 //                context += packHdr(line.substr(1), HdrMap) + (char) 254;
                 context += (line.substr(1)) + (char) 254;
             }
-        
+            
             // empty line. (char) 252 instead of line feed
-            else if (line.empty())    seq += (char) 252;
-        
+            else if (line.empty()) { seq += (char) 252;    seq += '\n'; }
+            
             // sequence
             else
             {
                 if (line.find(' ') != string::npos)
-                { cerr << "Invalid sequence -- spaces not allowed.\n";    exit(1); }
+                { cerr<< "Invalid sequence -- spaces not allowed.\n"; exit(1); }
                 // (char) 254 instead of '\n' at the end of each seq line
-                seq += line;
+                seq += line+"\n";
             }
         }
 //    if (!seq.empty())  context += packSeq_3to1(seq) + (char) 254; //the last seq
-        if (!seq.empty())  context += (seq) + (char) 254; //the last seq
+        if (!seq.empty())
+        {
+            seq.pop_back();                 // remove the last '\n'
+            context += (seq) + (char) 254;  // the last seq
+        }
         
-    //todo.test
-    cerr<<context<<'\n';
+//    //todo.test
+//    cerr<<context<<'\n';
 
 //        // shuffle
 //        if (!disable_shuffle)    shufflePkd(context);
 //
-//        // for unshuffling: insert the size of packed context in the beginning
-//        string contextSize;
-//        contextSize += (char) 253;
-//        contextSize += to_string(context.size());
-//        contextSize += (char) 254;
-//        context.insert(0, contextSize);
-//
-//        // write header containing threadID for each
-//        pkfile << THR_ID_HDR << to_string(threadID) << '\n';
-//        pkfile << context << '\n';
-//
+        // for unshuffling: insert the size of packed context in the beginning
+        string contextSize;
+        contextSize += (char) 253;
+        contextSize += to_string(context.size());
+        contextSize += (char) 254;
+        context.insert(0, contextSize);
+
+        // write header containing threadID for each
+        pkfile << THR_ID_HDR << to_string(threadID) << '\n';
+        pkfile << context << '\n';
+        
         // ignore to go to the next related chunk
         for (u64 l = (u64) (n_threads-1)*LINE_BUFFER; l--;)
             in.ignore(LARGE_NUMBER, '\n');
     }
 
-//    pkfile.close();
+    pkfile.close();
     in.close();
 }
 
