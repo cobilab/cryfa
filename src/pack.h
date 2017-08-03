@@ -593,6 +593,175 @@ inline string pack_1to1 (const string& strIn, const htbl_t &map)
 inline constexpr char penaltySym (char c)
 {
     return (c != (char) 254 && c != (char) 252) ? c : (char) 10;
+//    return (c != (char) 254 && c != (char) 252 && c != (char) 251) ? c : (char) 10;
+}
+
+/*******************************************************************************
+    unpack 1 byte to 3 DNA bases -- FASTQ
+*******************************************************************************/
+inline string unpackSeqFA_3to1 (string::iterator &i)
+{
+//    string line;
+//    string tpl;     // tuplet
+//    char c;
+//    ifstream in(DEC_FILENAME);
+////    string::iterator i = decText.begin();
+//
+//    bool isHeader = true;
+//    byte s;
+//
+////    ++i;    // jump over decText[0]
+//    in.ignore(1);
+////    for (; i != decText.end()-1; ++i)   // exclude last symbol of decText
+//    while (in.peek() != EOF)
+//    {
+//        in.get(c);
+//        s = (byte) c;
+////        s = (byte) *i;
+//        //empty line OR end of each seq line
+//        if (s == 252 || (s == 254 && !isHeader)) { cout << '\n'; }
+//        //seq len not multiple of 3
+//        else if (s == 255) { in.get(c);    cout << penaltySym(c); }
+//        // header
+//        else if (s == 253) { cout << '>';  isHeader = true; }
+//        else if (isHeader) { cout << s; if (s == '\n') isHeader = false; }
+//        // sequence
+//        else //if (!isHeader)
+//        {
+//            tpl = DNA_UNPACK[s];
+//
+//            if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]!='X')                // ...
+//            { cout<<tpl; }
+//                // using just one 'cout' makes trouble
+//            else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]!='X')           // X..
+//            { in.get(c);  cout<<penaltySym(c);  cout<<tpl[1];  cout<<tpl[2]; }
+//
+//            else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]!='X')           // .X.
+//            { cout<<tpl[0];  in.get(c);  cout<<penaltySym(c);  cout<<tpl[2]; }
+//
+//            else if (tpl[0]=='X' && tpl[1]=='X' && tpl[2]!='X')           // XX.
+//            { in.get(c);  cout<<penaltySym(c);  in.get(c);  cout<<penaltySym(c);
+//              cout<<tpl[2]; }
+//
+//            else if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]=='X')           // ..X
+//            { cout<<tpl[0];  cout<<tpl[1];  in.get(c);  cout<<penaltySym(c); }
+//
+//            else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]=='X')           // X.X
+//            { in.get(c);  cout<<penaltySym(c);  cout<<tpl[1];  in.get(c);
+//              cout<<penaltySym(c); }
+//
+//            else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]=='X')           // .XX
+//            { cout<<tpl[0];  in.get(c);  cout<<penaltySym(c);  in.get(c);
+//              cout<<penaltySym(c); }
+//
+//            else { in.get(c);  cout<<penaltySym(c);  in.get(c);           // XXX
+//                   cout<<penaltySym(c);  in.get(c);  cout<<penaltySym(c); }
+//        }
+//    }
+    
+    
+    
+    
+
+    
+    
+    
+//    string line;
+    string tpl;     // tuplet
+    string out;
+//    char c;
+//    ifstream in(DEC_FILENAME);
+////    string::iterator i = decText.begin();
+
+//    bool isHeader = true;
+    byte s;
+
+////    ++i;    // jump over decText[0]
+//    in.ignore(1);
+    for (; *i != (char) 254; ++i)
+//    while (in.peek() != EOF)
+    {
+//        in.get(c);
+//        s = (byte) c;
+        s = (byte) *i;//cerr<<std::to_string(s);
+        // empty line OR end of each seq line
+////        if (s == 252 || (s == 254 && !isHeader)) { out += '\n'; }
+//        if (s == 252) { out += '\n'; }
+//        // seq len not multiple of 3
+//        else
+        if (s == 255) { out += penaltySym(*(++i)); }
+        else
+        {
+            tpl = DNA_UNPACK[s];//cerr<<tpl;
+
+            if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]!='X')                // ...
+            { out+=tpl; }
+            // using just one 'out' makes trouble
+            else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]!='X')           // X..
+            { out+=penaltySym(*(++i));  out+=tpl[1];  out+=tpl[2]; }
+
+            else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]!='X')           // .X.
+            { out+=tpl[0];  out+=penaltySym(*(++i));  out+=tpl[2]; }
+
+            else if (tpl[0]=='X' && tpl[1]=='X' && tpl[2]!='X')           // XX.
+            { out+=penaltySym(*(++i));  out+=penaltySym(*(++i));  out+=tpl[2]; }
+
+            else if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]=='X')           // ..X
+            { out+=tpl[0];  out+=tpl[1];  out+=penaltySym(*(++i)); }
+
+            else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]=='X')           // X.X
+            { out+=penaltySym(*(++i));  out+=tpl[1];  out+=penaltySym(*(++i)); }
+
+            else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]=='X')           // .XX
+            { out+=tpl[0];  out+=penaltySym(*(++i));  out+=penaltySym(*(++i)); }
+
+            else { out+=penaltySym(*(++i));  out+=penaltySym(*(++i));     // XXX
+                   out+=penaltySym(*(++i)); }
+            
+//            cerr<<out;
+        }
+    }
+    
+    
+    
+    
+    
+    
+    
+//    string tpl, out;
+//
+//    for (; *i != (char) 254; ++i)
+//    {
+//        //seq len not multiple of 3
+//        if (*i == (char) 255) { out += penaltySym(*(++i));  continue; }
+//
+//        tpl = DNA_UNPACK[(byte) *i];
+//
+//        if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]!='X')    out+=tpl;       // ...
+//
+//        else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]!='X')               // X..
+//        { out+=penaltySym(*(++i));    out+=tpl[1];    out+=tpl[2]; }
+//
+//        else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]!='X')               // .X.
+//        { out+=tpl[0];    out+=penaltySym(*(++i));    out+=tpl[2]; }
+//
+//        else if (tpl[0]=='X' && tpl[1]=='X' && tpl[2]!='X')               // XX.
+//        { out+=penaltySym(*(++i));    out+=penaltySym(*(++i));    out+=tpl[2]; }
+//
+//        else if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]=='X')               // ..X
+//        { out+=tpl[0];    out+=tpl[1];    out+=penaltySym(*(++i)); }
+//
+//        else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]=='X')               // X.X
+//        { out+=penaltySym(*(++i));    out+=tpl[1];    out+=penaltySym(*(++i)); }
+//
+//        else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]=='X')               // .XX
+//        { out+=tpl[0];    out+=penaltySym(*(++i));    out+=penaltySym(*(++i)); }
+//
+//        else { out+=penaltySym(*(++i));    out+=penaltySym(*(++i));       // XXX
+//            out+=penaltySym(*(++i)); }
+//    }
+    
+    return out;
 }
 
 /*******************************************************************************
