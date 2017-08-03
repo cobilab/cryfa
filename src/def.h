@@ -81,8 +81,6 @@ struct POWER<B, 0>
 #define LINE_BUFFER     3//600000//4//12//8//6000//16//36000//
                                      // buffer size (lines) to separate fastq
                                      // files for multithreading. MUST be x4
-//#define CHAR_BUFFER     7            // buffer size (chars) to separate fasta
-//                                     // files for multithreading
 #define LARGE_NUMBER    std::numeric_limits<std::streamsize>::max()
 #define C1              2            //       cat 1  =  2
 #define C2              3            //       cat 2  =  3
