@@ -16,8 +16,47 @@
 #include "cryptopp/aes.h"
 #include "cryptopp/eax.h"
 #include "cryptopp/files.h"
-//#include "cryptopp/filters.h"
-//#include "cryptopp/modes.h"
+
+
+//todo.add .h files
+#include "cryptopp/algparam.h"
+#include "cryptopp/argnames.h"
+#include "cryptopp/authenc.h"
+#include "cryptopp/cmac.h"
+#include "cryptopp/config.h"
+#include "cryptopp/cryptlib.h"
+#include "cryptopp/filters.h"
+#include "cryptopp/integer.h"
+#include "cryptopp/misc.h"
+#include "cryptopp/modes.h"
+#include "cryptopp/queue.h"
+#include "cryptopp/rijndael.h"
+#include "cryptopp/secblock.h"
+#include "cryptopp/seckey.h"
+#include "cryptopp/simple.h"
+#include "cryptopp/smartptr.h"
+#include "cryptopp/stdcpp.h"
+#include "cryptopp/strciphr.h"
+#include "cryptopp/trap.h"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 using std::vector;
 using std::cout;
 using std::cerr;

@@ -60,7 +60,7 @@ private:
     inline void un_shuffleSeedGen ();                    // (un)shuffle seed gen
     inline void shufflePkd (string&);                    // shuffle packed
     inline void unshufflePkd (string::iterator&, const u64); // unshuffle packed
-
+    
     // FASTA
     inline void packFA (const byte,                      // pack FA
                         string (*) (const string&, const htbl_t&));
