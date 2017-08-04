@@ -88,7 +88,7 @@ int main (int argc, char* argv[])
 
     if (v_flag)  cerr << "Verbose mode on.\n";
     if (d_flag)
-    {//todo. modify decompressFA function.
+    {
         cerr << "Decrypting...\n";
         cryptObj.decrypt();                                         // decrypt
         ifstream in(DEC_FILENAME);
@@ -107,7 +107,7 @@ int main (int argc, char* argv[])
         return 0;
     }
     
-    cerr << "Encrypting...\n";//todo. modify compressFA function
+    cerr << "Encrypting...\n";
     (fileType(cryptObj.inFileName)=='A') ? cryptObj.compressFA()    // FASTA
                                          : cryptObj.compressFQ();   // FASTQ
     
