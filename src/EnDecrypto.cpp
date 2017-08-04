@@ -1092,10 +1092,10 @@ void EnDecrypto::decompressFQ ()
     unpack FQ: small hdr, small qs -- '@' at the beginning of headers not packed
 *******************************************************************************/
 inline void EnDecrypto::unpackHSQS (pos_t begPos, u64 chunkSize,
-                const vector<string> &hdrUnpack, const vector<string> &qsUnpack,
-                const byte threadID,
+                const vector<string> &hdrUnpack,
+                const vector<string> &qsUnpack, const byte threadID,
                 string (*unpackHdr) (string::iterator&, const vector<string>&),
-                string (*unpackQS) (string::iterator&, const vector<string>&))
+                string (*unpackQS)  (string::iterator&, const vector<string>&))
 {
     ifstream in(DEC_FILENAME);
     string decText, plusMore, chunkSizeStr;
@@ -1265,8 +1265,9 @@ inline void EnDecrypto::unpackHLQS (pos_t begPos, u64 chunkSize,
     unpack FQ: large hdr, large qs -- '@' at the beginning of headers not packed
 *******************************************************************************/
 inline void EnDecrypto::unpackHLQL (pos_t begPos, u64 chunkSize,
-       const char XChar_hdr, const vector<string> &hdrUnpack,
-       const char XChar_qs, const vector<string> &qsUnpack, const byte threadID)
+                          const char XChar_hdr, const vector<string> &hdrUnpack,
+                          const char XChar_qs, const vector<string> &qsUnpack,
+                          const byte threadID)
 {
     ifstream in(DEC_FILENAME);
     string decText, plusMore, chunkSizeStr;
