@@ -227,7 +227,7 @@ inline u16 largePack (const string &strIn, const htbl_t &map)
 /*******************************************************************************
     encapsulate each 3 DNA bases in 1 byte -- reduction: ~2/3
 *******************************************************************************/
-inline string packSeq_3to1 (const string& seq)
+inline string packSeq_3to1 (const string &seq)
 {
     string packedSeq;
     bool firstNotIn, secondNotIn, thirdNotIn;
@@ -277,7 +277,7 @@ inline string packSeq_3to1 (const string& seq)
 /*******************************************************************************
     encapsulate 3 header symbols in 2 bytes -- reduction ~1/3.           40 <= #
 *******************************************************************************/
-inline string packLargeHdr_3to2 (const string& strIn, const htbl_t &map)
+inline string packLargeHdr_3to2 (const string &strIn, const htbl_t &map)
 {
     string tuple, packed;
     bool firstNotIn, secondNotIn, thirdNotIn;
@@ -327,7 +327,7 @@ inline string packLargeHdr_3to2 (const string& strIn, const htbl_t &map)
 /*******************************************************************************
     encapsulate 3 quality score symbols in 2 bytes -- reduction ~1/3.    40 <= #
 *******************************************************************************/
-inline string packLargeQs_3to2 (const string& strIn, const htbl_t &map)
+inline string packLargeQs_3to2 (const string &strIn, const htbl_t &map)
 {
     string tuple, packed;
     bool firstNotIn, secondNotIn, thirdNotIn;
@@ -377,7 +377,7 @@ inline string packLargeQs_3to2 (const string& strIn, const htbl_t &map)
 /*******************************************************************************
     encapsulate 3 symbols in 2 bytes -- reduction ~1/3.            16 <= # <= 39
 *******************************************************************************/
-inline string pack_3to2 (const string& strIn, const htbl_t &map)
+inline string pack_3to2 (const string &strIn, const htbl_t &map)
 {
     string tuple, packed;
     u16 shortTuple;
@@ -412,7 +412,7 @@ inline string pack_3to2 (const string& strIn, const htbl_t &map)
 /*******************************************************************************
     encapsulate 2 symbols in 1 bytes -- reduction ~1/2.             7 <= # <= 15
 *******************************************************************************/
-inline string pack_2to1 (const string& strIn, const htbl_t &map)
+inline string pack_2to1 (const string &strIn, const htbl_t &map)
 {
     string tuple, packed;
     string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-1;
@@ -432,7 +432,7 @@ inline string pack_2to1 (const string& strIn, const htbl_t &map)
 /*******************************************************************************
     encapsulate 3 symbols in 1 bytes -- reduction ~2/3.              # = 4, 5, 6
 *******************************************************************************/
-inline string pack_3to1 (const string& strIn, const htbl_t &map)
+inline string pack_3to1 (const string &strIn, const htbl_t &map)
 {
     string tuple, packed;
     string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-2;
@@ -464,7 +464,7 @@ inline string pack_3to1 (const string& strIn, const htbl_t &map)
 /*******************************************************************************
     encapsulate 5 symbols in 1 bytes -- reduction ~4/5.                    # = 3
 *******************************************************************************/
-inline string pack_5to1 (const string& strIn, const htbl_t &map)
+inline string pack_5to1 (const string &strIn, const htbl_t &map)
 {
     string tuple, packed;
     string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-4;
@@ -510,7 +510,7 @@ inline string pack_5to1 (const string& strIn, const htbl_t &map)
 /*******************************************************************************
     encapsulate 7 symbols in 1 bytes -- reduction ~6/7.                    # = 2
 *******************************************************************************/
-inline string pack_7to1 (const string& strIn, const htbl_t &map)
+inline string pack_7to1 (const string &strIn, const htbl_t &map)
 {
     string tuple, packed;
     string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-6;
@@ -573,7 +573,7 @@ inline string pack_7to1 (const string& strIn, const htbl_t &map)
 /*******************************************************************************
     show 1 symbol in 1 byte.                                               # = 1
 *******************************************************************************/
-inline string pack_1to1 (const string& strIn, const htbl_t &map)
+inline string pack_1to1 (const string &strIn, const htbl_t &map)
 {
     string single, packed;
     string::const_iterator i = strIn.begin(),   iEnd = strIn.end();

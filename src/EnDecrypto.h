@@ -13,35 +13,43 @@
 using std::string;
 using std::vector;
 
+struct unpack_s
+{
+    char  XChar_hdr;
+    char  XChar_qs;
+    byte  threadID;
+    pos_t begPos;
+    u64   chunkSize;
+    vector<string> hdrUnpack;
+    vector<string> qsUnpack;
+    //todo. add function pointers
+};
+
 class EnDecrypto
 {
 public:
+    bool   disable_shuffle = false;                      // disable shuffle
+    bool   verbose = false;                              // for verbose mode
     byte   n_threads;                                    // number of threads
     string inFileName;                                   // input file name
     string keyFileName;                                  // password file name
-    bool   disable_shuffle = false;                      // disable shuffle
-    bool   verbose = false;                              // for verbose mode
     
     EnDecrypto () = default;                             // default constructor
     void   decrypt ();                                   // decrypt
-    
-    // FASTA
     void   compressFA ();                                // compress FASTA
-    void   decompressFA ();                              // decompress FA
-    
-    // FASTQ
+    void   decompressFA ();                              // decompress FASTA
     void   compressFQ ();                                // compress FASTQ
-    void   decompressFQ ();                              // decompress FQ
+    void   decompressFQ ();                              // decompress FASTQ
     
 private:
+    bool   justPlus = true;                              // if line 3 is just +
     u64    seed_shared;                                  // shared seed
     string Hdrs;                                         // max: 39 values
     string QSs;                                          // max: 39 values
-    htbl_t HdrMap;                                       // Hdrs hash table
-    htbl_t QsMap;                                        // QSs hash table
-    bool   justPlus = true;                              // if line 3 is just +
     string HdrsX;                                        // extended Hdrs
     string QSsX;                                         // extended QSs
+    htbl_t HdrMap;                                       // Hdrs hash table
+    htbl_t QsMap;                                        // QSs hash table
     
     inline void encrypt  ();                             // encrypt
     inline void buildIV  (byte*, const string&);         // build IV
@@ -77,6 +85,8 @@ private:
                         string (*) (const string&, const htbl_t&),
                         string (*) (const string&, const htbl_t&));
     
+    
+    //todo. extend struct idea for inputs of the followings
     inline void unpackHSQS (pos_t, u64,                  // unpack H:Small, Q:S
                       const vector<string>&, const vector<string>&, const byte,
                       string (*) (string::iterator&, const vector<string>&),
@@ -88,12 +98,13 @@ private:
                          string (*) (string::iterator&, const vector<string>&));
     
     inline void unpackHLQS (pos_t, u64, const char,      // unpack H:Large, Q:S
-                         const vector<string>&, const vector<string>&, byte,
-                         string (*) (string::iterator&, const vector<string>&));
+                       const vector<string>&, const vector<string>&, const byte,
+                       string (*) (string::iterator&, const vector<string>&));
     
-    inline void unpackHLQL (pos_t, u64,                  // unpack H:Large, Q:L
-                            const char, const vector<string>&,
-                            const char, const vector<string>&, const byte);
+//    inline void unpackHLQL (pos_t, u64,                  // unpack H:Large, Q:L
+//                            const char, const vector<string>&,
+//                            const char, const vector<string>&, const byte);
+    inline void unpackHLQL (const unpack_s&);
 };
 
 #endif //CRYFA_ENDECRYPTO_H

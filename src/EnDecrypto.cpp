@@ -19,39 +19,25 @@
 
 
 //todo.add .h files
-#include "cryptopp/algparam.h"
-#include "cryptopp/argnames.h"
-#include "cryptopp/authenc.h"
-#include "cryptopp/cmac.h"
-#include "cryptopp/config.h"
-#include "cryptopp/cryptlib.h"
-#include "cryptopp/filters.h"
-#include "cryptopp/integer.h"
-#include "cryptopp/misc.h"
-#include "cryptopp/modes.h"
-#include "cryptopp/queue.h"
-#include "cryptopp/rijndael.h"
-#include "cryptopp/secblock.h"
-#include "cryptopp/seckey.h"
-#include "cryptopp/simple.h"
-#include "cryptopp/smartptr.h"
-#include "cryptopp/stdcpp.h"
-#include "cryptopp/strciphr.h"
-#include "cryptopp/trap.h"
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+//#include "cryptopp/algparam.h"
+//#include "cryptopp/argnames.h"
+//#include "cryptopp/authenc.h"
+//#include "cryptopp/cmac.h"
+//#include "cryptopp/config.h"
+//#include "cryptopp/cryptlib.h"
+//#include "cryptopp/filters.h"
+//#include "cryptopp/integer.h"
+//#include "cryptopp/misc.h"
+//#include "cryptopp/modes.h"
+//#include "cryptopp/queue.h"
+//#include "cryptopp/rijndael.h"
+//#include "cryptopp/secblock.h"
+//#include "cryptopp/seckey.h"
+//#include "cryptopp/simple.h"
+//#include "cryptopp/smartptr.h"
+//#include "cryptopp/stdcpp.h"
+//#include "cryptopp/strciphr.h"
+//#include "cryptopp/trap.h"
 
 
 
@@ -949,7 +935,7 @@ void EnDecrypto::decompressFQ ()
         else if (qscoresLen == C1)          keyLen_qs = KEYLEN_C1;      // cat 1
         else                                keyLen_qs = 1;              // = 1
     }
-    
+
     string plusMore;
     if (headersLen <= MAX_C5 && qscoresLen <= MAX_C5)
     {
@@ -1028,6 +1014,17 @@ void EnDecrypto::decompressFQ ()
         hdrUnpack = buildUnpack(decHeadersX, keyLen_hdr);
         qsUnpack  = buildUnpack(decQscoresX, keyLen_qs);
     
+        
+        
+        
+        
+        unpack_s upkStruct;
+        upkStruct.XChar_hdr = XChar_hdr;
+        upkStruct.XChar_qs  = XChar_qs;
+        upkStruct.hdrUnpack = hdrUnpack;
+        upkStruct.qsUnpack  = qsUnpack;
+        
+        
         // distribute file among threads, for reading and unpacking
         for (t = 0; t != n_threads; ++t)
         {
@@ -1037,9 +1034,17 @@ void EnDecrypto::decompressFQ ()
                 chunkSizeStr.clear();   // chunk size
                 while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
                 offset = stoull(chunkSizeStr);
-                
-                arrThread[t] = thread(&EnDecrypto::unpackHLQL, this, in.tellg(),
-                           offset, XChar_hdr, hdrUnpack, XChar_qs, qsUnpack, t);
+    
+    
+    
+                upkStruct.begPos = in.tellg();
+                upkStruct.chunkSize = offset;
+                upkStruct.threadID = t;
+//
+                arrThread[t] = thread(&EnDecrypto::unpackHLQL, this, upkStruct);
+
+//                arrThread[t] = thread(&EnDecrypto::unpackHLQL, this, in.tellg(),
+//                           offset, XChar_hdr, hdrUnpack, XChar_qs, qsUnpack, t);
             
                 // jump to the beginning of the next chunk
                 in.seekg((std::streamoff) offset, std::ios_base::cur);
@@ -1303,11 +1308,23 @@ inline void EnDecrypto::unpackHLQS (pos_t begPos, u64 chunkSize,
 /*******************************************************************************
     unpack FQ: large hdr, large qs -- '@' at the beginning of headers not packed
 *******************************************************************************/
-inline void EnDecrypto::unpackHLQL (pos_t begPos, u64 chunkSize,
-                          const char XChar_hdr, const vector<string> &hdrUnpack,
-                          const char XChar_qs, const vector<string> &qsUnpack,
-                          const byte threadID)
+//inline void EnDecrypto::unpackHLQL (pos_t begPos, u64 chunkSize,
+//                          const char XChar_hdr, const vector<string> &hdrUnpack,
+//                          const char XChar_qs, const vector<string> &qsUnpack,
+//                          const byte threadID)
+inline void EnDecrypto::unpackHLQL (const unpack_s &upkStruct)
 {
+    pos_t          begPos    = upkStruct.begPos;
+    u64            chunkSize = upkStruct.chunkSize;
+    const char     XChar_hdr = upkStruct.XChar_hdr;
+    vector<string> hdrUnpack = upkStruct.hdrUnpack;
+    const char     XChar_qs  = upkStruct.XChar_qs;
+    vector<string> qsUnpack  = upkStruct.qsUnpack;
+    const byte     threadID  = upkStruct.threadID;
+    
+    
+    
+    
     ifstream in(DEC_FILENAME);
     string decText, plusMore, chunkSizeStr;
     string::iterator i;
