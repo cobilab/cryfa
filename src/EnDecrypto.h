@@ -17,12 +17,13 @@ struct unpack_s
 {
     char  XChar_hdr;
     char  XChar_qs;
-    byte  threadID;
     pos_t begPos;
     u64   chunkSize;
     vector<string> hdrUnpack;
     vector<string> qsUnpack;
     //todo. add function pointers
+    string (*unpackHdr) (string::iterator&, const vector<string>&);
+    string (*unpackQS)  (string::iterator&, const vector<string>&);
 };
 
 class EnDecrypto
@@ -104,7 +105,7 @@ private:
 //    inline void unpackHLQL (pos_t, u64,                  // unpack H:Large, Q:L
 //                            const char, const vector<string>&,
 //                            const char, const vector<string>&, const byte);
-    inline void unpackHLQL (const unpack_s&);
+    inline void unpackHLQL (const unpack_s&, byte);
 };
 
 #endif //CRYFA_ENDECRYPTO_H

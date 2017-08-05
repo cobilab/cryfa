@@ -1039,9 +1039,8 @@ void EnDecrypto::decompressFQ ()
     
                 upkStruct.begPos = in.tellg();
                 upkStruct.chunkSize = offset;
-                upkStruct.threadID = t;
 //
-                arrThread[t] = thread(&EnDecrypto::unpackHLQL, this, upkStruct);
+                arrThread[t] = thread(&EnDecrypto::unpackHLQL, this, upkStruct, t);
 
 //                arrThread[t] = thread(&EnDecrypto::unpackHLQL, this, in.tellg(),
 //                           offset, XChar_hdr, hdrUnpack, XChar_qs, qsUnpack, t);
@@ -1312,7 +1311,7 @@ inline void EnDecrypto::unpackHLQS (pos_t begPos, u64 chunkSize,
 //                          const char XChar_hdr, const vector<string> &hdrUnpack,
 //                          const char XChar_qs, const vector<string> &qsUnpack,
 //                          const byte threadID)
-inline void EnDecrypto::unpackHLQL (const unpack_s &upkStruct)
+inline void EnDecrypto::unpackHLQL (const unpack_s &upkStruct, byte threadID)
 {
     pos_t          begPos    = upkStruct.begPos;
     u64            chunkSize = upkStruct.chunkSize;
@@ -1320,7 +1319,6 @@ inline void EnDecrypto::unpackHLQL (const unpack_s &upkStruct)
     vector<string> hdrUnpack = upkStruct.hdrUnpack;
     const char     XChar_qs  = upkStruct.XChar_qs;
     vector<string> qsUnpack  = upkStruct.qsUnpack;
-    const byte     threadID  = upkStruct.threadID;
     
     
     
