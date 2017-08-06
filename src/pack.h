@@ -296,7 +296,7 @@ inline string packLargeHdr_3to2 (const string &strIn, const htbl_t &map)
         tuple  = (firstNotIn  = (hdrs.find(s0)==string::npos)) ? XChar : s0;
         tuple += (secondNotIn = (hdrs.find(s1)==string::npos)) ? XChar : s1;
         tuple += (thirdNotIn  = (hdrs.find(s2)==string::npos)) ? XChar : s2;
-        
+    
         shortTuple = largePack(tuple, map);
         packed += (unsigned char) (shortTuple >> 8);      // left byte
         packed += (unsigned char) (shortTuple & 0xFF);    // right byte

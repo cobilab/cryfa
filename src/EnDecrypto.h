@@ -21,10 +21,10 @@ struct unpack_s
     u64   chunkSize;
     vector<string> hdrUnpack;
     vector<string> qsUnpack;
-    //todo. add function pointers
-    string (*unpackHdr) (string::iterator&, const vector<string>&);
-    string (*unpackQS)  (string::iterator&, const vector<string>&);
+    string (*unpackHdrFPtr) (string::iterator&, const vector<string>&);
+    string (*unpackQSFPtr)  (string::iterator&, const vector<string>&);
 };
+
 
 class EnDecrypto
 {
@@ -86,26 +86,10 @@ private:
                         string (*) (const string&, const htbl_t&),
                         string (*) (const string&, const htbl_t&));
     
-    
-    //todo. extend struct idea for inputs of the followings
-    inline void unpackHSQS (pos_t, u64,                  // unpack H:Small, Q:S
-                      const vector<string>&, const vector<string>&, const byte,
-                      string (*) (string::iterator&, const vector<string>&),
-                      string (*) (string::iterator&, const vector<string>&));
-    
-    inline void unpackHSQL (pos_t, u64,                  // unpack H:S, Q:Large
-                         const vector<string>&, const char,
-                         const vector<string>&, const byte,
-                         string (*) (string::iterator&, const vector<string>&));
-    
-    inline void unpackHLQS (pos_t, u64, const char,      // unpack H:Large, Q:S
-                       const vector<string>&, const vector<string>&, const byte,
-                       string (*) (string::iterator&, const vector<string>&));
-    
-//    inline void unpackHLQL (pos_t, u64,                  // unpack H:Large, Q:L
-//                            const char, const vector<string>&,
-//                            const char, const vector<string>&, const byte);
-    inline void unpackHLQL (const unpack_s&, byte);
+    inline void unpackHSQS (const unpack_s&, byte);      // unpack H:Small, Q:S
+    inline void unpackHSQL (const unpack_s&, byte);      // unpack H:S, Q:Large
+    inline void unpackHLQS (const unpack_s&, byte);      // unpack H:Large, Q:S
+    inline void unpackHLQL (const unpack_s&, byte);      // unpack H:Large, Q:L
 };
 
 #endif //CRYFA_ENDECRYPTO_H
