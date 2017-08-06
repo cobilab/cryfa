@@ -72,8 +72,9 @@ std::mutex mutx;
 void EnDecrypto::compressFA ()
 {
     thread arrThread[n_threads];
-    byte t;         // for threads
+    byte   t;               // for threads
     string headers;
+    pack_s pkStruct;        // collection of inputs to pass to pack...
     
     // gather all headers
     gatherHdr(headers);
@@ -117,9 +118,11 @@ void EnDecrypto::compressFA ()
         { HdrMap = buildHashTable(Hdrs, 1);            packHdr = &pack_1to1; }
     }
     
+    pkStruct.packHdrFPtr = packHdr;
+    
     // distribute file among threads, for reading and packing
     for (t = 0; t != n_threads; ++t)
-        arrThread[t] = thread(&EnDecrypto::packFA, this, t, packHdr);
+        arrThread[t] = thread(&EnDecrypto::packFA, this, pkStruct, t);
     for (t = 0; t != n_threads; ++t)
         if (arrThread[t].joinable())    arrThread[t].join();
 
@@ -158,7 +161,7 @@ void EnDecrypto::compressFA ()
         }
     }
     pckdFile << (char) 252;
-
+    
     // close/delete input/output files
     pckdFile.close();
     string pkFileName;
@@ -175,12 +178,13 @@ void EnDecrypto::compressFA ()
 /*******************************************************************************
     pack fasta -- '>' at the beginning of headers is not packed
 *******************************************************************************/
-inline void EnDecrypto::packFA (const byte threadID,
-                             string (*packHdr) (const string &, const htbl_t &))
+inline void EnDecrypto::packFA (const pack_s& pkStruct, byte threadID)
 {
-    ifstream in(inFileName);
-    string line, context, seq;
-    ofstream pkfile(PK_FILENAME+to_string(threadID), std::ios_base::app);
+    using packHdrFPtr   = string (*) (const string&, const htbl_t&);
+    packHdrFPtr packHdr = pkStruct.packHdrFPtr;              // function pointer
+    ifstream    in(inFileName);
+    string      line, context, seq;
+    ofstream    pkfile(PK_FILENAME+to_string(threadID), std::ios_base::app);
     
     // lines ignored at the beginning
     for (u64 l=(u64) threadID*LINE_BUFFER; l--;)  in.ignore(LARGE_NUMBER, '\n');
@@ -274,9 +278,10 @@ void EnDecrypto::compressFQ ()
 {
     string line;
     thread arrThread[n_threads];
-    byte t;         // for threads
+    byte   t;                   // for threads
     string headers, qscores;
-
+    pack_s pkStruct;            // collection of inputs to pass to pack...
+    
     // gather all headers and quality scores
     gatherHdrQs(headers, qscores);
 
@@ -284,7 +289,7 @@ void EnDecrypto::compressFQ ()
     using packHdrPointer = string (*)(const string&, const htbl_t&);
     packHdrPointer packHdr;
     using packQSPointer  = string (*)(const string&, const htbl_t&);
-    packQSPointer packQS;
+    packQSPointer  packQS;
 
     const size_t headersLen = headers.length();
     const size_t qscoresLen = qscores.length();
@@ -355,9 +360,12 @@ void EnDecrypto::compressFQ ()
         { QsMap = buildHashTable(QSs, 1);            packQS = &pack_1to1; }
     }
     
+    pkStruct.packHdrFPtr = packHdr;
+    pkStruct.packQSFPtr  = packQS;
+    
     // distribute file among threads, for reading and packing
     for (t = 0; t != n_threads; ++t)
-        arrThread[t] = thread(&EnDecrypto::packFQ, this, t, packHdr, packQS);
+        arrThread[t] = thread(&EnDecrypto::packFQ, this, pkStruct, t);
     for (t = 0; t != n_threads; ++t)
         if (arrThread[t].joinable())    arrThread[t].join();
     
@@ -436,13 +444,17 @@ void EnDecrypto::compressFQ ()
 /*******************************************************************************
     pack fastq -- '@' at the beginning of headers is not packed
 *******************************************************************************/
-inline void EnDecrypto::packFQ (const byte threadID,
-                             string (*packHdr) (const string &, const htbl_t &),
-                             string (*packQS) (const string &, const htbl_t &))
+inline void EnDecrypto::packFQ (const pack_s& pkStruct, byte threadID)
 {
+    // function pointers
+    using packHdrFPtr   = string (*) (const string&, const htbl_t&);
+    packHdrFPtr packHdr = pkStruct.packHdrFPtr;
+    using packQSPtr     = string (*) (const string&, const htbl_t&);
+    packQSPtr   packQS  = pkStruct.packQSFPtr;
+    
     ifstream in(inFileName);
-    string context;     // output string
-    string inTempStr, line;
+    string   context;       // output string
+    string   inTempStr, line;
     ofstream pkfile(PK_FILENAME+to_string(threadID), std::ios_base::app);
 
     // lines ignored at the beginning
@@ -630,13 +642,14 @@ void EnDecrypto::decrypt ()
 *******************************************************************************/
 void EnDecrypto::decompressFA ()
 {
-    char c;                         // chars in file
     vector<string> hdrUnpack;       // for unpacking header
-    string headers;
-    string chunkSizeStr;            // chunk size (string) -- for unshuffling
-    thread arrThread[n_threads];    // array of threads
-    byte t;                         // for threads
-    u64 offset;                     // to traverse decompressed file
+    char     c;                     // chars in file
+    string   headers;
+    unpack_s upkStruct;             // collection of inputs to pass to unpack...
+    string   chunkSizeStr;          // chunk size (string) -- for unshuffling
+    thread   arrThread[n_threads];  // array of threads
+    byte     t;                     // for threads
+    u64      offset;                // to traverse decompressed file
     
     ifstream in(DEC_FILENAME);
     in.ignore(1);                   // jump over decText[0]==(char) 127
@@ -666,7 +679,7 @@ void EnDecrypto::decompressFA ()
     if (headersLen <= MAX_C5)
     {
         // tables for unpacking
-        hdrUnpack = buildUnpack(headers, keyLen_hdr);
+        upkStruct.hdrUnpack = buildUnpack(headers, keyLen_hdr);
         
         // distribute file among threads, for reading and unpacking
         for (t = 0; t != n_threads; ++t)
@@ -677,9 +690,12 @@ void EnDecrypto::decompressFA ()
                 chunkSizeStr.clear();   // chunk size
                 while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
                 offset = stoull(chunkSizeStr);
+    
+                upkStruct.begPos        = in.tellg();
+                upkStruct.chunkSize     = offset;
+                upkStruct.unpackHdrFPtr = unpackHdr;
                 
-                arrThread[t] = thread(&EnDecrypto::unpackHS, this, in.tellg(),
-                                      offset, hdrUnpack, t, unpackHdr);
+                arrThread[t]= thread(&EnDecrypto::unpackHS, this, upkStruct, t);
                 
                 // jump to the beginning of the next chunk
                 in.seekg((std::streamoff) offset, std::ios_base::cur);
@@ -695,11 +711,11 @@ void EnDecrypto::decompressFA ()
     {
         const string decHeaders = headers.substr(headersLen - MAX_C5);
         // ASCII char after the last char in headers string
-        const char XChar_hdr = (char) (decHeaders.back() + 1);
-        string decHeadersX = decHeaders;    decHeadersX += XChar_hdr;
+        string decHeadersX = decHeaders;
+        decHeadersX += (upkStruct.XChar_hdr = (char) (decHeaders.back() + 1));
 
         // tables for unpacking
-        hdrUnpack = buildUnpack(decHeadersX, keyLen_hdr);
+        upkStruct.hdrUnpack = buildUnpack(decHeadersX, keyLen_hdr);
 
         // distribute file among threads, for reading and unpacking
         for (t = 0; t != n_threads; ++t)
@@ -710,9 +726,11 @@ void EnDecrypto::decompressFA ()
                 chunkSizeStr.clear();   // chunk size
                 while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
                 offset = stoull(chunkSizeStr);
-
-                arrThread[t] = thread(&EnDecrypto::unpackHL, this, in.tellg(),
-                                      offset, XChar_hdr, hdrUnpack, t);
+    
+                upkStruct.begPos        = in.tellg();
+                upkStruct.chunkSize     = offset;
+                
+                arrThread[t]= thread(&EnDecrypto::unpackHL, this, upkStruct, t);
 
                 // jump to the beginning of the next chunk
                 in.seekg((std::streamoff) offset, std::ios_base::cur);
@@ -769,15 +787,17 @@ void EnDecrypto::decompressFA ()
 /*******************************************************************************
     unpack FA: small hdr
 *******************************************************************************/
-inline void EnDecrypto::unpackHS (pos_t begPos, u64 chunkSize,
-                 const vector<string> &hdrUnpack, const byte threadID,
-                 string (*unpackHdr) (string::iterator&, const vector<string>&))
+inline void EnDecrypto::unpackHS (const unpack_s &upkStruct, byte threadID)
 {
-    ifstream in(DEC_FILENAME);
-    string decText, chunkSizeStr;
+    using unpackHdrFPtr = string (*) (string::iterator&, const vector<string>&);
+    unpackHdrFPtr unpackHdr = upkStruct.unpackHdrFPtr;       // function pointer
+    pos_t            begPos    = upkStruct.begPos;
+    u64              chunkSize = upkStruct.chunkSize;
+    ifstream         in(DEC_FILENAME);
+    string           decText, chunkSizeStr;
     string::iterator i;
-    char c;
-    pos_t endPos;
+    char             c;
+    pos_t            endPos;
     ofstream upkfile(UPK_FILENAME+to_string(threadID), std::ios_base::app);
     
     while (in.peek() != EOF)
@@ -794,8 +814,8 @@ inline void EnDecrypto::unpackHS (pos_t begPos, u64 chunkSize,
         
         upkfile << THR_ID_HDR + to_string(threadID) << '\n';
         do {
-            if (*i == (char) 253)
-                upkfile << '>' << unpackHdr(++i, hdrUnpack) << '\n';      // hdr
+            if (*i == (char) 253)                                         // hdr
+                upkfile << '>' << unpackHdr(++i, upkStruct.hdrUnpack) << '\n';
             else
                 upkfile << unpackSeqFA_3to1(i) << '\n';                   // seq
         } while (++i != decText.end());        // if trouble: change "!=" to "<"
@@ -824,15 +844,15 @@ inline void EnDecrypto::unpackHS (pos_t begPos, u64 chunkSize,
 /*******************************************************************************
     unpack FA: large hdr
 *******************************************************************************/
-inline void EnDecrypto::unpackHL (pos_t begPos, u64 chunkSize,
-                           const char XChar_hdr,
-                           const vector<string> &hdrUnpack, const byte threadID)
+inline void EnDecrypto::unpackHL (const unpack_s &upkStruct, byte threadID)
 {
-    ifstream in(DEC_FILENAME);
-    string decText, chunkSizeStr;
+    pos_t            begPos    = upkStruct.begPos;
+    u64              chunkSize = upkStruct.chunkSize;
+    ifstream         in(DEC_FILENAME);
+    string           decText, chunkSizeStr;
     string::iterator i;
-    char c;
-    pos_t endPos;
+    char             c;
+    pos_t            endPos;
     ofstream upkfile(UPK_FILENAME+to_string(threadID), std::ios_base::app);
     
     while (in.peek() != EOF)
@@ -850,8 +870,8 @@ inline void EnDecrypto::unpackHL (pos_t begPos, u64 chunkSize,
         upkfile << THR_ID_HDR + to_string(threadID) << '\n';
         do {
             if (*i == (char) 253)
-                upkfile << '>' << unpackLarge_read2B(++i, XChar_hdr, hdrUnpack)
-                        << '\n';                                          // hdr
+                upkfile << '>' << unpackLarge_read2B(++i, upkStruct.XChar_hdr,
+                                         upkStruct.hdrUnpack) << '\n';    // hdr
             else
                 upkfile << unpackSeqFA_3to1(i) << '\n';                   // seq
         } while (++i != decText.end());        // if trouble: change "!=" to "<"
@@ -893,14 +913,13 @@ inline void EnDecrypto::unpackHL (pos_t begPos, u64 chunkSize,
 *******************************************************************************/
 void EnDecrypto::decompressFQ ()
 {
-    char c;                             // chars in file
-    vector<string> hdrUnpack, qsUnpack; // for unpacking header & qscore
-    string headers, qscores;
+    char     c;                     // chars in file
+    string   headers, qscores;
     unpack_s upkStruct;             // collection of inputs to pass to unpack...
-    string chunkSizeStr;            // chunk size (string) -- for unshuffling
-    thread arrThread[n_threads];    // array of threads
-    byte t;                         // for threads
-    u64 offset;                     // to traverse decompressed file
+    string   chunkSizeStr;          // chunk size (string) -- for unshuffling
+    thread   arrThread[n_threads];  // array of threads
+    byte     t;                     // for threads
+    u64      offset;                // to traverse decompressed file
     
     ifstream in(DEC_FILENAME);
     while (in.get(c) && c != (char) 254)                 headers += c;
@@ -1144,19 +1163,18 @@ void EnDecrypto::decompressFQ ()
 *******************************************************************************/
 inline void EnDecrypto::unpackHSQS (const unpack_s &upkStruct, byte threadID)
 {
-    pos_t begPos    = upkStruct.begPos;
-    u64   chunkSize = upkStruct.chunkSize;
     // function pointers
     using unpackHdrFPtr = string (*) (string::iterator&, const vector<string>&);
     unpackHdrFPtr unpackHdr = upkStruct.unpackHdrFPtr;
     using unpackQSFPtr  = string (*) (string::iterator&, const vector<string>&);
-    unpackQSFPtr unpackQS = upkStruct.unpackQSFPtr;
-    
-    ifstream in(DEC_FILENAME);
-    string decText, plusMore, chunkSizeStr;
+    unpackQSFPtr  unpackQS = upkStruct.unpackQSFPtr;
+    pos_t            begPos    = upkStruct.begPos;
+    u64              chunkSize = upkStruct.chunkSize;
+    ifstream         in(DEC_FILENAME);
+    string           decText, plusMore, chunkSizeStr;
     string::iterator i;
-    char c;
-    pos_t endPos;
+    char             c;
+    pos_t            endPos;
     ofstream upkfile(UPK_FILENAME+to_string(threadID), std::ios_base::app);
     
     while (in.peek() != EOF)
@@ -1207,15 +1225,15 @@ inline void EnDecrypto::unpackHSQS (const unpack_s &upkStruct, byte threadID)
 *******************************************************************************/
 inline void EnDecrypto::unpackHSQL (const unpack_s &upkStruct, byte threadID)
 {
-    pos_t begPos        = upkStruct.begPos;
-    u64   chunkSize     = upkStruct.chunkSize;
     using unpackHdrFPtr = string (*) (string::iterator&, const vector<string>&);
     unpackHdrFPtr unpackHdr = upkStruct.unpackHdrFPtr;       // function pointer
-    ifstream in(DEC_FILENAME);
-    string decText, plusMore, chunkSizeStr;
+    pos_t            begPos    = upkStruct.begPos;
+    u64              chunkSize = upkStruct.chunkSize;
+    ifstream         in(DEC_FILENAME);
+    string           decText, plusMore, chunkSizeStr;
     string::iterator i;
-    char c;
-    pos_t endPos;
+    char             c;
+    pos_t            endPos;
     ofstream upkfile(UPK_FILENAME + to_string(threadID), std::ios_base::app);
     
     while (in.peek() != EOF)
@@ -1267,16 +1285,15 @@ inline void EnDecrypto::unpackHSQL (const unpack_s &upkStruct, byte threadID)
 *******************************************************************************/
 inline void EnDecrypto::unpackHLQS (const unpack_s &upkStruct, byte threadID)
 {
-    pos_t begPos       = upkStruct.begPos;
-    u64   chunkSize    = upkStruct.chunkSize;
     using unpackQSFPtr = string (*) (string::iterator&, const vector<string>&);
     unpackQSFPtr unpackQS = upkStruct.unpackQSFPtr;          // function pointer
-    
-    ifstream in(DEC_FILENAME);
-    string decText, plusMore, chunkSizeStr;
+    pos_t            begPos    = upkStruct.begPos;
+    u64              chunkSize = upkStruct.chunkSize;
+    ifstream         in(DEC_FILENAME);
+    string           decText, plusMore, chunkSizeStr;
     string::iterator i;
-    char c;
-    pos_t endPos;
+    char             c;
+    pos_t            endPos;
     ofstream upkfile(UPK_FILENAME + to_string(threadID), std::ios_base::app);
     
     while (in.peek() != EOF)
@@ -1327,13 +1344,13 @@ inline void EnDecrypto::unpackHLQS (const unpack_s &upkStruct, byte threadID)
 *******************************************************************************/
 inline void EnDecrypto::unpackHLQL (const unpack_s &upkStruct, byte threadID)
 {
-    pos_t begPos    = upkStruct.begPos;
-    u64   chunkSize = upkStruct.chunkSize;
-    ifstream in(DEC_FILENAME);
-    string decText, plusMore, chunkSizeStr;
+    pos_t            begPos    = upkStruct.begPos;
+    u64              chunkSize = upkStruct.chunkSize;
+    ifstream         in(DEC_FILENAME);
+    string           decText, plusMore, chunkSizeStr;
     string::iterator i;
-    char c;
-    pos_t endPos;
+    char             c;
+    pos_t            endPos;
     ofstream upkfile(UPK_FILENAME + to_string(threadID), std::ios_base::app);
     
     while (in.peek() != EOF)
@@ -1386,7 +1403,7 @@ inline void EnDecrypto::unpackHLQL (const unpack_s &upkStruct, byte threadID)
 inline bool EnDecrypto::hasFQjustPlus () const
 {
     ifstream in(inFileName);
-    string line;
+    string   line;
     
     in.ignore(LARGE_NUMBER, '\n');          // ignore header
     in.ignore(LARGE_NUMBER, '\n');          // ignore seq
@@ -1413,7 +1430,7 @@ inline void EnDecrypto::gatherHdr (string& headers) const
     std::memset(hChars+32, false, 95);
     
     ifstream in(inFileName);
-    string line;
+    string   line;
     while (!in.eof())
     {
         if (in.peek() == 62)    // '>' = (char) 62
@@ -1441,7 +1458,7 @@ inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores) const
     std::memset(qChars+32, false, 95);
     
     ifstream in(inFileName);
-    string line;
+    string   line;
     while (!in.eof())
     {
         if (getline(in,line).good())  for(const char &c : line)  hChars[c]=true;
@@ -1656,7 +1673,7 @@ inline void EnDecrypto::printKey (byte *key) const
 inline string EnDecrypto::extractPass () const
 {
     ifstream in(keyFileName);
-    string l;   // each line of file
+    string   l;   // each line of file
     
     if (keyFileName.empty())
     { cerr << "Error: no password file has been set!\n";     exit(1); }
