@@ -642,7 +642,6 @@ void EnDecrypto::decrypt ()
 *******************************************************************************/
 void EnDecrypto::decompressFA ()
 {
-    vector<string> hdrUnpack;       // for unpacking header
     char     c;                     // chars in file
     string   headers;
     unpack_s upkStruct;             // collection of inputs to pass to unpack...
