@@ -21,19 +21,19 @@ string Hdrs_g;    // max: 39 values -- global
 string QSs_g;     // max: 39 values -- global
 
 /*******************************************************************************
-    build hash table
+    build hash table -- output: map (1st input)
 *******************************************************************************/
-inline htbl_t buildHashTable (const string &strIn, short keyLen)
+inline void buildHashTable (htbl_t &map, const string &strIn, short keyLen)
 {
     u64 elementNo = 0;
-    string element;
-    htbl_t map;
+    string element;    element.reserve(keyLen);
+    const u64 elementSize = (u64) std::pow(strIn.size(), keyLen);
+    map.clear();
+    map.reserve(elementSize);
     
     switch (keyLen)
     {
         case 3:
-            element.reserve(3);
-            
             LOOP3(i, j, k, strIn)
             {
                 element=i;    element+=j;    element+=k;
@@ -44,8 +44,6 @@ inline htbl_t buildHashTable (const string &strIn, short keyLen)
             break;
     
         case 2:
-            element.reserve(2);
-            
             LOOP2(i, j, strIn)
             {
                 element=i;    element+=j;
@@ -54,8 +52,6 @@ inline htbl_t buildHashTable (const string &strIn, short keyLen)
             break;
 
         case 1:
-            element.reserve(1);
-            
             LOOP(i, strIn)
             {
                 element=i;
@@ -64,8 +60,6 @@ inline htbl_t buildHashTable (const string &strIn, short keyLen)
             break;
 
         case 5:
-            element.reserve(5);
-        
             LOOP5(i, j, k, l, m, strIn)
             {
                 element=i;  element+=j;  element+=k;  element+=l;  element+=m;
@@ -74,8 +68,6 @@ inline htbl_t buildHashTable (const string &strIn, short keyLen)
             break;
 
         case 7:
-            element.reserve(7);
-        
             LOOP7(i, j, k, l, m, n, o, strIn)
             {
                 element =i;  element+=j;  element+=k;  element+=l;  element+=m;
@@ -85,8 +77,6 @@ inline htbl_t buildHashTable (const string &strIn, short keyLen)
             break;
 
         case 4:
-            element.reserve(4);
-        
             LOOP4(i, j, k, l, strIn)
             {
                 element=i;    element+=j;    element+=k;    element+=l;
@@ -95,8 +85,6 @@ inline htbl_t buildHashTable (const string &strIn, short keyLen)
             break;
 
         case 6:
-            element.reserve(6);
-        
             LOOP6(i, j, k, l, m, n, strIn)
             {
                 element =i;  element+=j;  element+=k;  element+=l;  element+=m;
@@ -106,8 +94,6 @@ inline htbl_t buildHashTable (const string &strIn, short keyLen)
             break;
             
         case 8:
-            element.reserve(8);
-            
             LOOP8(i, j, k, l, m, n, o, p, strIn)
             {
                 element =i;  element+=j;  element+=k;  element+=l;  element+=m;
@@ -124,26 +110,22 @@ inline htbl_t buildHashTable (const string &strIn, short keyLen)
 //    for (htbl_t::iterator i = map.begin(); i != map.end(); ++i)
 //        cerr << i->first << "\t" << i->second << '\n';
 //    cerr << "elementNo = " << elementNo << '\n';
-    
-    
-    return map;
 }
 
 /*******************************************************************************
-    build table for unpacking
+    build table for unpacking -- output: unpack (1st input)
 *******************************************************************************/
-inline vector<string> buildUnpack (const string &strIn, u16 keyLen)
+inline void buildUnpack(vector<string> &unpack, const string &strIn, u16 keyLen)
 {
     u64 elementNo = 0;
-    string element;
-    const u64 unpackSize = std::pow(strIn.size(), keyLen);
-    vector<string> unpack;    unpack.reserve(unpackSize);
+    string element;    element.reserve(keyLen);
+    const u64 unpackSize = (u64) std::pow(strIn.size(), keyLen);
+    unpack.clear();
+    unpack.reserve(unpackSize);
     
     switch (keyLen)
     {
         case 3:
-            element.reserve(3);
-        
             LOOP3(i, j, k, strIn)
             {
                 element=i;    element+=j;    element+=k;
@@ -152,8 +134,6 @@ inline vector<string> buildUnpack (const string &strIn, u16 keyLen)
             break;
 
         case 2:
-            element.reserve(2);
-        
             LOOP2(i, j, strIn)
             {
                 element=i;    element+=j;
@@ -162,8 +142,6 @@ inline vector<string> buildUnpack (const string &strIn, u16 keyLen)
             break;
 
         case 1:
-            element.reserve(1);
-        
             LOOP(i, strIn)
             {
                 element=i;
@@ -172,8 +150,6 @@ inline vector<string> buildUnpack (const string &strIn, u16 keyLen)
             break;
 
         case 5:
-            element.reserve(5);
-        
             LOOP5(i, j, k, l, m, strIn)
             {
                 element=i;  element+=j;  element+=k;  element+=l;  element+=m;
@@ -182,8 +158,6 @@ inline vector<string> buildUnpack (const string &strIn, u16 keyLen)
             break;
 
         case 7:
-            element.reserve(7);
-        
             LOOP7(i, j, k, l, m, n, o, strIn)
             {
                 element =i;  element+=j;  element+=k;  element+=l;  element+=m;
@@ -193,8 +167,6 @@ inline vector<string> buildUnpack (const string &strIn, u16 keyLen)
             break;
 
         case 4:
-            element.reserve(4);
-        
             LOOP4(i, j, k, l, strIn)
             {
                 element=i;    element+=j;    element+=k;    element+=l;
@@ -203,8 +175,6 @@ inline vector<string> buildUnpack (const string &strIn, u16 keyLen)
             break;
 
         case 6:
-            element.reserve(6);
-        
             LOOP6(i, j, k, l, m, n, strIn)
             {
                 element =i;  element+=j;  element+=k;  element+=l;  element+=m;
@@ -214,8 +184,6 @@ inline vector<string> buildUnpack (const string &strIn, u16 keyLen)
             break;
 
         case 8:
-            element.reserve(8);
-        
             LOOP8(i, j, k, l, m, n, o, p, strIn)
             {
                 element =i;  element+=j;  element+=k;  element+=l;  element+=m;
@@ -226,8 +194,6 @@ inline vector<string> buildUnpack (const string &strIn, u16 keyLen)
             
         default: break;
     }
-    
-    return unpack;
     
     // test
 //    for (int i = 0; i != arrSize; ++i)
@@ -257,11 +223,10 @@ inline u16 largePack (const string &strIn, const htbl_t &map)
 }
 
 /*******************************************************************************
-    encapsulate each 3 DNA bases in 1 byte -- reduction: ~2/3
+    encapsulate each 3 DNA bases in 1 byte. output: packedSeq -- reduction: ~2/3
 *******************************************************************************/
-inline string packSeq_3to1 (const string &seq)
+inline void packSeq_3to1 (string &packedSeq, const string &seq)
 {
-    string packedSeq;
     bool firstNotIn, secondNotIn, thirdNotIn;
     char s0, s1, s2;
     string tuple;   tuple.reserve(3);
@@ -302,16 +267,15 @@ inline string packSeq_3to1 (const string &seq)
 
         default: break;
     }
-
-    return packedSeq;
 }
 
 /*******************************************************************************
     encapsulate 3 header symbols in 2 bytes -- reduction ~1/3.           40 <= #
 *******************************************************************************/
-inline string packLargeHdr_3to2 (const string &strIn, const htbl_t &map)
+inline void packLargeHdr_3to2 (string &packed, const string &strIn,
+                               const htbl_t &map)
 {
-    string tuple, packed;   tuple.reserve(3);
+    string tuple;    tuple.reserve(3);
     bool firstNotIn, secondNotIn, thirdNotIn;
     char s0, s1, s2;
     u16 shortTuple;
@@ -352,16 +316,15 @@ inline string packLargeHdr_3to2 (const string &strIn, const htbl_t &map)
         
         default: break;
     }
-    
-    return packed;
 }
 
 /*******************************************************************************
     encapsulate 3 quality score symbols in 2 bytes -- reduction ~1/3.    40 <= #
 *******************************************************************************/
-inline string packLargeQs_3to2 (const string &strIn, const htbl_t &map)
+inline void packLargeQs_3to2 (string &packed, const string &strIn,
+                              const htbl_t &map)
 {
-    string tuple, packed;   tuple.reserve(3);
+    string tuple;    tuple.reserve(3);
     bool firstNotIn, secondNotIn, thirdNotIn;
     char s0, s1, s2;
     u16 shortTuple;
@@ -402,16 +365,14 @@ inline string packLargeQs_3to2 (const string &strIn, const htbl_t &map)
         
         default: break;
     }
-    
-    return packed;
 }
 
 /*******************************************************************************
     encapsulate 3 symbols in 2 bytes -- reduction ~1/3.            16 <= # <= 39
 *******************************************************************************/
-inline string pack_3to2 (const string &strIn, const htbl_t &map)
+inline void pack_3to2 (string &packed, const string &strIn, const htbl_t &map)
 {
-    string tuple, packed;   tuple.reserve(3);
+    string tuple;    tuple.reserve(3);
     u16 shortTuple;
     string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-2;
     
@@ -437,16 +398,15 @@ inline string pack_3to2 (const string &strIn, const htbl_t &map)
 
         default: break;
     }
-
-    return packed;
 }
 
 /*******************************************************************************
     encapsulate 2 symbols in 1 bytes -- reduction ~1/2.             7 <= # <= 15
 *******************************************************************************/
-inline string pack_2to1 (const string &strIn, const htbl_t &map)
+inline void pack_2to1 (string &packed, const string &strIn, const htbl_t &map)
 {
-    string tuple, packed;   tuple.reserve(2);
+    string tuple;    tuple.reserve(2);
+    
     string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-1;
     
     for (; i < iEnd; i += 2)
@@ -457,16 +417,15 @@ inline string pack_2to1 (const string &strIn, const htbl_t &map)
     
     // if len isn't multiple of 2 (it's odd), add (char) 255 before each sym
     if (strIn.length() & 1) { packed += 255;    packed += *i; }
-
-    return packed;
 }
 
 /*******************************************************************************
     encapsulate 3 symbols in 1 bytes -- reduction ~2/3.              # = 4, 5, 6
 *******************************************************************************/
-inline string pack_3to1 (const string &strIn, const htbl_t &map)
+inline void pack_3to1 (string &packed, const string &strIn, const htbl_t &map)
 {
-    string tuple, packed;   tuple.reserve(3);
+    string tuple;    tuple.reserve(3);
+    
     string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-2;
 
     for (; i < iEnd; i += 3)
@@ -489,16 +448,14 @@ inline string pack_3to1 (const string &strIn, const htbl_t &map)
 
         default: break;
     }
-
-    return packed;
 }
 
 /*******************************************************************************
     encapsulate 5 symbols in 1 bytes -- reduction ~4/5.                    # = 3
 *******************************************************************************/
-inline string pack_5to1 (const string &strIn, const htbl_t &map)
+inline void pack_5to1 (string &packed, const string &strIn, const htbl_t &map)
 {
-    string tuple, packed;   tuple.reserve(5);
+    string tuple;    tuple.reserve(5);
     string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-4;
     
     for (; i < iEnd; i += 5)
@@ -535,16 +492,14 @@ inline string pack_5to1 (const string &strIn, const htbl_t &map)
 
         default: break;
     }
-    
-    return packed;
 }
 
 /*******************************************************************************
     encapsulate 7 symbols in 1 bytes -- reduction ~6/7.                    # = 2
 *******************************************************************************/
-inline string pack_7to1 (const string &strIn, const htbl_t &map)
+inline void pack_7to1 (string &packed, const string &strIn, const htbl_t &map)
 {
-    string tuple, packed;   tuple.reserve(7);
+    string tuple;    tuple.reserve(7);
     string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-6;
     
     for (; i < iEnd; i += 7)
@@ -598,16 +553,14 @@ inline string pack_7to1 (const string &strIn, const htbl_t &map)
 
         default: break;
     }
-
-    return packed;
 }
 
 /*******************************************************************************
     show 1 symbol in 1 byte.                                               # = 1
 *******************************************************************************/
-inline string pack_1to1 (const string &strIn, const htbl_t &map)
+inline void pack_1to1 (string &packed, const string &strIn, const htbl_t &map)
 {
-    string single, packed;    single.reserve(1);
+    string single;    single.reserve(1);
     string::const_iterator i = strIn.begin(),   iEnd = strIn.end();
     
     for (; i < iEnd; ++i)
@@ -615,8 +568,6 @@ inline string pack_1to1 (const string &strIn, const htbl_t &map)
         single.clear();   single = *i;
         packed += (char) map.find(single)->second;
     }
-    
-    return packed;
 }
 
 /*******************************************************************************
@@ -635,10 +586,10 @@ char penaltySym (char c)
 /*******************************************************************************
     unpack 1 byte to 3 DNA bases -- FASTQ
 *******************************************************************************/
-inline string unpackSeqFA_3to1 (string::iterator &i)
+inline void unpackSeqFA_3to1 (string &out, string::iterator &i)
 {
     string tpl;    tpl.reserve(3);     // tuplet
-    string out;
+    out.clear();
     byte s;
 
     for (; *i != (char) 254; ++i)
@@ -675,16 +626,15 @@ inline string unpackSeqFA_3to1 (string::iterator &i)
                    out+=penaltySym(*(++i));                                    }
         }
     }
-    
-    return out;
 }
 
 /*******************************************************************************
     unpack 1 byte to 3 DNA bases -- FASTQ
 *******************************************************************************/
-inline string unpackSeqFQ_3to1 (string::iterator &i)
+inline void unpackSeqFQ_3to1 (string &out, string::iterator &i)
 {
-    string tpl, out;    tpl.reserve(3);
+    string tpl;    tpl.reserve(3);
+    out.clear();
     
     for (; *i != (char) 254; ++i)
     {
@@ -716,20 +666,18 @@ inline string unpackSeqFQ_3to1 (string::iterator &i)
         else { out+=penaltySym(*(++i));    out+=penaltySym(*(++i));       // XXX
                out+=penaltySym(*(++i));                                        }
     }
-
-    return out;
 }
 
 /*******************************************************************************
     unpack by reading 2 byte by 2 byte, when # > 39
 *******************************************************************************/
-inline string unpackLarge_read2B (string::iterator &i, const char XChar,
-                                  const vector<string> &unpack)
+inline void unpackLarge_read2B (string &out, string::iterator &i,
+                                const char XChar, const vector<string> &unpack)
 {
     byte leftB, rightB;
     u16 doubleB;    // double byte
     string tpl;    tpl.reserve(3);     // tuplet
-    string out;
+    out.clear();
 
     while (*i != (char) 254)
     {
@@ -766,18 +714,17 @@ inline string unpackLarge_read2B (string::iterator &i, const char XChar,
         else { out+=penaltySym(*(i+2));    out+=penaltySym(*(i+3));       // XXX
                out+=penaltySym(*(i+4));                                  i+=5; }
     }
-    
-    return out;
 }
 
 /*******************************************************************************
     unpack by reading 2 byte by 2 byte
 *******************************************************************************/
-inline string unpack_read2B (string::iterator &i, const vector<string> &unpack)
+inline void unpack_read2B (string &out, string::iterator &i,
+                           const vector<string> &unpack)
 {
     byte leftB, rightB;
     u16 doubleB;     // double byte
-    string out;
+    out.clear();
     
     for (; *i != (char) 254; i += 2)
     {
@@ -790,16 +737,15 @@ inline string unpack_read2B (string::iterator &i, const vector<string> &unpack)
         
         out += unpack[doubleB];
     }
-    
-    return out;
 }
 
 /*******************************************************************************
     unpack by reading 1 byte by 1 byte
 *******************************************************************************/
-inline string unpack_read1B (string::iterator &i, const vector<string> &unpack)
+inline void unpack_read1B (string &out, string::iterator &i,
+                           const vector<string> &unpack)
 {
-    string out;
+    out.clear();
     
     for (; *i != (char) 254; ++i)
     {
@@ -807,8 +753,6 @@ inline string unpack_read1B (string::iterator &i, const vector<string> &unpack)
         if (*i == (char) 255) { out += penaltySym(*(++i));    continue; }
         out += unpack[(byte) *i];
     }
-    
-    return out;
 }
 
 #endif //CRYFA_PACK_H

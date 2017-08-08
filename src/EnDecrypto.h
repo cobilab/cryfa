@@ -18,8 +18,8 @@ using std::vector;
 *******************************************************************************/
 struct pack_s
 {
-    string (*packHdrFPtr) (const string&, const htbl_t&);   // function pointer
-    string (*packQSFPtr)  (const string&, const htbl_t&);   // function pointer
+    void (*packHdrFPtr) (string&, const string&, const htbl_t&);
+    void (*packQSFPtr)  (string&, const string&, const htbl_t&);
 };
 
 /*******************************************************************************
@@ -33,8 +33,8 @@ struct unpack_s
     u64   chunkSize;                // chunk size
     vector<string> hdrUnpack;       // table for unpacking headers
     vector<string> qsUnpack;        // table for unpacking quality scores
-    string (*unpackHdrFPtr) (string::iterator&, const vector<string>&);
-    string (*unpackQSFPtr)  (string::iterator&, const vector<string>&);
+    void (*unpackHdrFPtr) (string&, string::iterator&, const vector<string>&);
+    void (*unpackQSFPtr)  (string&, string::iterator&, const vector<string>&);
 };
 
 /*******************************************************************************
