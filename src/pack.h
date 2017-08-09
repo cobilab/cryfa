@@ -27,9 +27,8 @@ inline void buildHashTable (htbl_t &map, const string &strIn, short keyLen)
 {
     u64 elementNo = 0;
     string element;    element.reserve(keyLen);
-    const u64 elementSize = (u64) std::pow(strIn.size(), keyLen);
     map.clear();
-    map.reserve(elementSize);
+    map.reserve((u64) std::pow(strIn.size(), keyLen));
     
     switch (keyLen)
     {
@@ -119,9 +118,8 @@ inline void buildUnpack(vector<string> &unpack, const string &strIn, u16 keyLen)
 {
     u64 elementNo = 0;
     string element;    element.reserve(keyLen);
-    const u64 unpackSize = (u64) std::pow(strIn.size(), keyLen);
     unpack.clear();
-    unpack.reserve(unpackSize);
+    unpack.reserve((u64) std::pow(strIn.size(), keyLen));
     
     switch (keyLen)
     {
@@ -203,7 +201,7 @@ inline void buildUnpack(vector<string> &unpack, const string &strIn, u16 keyLen)
 /*******************************************************************************
     index of each DNA bases pack
 *******************************************************************************/
-inline u16 dnaPack (const string &dna)
+inline byte dnaPack (const string &dna)     // maybe byte <-> u16 replacement
 {
     htbl_t::const_iterator got = DNA_MAP.find(dna);
     if (got == DNA_MAP.end())
@@ -246,8 +244,8 @@ inline void packSeq_3to1 (string &packedSeq, const string &seq)
         tuple +=
            (thirdNotIn = (s2!='A' && s2!='C' && s2!='G' && s2!='T' && s2!='N'))
            ? 'X' : s2;
-
-        packedSeq += (char) dnaPack(tuple);
+        
+        packedSeq += dnaPack(tuple);
         if (firstNotIn)  packedSeq += s0;
         if (secondNotIn) packedSeq += s1;
         if (thirdNotIn)  packedSeq += s2;
