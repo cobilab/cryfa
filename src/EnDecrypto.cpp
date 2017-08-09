@@ -588,13 +588,6 @@ void EnDecrypto::decrypt ()
     if ((line+"\n") != watermark)
     { cerr << "Error: invalid encrypted file!\n";    exit(1); }
     
-    ofstream compNW(CNW_FILENAME);
-    char c;     while (in.get(c)) compNW << c;
-
-    // close open files -- is a MUST (for compNW)
-    compNW.close();
-    in.close();
-    
 ////    string::size_type watermarkIdx = cipherText.find(watermark);
 ////    if (watermarkIdx == string::npos)
 ////    { cerr << "Error: invalid encrypted file!\n";    exit(1); }
@@ -619,17 +612,13 @@ void EnDecrypto::decrypt ()
 //        cerr << " block size: " << AES::BLOCKSIZE        << '\n';
 //    }
     
-    ////const char* inFile  = "CRYFA_COMPRESSED";   //for test
-    const char* inFile  = CNW_FILENAME;
     const char* outFile = DEC_FILENAME;
     CBC_Mode<CryptoPP::AES>::Decryption
             cbcDec(key, (size_t) AES::DEFAULT_KEYLENGTH, iv);
-    FileSource(inFile, true,
+    FileSource(in, true,
                new StreamTransformationFilter(cbcDec, new FileSink(outFile)));
     
-    // delete compressed without watermark file
-    const string cnwFileName = CNW_FILENAME;
-    std::remove(cnwFileName.c_str());
+    in.close();
 }
 
 /*******************************************************************************

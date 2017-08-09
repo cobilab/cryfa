@@ -20,7 +20,7 @@ using std::unordered_map;
     version and release
 *******************************************************************************/
 #define VERSION_CRYFA 1
-#define RELEASE_CRYFA 17.05
+#define RELEASE_CRYFA 17.08
 
 /*******************************************************************************
     typedefs
@@ -72,7 +72,6 @@ struct POWER<B, 0>
 #define THR_ID_HDR      "THRD="      // thread ID header
 #define PK_FILENAME     "CRYFA_PK"   // packed file name
 #define PCKD_FILENAME   "CRYFA_PCKD" // packed file name -- joined
-#define CNW_FILENAME    "CRYFA_CNW"  // compressed without watermark file name
 #define DEC_FILENAME    "CRYFA_DEC"  // decrypted file name
 #define UPK_FILENAME    "CRYFA_UPK"  // unpacked file name
 #define DEFAULT_N_THR   1            // default number of threads
