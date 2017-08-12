@@ -678,7 +678,6 @@ void EnDecrypto::decompressFA ()
         decHeadersX += (upkStruct.XChar_hdr = (char) (decHeaders.back() + 1));
 
         // tables for unpacking
-//        upkStruct.hdrUnpack = buildUnpack(decHeadersX, keyLen_hdr);
         buildUnpack(upkStruct.hdrUnpack, decHeadersX, keyLen_hdr);
 
         // distribute file among threads, for reading and unpacking
