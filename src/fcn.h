@@ -18,7 +18,7 @@ using std::cerr;
 *******************************************************************************/
 inline char fileType (const string& inFileName)
 {
-    char c;
+    char     c;
     ifstream in(inFileName);
     
     if (!in.good())
