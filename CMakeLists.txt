@@ -14,33 +14,33 @@ set(SOURCE_FILES src/cryfa.cpp src/EnDecrypto.cpp
         src/cryptopp/cryptlib.cpp
         src/cryptopp/des.cpp
         src/cryptopp/dessp.cpp
-#
-        src/cryptopp_copy/dll.cpp
+        #
+        src/cryptopp/dll.cpp
         src/cryptopp/ec2n.cpp
         src/cryptopp/ecp.cpp
         src/cryptopp/emsa2.cpp
         src/cryptopp/files.cpp
-#
-        src/cryptopp_copy/filters.cpp
+        #
+        src/cryptopp/filters.cpp
         src/cryptopp/fips140.cpp
-#
-        src/cryptopp_copy/fipstest.cpp
-#
-        src/cryptopp_copy/gf2n.cpp
-#
-        src/cryptopp_copy/gfpcrypt.cpp
+        #
+        src/cryptopp/fipstest.cpp
+        #
+        src/cryptopp/gf2n.cpp
+        #
+        src/cryptopp/gfpcrypt.cpp
         src/cryptopp/hex.cpp
         src/cryptopp/hmac.cpp
-#
-        src/cryptopp_copy/hrtimer.cpp
-#
-        src/cryptopp_copy/integer.cpp
+        #
+        src/cryptopp/hrtimer.cpp
+        #
+        src/cryptopp/integer.cpp
         src/cryptopp/iterhash.cpp
-#
-        src/cryptopp_copy/misc.cpp
+        #
+        src/cryptopp/misc.cpp
         src/cryptopp/modes.cpp
-#
-        src/cryptopp_copy/mqueue.cpp
+        #
+        src/cryptopp/mqueue.cpp
         src/cryptopp/nbtheory.cpp
         src/cryptopp/oaep.cpp
         src/cryptopp/osrng.cpp
@@ -48,21 +48,21 @@ set(SOURCE_FILES src/cryfa.cpp src/EnDecrypto.cpp
         src/cryptopp/pssr.cpp
         src/cryptopp/pubkey.cpp
         src/cryptopp/queue.cpp
-#
-        src/cryptopp_copy/randpool.cpp
+        #
+        src/cryptopp/randpool.cpp
         src/cryptopp/rdtables.cpp
         src/cryptopp/rijndael.cpp
         src/cryptopp/rng.cpp
-#
-        src/cryptopp_copy/rsa.cpp
+        #
+        src/cryptopp/rsa.cpp
         src/cryptopp/sha.cpp
         src/cryptopp/skipjack.cpp
-#
-        src/cryptopp_copy/wait.cpp
-#
-        src/cryptopp_copy/zdeflate.cpp
-#
-        src/cryptopp_copy/zinflate.cpp
+        #
+        src/cryptopp/wait.cpp
+        #
+        src/cryptopp/zdeflate.cpp
+        #
+        src/cryptopp/zinflate.cpp
 
 
 #        src/cryptopp/3way.cpp
