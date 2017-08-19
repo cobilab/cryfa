@@ -5,11 +5,17 @@
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 N_THRD=8                # number of threads
 
+in=$1
+comFile="CRYFA_COMPRESSED"
+decomFile="CRYFA_DECOMPRESSED"
+
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #   get datasets, install dependencies, run cryfa, plot results
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-GET_HUMAN=1             # download Human choromosomes and make SEQ out of FASTA
+GET_HUMAN=0             # download Human choromosomes and make SEQ out of FASTA
+GET_VIRUSES=0           # get Viruses SEQ using "GOOSE" & downloadViruses.pl
+GEN_SYNTH_DATASET=1     # generate synthetic dataset using XS
 RUN_CRYFA=0             # run cryfa
 #GET_CHIMPANZEE=0       # download Chimpanzee chrs and make SEQ out of FASTA
 #GET_GORILLA=0          # download Gorilla chrs and make SEQ out of FASTA
@@ -18,7 +24,6 @@ RUN_CRYFA=0             # run cryfa
 #GET_ARCHAEA=0          # get Archaea SEQ using "GOOSE" & downloadArchaea.pl
 #GET_FUNGI=0            # get Fungi SEQ using "GOOSE" & downloadFungi.pl
 #GET_BACTERIA=0         # get Bacteria SEQ using "GOOSE" & downloadBacteria.pl
-#GET_VIRUSES=0          # get Viruses SEQ using "GOOSE" & downloadViruses.pl
 #INSTALL_XS=0           # install "XS" from Github
 #INSTALL_GOOSE=0        # install "GOOSE" from Github
 #INSTALL_GULL=0         # install "GULL" from Github
@@ -28,7 +33,7 @@ RUN_CRYFA=0             # run cryfa
 #PLOT_RESULT=0          # plot results using "gnuplot"
 #BUILD_MATRIX=0         # build matrix from datasets
 #FILTER=0               # filter total & diff by threshold
-#PLOT_AlCoB=0	       # plot matrix -- AlCoB conference
+#PLOT_AlCoB=0	        # plot matrix -- AlCoB conference
 #PLOT_MATRIX=0          # plot matrix from datasets
 #PLOT_MATRIX_ARCHEA=0   # plot matrix Archaea from datasets
 
@@ -36,12 +41,12 @@ RUN_CRYFA=0             # run cryfa
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #   folders
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+FLD_dataset="dataset"
+FLD_XS="XS"
 #FLD_chromosomes="chromosomes"
 #FLD_GOOSE="goose"
 #FLD_GULL="GULL"
-#FLD_XS="XS"
 #FLD_dat="dat"
-FLD_dataset="dataset"
 #FLD_archaea="archaea"
 #FLD_fungi="fungi"
 #FLD_bacteria="bacteria"
@@ -180,6 +185,37 @@ if [[ $GET_HUMAN -eq 1 ]]; then
         $FLD_dataset/$HUMAN"UL".$FA_FTYPE
 fi
 
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#   get viruses
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if [[ $GET_VIRUSES -eq 1 ]]; then
+    perl ./scripts/DownloadViruses.pl
+fi
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#   generate synthetic dataset
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if [[ $GEN_SYNTH_DATASET -eq 1 ]]; then
+
+    ### install XS
+#    rm -fr $FLD_XS
+#    git clone https://github.com/pratas/XS.git
+#    cd $FLD_XS
+#    make
+#    cd ..
+
+    ### generate dataset -- 1000000 lines = 100 MB
+    XS/XS -ls 100 -n 1000000 -rn 0 -f 0.20,0.20,0.20,0.20,0.20 \
+                                                              -eh -eo -es dtstXS
+    echo ">X" > HEADER    # add ">X" as header of the sequence (build "nonRepX")
+    cat HEADER dtstXS > synth_dataset
+    rm -f HEADER dtstXS
+fi
+
+
+
 #if [[ $GET_CHIMPANZEE -eq 1 ]];    then . $FLD_script/get-chimpanzee.sh;      fi
 #if [[ $GET_GORILLA    -eq 1 ]];    then . $FLD_script/get-gorilla.sh;         fi
 #if [[ $GET_CHICKEN    -eq 1 ]];    then . $FLD_script/get-chicken.sh;         fi
@@ -187,7 +223,6 @@ fi
 #if [[ $GET_ARCHAEA    -eq 1 ]];    then . $FLD_script/get-archaea.sh;         fi
 #if [[ $GET_FUNGI      -eq 1 ]];    then . $FLD_script/get-fungi.sh;           fi
 #if [[ $GET_BACTERIA   -eq 1 ]];    then . $FLD_script/get-bacteria.sh;        fi
-#if [[ $GET_VIRUSES    -eq 1 ]];    then . $FLD_script/get-viruses.sh;         fi
 #if [[ $INSTALL_XS     -eq 1 ]];    then . $FLD_script/install-XS.sh;          fi
 #if [[ $INSTALL_GOOSE  -eq 1 ]];    then . $FLD_script/install-GOOSE.sh;       fi
 #if [[ $INSTALL_GULL   -eq 1 ]];    then . $FLD_script/install-GULL.sh;        fi
@@ -212,12 +247,7 @@ if [[ $RUN_CRYFA -eq 1 ]]; then
     cmake .
     make
 
-    in=$1
-    comFile="CRYFA_COMPRESSED"
-    decomFile="CRYFA_DECOMPRESSED"
-    n=8
-
-    ./cryfa -t $n -k pass.txt $in > $comFile           # -s to disable shuffling
-    ./cryfa -t $n -dk pass.txt $comFile > $decomFile   # -s to disable shuffling
+    ./cryfa -t $N_THRD -k pass.txt $in > $comFile           # -s to disable shuffling
+    ./cryfa -t $N_THRD -dk pass.txt $comFile > $decomFile   # -s to disable shuffling
     cmp $in $decomFile
 fi
