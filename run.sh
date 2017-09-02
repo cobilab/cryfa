@@ -13,10 +13,13 @@ decomFile="CRYFA_DECOMPRESSED"
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #   get datasets, install dependencies, run cryfa, plot results
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-GET_HUMAN=0             # download Human choromosomes and make SEQ out of FASTA
-GET_VIRUSES=0           # get Viruses SEQ using "GOOSE" & downloadViruses.pl
-GEN_SYNTH_DATASET=1     # generate synthetic dataset using XS
-RUN_CRYFA=0             # run cryfa
+GET_HUMAN_FA=0          # download Human choromosomes in FASTA
+GET_VIRUSES_FA=0        # get Viruses in FASTA using downloadViruses.pl
+GEN_SYNTH_DATASET=0     # generate synthetic dataset using XS
+CRYFA_COMP=0            # cryfa -- compress
+CRYFA_DECOMP=0          # cryfa -- decompress
+CRYFA_COMPARE_COMP_DECOMP=0     # cryfa -- compare comp. & decomp. results
+CRYFA_COMP_DECOMP_COMPARE=0     # cryfa: comp. + decomp. + compare results
 #GET_CHIMPANZEE=0       # download Chimpanzee chrs and make SEQ out of FASTA
 #GET_GORILLA=0          # download Gorilla chrs and make SEQ out of FASTA
 #GET_CHICKEN=0          # download Chicken chrs and make SEQ out of FASTA
@@ -159,22 +162,22 @@ if [ ! -d $FLD_dataset     ]; then mkdir -p $FLD_dataset;     fi
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   get human
+#   get human FA
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ $GET_HUMAN -eq 1 ]]; then
+if [[ $GET_HUMAN_FA -eq 1 ]]; then
 
     ### download FASTA
     for i in {1..22} X Y MT; do
         wget $HUMAN_URL/$HUMAN_CHROMOSOME$i.$FA_FTYPE.$COMP_FTYPE;
         gunzip < $HUMAN_CHROMOSOME$i.$FA_FTYPE.$COMP_FTYPE \
-         > $FLD_dataset/$HUMAN$i.$FA_FTYPE;
+               > $FLD_dataset/$HUMAN$i.$FA_FTYPE;
         rm $HUMAN_CHROMOSOME$i.$FA_FTYPE.$COMP_FTYPE
     done
 
     for i in alts unplaced unlocalized; do
         wget $HUMAN_URL/$HUMAN_CHR_PREFIX$i.$FA_FTYPE.$COMP_FTYPE;
         gunzip < $HUMAN_CHR_PREFIX$i.$FA_FTYPE.$COMP_FTYPE \
-            > $FLD_dataset/$HUMAN$i.$FA_FTYPE;
+               > $FLD_dataset/$HUMAN$i.$FA_FTYPE;
         rm $HUMAN_CHR_PREFIX$i.$FA_FTYPE.$COMP_FTYPE
     done
 
@@ -182,14 +185,14 @@ if [[ $GET_HUMAN -eq 1 ]]; then
     mv $FLD_dataset/$HUMAN"alts".$FA_FTYPE     $FLD_dataset/$HUMAN"AL".$FA_FTYPE
     mv $FLD_dataset/$HUMAN"unplaced".$FA_FTYPE $FLD_dataset/$HUMAN"UP".$FA_FTYPE
     mv $FLD_dataset/$HUMAN"unlocalized".$FA_FTYPE \
-        $FLD_dataset/$HUMAN"UL".$FA_FTYPE
+           $FLD_dataset/$HUMAN"UL".$FA_FTYPE
 fi
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   get viruses
+#   get viruses FA
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ $GET_VIRUSES -eq 1 ]]; then
+if [[ $GET_VIRUSES_FA -eq 1 ]]; then
     perl ./scripts/DownloadViruses.pl
 fi
 
@@ -241,13 +244,43 @@ fi
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   run cryfa
+#   run cryfa -- compression
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ $RUN_CRYFA -eq 1 ]]; then
+if [[ $CRYFA_COMP -eq 1 ]]; then
     cmake .
     make
 
-    ./cryfa -t $N_THRD -k pass.txt $in > $comFile           # -s to disable shuffling
-    ./cryfa -t $N_THRD -dk pass.txt $comFile > $decomFile   # -s to disable shuffling
+    ./cryfa -t $N_THRD -k pass.txt $in > $comFile        # -s: disable shuffling
+fi
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#   run cryfa -- decompression
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if [[ $CRYFA_DECOMP -eq 1 ]]; then
+    cmake .
+    make
+
+    ./cryfa -t $N_THRD -dk pass.txt $comFile > $decomFile #-s: disable shuffling
+fi
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#   compare comp. & decomp. results of running cryfa
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if [[ $CRYFA_COMPARE_COMP_DECOMP -eq 1 ]]; then
+    cmp $in $decomFile
+fi
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#   run cryfa -- compression + decompression + compare results
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if [[ $CRYFA_COMP_DECOMP_COMPARE -eq 1 ]]; then
+    cmake .
+    make
+
+    ./cryfa -t $N_THRD -k pass.txt $in       > $comFile   #-s: disable shuffling
+    ./cryfa -t $N_THRD -dk pass.txt $comFile > $decomFile #-s: disable shuffling
     cmp $in $decomFile
 fi
