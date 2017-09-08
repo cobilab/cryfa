@@ -15,9 +15,8 @@ decomFile="CRYFA_DECOMPRESSED"
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 GET_HUMAN_FA=0          # download Human choromosomes in FASTA
 GET_VIRUSES_FA=0        # download Viruses in FASTA using downloadViruses.pl
-GET_DENISOVA_FQ=1       # download Denisova in FASTQ
+GET_DENISOVA_FQ=0       # download Denisova in FASTQ
 GET_HUMAN_FQ=0          # download Human in FASTQ
-INSTALL_XS=0            # install "XS" from Github
 GEN_SYNTH_FA=0          # generate synthetic FASTA dataset using XS
 GEN_SYNTH_FQ=0          # generate synthetic FASTQ dataset using XS
 
@@ -49,6 +48,8 @@ CRYFA_COMP_DECOMP_COMPARE=0     # cryfa: comp. + decomp. + compare results
 #   folders
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 FLD_dataset="dataset"
+FA="FA"
+FQ="FQ"
 FLD_XS="XS"
 #FLD_chromosomes="chromosomes"
 #FLD_GOOSE="goose"
@@ -67,6 +68,7 @@ FLD_XS="XS"
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 HUMAN_FA_URL="ftp://ftp.ncbi.nlm.nih.gov/genomes/H_sapiens/\
 Assembled_chromosomes/seq"
+HUMAN_FQ_URL="ftp://ftp.sra.ebi.ac.uk/vol1/fastq"
 DENISOVA_FQ_URL="http://cdna.eva.mpg.de/denisova/raw_reads"
 #CHIMPANZEE_URL="ftp://ftp.ncbi.nlm.nih.gov/genomes/Pan_troglodytes/\
 #Assembled_chromosomes/seq"
@@ -93,6 +95,7 @@ HUMAN_SNAME="Homo sapiens"
 HUMAN="HS"
 VIRUSES="V"
 DENISOVA="DS"
+Synth="Synth"
 #CHIMPANZEE="PT"
 #GORILLA="GG"
 #CHICKEN="GGA"
@@ -145,20 +148,24 @@ if [ ! -d $FLD_dataset     ]; then mkdir -p $FLD_dataset;     fi
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $GET_HUMAN_FA -eq 1 ]]; then
 
-    ### create a folder for human dataset
-    if [ ! -d $FLD_dataset/$HUMAN ]; then mkdir -p $FLD_dataset/$HUMAN; fi
+    ### create a folder for FASTA files and one for human dataset
+    if [ ! -d $FLD_dataset/$FA/$HUMAN ]; then
+        mkdir -p $FLD_dataset/$FA/$HUMAN;
+    fi
 
     ### download
     for i in {1..22} X Y MT; do
         wget $WGET_OP $HUMAN_FA_URL/$HUMAN_CHROMOSOME$i.fa.gz;
-        gunzip < $HUMAN_CHROMOSOME$i.fa.gz > $FLD_dataset/$HUMAN/$HUMAN-$i.fa;
+        gunzip < $HUMAN_CHROMOSOME$i.fa.gz \
+               > $FLD_dataset/$FA/$HUMAN/$HUMAN-$i.fa;
         rm $HUMAN_CHROMOSOME$i.fa.gz
     done
 
     for dual in "alts AL" "unplaced UP" "unlocalized UL"; do
         set $dual
         wget $WGET_OP $HUMAN_FA_URL/$HUMAN_CHR_PREFIX$1.fa.gz;
-        gunzip < $HUMAN_CHR_PREFIX$1.fa.gz > $FLD_dataset/$HUMAN/$HUMAN-$2.fa;
+        gunzip < $HUMAN_CHR_PREFIX$1.fa.gz \
+               > $FLD_dataset/$FA/$HUMAN/$HUMAN-$2.fa;
         rm $HUMAN_CHR_PREFIX$1.fa.gz
     done
 fi
@@ -169,46 +176,84 @@ fi
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $GET_VIRUSES_FA -eq 1 ]]; then
 
-    ### create a folder for viruses dataset
-    if [ ! -d $FLD_dataset/$VIRUSES ]; then mkdir -p $FLD_dataset/$VIRUSES; fi
+    ### create a folder for FASTA files and one for viruses dataset
+    if [ ! -d $FLD_dataset/$FA/$VIRUSES ]; then
+        mkdir -p $FLD_dataset/$FA/$VIRUSES;
+    fi
 
     ### download
     perl ./scripts/DownloadViruses.pl
+
+    ### move downloaded file to dataset folder
+    mv viruses.fa $FLD_dataset/$FA/$VIRUSES
 fi
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   get Denisova in FASTQ -- 245 GB
+#   get Denisova in FASTQ -- 245 GB compressed * 4 -> GB decompressed
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $GET_DENISOVA_FQ -eq 1 ]]; then
 
-    ### create a folder for Denisova dataset
-    if [ ! -d $FLD_dataset/$DENISOVA ]; then mkdir -p $FLD_dataset/$DENISOVA; fi
+    ### create a folder for FASTQ files and one for Denisova dataset
+    if [ ! -d $FLD_dataset/$FQ/$DENISOVA ]; then
+        mkdir -p $FLD_dataset/$FQ/$DENISOVA;
+    fi
 
     ### download
     for i in B1087 B1088 B1101 B1102 B1107 B1108 B1109 B1110 B1128 B1130 B1133 \
              SL3003 SL3004; do
         wget $WGET_OP $DENISOVA_FQ_URL/${i}_SR.txt.gz;
-        gunzip < ${i}_SR.txt.gz > $FLD_dataset/$DENISOVA/$DENISOVA-${i}_SR.fq;
+        gunzip < ${i}_SR.txt.gz \
+               > $FLD_dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.fq;
         rm ${i}_SR.txt.gz;
     done
 fi
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   get Human in FASTQ --
+#   get Human in FASTQ -- 8.6 GB compressed * 4 -> GB decompressed
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $GET_HUMAN_FQ -eq 1 ]]; then
 
+    ### create a folder for FASTQ files and one for human dataset
+    if [ ! -d $FLD_dataset/$FQ/$HUMAN ]; then
+        mkdir -p $FLD_dataset/$FQ/$HUMAN;
+    fi
+
+    ### download
+    # SRR707196_1: HG00126--Male--GBR (British in England and Scotland)--Exome
+    # ERR031905_2: HG00501--Female--CHS (Han Chinese South)--Exome
+    # ERR013103_1: HG00190--Male--FIN (Finnish in Finland)--Low coverage WGS
+    # ERR015767_2: HG00638--Female--PUR (Puerto Rican in Puerto Rico)--Low cov.
+    # SRR442469_1: HG02108--Female--ACB (African Caribbean in Barbados)--Low co.
+    for dual in \
+        "SRR707  SRR707196  SRR707196_1" \   # 2.6 GB
+        "ERR031  ERR031905  ERR031905_2" \   # 3.8 GB
+        "ERR013  ERR013103  ERR013103_1" \   # 1.7 GB
+        "ERR015  ERR015767  ERR015767_2" \   # 360 MB
+        "SRR442  SRR442469  SRR442469_1";    # 160 MB
+    do
+        set $dual
+        wget $WGET_OP $HUMAN_FQ_URL/$1/$2/$3.fastq.gz;
+        gunzip < $3.fastq.gz > $FLD_dataset/$FQ/$HUMAN/$HUMAN-$3.fq;
+        rm $3.fastq.gz;
+    done
 fi
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   generate synthetic dataset in FASTA --
+#   generate synthetic dataset in FASTA --1000000 lines * 100 char/line = 100 MB
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $GEN_SYNTH_FA -eq 1 ]]; then
 
+    ### create a folder for FASTA files and one for synthetic dataset
+    if [ ! -d $FLD_dataset/$FA/$Synth ]; then
+        mkdir -p $FLD_dataset/$FA/$Synth;
+    fi
+
     ### install XS
+    INSTALL_XS=1
+
     if [[ $INSTALL_XS -eq 1 ]]; then
         rm -fr $FLD_XS
         git clone https://github.com/pratas/XS.git
@@ -217,12 +262,37 @@ if [[ $GEN_SYNTH_FA -eq 1 ]]; then
         cd ..
     fi
 
-    ### generate dataset -- 1000000 lines * 100 char/line = 100 MB
+    ### generate dataset
     XS/XS -ls 100 -n 1000000 -rn 0 -f 0.20,0.20,0.20,0.20,0.20 \
           -eh -eo -es dtstXS
     echo ">X" > HEADER    # add ">X" as header of the sequence (build "nonRepX")
     cat HEADER dtstXS > synth_dataset
     rm -f HEADER dtstXS
+fi
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#   generate synthetic dataset in FASTQ --
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if [[ $GEN_SYNTH_FQ -eq 1 ]]; then
+
+    ### create a folder for FASTQ files and one for synthetic dataset
+    if [ ! -d $FLD_dataset/$FQ/$Synth ]; then
+        mkdir -p $FLD_dataset/$FQ/$Synth;
+    fi
+
+    ### install XS
+    INSTALL_XS=1
+
+    if [[ $INSTALL_XS -eq 1 ]]; then
+        rm -fr $FLD_XS
+        git clone https://github.com/pratas/XS.git
+        cd $FLD_XS
+        make
+        cd ..
+    fi
+
+    ### generate dataset
 fi
 
 

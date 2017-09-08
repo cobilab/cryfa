@@ -101,7 +101,7 @@ int main (int argc, char* argv[])
                 high_resolution_clock::now();
         // duration in seconds
         std::chrono::duration<double> elapsed = finishTime - startTime;
-        cerr << "done in " << std::fixed << setprecision(4) << elapsed.count()
+        cerr << "took " << std::fixed << setprecision(4) << elapsed.count()
              << " seconds.\n";
         
         return 0;
@@ -115,8 +115,8 @@ int main (int argc, char* argv[])
     high_resolution_clock::time_point finishTime = high_resolution_clock::now();
     // duration in seconds
     std::chrono::duration<double> elapsed = finishTime - startTime;
-    cerr << "done in " << std::fixed << setprecision(4) << elapsed.count()
+    cerr << "took " << std::fixed << setprecision(4) << elapsed.count()
          << " seconds.\n";
-
+    
     return 0;
 }
