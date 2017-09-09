@@ -24,6 +24,7 @@ CRYFA_COMP=0            # cryfa -- compress
 CRYFA_DECOMP=0          # cryfa -- decompress
 CRYFA_COMPARE_COMP_DECOMP=0     # cryfa -- compare comp. & decomp. results
 CRYFA_COMP_DECOMP_COMPARE=0     # cryfa: comp. + decomp. + compare results
+
 #GET_CHIMPANZEE=0       # download Chimpanzee chrs and make SEQ out of FASTA
 #GET_GORILLA=0          # download Gorilla chrs and make SEQ out of FASTA
 #GET_CHICKEN=0          # download Chicken chrs and make SEQ out of FASTA
@@ -33,32 +34,20 @@ CRYFA_COMP_DECOMP_COMPARE=0     # cryfa: comp. + decomp. + compare results
 #GET_BACTERIA=0         # get Bacteria SEQ using "GOOSE" & downloadBacteria.pl
 #INSTALL_GOOSE=0        # install "GOOSE" from Github
 #INSTALL_GULL=0         # install "GULL" from Github
-#GEN_DATASET=0          # generate datasets using "XS"
-#GEN_MUTATIONS=0        # generate mutations using "GOOSE"
 #RUN_PHOENIX=0          # run Phoenix
 #PLOT_RESULT=0          # plot results using "gnuplot"
 #BUILD_MATRIX=0         # build matrix from datasets
 #FILTER=0               # filter total & diff by threshold
-#PLOT_AlCoB=0	        # plot matrix -- AlCoB conference
-#PLOT_MATRIX=0          # plot matrix from datasets
-#PLOT_MATRIX_ARCHEA=0   # plot matrix Archaea from datasets
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #   folders
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-FLD_dataset="dataset"
+dataset="dataset"
 FA="FA"
 FQ="FQ"
-FLD_XS="XS"
-#FLD_chromosomes="chromosomes"
-#FLD_GOOSE="goose"
-#FLD_GULL="GULL"
+XS="XS"
 #FLD_dat="dat"
-#FLD_archaea="archaea"
-#FLD_fungi="fungi"
-#FLD_bacteria="bacteria"
-#FLD_viruses="viruses"
 #FLD_src="src"
 #FLD_script="script"
 
@@ -84,6 +73,7 @@ DENISOVA_FQ_URL="http://cdna.eva.mpg.de/denisova/raw_reads"
 #   scientific & abbreviated names
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 HUMAN_SNAME="Homo sapiens"
+VIRUSES_SNAME="Viruses"
 #CHIMPANZEE_SNAME="Pan troglodytes"
 #GORILLA_SNAME="Gorilla gorilla"
 #CHICKEN_SNAME="Gallus gallus"
@@ -91,7 +81,6 @@ HUMAN_SNAME="Homo sapiens"
 #ARCHAEA_SNAME="Archaea"
 #FUNGI_SNAME="Fungi"
 #BACTERIA_SNAME="Bacteria"
-#VIRUSES_SNAME="Viruses"
 
 HUMAN="HS"
 VIRUSES="V"
@@ -143,9 +132,8 @@ PIX_FORMAT=pdf    # output format: pdf, png, svg, eps, epslatex (set output x.y)
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #   create folders, if they don't already exist
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [ ! -d $FLD_dataset     ]; then mkdir -p $FLD_dataset;     fi
-#if [ ! -d $FLD_chromosomes ]; then mkdir -p $FLD_chromosomes; fi
-#if [ ! -d $FLD_dat         ]; then mkdir -p $FLD_dat;         fi
+if [ ! -d $dataset ]; then mkdir -p $dataset; fi
+#if [ ! -d $FLD_dat ]; then mkdir -p $FLD_dat; fi
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -154,23 +142,19 @@ if [ ! -d $FLD_dataset     ]; then mkdir -p $FLD_dataset;     fi
 if [[ $GET_HUMAN_FA -eq 1 ]]; then
 
     ### create a folder for FASTA files and one for human dataset
-    if [ ! -d $FLD_dataset/$FA/$HUMAN ]; then
-        mkdir -p $FLD_dataset/$FA/$HUMAN;
-    fi
+    if [ ! -d $dataset/$FA/$HUMAN ]; then mkdir -p $dataset/$FA/$HUMAN; fi
 
     ### download
     for i in {1..22} X Y MT; do
         wget $WGET_OP $HUMAN_FA_URL/$HUMAN_CHROMOSOME$i.fa.gz;
-        gunzip < $HUMAN_CHROMOSOME$i.fa.gz \
-               > $FLD_dataset/$FA/$HUMAN/$HUMAN-$i.fa;
+        gunzip < $HUMAN_CHROMOSOME$i.fa.gz > $dataset/$FA/$HUMAN/$HUMAN-$i.fa;
         rm $HUMAN_CHROMOSOME$i.fa.gz
     done
 
     for dual in "alts AL" "unplaced UP" "unlocalized UL"; do
         set $dual
         wget $WGET_OP $HUMAN_FA_URL/$HUMAN_CHR_PREFIX$1.fa.gz;
-        gunzip < $HUMAN_CHR_PREFIX$1.fa.gz \
-               > $FLD_dataset/$FA/$HUMAN/$HUMAN-$2.fa;
+        gunzip < $HUMAN_CHR_PREFIX$1.fa.gz > $dataset/$FA/$HUMAN/$HUMAN-$2.fa;
         rm $HUMAN_CHR_PREFIX$1.fa.gz;
     done
 fi
@@ -182,15 +166,13 @@ fi
 if [[ $GET_VIRUSES_FA -eq 1 ]]; then
 
     ### create a folder for FASTA files and one for viruses dataset
-    if [ ! -d $FLD_dataset/$FA/$VIRUSES ]; then
-        mkdir -p $FLD_dataset/$FA/$VIRUSES;
-    fi
+    if [ ! -d $dataset/$FA/$VIRUSES ]; then mkdir -p $dataset/$FA/$VIRUSES; fi
 
     ### download
     perl ./scripts/DownloadViruses.pl
 
     ### move downloaded file to dataset folder
-    mv viruses.fa $FLD_dataset/$FA/$VIRUSES
+    mv viruses.fa $dataset/$FA/$VIRUSES
 fi
 
 
@@ -202,15 +184,13 @@ if [[ $GEN_SYNTH_FA -eq 1 ]]; then
     INSTALL_XS=1
 
     ### create a folder for FASTA files and one for synthetic dataset
-    if [ ! -d $FLD_dataset/$FA/$Synth ]; then
-        mkdir -p $FLD_dataset/$FA/$Synth;
-    fi
+    if [ ! -d $dataset/$FA/$Synth ]; then mkdir -p $dataset/$FA/$Synth; fi
     
     ### install XS
     if [[ $INSTALL_XS -eq 1 ]]; then
-        rm -fr $FLD_XS
+        rm -fr $XS
         git clone https://github.com/pratas/XS.git
-        cd $FLD_XS
+        cd $XS
         make
         cd ..
     fi
@@ -219,7 +199,7 @@ if [[ $GEN_SYNTH_FA -eq 1 ]]; then
     XS/XS -eo -es -t 1 -n 4000000 -ld 70:1000 -f 0.2,0.2,0.2,0.2,0.2  Synth-1.fa
     XS/XS -eo -es -t 2 -n 3000000 -ls 500 -f 0.23,0.23,0.23,0.23,0.08 Synth-2.fa
 
-    for i in {1..2}; do mv Synth-$i.fa $FLD_dataset/$FA/$Synth/Synth-$i.fa; done
+    for i in {1..2}; do mv Synth-$i.fa $dataset/$FA/$Synth/Synth-$i.fa; done
 fi
 
 
@@ -229,9 +209,7 @@ fi
 if [[ $GET_HUMAN_FQ -eq 1 ]]; then
 
     ### create a folder for FASTQ files and one for human dataset
-    if [ ! -d $FLD_dataset/$FQ/$HUMAN ]; then
-        mkdir -p $FLD_dataset/$FQ/$HUMAN;
-    fi
+    if [ ! -d $dataset/$FQ/$HUMAN ]; then mkdir -p $dataset/$FQ/$HUMAN; fi
 
     ### download -- 160 MB - 360 MB - 1.7 GB - 2.6 GB - 3.8 GB
     # SRR707196_1: HG00126--Male--GBR (British in England and Scotland)--Exome
@@ -244,7 +222,7 @@ if [[ $GET_HUMAN_FQ -eq 1 ]]; then
                 "ERR031 ERR031905 ERR031905_2"; do
         set $dual
         wget $WGET_OP $HUMAN_FQ_URL/$1/$2/$3.fastq.gz;
-        gunzip < $3.fastq.gz > $FLD_dataset/$FQ/$HUMAN/$HUMAN-$3.fq;
+        gunzip < $3.fastq.gz > $dataset/$FQ/$HUMAN/$HUMAN-$3.fq;
         rm $3.fastq.gz;
     done
 fi
@@ -256,17 +234,12 @@ fi
 if [[ $GET_DENISOVA_FQ -eq 1 ]]; then
 
     ### create a folder for FASTQ files and one for Denisova dataset
-    if [ ! -d $FLD_dataset/$FQ/$DENISOVA ]; then
-        mkdir -p $FLD_dataset/$FQ/$DENISOVA;
-    fi
+    if [ ! -d $dataset/$FQ/$DENISOVA ]; then mkdir -p $dataset/$FQ/$DENISOVA; fi
 
     ### download -- 292 MB - 396 MB - 11 GB - 15 GB - 15 GB
-#    for i in B1087 B1088 B1101 B1102 B1107 B1108 B1109 B1110 B1128 B1130 \
-#             B1133 SL3003 SL3004; do
     for i in B1088 B1087 B1128 B1110 SL3003; do
         wget $WGET_OP $DENISOVA_FQ_URL/${i}_SR.txt.gz;
-        gunzip < ${i}_SR.txt.gz \
-               > $FLD_dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.fq;
+        gunzip < ${i}_SR.txt.gz > $dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.fq;
         rm ${i}_SR.txt.gz;
     done
 fi
@@ -280,15 +253,13 @@ if [[ $GEN_SYNTH_FQ -eq 1 ]]; then
     INSTALL_XS=1
 
     ### create a folder for FASTQ files and one for synthetic dataset
-    if [ ! -d $FLD_dataset/$FQ/$Synth ]; then
-        mkdir -p $FLD_dataset/$FQ/$Synth;
-    fi
+    if [ ! -d $dataset/$FQ/$Synth ]; then mkdir -p $dataset/$FQ/$Synth; fi
 
     ### install XS
     if [[ $INSTALL_XS -eq 1 ]]; then
-        rm -fr $FLD_XS
+        rm -fr $XS
         git clone https://github.com/pratas/XS.git
-        cd $FLD_XS
+        cd $XS
         make
         cd ..
     fi
@@ -297,31 +268,8 @@ if [[ $GEN_SYNTH_FQ -eq 1 ]]; then
     XS/XS -t 1 -n 16000000 -ld 70:100 -o -f 0.2,0.2,0.2,0.2,0.2      Synth-1.fq
     XS/XS -t 2 -n 10000000 -ls 70 -qt 2 -f 0.23,0.23,0.23,0.23,0.08  Synth-2.fq
 
-    for i in {1..2}; do mv Synth-$i.fq $FLD_dataset/$FQ/$Synth/Synth-$i.fq; done
+    for i in {1..2}; do mv Synth-$i.fq $dataset/$FQ/$Synth/Synth-$i.fq; done
 fi
-
-
-
-#if [[ $GET_CHIMPANZEE -eq 1 ]];    then . $FLD_script/get-chimpanzee.sh;      fi
-#if [[ $GET_GORILLA    -eq 1 ]];    then . $FLD_script/get-gorilla.sh;         fi
-#if [[ $GET_CHICKEN    -eq 1 ]];    then . $FLD_script/get-chicken.sh;         fi
-#if [[ $GET_TURKEY     -eq 1 ]];    then . $FLD_script/get-turkey.sh;          fi
-#if [[ $GET_ARCHAEA    -eq 1 ]];    then . $FLD_script/get-archaea.sh;         fi
-#if [[ $GET_FUNGI      -eq 1 ]];    then . $FLD_script/get-fungi.sh;           fi
-#if [[ $GET_BACTERIA   -eq 1 ]];    then . $FLD_script/get-bacteria.sh;        fi
-#if [[ $INSTALL_GOOSE  -eq 1 ]];    then . $FLD_script/install-GOOSE.sh;       fi
-#if [[ $INSTALL_GULL   -eq 1 ]];    then . $FLD_script/install-GULL.sh;        fi
-#if [[ $GEN_MUTATIONS  -eq 1 ]];    then . $FLD_script/generate-mutation.sh;   fi
-#if [[ $RUN_PHOENIX    -eq 1 ]];    then . $FLD_script/run-phoenix.sh;         fi
-#if [[ $PLOT_RESULT    -eq 1 ]];    then . $FLD_script/plot-result.sh;         fi
-#if [[ $BUILD_MATRIX   -eq 1 ]];    then . $FLD_script/build-matrix.sh;        fi
-#if [[ $FILTER         -eq 1 ]];    then . $FLD_script/filter.sh;              fi
-#if [[ $PLOT_AlCoB     -eq 1 ]];    then . $FLD_script/plot--AlCoB.sh;         fi
-#if [[ $PLOT_MATRIX    -eq 1 ]];    then . $FLD_script/plot-matrix.sh;         fi
-#if [[ $PLOT_MATRIX_ARCHEA -eq 1 ]];then . $FLD_script/plot-matrix-archaea.sh; fi
-
-########################
-#cd $FLD_script
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -347,7 +295,7 @@ fi
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   compare comp. & decomp. results of running cryfa
+#   compare compression & decompression results of running cryfa
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $CRYFA_COMPARE_COMP_DECOMP -eq 1 ]]; then
     cmp $in $decomFile
