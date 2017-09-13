@@ -60,7 +60,7 @@ struct POWER<B, 0>
 #define LOOP6(i,j,k,l,m,n,S) LOOP(i,S) LOOP(j,S) LOOP(k,S) LOOP(l,S) LOOP(m,S) \
                              LOOP(n,S)
 #define LOOP7(i,j,k,l,m,n,\
-                    o,S)     LOOP(i,S) LOOP(j,S) LOOP(k,S) LOOP(l,S) LOOP(m,S) \
+                      o,S)   LOOP(i,S) LOOP(j,S) LOOP(k,S) LOOP(l,S) LOOP(m,S) \
                              LOOP(n,S) LOOP(o,S)
 #define LOOP8(i,j,k,l,m,n,\
                     o,p,S)   LOOP(i,S) LOOP(j,S) LOOP(k,S) LOOP(l,S) LOOP(m,S) \
