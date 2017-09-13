@@ -132,8 +132,8 @@ PIX_FORMAT=pdf    # output format: pdf, png, svg, eps, epslatex (set output x.y)
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #   create folders, if they don't already exist
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [ ! -d $dataset ]; then mkdir -p $dataset; fi
-#if [ ! -d $FLD_dat ]; then mkdir -p $FLD_dat; fi
+if [[ ! -d $dataset ]]; then mkdir -p $dataset; fi
+#if [[ ! -d $FLD_dat ]]; then mkdir -p $FLD_dat; fi
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -142,7 +142,7 @@ if [ ! -d $dataset ]; then mkdir -p $dataset; fi
 if [[ $GET_HUMAN_FA -eq 1 ]]; then
 
     ### create a folder for FASTA files and one for human dataset
-    if [ ! -d $dataset/$FA/$HUMAN ]; then mkdir -p $dataset/$FA/$HUMAN; fi
+    if [[ ! -d $dataset/$FA/$HUMAN ]]; then mkdir -p $dataset/$FA/$HUMAN; fi
 
     ### download
     for i in {1..22} X Y MT; do
@@ -166,7 +166,7 @@ fi
 if [[ $GET_VIRUSES_FA -eq 1 ]]; then
 
     ### create a folder for FASTA files and one for viruses dataset
-    if [ ! -d $dataset/$FA/$VIRUSES ]; then mkdir -p $dataset/$FA/$VIRUSES; fi
+    if [[ ! -d $dataset/$FA/$VIRUSES ]]; then mkdir -p $dataset/$FA/$VIRUSES; fi
 
     ### download
     perl ./scripts/DownloadViruses.pl
@@ -184,7 +184,7 @@ if [[ $GEN_SYNTH_FA -eq 1 ]]; then
     INSTALL_XS=1
 
     ### create a folder for FASTA files and one for synthetic dataset
-    if [ ! -d $dataset/$FA/$Synth ]; then mkdir -p $dataset/$FA/$Synth; fi
+    if [[ ! -d $dataset/$FA/$Synth ]]; then mkdir -p $dataset/$FA/$Synth; fi
     
     ### install XS
     if [[ $INSTALL_XS -eq 1 ]]; then
@@ -209,7 +209,7 @@ fi
 if [[ $GET_HUMAN_FQ -eq 1 ]]; then
 
     ### create a folder for FASTQ files and one for human dataset
-    if [ ! -d $dataset/$FQ/$HUMAN ]; then mkdir -p $dataset/$FQ/$HUMAN; fi
+    if [[ ! -d $dataset/$FQ/$HUMAN ]]; then mkdir -p $dataset/$FQ/$HUMAN; fi
 
     ### download -- 160 MB - 360 MB - 1.7 GB - 2.6 GB - 3.8 GB
     # SRR707196_1: HG00126--Male--GBR (British in England and Scotland)--Exome
@@ -234,7 +234,7 @@ fi
 if [[ $GET_DENISOVA_FQ -eq 1 ]]; then
 
     ### create a folder for FASTQ files and one for Denisova dataset
-    if [ ! -d $dataset/$FQ/$DENISOVA ]; then mkdir -p $dataset/$FQ/$DENISOVA; fi
+    if [[ ! -d $dataset/$FQ/$DENISOVA ]];then mkdir -p $dataset/$FQ/$DENISOVA;fi
 
     ### download -- 292 MB - 396 MB - 11 GB - 15 GB - 15 GB
     for i in B1088 B1087 B1128 B1110 SL3003; do
@@ -253,7 +253,7 @@ if [[ $GEN_SYNTH_FQ -eq 1 ]]; then
     INSTALL_XS=1
 
     ### create a folder for FASTQ files and one for synthetic dataset
-    if [ ! -d $dataset/$FQ/$Synth ]; then mkdir -p $dataset/$FQ/$Synth; fi
+    if [[ ! -d $dataset/$FQ/$Synth ]]; then mkdir -p $dataset/$FQ/$Synth; fi
 
     ### install XS
     if [[ $INSTALL_XS -eq 1 ]]; then
