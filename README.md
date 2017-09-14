@@ -2,40 +2,36 @@
 alt="Cryfa" width="150" border="0" /></p>
 <br>
 <p>
-Cryfa is a FASTA and FASTQ encryption and decryption tool.
-Cryfa uses AES symmetric encryption, with very fast processing times. 
+Cryfa is a FASTA/FASTQ packing plus encryption tool.
+It uses AES (Advanced Encryption Standard) for the purpose of encryption.
 Cryfa can be applied to any FASTA or FASTQ file (DNA sequences, headers and quality-scores).
-Cryfa compacts 3 DNA bases into 1 char, using a fixed block size packing. When compared with general encryption tools it allows to reduce the storage (~3x), without creating security problems such as those derived from CRIME or BREACH attacks.
+It compacts 3 DNA bases into 1 char, using a fixed block size packing.
+When compared with general compression tools, it allows to reduce the storage size approximately three times (~3X), without creating security problems such as those derived from CRIME or BREACH attacks.
 </p>
 
 ## INSTALLATION
 First you need to get cryfa using:
 ```bash
 git clone https://github.com/pratas/cryfa.git
-cd cryfa/src/
 ```
-Then, you need to install CryptoPP using:
+Then, you need to set the parameters in **run.sh** bash script. This way, you specify if you want to download a specific dataset, install dependencies or run the program.
+
+Finally, run the **run.sh** bash script:
 ```bash
-git clone https://github.com/weidai11/cryptopp
-cd cryptopp/
-make
-cp libcryptopp.a ..
-cd ..
-```
-Finally, compile with:
-```bash
-g++ -std=c++11 -I cryptopp -o cryfa cryfa.cpp defs.h libcryptopp.a
-```
-or use
-```bash
-./execute.sh
+. run.sh
 ```
 
 ## PARAMETERS
-To see the possible options type
+To see the possible options, first, you should make cryfa executable, using:
+```bash
+cmake .
+make
+```
+Then you can type
 ```bash
 ./cryfa -h
 ```
+
 These will print the following options:
 ```bash
 Synopsis:
@@ -45,12 +41,13 @@ Options:
     -h,  --help
          usage guide
 
-    -a,  --about
-         about the program
-
     -v,  --verbose
          verbose mode (more information)
 
+    -s,  --disable_shuffle
+         disable shuffling input. It should be used in 
+         both encryption and decryption sides
+    
     -d,  --decrypt
          decryption mode
 
@@ -59,6 +56,9 @@ Options:
          
     -t [NUMBER],  --thread [NUMBER]
          number of threads
+         
+    -a,  --about
+         about the program
 ```
 Cryfa uses stdin and stdout and, hence, can be directly integrated on pipelines.
 

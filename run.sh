@@ -20,10 +20,10 @@ GET_HUMAN_FQ=0          # download Human in FASTQ
 GET_DENISOVA_FQ=0       # download Denisova in FASTQ
 GEN_SYNTH_FQ=0          # generate synthetic FASTQ dataset using XS
 
+CRYFA_COMP_DECOMP_COMPARE=1     # cryfa: comp. + decomp. + compare results
 CRYFA_COMP=0            # cryfa -- compress
 CRYFA_DECOMP=0          # cryfa -- decompress
 CRYFA_COMPARE_COMP_DECOMP=0     # cryfa -- compare comp. & decomp. results
-CRYFA_COMP_DECOMP_COMPARE=1     # cryfa: comp. + decomp. + compare results
 
 #GET_CHIMPANZEE=0       # download Chimpanzee chrs and make SEQ out of FASTA
 #GET_GORILLA=0          # download Gorilla chrs and make SEQ out of FASTA

@@ -1,19 +1,13 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-             =========================================================
-             | CRYFA :: A FASTA/FASTQ encryption and decryption tool |
-             ---------------------------------------------------------
-             |   Diogo Pratas, Morteza Hosseini, Armando J. Pinho    |
-             |            {pratas,seyedmorteza,ap}@ua.pt             |
-             |       Copyright (C) 2017, University of Aveiro        |
-             =========================================================
-             
-  COMPILE:  g++ -std=c++11 -I cryptopp -o cryfa cryfa.cpp defs.h libcryptopp.a
-  
-  DEPENDENCIES: https://github.com/weidai11/cryptopp
-  sudo apt-get install libcrypto++-dev libcrypto++-doc libcrypto++-utils
-  
+           CRYFA :: A FASTA/FASTQ encryption/decryption tool
+         -----------------------------------------------------
+            Morteza Hosseini, Diogo Pratas, Armando J. Pinho
+                    {seyedmorteza,pratas,ap}@ua.pt
+             Copyright (C) 2017, IEETA, University of Aveiro
+               
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+
 
 #include <iostream>
 #include <getopt.h>
