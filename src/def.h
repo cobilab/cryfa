@@ -184,15 +184,11 @@ inline void Help ()    // usage guide
       << "    -h,  --help"                                            << '\n'
       << "         usage guide"                                       << '\n'
                                                                       << '\n'
-      << "    -a,  --about"                                           << '\n'
-      << "         about the program"                                 << '\n'
-                                                                      << '\n'
       << "    -v,  --verbose"                                         << '\n'
       << "         verbose mode (more information)"                   << '\n'
                                                                       << '\n'
       << "    -s,  --disable_shuffle"                                 << '\n'
-      << "         disable shuffling input. It should be used in both "
-      <<                            "encryption and decryption sides" << '\n'
+      << "         disable shuffling input"                           << '\n'
                                                                       << '\n'
       << "    -d,  --decrypt"                                         << '\n'
       << "         decryption mode"                                   << '\n'
@@ -202,6 +198,9 @@ inline void Help ()    // usage guide
                                                                       << '\n'
       << "    -t [NUMBER],  --thread [NUMBER]"                        << '\n'
       << "         number of threads"                                 << '\n'
+                                                                      << '\n'
+      << "    -a,  --about"                                           << '\n'
+      << "         about the program"                                 << '\n'
                                                                       << '\n';
 }
 //..............................................................................
