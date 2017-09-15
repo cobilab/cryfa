@@ -101,16 +101,20 @@ int main (int argc, char* argv[])
         return 0;
     }
     
-    cerr << "Encrypting...\n";
-    (fileType(cryptObj.inFileName)=='A') ? cryptObj.compressFA()    // FASTA
-                                         : cryptObj.compressFQ();   // FASTQ
+    if(!h_flag && !a_flag)
+    {
+        cerr << "Encrypting...\n";
+        (fileType(cryptObj.inFileName) == 'A') ? cryptObj.compressFA()  // FASTA
+                                               : cryptObj.compressFQ(); // FASTQ
     
-    // stop timer
-    high_resolution_clock::time_point finishTime = high_resolution_clock::now();
-    // duration in seconds
-    std::chrono::duration<double> elapsed = finishTime - startTime;
-    cerr << "took " << std::fixed << setprecision(4) << elapsed.count()
-         << " seconds.\n";
+        // stop timer
+        high_resolution_clock::time_point finishTime =
+                high_resolution_clock::now();
+        // duration in seconds
+        std::chrono::duration<double> elapsed = finishTime - startTime;
+        cerr << "took " << std::fixed << setprecision(4) << elapsed.count()
+             << " seconds.\n";
+    }
     
     return 0;
 }

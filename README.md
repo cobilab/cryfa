@@ -77,5 +77,4 @@ Please let us know if there is any [issues](https://github.com/pratas/cryfa/issu
 ## LICENSE
 GPL v3.
 
-For more information:
-<pre>http://www.gnu.org/licenses/gpl-3.0.html</pre>
+For more information, [click](http://www.gnu.org/licenses/gpl-3.0.html).

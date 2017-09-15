@@ -20,7 +20,7 @@ using std::unordered_map;
     version and release
 *******************************************************************************/
 #define VERSION_CRYFA 1
-#define RELEASE_CRYFA 17.08
+#define RELEASE_CRYFA 09.17
 
 /*******************************************************************************
     typedefs
@@ -208,11 +208,13 @@ inline void About ()   // About cryfa
 {
     cout                                                              << '\n'
       << "cryfa v" << VERSION_CRYFA << "." << RELEASE_CRYFA           << '\n'
-      << "================"                                           << '\n'
+      << "..............."                                            << '\n'
       << "A FASTA/FASTQ packing plus encryption tool"                 << '\n'
                                                                       << '\n'
-      << "Morteza Hosseini, Diogo Pratas, Armando J. Pinho"           << '\n'
-      << "{seyedmorteza,pratas,ap}@ua.pt"                             << '\n'
+      << "Morteza Hosseini    seyedmorteza@ua.pt"                     << '\n'
+      << "Diogo Pratas        pratas@ua.pt"                           << '\n'
+      << "Armando J. Pinho    ap@ua.pt"                               << '\n'
+                                                                      << '\n'
       << "Copyright (C) 2017, University of Aveiro"                   << '\n'
                                                                       << '\n'
       << "This is a Free software, under GPLv3. You may redistribute" << '\n'
