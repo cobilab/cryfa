@@ -58,6 +58,7 @@ public:
     
 private:
     bool   justPlus = true;                              // if line 3 is just +
+    bool   shuffled = true;
     u64    seed_shared;                                  // shared seed
     string Hdrs;                                         // max: 39 values
     string QSs;                                          // max: 39 values

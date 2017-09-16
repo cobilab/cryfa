@@ -18,11 +18,15 @@ Then, you need to set the parameters in **run.sh**, which is an all-in-one bash 
 
 Finally, run the **run.sh** script using:
 ```bash
-. run.sh INPUT_FILE_NAME
+./run.sh INPUT_FILE_NAME > OUTPUT_FILE_NAME
+```
+Please note that when the parameter *CRYFA_COMP_DECOMP_COMPARE* is set to 1, compression, decompression and comparing results will be carried out. In this case, **run.sh** script must be run without redirection symbol, *>*, in the following way:
+```bash
+./run.sh INPUT_FILE_NAME OUTPUT_FILE_NAME
 ```
 
 ## PARAMETERS
-To see the possible options, first, you should make cryfa executable, using:
+Cryfa executable is a file called **cryfa**. To see the possible options, if this executable is not yet made, you should make it, using:
 ```bash
 cmake .
 make
