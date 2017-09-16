@@ -82,7 +82,6 @@ int main (int argc, char* argv[])
     if (v_flag)  cerr << "Verbose mode on.\n";
     if (d_flag)
     {
-        cerr << "Decrypting...\n";
         cryptObj.decrypt();                                         // decrypt
         ifstream in(DEC_FILENAME);
         (in.peek() == (char) 127) ? cryptObj.decompressFA()         // FASTA
@@ -103,12 +102,12 @@ int main (int argc, char* argv[])
     if (!h_flag && !a_flag)
     {
         char file_type = fileType(cryptObj.inFileName); //file type: FASTA/FASTQ
-    
+        
         // if input is neither FASTA nor FASTQ file
         if (file_type == 'n')
         {
-            cerr << '"' << cryptObj.inFileName << '"'
-                 << " is neither FASTA nor FASTQ file.\n";
+            cerr << "Error: \"" << cryptObj.inFileName << '"'
+                 << " is neither a FASTA nor a FASTQ file.\n";
             return 0;
         }
         

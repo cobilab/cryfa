@@ -558,15 +558,21 @@ void EnDecrypto::decrypt ()
     watermark += to_string(VERSION_CRYFA);    watermark += ".";
     watermark += to_string(RELEASE_CRYFA);    watermark += "\n";
     
+    // invalid encrypted file
     string line;    getline(in, line);
-    if ((line+"\n") != watermark)
-    { cerr << "Error: invalid encrypted file!\n";    exit(1); }
+    if ((line + "\n") != watermark)
+    {
+        cerr << "Error: \"" << inFileName << '"'
+             << " is not a valid file encrypted by cryfa.\n";
+        exit(1);
+    }
     
 ////    string::size_type watermarkIdx = cipherText.find(watermark);
 ////    if (watermarkIdx == string::npos)
 ////    { cerr << "Error: invalid encrypted file!\n";    exit(1); }
 ////    else  cipherText.erase(watermarkIdx, watermark.length());
-
+    
+    cerr << "Decrypting...\n";
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
     memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
