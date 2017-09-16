@@ -38,7 +38,7 @@ int main (int argc, char* argv[])
     int c;                               // deal with getopt_long()
     int option_index;                    // option index stored by getopt_long()
     opterr = 0;  // force getopt_long() to remain silent when it finds a problem
-    
+
     static struct option long_options[] =
     {
         {"help",            no_argument, &h_flag, (int) 'h'},   // help
@@ -75,8 +75,7 @@ int main (int argc, char* argv[])
             case 't': cryptObj.n_threads = (byte) stoi((string) optarg);  break;
 
             default:
-                cerr << "Option '" << (char) optopt << "' is invalid.\n";
-                break;
+                cerr << "Option '" << (char) optopt << "' is invalid.\n"; break;
         }
     }
 
@@ -89,7 +88,7 @@ int main (int argc, char* argv[])
         (in.peek() == (char) 127) ? cryptObj.decompressFA()         // FASTA
                                   : cryptObj.decompressFQ();        // FASTQ
         in.close();
-        
+
         // stop timer
         high_resolution_clock::time_point finishTime =
                 high_resolution_clock::now();
@@ -97,16 +96,25 @@ int main (int argc, char* argv[])
         std::chrono::duration<double> elapsed = finishTime - startTime;
         cerr << "took " << std::fixed << setprecision(4) << elapsed.count()
              << " seconds.\n";
-        
+
         return 0;
     }
     
-    if(!h_flag && !a_flag)
+    if (!h_flag && !a_flag)
     {
-        cerr << "Encrypting...\n";
-        (fileType(cryptObj.inFileName) == 'A') ? cryptObj.compressFA()  // FASTA
-                                               : cryptObj.compressFQ(); // FASTQ
+        char file_type = fileType(cryptObj.inFileName); //file type: FASTA/FASTQ
     
+        // if input is neither FASTA nor FASTQ file
+        if (file_type == 'n')
+        {
+            cerr << '"' << cryptObj.inFileName << '"'
+                 << " is neither FASTA nor FASTQ file.\n";
+            return 0;
+        }
+        
+        cerr << "Encrypting...\n";
+        (file_type == 'A') ? cryptObj.compressFA() : cryptObj.compressFQ();
+
         // stop timer
         high_resolution_clock::time_point finishTime =
                 high_resolution_clock::now();

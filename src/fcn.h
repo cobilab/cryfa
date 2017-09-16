@@ -14,7 +14,7 @@ using std::ifstream;
 using std::cerr;
 
 /*******************************************************************************
-    find file type: FASTA (A) or FASTQ (Q)
+    find file type: FASTA (A), FASTQ (Q), none (n)
 *******************************************************************************/
 inline char fileType (const string& inFileName)
 {
@@ -24,8 +24,21 @@ inline char fileType (const string& inFileName)
     if (!in.good())
     { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
     
-    in.get(c);    in.close();
-    return (c=='@' ? 'Q' : 'A');
+    // FASTQ
+    if (in.peek() == '@')
+    {
+        in.ignore(LARGE_NUMBER, '\n');                 // ignore the first line
+        in.ignore(LARGE_NUMBER, '\n');                 // ignore the second line
+        if (in.peek() == '+') { in.close();    return 'Q'; }
+    }
+    
+    // FASTA
+    while (in.peek()==' ' || in.peek()=='\n')    in.get(c);       // skip spaces
+    if (in.peek() == '>') { in.close();    return 'A'; }
+    
+    // neither FASTA nor FASTQ
+    in.close();
+    return 'n';
 }
 
 #endif //CRYFA_FCN_H

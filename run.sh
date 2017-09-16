@@ -1,7 +1,8 @@
 #!/bin/bash
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   arguments
+#   parameters -- set to 1 to activate and 0 to deactivate
+#   get/generate datasets, install dependencies, run cryfa, plot results
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 N_THRD=8                # number of threads
 
@@ -9,11 +10,6 @@ in=$1
 comFile="CRYFA_COMPRESSED"
 decomFile="CRYFA_DECOMPRESSED"
 
-
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   parameters -- set to 1 to activate and 0 to deactivate
-#   get/generate datasets, install dependencies, run cryfa, plot results
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 GET_HUMAN_FA=0          # download Human choromosomes in FASTA
 GET_VIRUSES_FA=0        # download Viruses in FASTA using downloadViruses.pl
 GEN_SYNTH_FA=0          # generate synthetic FASTA dataset using XS
@@ -21,8 +17,8 @@ GET_HUMAN_FQ=0          # download Human in FASTQ
 GET_DENISOVA_FQ=0       # download Denisova in FASTQ
 GEN_SYNTH_FQ=0          # generate synthetic FASTQ dataset using XS
 
-CRYFA_COMP_DECOMP_COMPARE=1     # cryfa: comp. + decomp. + compare results
-CRYFA_COMP=0            # cryfa -- compress
+CRYFA_COMP_DECOMP_COMPARE=0     # cryfa: comp. + decomp. + compare results
+CRYFA_COMP=1            # cryfa -- compress
 CRYFA_DECOMP=0          # cryfa -- decompress
 CRYFA_COMPARE_COMP_DECOMP=0     # cryfa -- compare comp. & decomp. results
 
@@ -215,9 +211,13 @@ fi
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $CRYFA_COMP -eq 1 ]]; then
     cmake .
+#    stdbuf -i0 -o0 -e0
     make
 
-    ./cryfa -t $N_THRD -k pass.txt $in > $comFile        # -s: disable shuffling
+  ./cryfa -t $N_THRD -k pass.txt $1       # -s: disable shuffling
+#    ./cryfa -t $N_THRD -k pass.txt $1 #> $2        # -s: disable shuffling
+#    stdbuf -oL -eL ./cryfa -t $N_THRD -k pass.txt $1 #> $2        # -s: disable shuffling
+#    ./cryfa -t $N_THRD -k pass.txt $in #> $comFile        # -s: disable shuffling
 fi
 
 
@@ -228,7 +228,9 @@ if [[ $CRYFA_DECOMP -eq 1 ]]; then
     cmake .
     make
 
-    ./cryfa -t $N_THRD -dk pass.txt $comFile > $decomFile #-s: disable shuffling
+#    ./cryfa -t $N_THRD -dk pass.txt $1 > $2 #-s: disable shuffling
+    ./cryfa -t $N_THRD -dk pass.txt $1 #> $decomFile #-s: disable shuffling
+#    ./cryfa -t $N_THRD -dk pass.txt $comFile > $decomFile #-s: disable shuffling
 fi
 
 

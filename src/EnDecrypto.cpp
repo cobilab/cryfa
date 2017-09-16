@@ -56,9 +56,9 @@ void EnDecrypto::compressFA ()
     // function pointer
     using packHdrPointer = void (*) (string&, const string&, const htbl_t&);
     packHdrPointer packHdr;
-    
+
     const size_t headersLen = headers.length();
-    
+
     // header
     if (headersLen > MAX_C5)          // if len > 39 filter the last 39 ones
     {
@@ -72,26 +72,26 @@ void EnDecrypto::compressFA ()
     {
         Hdrs = headers;
         Hdrs_g = Hdrs;
-        
+
         if (headersLen > MAX_C4)                                        // cat 5
         { buildHashTable(HdrMap, Hdrs, KEYLEN_C5);    packHdr = &pack_3to2; }
-        
+
         else if (headersLen > MAX_C3)                                   // cat 4
         { buildHashTable(HdrMap, Hdrs, KEYLEN_C4);    packHdr = &pack_2to1; }
                                                                         // cat 3
         else if (headersLen==MAX_C3 || headersLen==MID_C3 || headersLen==MIN_C3)
         { buildHashTable(HdrMap, Hdrs, KEYLEN_C3);    packHdr = &pack_3to1; }
-        
+
         else if (headersLen == C2)                                      // cat 2
         { buildHashTable(HdrMap, Hdrs, KEYLEN_C2);    packHdr = &pack_5to1; }
-        
+
         else if (headersLen == C1)                                      // cat 1
         { buildHashTable(HdrMap, Hdrs, KEYLEN_C1);    packHdr = &pack_7to1; }
-        
+
         else                                                   // headersLen = 1
         { buildHashTable(HdrMap, Hdrs, 1);            packHdr = &pack_1to1; }
     }
-    
+
     pkStruct.packHdrFPtr = packHdr;
     
     // distribute file among threads, for reading and packing
@@ -106,7 +106,7 @@ void EnDecrypto::compressFA ()
     // watermark for encrypted file
     cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
                        + to_string(RELEASE_CRYFA) + "\n";
-    
+
     // open packed file
     ofstream pckdFile(PCKD_FILENAME);
     pckdFile << (char) 127;               // let decryptor know this isn't FASTQ
@@ -135,7 +135,7 @@ void EnDecrypto::compressFA ()
         }
     }
     pckdFile << (char) 252;
-    
+
     // close/delete input/output files
     pckdFile.close();
     string pkFileName;
@@ -159,7 +159,7 @@ inline void EnDecrypto::packFA (const pack_s& pkStruct, byte threadID)
     ifstream    in(inFileName);
     string      line, context, seq;
     ofstream    pkfile(PK_FILENAME+to_string(threadID), std::ios_base::app);
-    
+
     // lines ignored at the beginning
     for (u64 l=(u64) threadID*LINE_BUFFER; l--;)  in.ignore(LARGE_NUMBER, '\n');
     
@@ -167,7 +167,7 @@ inline void EnDecrypto::packFA (const pack_s& pkStruct, byte threadID)
     {
         context.clear();
         seq.clear();
-
+        
         for (u64 l = LINE_BUFFER; l-- && getline(in, line).good();)
         {
             // header
@@ -181,7 +181,7 @@ inline void EnDecrypto::packFA (const pack_s& pkStruct, byte threadID)
                     context += (char) 254;
                 }
                 seq.clear();
-                
+
                 // header line
                 context += (char) 253;
                 packHdr(context, line.substr(1), HdrMap);
@@ -190,7 +190,7 @@ inline void EnDecrypto::packFA (const pack_s& pkStruct, byte threadID)
             
             // empty line. (char) 252 instead of line feed
             else if (line.empty()) { seq += (char) 252; }
-            
+
             // sequence
             else
             {
@@ -205,12 +205,12 @@ inline void EnDecrypto::packFA (const pack_s& pkStruct, byte threadID)
         if (!seq.empty())
         {
             seq.pop_back();                              // remove the last '\n'
-            
+
             // the last seq
             packSeq_3to1(context, seq);
             context += (char) 254;
         }
-        
+
         // shuffle
         if (!disable_shuffle)    shufflePkd(context);
 
@@ -224,7 +224,7 @@ inline void EnDecrypto::packFA (const pack_s& pkStruct, byte threadID)
         // write header containing threadID for each
         pkfile << THR_ID_HDR << to_string(threadID) << '\n';
         pkfile << context << '\n';
-        
+
         // ignore to go to the next related chunk
         for (u64 l = (u64) (n_threads-1)*LINE_BUFFER; l--;)
             in.ignore(LARGE_NUMBER, '\n');

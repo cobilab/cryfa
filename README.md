@@ -18,7 +18,7 @@ Then, you need to set the parameters in **run.sh**, which is an all-in-one bash 
 
 Finally, run the **run.sh** script using:
 ```bash
-. run.sh
+. run.sh INPUT_FILE_NAME
 ```
 
 ## PARAMETERS
