@@ -4,8 +4,9 @@
 #   parameters -- set to 1 to activate and 0 to deactivate
 #   get/generate datasets, install dependencies, run cryfa, plot results
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-N_THRD=8                # number of threads
+N_THREADS=8             # number of threads
 
+### datasets
 GET_HUMAN_FA=0          # download Human choromosomes in FASTA
 GET_VIRUSES_FA=0        # download Viruses in FASTA using downloadViruses.pl
 GEN_SYNTH_FA=0          # generate synthetic FASTA dataset using XS
@@ -13,6 +14,9 @@ GET_HUMAN_FQ=0          # download Human in FASTQ
 GET_DENISOVA_FQ=0       # download Denisova in FASTQ
 GEN_SYNTH_FQ=0          # generate synthetic FASTQ dataset using XS
 
+### cryfa
+SHUFFLE=1               # cryfa: shuffle -- enabled by default
+VERBOSE=0               # cryga: verbose mode -- disabled by default
 CRYFA_COMP=1            # cryfa -- compress
 CRYFA_DECOMP=0          # cryfa -- decompress
 CRYFA_COMP_DECOMP_COMPARE=0   # test -- cryfa: comp. + decomp. + compare results
@@ -205,7 +209,15 @@ fi
 #   run cryfa -- compress
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $CRYFA_COMP -eq 1 ]]; then
-    cmake . | make | ./cryfa -t $N_THRD -k pass.txt $1   # -s: disable shuffling
+    if [[ $SHUFFLE -eq 0 && $VERBOSE -eq 0 ]]; then
+        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt -s $1
+    elif [[ $SHUFFLE -eq 0 && $VERBOSE -eq 1 ]]; then
+        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt -s -v $1
+    elif [[ $SHUFFLE -eq 1 && $VERBOSE -eq 0 ]]; then
+        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt $1
+    elif [[ $SHUFFLE -eq 1 && $VERBOSE -eq 1 ]]; then
+        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt -v $1
+    fi
 fi
 
 
@@ -213,7 +225,15 @@ fi
 #   run cryfa -- decompress
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $CRYFA_DECOMP -eq 1 ]]; then
-    cmake . | make | ./cryfa -t $N_THRD -dk pass.txt $1
+    if [[ $SHUFFLE -eq 0 && $VERBOSE -eq 0 ]]; then
+        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt -s -d $1
+    elif [[ $SHUFFLE -eq 0 && $VERBOSE -eq 1 ]]; then
+        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt -s -v -d $1
+    elif [[ $SHUFFLE -eq 1 && $VERBOSE -eq 0 ]]; then
+        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt -d $1
+    elif [[ $SHUFFLE -eq 1 && $VERBOSE -eq 1 ]]; then
+        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt -v -d $1
+    fi
 fi
 
 
@@ -222,10 +242,10 @@ fi
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $CRYFA_COMP_DECOMP_COMPARE -eq 1 ]]; then
     # compress
-    cmake . | make | ./cryfa -t $N_THRD -k pass.txt $1>$2 #-s: disable shuffling
+    cmake . | make | ./cryfa -t $N_THREADS -k pass.txt $1>$2 #-s: disable shuffling
 
     # decompress
-    ./cryfa -t $N_THRD -dk pass.txt $2 > "CRYFA_DECOMPRESSED"
+    ./cryfa -t $N_THREADS -dk pass.txt $2 > "CRYFA_DECOMPRESSED"
 
     # compare
     cmp $1 "CRYFA_DECOMPRESSED"
