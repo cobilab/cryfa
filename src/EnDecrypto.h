@@ -57,6 +57,7 @@ public:
     void   decompressFQ ();                              // decompress FASTQ
     
 private:
+    bool   shufflingInProgress = true;                   // shuffle in progress
     bool   justPlus = true;                              // if line 3 is just +
     bool   shuffled = true;
     u64    seed_shared;                                  // shared seed
