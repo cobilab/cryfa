@@ -33,8 +33,8 @@ int main (int argc, char* argv[])
     EnDecrypto cryptObj;
     cryptObj.inFileName = argv[argc-1];  // input file name
     cryptObj.n_threads = DEFAULT_N_THR;  // initialize number of threads
-
-    static int h_flag, a_flag, v_flag, d_flag, s_flag;
+    
+    static int h_flag, a_flag, v_flag, d_flag, s_flag, k_flag=0;
     int c;                               // deal with getopt_long()
     int option_index;                    // option index stored by getopt_long()
     opterr = 0;  // force getopt_long() to remain silent when it finds a problem
@@ -66,20 +66,33 @@ int main (int argc, char* argv[])
                 if (optarg)    cout << " with arg " << optarg << '\n';
                 break;
                 
+            case 'k':
+                k_flag = 1;
+                cryptObj.keyFileName = (string) optarg;
+                break;
+                
             case 'h': h_flag = 1;    Help();                              break;
             case 'a': a_flag = 1;    About();                             break;
             case 'v': v_flag = 1;    cryptObj.verbose = true;             break;
             case 's': s_flag = 1;    cryptObj.disable_shuffle = true;     break;
             case 'd': d_flag = 1;                                         break;
-            case 'k': cryptObj.keyFileName = (string) optarg;             break;
             case 't': cryptObj.n_threads = (byte) stoi((string) optarg);  break;
 
             default:
                 cerr << "Option '" << (char) optopt << "' is invalid.\n"; break;
         }
     }
-
-    if (v_flag)  cerr << "Verbose mode on.\n";
+    
+    if (!k_flag)
+    {
+        cerr << "Error: no password file has been set!\n";
+        
+        return 0;
+    }
+    
+    if (v_flag)
+        cerr << "Verbose mode on.\n";
+    
     if (d_flag)
     {
         cryptObj.decrypt();                                         // decrypt
@@ -113,7 +126,7 @@ int main (int argc, char* argv[])
             return 0;
         }
         
-        cerr << "Compressing...\n";
+        cerr << "Compacting...\n";
         (file_type == 'A') ? cryptObj.compressFA() : cryptObj.compressFQ();
         
 //        // stop timer

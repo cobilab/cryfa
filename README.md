@@ -2,7 +2,7 @@
 alt="Cryfa" width="150" border="0" /></p>
 <br>
 
-Cryfa is a FASTA/FASTQ packing plus encryption tool.
+Cryfa is a FASTA/FASTQ compaction plus encryption tool.
 It uses AES (Advanced Encryption Standard) for the purpose of encryption.
 Cryfa can be applied to any FASTA or FASTQ file (DNA sequences, headers and quality-scores).
 It compacts 3 DNA bases into 1 char, using a fixed block size packing.

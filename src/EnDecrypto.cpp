@@ -156,7 +156,7 @@ void EnDecrypto::compressFA ()
     // compression duration in seconds
     std::chrono::duration<double> elapsed = finishTime - startTime;
     
-    cerr << (verbose ? "Compression done" : "Done") << " in "
+    cerr << (verbose ? "Compaction done" : "Done") << " in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
     
     // close/delete input/output files
@@ -441,7 +441,7 @@ void EnDecrypto::compressFQ ()
     // compression duration in seconds
     std::chrono::duration<double> elapsed = finishTime - startTime;
     
-    cerr << (verbose ? "Compression done" : "Done") << " in "
+    cerr << (verbose ? "Compaction done" : "Done") << " in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
     
     // cout encrypted content

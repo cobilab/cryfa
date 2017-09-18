@@ -16,7 +16,7 @@ GEN_SYNTH_FQ=0          # generate synthetic FASTQ dataset using XS
 
 ### cryfa
 SHUFFLE=1               # cryfa: shuffle -- enabled by default
-VERBOSE=0               # cryga: verbose mode -- disabled by default
+VERBOSE=1               # cryga: verbose mode -- disabled by default
 CRYFA_COMP=1            # cryfa -- compress
 CRYFA_DECOMP=0          # cryfa -- decompress
 CRYFA_COMP_DECOMP_COMPARE=0   # test -- cryfa: comp. + decomp. + compare results
@@ -225,13 +225,9 @@ fi
 #   run cryfa -- decompress
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $CRYFA_DECOMP -eq 1 ]]; then
-    if [[ $SHUFFLE -eq 0 && $VERBOSE -eq 0 ]]; then
-        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt -s -d $1
-    elif [[ $SHUFFLE -eq 0 && $VERBOSE -eq 1 ]]; then
-        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt -s -v -d $1
-    elif [[ $SHUFFLE -eq 1 && $VERBOSE -eq 0 ]]; then
+    if [[ $VERBOSE -eq 0 ]]; then
         cmake . | make | ./cryfa -t $N_THREADS -k pass.txt -d $1
-    elif [[ $SHUFFLE -eq 1 && $VERBOSE -eq 1 ]]; then
+    elif [[ $VERBOSE -eq 1 ]]; then
         cmake . | make | ./cryfa -t $N_THREADS -k pass.txt -v -d $1
     fi
 fi
@@ -241,12 +237,19 @@ fi
 #   run cryfa -- compress + decompress + compare results
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $CRYFA_COMP_DECOMP_COMPARE -eq 1 ]]; then
-    # compress
-    cmake . | make | ./cryfa -t $N_THREADS -k pass.txt $1>$2 #-s: disable shuffling
+    if [[ $SHUFFLE -eq 0 && $VERBOSE -eq 0 ]]; then
+        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt -s $1 > $2#compress
+        ./cryfa -t $N_THREADS -k pass.txt -d $2>"CRYFA_DECOMPRESSED" #decompress
+    elif [[ $SHUFFLE -eq 0 && $VERBOSE -eq 1 ]]; then
+        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt -sv $1 >$2#compress
+        ./cryfa -t $N_THREADS -k pass.txt -vd $2>"CRYFA_DECOMPRESSED"#decompress
+    elif [[ $SHUFFLE -eq 1 && $VERBOSE -eq 0 ]]; then
+        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt $1 > $2   #compress
+        ./cryfa -t $N_THREADS -k pass.txt -d $2>"CRYFA_DECOMPRESSED" #decompress
+    elif [[ $SHUFFLE -eq 1 && $VERBOSE -eq 1 ]]; then
+        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt -v $1 >$2 #compress
+        ./cryfa -t $N_THREADS -k pass.txt -vd $2>"CRYFA_DECOMPRESSED"#decompress
+    fi
 
-    # decompress
-    ./cryfa -t $N_THREADS -dk pass.txt $2 > "CRYFA_DECOMPRESSED"
-
-    # compare
-    cmp $1 "CRYFA_DECOMPRESSED"
+    cmp $1 "CRYFA_DECOMPRESSED"                                      # compare
 fi
