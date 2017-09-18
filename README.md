@@ -79,6 +79,4 @@ https://github.com/pratas/cryfa/releases:
 Please let us know if there is any [issues](https://github.com/pratas/cryfa/issues).
 
 ## LICENSE
-GPL v3.
-
-For more information, [click](http://www.gnu.org/licenses/gpl-3.0.html).
+Cryfa is under GPL v3 license. For more information, click [here](http://www.gnu.org/licenses/gpl-3.0.html).
