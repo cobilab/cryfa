@@ -50,7 +50,7 @@ void EnDecrypto::compressFA ()
     string headers;
     pack_s pkStruct;        // collection of inputs to pass to pack...
 
-    // gather all headers
+    // gather all chars in headers
     gatherHdr(headers);
 
     // function pointer
@@ -99,10 +99,10 @@ void EnDecrypto::compressFA ()
         arrThread[t] = thread(&EnDecrypto::packFA, this, pkStruct, t);
     for (t = 0; t != n_threads; ++t)
         if (arrThread[t].joinable())    arrThread[t].join();
-
+    
     // join partially packed files
     ifstream pkFile[n_threads];
-
+    
     // watermark for encrypted file
     cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
                        + to_string(RELEASE_CRYFA) + "\n";
@@ -485,6 +485,7 @@ inline void EnDecrypto::packFQ (const pack_s& pkStruct, byte threadID)
 *******************************************************************************/
 inline void EnDecrypto::encrypt ()
 {
+    cerr << "Encrypting...\n";
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
     memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
@@ -574,7 +575,6 @@ void EnDecrypto::decrypt ()
 ////    { cerr << "Error: invalid encrypted file!\n";    exit(1); }
 ////    else  cipherText.erase(watermarkIdx, watermark.length());
     
-    cerr << "Decrypting...\n";
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
     memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
@@ -1470,6 +1470,17 @@ inline void EnDecrypto::gatherHdr (string& headers) const
     // gather the characters -- ignore '>'=62 for headers
     for (byte i = 32; i != 62;  ++i)    if (*(hChars+i))  headers += i;
     for (byte i = 63; i != 127; ++i)    if (*(hChars+i))  headers += i;
+    
+    // show number of different chars in headers, when verbose mode is on
+    if (verbose)
+    {
+        int n=0;
+        for(int i=32;i<127;++i)
+            if(hChars[i])
+                ++n;
+        
+        cerr << n;
+    }
 }
 
 /*******************************************************************************
