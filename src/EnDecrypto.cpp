@@ -49,10 +49,10 @@ void EnDecrypto::compressFA ()
     byte   t;               // for threads
     string headers;
     pack_s pkStruct;        // collection of inputs to pass to pack...
-    
+
     // gather all headers
     gatherHdr(headers);
-    
+
     // function pointer
     using packHdrPointer = void (*) (string&, const string&, const htbl_t&);
     packHdrPointer packHdr;
@@ -93,7 +93,7 @@ void EnDecrypto::compressFA ()
     }
 
     pkStruct.packHdrFPtr = packHdr;
-    
+
     // distribute file among threads, for reading and packing
     for (t = 0; t != n_threads; ++t)
         arrThread[t] = thread(&EnDecrypto::packFA, this, pkStruct, t);
@@ -106,20 +106,19 @@ void EnDecrypto::compressFA ()
     // watermark for encrypted file
     cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
                        + to_string(RELEASE_CRYFA) + "\n";
-
+    
     // open packed file
     ofstream pckdFile(PCKD_FILENAME);
-    pckdFile << (char) 127;               // let decryptor know this is FASTA
-//    if (!disable_shuffle)   pckdFile << (char) 127;   // shuffling in enabled
-//    else                    pckdFile << (char) 128;   // shuffling in disabled
-    pckdFile << headers;                  // send headers to decryptor
-    pckdFile << (char) 254;               // to detect headers in dec.
-
+    pckdFile << (char) 127;                // let decryptor know this is FASTA
+    pckdFile << (!disable_shuffle ? (char) 128 : (char) 129); //shuffling on/off
+    pckdFile << headers;                   // send headers to decryptor
+    pckdFile << (char) 254;                // to detect headers in decompressor
+    
     // open input files
     for (t = 0; t != n_threads; ++t)  pkFile[t].open(PK_FILENAME+to_string(t));
 
     string line;
-    bool prevLineNotThrID;                // if previous line was "THR=" or not
+    bool prevLineNotThrID;                 // if previous line was "THR=" or not
     while (!pkFile[0].eof())
     {
         for (t = 0; t != n_threads; ++t)
@@ -355,6 +354,7 @@ void EnDecrypto::compressFQ ()
 
     // open packed file
     ofstream pckdFile(PCKD_FILENAME);
+    pckdFile << (!disable_shuffle ? (char) 128 : (char) 129); //shuffling on/off
     pckdFile << headers;                            // send headers to decryptor
     pckdFile << (char) 254;                         // to detect headers in dec.
     pckdFile << qscores;                            // send qscores to decryptor
@@ -623,8 +623,7 @@ void EnDecrypto::decompressFA ()
     
     ifstream in(DEC_FILENAME);
     in.ignore(1);                   // jump over decText[0]==(char) 127
-    // check if file had been shuffled
-    in.get(c);    shuffled = (c==(char) 127);
+    in.get(c);    shuffled = (c==(char) 128); // check if file had been shuffled
     while (in.get(c) && c != (char) 254)    headers += c;
     const size_t headersLen = headers.length();
     u16 keyLen_hdr = 0;
@@ -786,7 +785,6 @@ inline void EnDecrypto::unpackHS (const unpack_s &upkStruct, byte threadID)
         
         // unshuffle
         if (shuffled)    unshufflePkd(i, chunkSize);
-//        if (!disable_shuffle)    unshufflePkd(i, chunkSize);
         
         upkfile << THR_ID_HDR + to_string(threadID) << '\n';
         do {
@@ -846,10 +844,9 @@ inline void EnDecrypto::unpackHL (const unpack_s &upkStruct, byte threadID)
         for (u64 u = chunkSize; u--;) { in.get(c);    decText += c; }
         i = decText.begin();
         endPos = in.tellg();   // set the end position
-
+        
         // unshuffle
         if (shuffled)    unshufflePkd(i, chunkSize);
-//        if (!disable_shuffle)    unshufflePkd(i, chunkSize);
         
         upkfile << THR_ID_HDR + to_string(threadID) << '\n';
         do {
@@ -910,8 +907,9 @@ void EnDecrypto::decompressFQ ()
     thread   arrThread[n_threads];  // array of threads
     byte     t;                     // for threads
     u64      offset;                // to traverse decompressed file
-
+    
     ifstream in(DEC_FILENAME);
+    in.get(c);    shuffled = (c==(char) 128); // check if file had been shuffled
     while (in.get(c) && c != (char) 254)                 headers += c;
     while (in.get(c) && c != '\n' && c != (char) 253)    qscores += c;
     if (c == '\n')    justPlus = false;                 // if 3rd line is just +
@@ -1182,7 +1180,7 @@ inline void EnDecrypto::unpackHSQS (const unpack_s &upkStruct, byte threadID)
         endPos = in.tellg();   // set the end position
         
         // unshuffle
-        if (!disable_shuffle)    unshufflePkd(i, chunkSize);
+        if (shuffled)    unshufflePkd(i, chunkSize);
         
         upkfile << THR_ID_HDR + to_string(threadID) << '\n';
         do {
@@ -1249,7 +1247,7 @@ inline void EnDecrypto::unpackHSQL (const unpack_s &upkStruct, byte threadID)
         endPos = in.tellg();    // set the end position
         
         // unshuffle
-        if (!disable_shuffle)    unshufflePkd(i, chunkSize);
+        if (shuffled)    unshufflePkd(i, chunkSize);
         
         upkfile << THR_ID_HDR + to_string(threadID) << '\n';
         do {
@@ -1317,7 +1315,7 @@ inline void EnDecrypto::unpackHLQS (const unpack_s &upkStruct, byte threadID)
         endPos = in.tellg();    // set the end position
         
         // unshuffle
-        if (!disable_shuffle)    unshufflePkd(i, chunkSize);
+        if (shuffled)    unshufflePkd(i, chunkSize);
         
         upkfile << THR_ID_HDR + to_string(threadID) << '\n';
         do {
@@ -1382,7 +1380,7 @@ inline void EnDecrypto::unpackHLQL (const unpack_s &upkStruct, byte threadID)
         endPos = in.tellg();    // set the end position
         
         // unshuffle
-        if (!disable_shuffle)    unshufflePkd(i, chunkSize);
+        if (shuffled)    unshufflePkd(i, chunkSize);
         
         upkfile << THR_ID_HDR + to_string(threadID) << '\n';
         do {
