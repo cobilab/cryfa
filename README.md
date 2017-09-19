@@ -34,7 +34,7 @@ Please note that when the parameter *CRYFA_COMP_DECOMP_COMPARE* is set to 1, com
 ```
 
 ## PARAMETERS
-Cryfa executable is a file called **cryfa**. To see the possible options, if this executable is not yet made, you should make it using:
+Cryfa executable is a file called **cryfa**. To see the possible options, if this executable is not yet made, you should make it, first, using:
 ```bash
 cmake .
 make

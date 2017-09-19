@@ -40,12 +40,7 @@ using CryptoPP::FileSink;
 std::mutex mutx;
 
 /*******************************************************************************
-    compress FASTA.
-    * reserved symbols:
-          (char) 255:  penalty if sequence length isn't multiple of 3
-          (char) 254:  end of each sequence line
-          (char) 253:  instead of '>' in header
-          (char) 252:  instead of empty line
+    compress FASTA
 *******************************************************************************/
 void EnDecrypto::compressFA ()
 {
@@ -85,22 +80,22 @@ void EnDecrypto::compressFA ()
         Hdrs = headers;
         Hdrs_g = Hdrs;
 
-        if (headersLen > MAX_C4)                                        // cat 5
+        if (headersLen > MAX_C4)                            // 16 <= cat 5 <= 39
         { buildHashTable(HdrMap, Hdrs, KEYLEN_C5);    packHdr = &pack_3to2; }
 
-        else if (headersLen > MAX_C3)                                   // cat 4
+        else if (headersLen > MAX_C3)                       // 7 <= cat 4 <= 15
         { buildHashTable(HdrMap, Hdrs, KEYLEN_C4);    packHdr = &pack_2to1; }
-                                                                        // cat 3
+                                                            // 4 <= cat 3 <= 6
         else if (headersLen==MAX_C3 || headersLen==MID_C3 || headersLen==MIN_C3)
         { buildHashTable(HdrMap, Hdrs, KEYLEN_C3);    packHdr = &pack_3to1; }
 
-        else if (headersLen == C2)                                      // cat 2
+        else if (headersLen == C2)                          // cat 2 = 3
         { buildHashTable(HdrMap, Hdrs, KEYLEN_C2);    packHdr = &pack_5to1; }
 
-        else if (headersLen == C1)                                      // cat 1
+        else if (headersLen == C1)                          // cat 1 = 2
         { buildHashTable(HdrMap, Hdrs, KEYLEN_C1);    packHdr = &pack_7to1; }
 
-        else                                                   // headersLen = 1
+        else                                                // headersLen = 1
         { buildHashTable(HdrMap, Hdrs, 1);            packHdr = &pack_1to1; }
     }
     
@@ -220,7 +215,8 @@ inline void EnDecrypto::packFA (const pack_s& pkStruct, byte threadID)
             {
                 //todo. check if it's needed to check for blank char
 //                if (line.find(' ') != string::npos)
-//                { cerr<< "Invalid sequence -- spaces not allowed.\n"; exit(1); }
+//              { cerr<< "Invalid sequence -- spaces not allowed.\n"; exit(1); }
+                
                 // (char) 252 instead of '\n' at the end of each seq line
                 seq += line;
                 seq += (char) 252;
@@ -268,18 +264,7 @@ inline void EnDecrypto::packFA (const pack_s& pkStruct, byte threadID)
 }
 
 /*******************************************************************************
-    compress FASTQ.
-    * reserved symbols:
-          (char) 255:  penalty if sequence length isn't multiple of 3
-          (char) 254:  end of each line
-          (char) 253:  if third line contains only +
-          (char) 252:  end of file
-    * categories for headers and quality scores:
-                cat 1  =  2
-                cat 2  =  3
-           4 <= cat 3 <=  6
-           7 <= cat 4 <= 15
-          16 <= cat 5 <= 39
+    compress FASTQ
 *******************************************************************************/
 void EnDecrypto::compressFQ ()
 {
@@ -325,22 +310,22 @@ void EnDecrypto::compressFQ ()
         Hdrs = headers;
         Hdrs_g = Hdrs;
 
-        if (headersLen > MAX_C4)                                        // cat 5
+        if (headersLen > MAX_C4)                            // 16 <= cat 5 <= 39
         { buildHashTable(HdrMap, Hdrs, KEYLEN_C5);    packHdr = &pack_3to2; }
 
-        else if (headersLen > MAX_C3)                                   // cat 4
+        else if (headersLen > MAX_C3)                       // 7 <= cat 4 <= 15
         { buildHashTable(HdrMap, Hdrs, KEYLEN_C4);    packHdr = &pack_2to1; }
-                                                                        // cat 3
+                                                            // 4 <= cat 3 <= 6
         else if (headersLen==MAX_C3 || headersLen==MID_C3 || headersLen==MIN_C3)
         { buildHashTable(HdrMap, Hdrs, KEYLEN_C3);    packHdr = &pack_3to1; }
 
-        else if (headersLen == C2)                                      // cat 2
+        else if (headersLen == C2)                          // cat 2 = 3
         { buildHashTable(HdrMap, Hdrs, KEYLEN_C2);    packHdr = &pack_5to1; }
 
-        else if (headersLen == C1)                                      // cat 1
+        else if (headersLen == C1)                          // cat 1 = 2
         { buildHashTable(HdrMap, Hdrs, KEYLEN_C1);    packHdr = &pack_7to1; }
 
-        else                                                   // headersLen = 1
+        else                                                // headersLen = 1
         { buildHashTable(HdrMap, Hdrs, 1);            packHdr = &pack_1to1; }
     }
 
@@ -358,22 +343,22 @@ void EnDecrypto::compressFQ ()
         QSs = qscores;
         QSs_g = QSs;
 
-        if (qscoresLen > MAX_C4)                                        // cat 5
+        if (qscoresLen > MAX_C4)                            // 16 <= cat 5 <= 39
         { buildHashTable(QsMap, QSs, KEYLEN_C5);    packQS = &pack_3to2; }
 
-        else if (qscoresLen > MAX_C3)                                   // cat 4
+        else if (qscoresLen > MAX_C3)                       // 7 <= cat 4 <= 15
         { buildHashTable(QsMap, QSs, KEYLEN_C4);    packQS = &pack_2to1; }
-                                                                        // cat 3
+                                                            // 4 <= cat 3 <= 6
         else if (qscoresLen==MAX_C3 || qscoresLen==MID_C3 || qscoresLen==MIN_C3)
         { buildHashTable(QsMap, QSs, KEYLEN_C3);    packQS = &pack_3to1; }
 
-        else if (qscoresLen == C2)                                      // cat 2
+        else if (qscoresLen == C2)                          // cat 2 = 3
         { buildHashTable(QsMap, QSs, KEYLEN_C2);    packQS = &pack_5to1; }
 
-        else if (qscoresLen == C1)                                      // cat 1
+        else if (qscoresLen == C1)                          // cat 1 = 2
         { buildHashTable(QsMap, QSs, KEYLEN_C1);    packQS = &pack_7to1; }
 
-        else                                                   // qscoresLen = 1
+        else                                                // qscoresLen = 1
         { buildHashTable(QsMap, QSs, 1);            packQS = &pack_1to1; }
     }
 
@@ -472,7 +457,7 @@ void EnDecrypto::compressFQ ()
 }
 
 /*******************************************************************************
-    pack fastq -- '@' at the beginning of headers is not packed
+    pack FASTQ -- '@' at the beginning of headers is not packed
 *******************************************************************************/
 inline void EnDecrypto::packFQ (const pack_s& pkStruct, byte threadID)
 {
@@ -692,12 +677,7 @@ void EnDecrypto::decrypt ()
 }
 
 /*******************************************************************************
-    decompress FASTA.
-    * reserved symbols:
-          (char) 255:  penalty if sequence length isn't multiple of 3
-          (char) 254:  end of each sequence line
-          (char) 253:  instead of '>' in header
-          (char) 252:  instead of empty line
+    decompress FASTA
 *******************************************************************************/
 void EnDecrypto::decompressFA ()
 {
@@ -863,7 +843,7 @@ void EnDecrypto::decompressFA ()
 }
 
 /*******************************************************************************
-    unpack FA: small hdr
+    unpack FASTA: small hdr
 *******************************************************************************/
 inline void EnDecrypto::unpackHS (const unpack_s &upkStruct, byte threadID)
 {
@@ -937,7 +917,7 @@ inline void EnDecrypto::unpackHS (const unpack_s &upkStruct, byte threadID)
 }
 
 /*******************************************************************************
-    unpack FA: large hdr
+    unpack FASTA: large hdr
 *******************************************************************************/
 inline void EnDecrypto::unpackHL (const unpack_s &upkStruct, byte threadID)
 {
@@ -1009,18 +989,7 @@ inline void EnDecrypto::unpackHL (const unpack_s &upkStruct, byte threadID)
 }
 
 /*******************************************************************************
-    decompress FASTQ.
-    * reserved symbols:
-          (char) 255:  penalty if sequence length isn't multiple of 3
-          (char) 254:  end of each line
-          (char) 253:  if third line contains only +
-          (char) 252:  end of file
-    * categories for headers and quality scores:
-                cat 1  = 2
-                cat 2  = 3
-           4 <= cat 3 <=  6
-           7 <= cat 4 <= 15
-          16 <= cat 5 <= 39
+    decompress FASTQ
 *******************************************************************************/
 void EnDecrypto::decompressFQ ()
 {

@@ -38,13 +38,13 @@ struct unpack_s
 };
 
 /*******************************************************************************
-    class for encryption / decryption ...
+    class for encryption / decryption
 *******************************************************************************/
 class EnDecrypto
 {
 public:
-    bool   disable_shuffle = false;                      // disable shuffle
     bool   verbose = false;                              // for verbose mode
+    bool   disable_shuffle = false;                      // disable shuffle
     byte   n_threads;                                    // number of threads
     string inFileName;                                   // input file name
     string keyFileName;                                  // password file name

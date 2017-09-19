@@ -209,16 +209,16 @@ inline void Help ()    // usage guide
 inline void About ()   // About cryfa
 {
     cout                                                                << '\n'
-        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"   << '\n'
-        << "  cryfa v" << VERSION_CRYFA << "." << RELEASE_CRYFA
+        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"   << '\n'
+        << "   cryfa v" << VERSION_CRYFA << "." << RELEASE_CRYFA
         << ":: FASTA/FASTQ compaction plus encryption"                  << '\n'
-        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"   << '\n'
-        << "          Morteza Hosseini    seyedmorteza@ua.pt"           << '\n'
-        << "          Diogo Pratas        pratas@ua.pt"                 << '\n'
-        << "          Armando J. Pinho    ap@ua.pt"                     << '\n'
-        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"   << '\n'
-        << "     Copyright (C) 2017, IEETA, University of Aveiro"       << '\n'
-        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"   << '\n'
+        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"   << '\n'
+        << "           Morteza Hosseini    seyedmorteza@ua.pt"           << '\n'
+        << "           Diogo Pratas        pratas@ua.pt"                 << '\n'
+        << "           Armando J. Pinho    ap@ua.pt"                     << '\n'
+        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"   << '\n'
+        << "      Copyright (C) 2017, IEETA, University of Aveiro"       << '\n'
+        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"   << '\n'
                                                                         << '\n'
         << "This is a Free software, under GPLv3. You may redistribute" << '\n'
         << "copies of it under the terms of the GNU - General Public"   << '\n'

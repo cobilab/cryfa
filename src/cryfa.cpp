@@ -1,13 +1,15 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-              CRYFA :: FASTA/FASTQ compaction plus encryption
-           - - - - - - - - - - - - - - - - - - - - - - - - - - -
-          '       Morteza Hosseini    seyedmorteza@ua.pt        '
-          '       Diogo Pratas        pratas@ua.pt              '
-          '       Armando J. Pinho    ap@ua.pt                  '
-           - - - - - - - - - - - - - - - - - - - - - - - - - - -
-             Copyright (C) 2017, IEETA, University of Aveiro
-             
+          <<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+          <     CRYFA :: FASTA/FASTQ compaction plus encryption     >
+          <<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+          <          Morteza Hosseini    seyedmorteza@ua.pt         >
+          <          Diogo Pratas        pratas@ua.pt               >
+          <          Armando J. Pinho    ap@ua.pt                   >
+          <<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+          <     Copyright (C) 2017, IEETA, University of Aveiro     >
+          <<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+          
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
