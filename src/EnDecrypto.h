@@ -74,7 +74,6 @@ private:
     inline void printIV       (byte*)            const;  // print IV
     inline void printKey      (byte*)            const;  // print key
     inline string extractPass ()                 const;  // extract password
-    inline void evalPassSize  (const string&)    const;  // evaluate pass size
     inline bool hasFQjustPlus ()                 const;  // check '+' line
     inline void gatherHdr     (string&)          const;  // gather hdrs -- FA
     inline void gatherHdrQs   (string&, string&) const;  // gather hdrs & qss

@@ -1,8 +1,15 @@
+          #######################################################
+          #                 All in one script                   #
+          #       - - - - - - - - - - - - - - - - - - - -       #
+          #        Morteza Hosseini    seyedmorteza@ua.pt       #
+          #        Diogo Pratas        pratas@ua.pt             #
+          #        Armando J. Pinho    ap@ua.pt                 #
+          #######################################################
 #!/bin/bash
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #   parameters -- set to 1 to activate and 0 to deactivate
-#   get/generate datasets, install dependencies, run cryfa, plot results
+#   get/generate datasets, install dependencies, run methods
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 N_THREADS=8             # number of threads
 

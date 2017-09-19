@@ -176,52 +176,57 @@ const htbl_t DNA_MAP =
 *******************************************************************************/
 inline void Help ()    // usage guide
 {
-    cout                                                              << '\n'
-      << "Synopsis:"                                                  << '\n'
-      << "    cryfa [OPTION]... -k [KEYFILENAME] [FILENAME]"          << '\n'
-                                                                      << '\n'
-      << "Options:"                                                   << '\n'
-      << "    -h,  --help"                                            << '\n'
-      << "         usage guide"                                       << '\n'
-                                                                      << '\n'
-      << "    -v,  --verbose"                                         << '\n'
-      << "         verbose mode (more information)"                   << '\n'
-                                                                      << '\n'
-      << "    -s,  --disable_shuffle"                                 << '\n'
-      << "         disable shuffling input"                           << '\n'
-                                                                      << '\n'
-      << "    -d,  --decrypt"                                         << '\n'
-      << "         decryption mode"                                   << '\n'
-                                                                      << '\n'
-      << "    -k [KEYFILE],  --key [KEYFILE]"                         << '\n'
-      << "         key filename"                                      << '\n'
-                                                                      << '\n'
-      << "    -t [NUMBER],  --thread [NUMBER]"                        << '\n'
-      << "         number of threads"                                 << '\n'
-                                                                      << '\n'
-      << "    -a,  --about"                                           << '\n'
-      << "         about the program"                                 << '\n'
-                                                                      << '\n';
+    cout                                                                << '\n'
+        << "Synopsis:"                                                  << '\n'
+        << "    cryfa [OPTION]... -k [KEY_FILE] [INPUT_FILE]"           << '\n'
+                                                                        << '\n'
+        << "Options:"                                                   << '\n'
+        << "    -h,  --help"                                            << '\n'
+        << "         usage guide"                                       << '\n'
+                                                                        << '\n'
+        << "    -k [KEY_FILE],  --key [KEY_FILE]"                       << '\n'
+        << "         key file name -- Mandatory"                        << '\n'
+                                                                        << '\n'
+        << "    -d,  --decrypt"                                         << '\n'
+        << "         decryption"                                        << '\n'
+                                                                        << '\n'
+        << "    -v,  --verbose"                                         << '\n'
+        << "         verbose mode (more information)"                   << '\n'
+                                                                        << '\n'
+        << "    -s,  --disable_shuffle"                                 << '\n'
+        << "         disable shuffling input"                           << '\n'
+                                                                        << '\n'
+        << "    -t [NUMBER],  --thread [NUMBER]"                        << '\n'
+        << "         number of threads"                                 << '\n'
+                                                                        << '\n'
+        << "    -a,  --about"                                           << '\n'
+        << "         about cryfa"                                       << '\n'
+                                                                        << '\n';
+    
+    exit(1);
 }
 //..............................................................................
 inline void About ()   // About cryfa
 {
-    cout                                                              << '\n'
-      << "cryfa v" << VERSION_CRYFA << "." << RELEASE_CRYFA           << '\n'
-      << "..............."                                            << '\n'
-      << "A FASTA/FASTQ packing plus encryption tool"                 << '\n'
-                                                                      << '\n'
-      << "Morteza Hosseini    seyedmorteza@ua.pt"                     << '\n'
-      << "Diogo Pratas        pratas@ua.pt"                           << '\n'
-      << "Armando J. Pinho    ap@ua.pt"                               << '\n'
-                                                                      << '\n'
-      << "Copyright (C) 2017, University of Aveiro"                   << '\n'
-                                                                      << '\n'
-      << "This is a Free software, under GPLv3. You may redistribute" << '\n'
-      << "copies of it under the terms of the GNU - General Public"   << '\n'
-      << "License v3 <http://www.gnu.org/licenses/gpl.html>. There"   << '\n'
-      << "is NOT ANY WARRANTY, to the extent permitted by law."       << '\n'
-                                                                      << '\n';
+    cout                                                                << '\n'
+        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"   << '\n'
+        << "  cryfa v" << VERSION_CRYFA << "." << RELEASE_CRYFA
+        << ":: FASTA/FASTQ compaction plus encryption"                  << '\n'
+        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"   << '\n'
+        << "          Morteza Hosseini    seyedmorteza@ua.pt"           << '\n'
+        << "          Diogo Pratas        pratas@ua.pt"                 << '\n'
+        << "          Armando J. Pinho    ap@ua.pt"                     << '\n'
+        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"   << '\n'
+        << "     Copyright (C) 2017, IEETA, University of Aveiro"       << '\n'
+        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"   << '\n'
+                                                                        << '\n'
+        << "This is a Free software, under GPLv3. You may redistribute" << '\n'
+        << "copies of it under the terms of the GNU - General Public"   << '\n'
+        << "License v3 <http://www.gnu.org/licenses/gpl.html>. There"   << '\n'
+        << "is NOT ANY WARRANTY, to the extent permitted by law."       << '\n'
+                                                                        << '\n';
+    
+    exit(1);
 }
 
 #endif //CRYFA_DEF_H

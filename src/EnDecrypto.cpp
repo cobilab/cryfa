@@ -629,7 +629,7 @@ void EnDecrypto::decrypt ()
 {
     ifstream in(inFileName);
     if (!in.good())
-    { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
+    { cerr << "Error: failed opening \"" << inFileName << "\".\n";    exit(1); }
     
     // watermark
     string watermark = "#cryfa v";
@@ -1741,7 +1741,6 @@ inline int EnDecrypto::my_rand ()
 inline void EnDecrypto::un_shuffleSeedGen ()
 {
     const string pass = extractPass();
-    evalPassSize(pass);     // pass size must be >= 8
     
     u64 passDigitsMult = 1; // multiplication of all pass digits
     for (u32 i = (u32) pass.size(); i--;)    passDigitsMult *= pass[i];
@@ -1809,8 +1808,6 @@ inline void EnDecrypto::buildIV (byte *iv, const string &pass)
     std::uniform_int_distribution<rng_type::result_type> udist(0, 255);
     rng_type rng;
     
-    evalPassSize(pass);  // pass size must be >= 8
-    
     // using old rand to generate the new rand seed
     my_srand((u32) 7919 * pass[2] * pass[5] + 75653);
 //    srand((u32) 7919 * pass[2] * pass[5] + 75653);
@@ -1834,8 +1831,6 @@ inline void EnDecrypto::buildKey (byte *key, const string &pwd)
 {
     std::uniform_int_distribution<rng_type::result_type> udist(0, 255);
     rng_type rng;
-    
-    evalPassSize(pwd);  // pass size must be >= 8
     
     // using old rand to generate the new rand seed
     my_srand((u32) 24593 * (pwd[0] * pwd[2]) + 49157);
@@ -1881,27 +1876,12 @@ inline void EnDecrypto::printKey (byte *key) const
 inline string EnDecrypto::extractPass () const
 {
     ifstream in(keyFileName);
-    string   l;   // each line of file
+    char     c;
+    string   pass;
+    pass.clear();
     
-    if (keyFileName.empty())
-    { cerr << "Error: no password file has been set!\n";     exit(1); }
-    else if (!in.good())
-    { cerr << "Error opening '" << keyFileName << "'.\n";    exit(1); }
+    while (in.get(c))    pass += c;
     
-    while (getline(in, l).good())
-    {
-        if (l.empty()) { cerr<<"Error: empty password line file!\n";  exit(1); }
-        return l;
-    }
-    
-    return "UNKNOWN";
-}
-
-/*******************************************************************************
-    evaluate password size >= 8
-*******************************************************************************/
-inline void EnDecrypto::evalPassSize (const string &pass) const
-{
-    if (pass.size() < 8)
-    { cerr << "Error: password size must be at least 8!\n";    exit(1); }
+    in.close();
+    return pass;
 }

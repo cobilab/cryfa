@@ -1,11 +1,13 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-           CRYFA :: A FASTA/FASTQ encryption/decryption tool
-         -----------------------------------------------------
-            Morteza Hosseini, Diogo Pratas, Armando J. Pinho
-                    {seyedmorteza,pratas,ap}@ua.pt
+              CRYFA :: FASTA/FASTQ compaction plus encryption
+           - - - - - - - - - - - - - - - - - - - - - - - - - - -
+          '       Morteza Hosseini    seyedmorteza@ua.pt        '
+          '       Diogo Pratas        pratas@ua.pt              '
+          '       Armando J. Pinho    ap@ua.pt                  '
+           - - - - - - - - - - - - - - - - - - - - - - - - - - -
              Copyright (C) 2017, IEETA, University of Aveiro
-               
+             
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
 
 
@@ -34,9 +36,10 @@ int main (int argc, char* argv[])
     cryptObj.inFileName = argv[argc-1];  // input file name
     cryptObj.n_threads = DEFAULT_N_THR;  // initialize number of threads
     
-    static int h_flag, a_flag, v_flag, d_flag, s_flag, k_flag=0;
-    int c;                               // deal with getopt_long()
-    int option_index;                    // option index stored by getopt_long()
+    static int h_flag, a_flag, v_flag, d_flag, s_flag;
+    bool k_flag = false;
+    int  c;                              // deal with getopt_long()
+    int  option_index;                   // option index stored by getopt_long()
     opterr = 0;  // force getopt_long() to remain silent when it finds a problem
 
     static struct option long_options[] =
@@ -67,7 +70,7 @@ int main (int argc, char* argv[])
                 break;
                 
             case 'k':
-                k_flag = 1;
+                k_flag = true;
                 cryptObj.keyFileName = (string) optarg;
                 break;
                 
@@ -83,20 +86,16 @@ int main (int argc, char* argv[])
         }
     }
     
-    if (!k_flag)
-    {
-        cerr << "Error: no password file has been set!\n";
-        
-        return 0;
-    }
+    // check password file
+    if (!h_flag && !a_flag)    checkPass(cryptObj.keyFileName, k_flag);
     
     if (v_flag)
         cerr << "Verbose mode on.\n";
-    
+
     if (d_flag)
     {
         cryptObj.decrypt();                                         // decrypt
-        
+
         ifstream in(DEC_FILENAME);
         cerr << "Decompressing...\n";
         (in.peek() == (char) 127) ? cryptObj.decompressFA()         // FASTA
@@ -113,11 +112,11 @@ int main (int argc, char* argv[])
 
         return 0;
     }
-    
+
     if (!h_flag && !a_flag)
     {
         char file_type = fileType(cryptObj.inFileName); //file type: FASTA/FASTQ
-        
+
         // if input is neither FASTA nor FASTQ file
         if (file_type == 'n')
         {
@@ -125,10 +124,10 @@ int main (int argc, char* argv[])
                  << " is neither a FASTA nor a FASTQ file.\n";
             return 0;
         }
-        
+
         cerr << "Compacting...\n";
         (file_type == 'A') ? cryptObj.compressFA() : cryptObj.compressFQ();
-        
+
 //        // stop timer
 //        high_resolution_clock::time_point finishTime =
 //                high_resolution_clock::now();
