@@ -22,26 +22,27 @@ GET_DENISOVA_FQ=0       # download Denisova in FASTQ
 GEN_SYNTH_FQ=0          # generate synthetic FASTQ dataset using XS
 
 ### dependencies
-INS_DEPENDENCIES=0      # if this value is 0, no dependencies will be installed
-    INS_7ZIP=1          # 7zip
-    INS_CMAKE=1         # cmake
-    INS_LIBBOOST=1      # boost
-    INS_LIBCURL=1       # curl
-    INS_VALGRIND=1      # valgrind
-    INS_ZLIB=1          # zlib
+INSTALL_DEPENDENCIES=0  # if this value is 0, no dependencies will be installed
+  INS_7ZIP=1            # 7zip
+  INS_CMAKE=1           # cmake
+  INS_LIBBOOST=1        # boost
+  INS_LIBCURL=1         # curl
+  INS_VALGRIND=1        # valgrind
+  INS_ZLIB=1            # zlib
 
-### methods
-# FASTA
-INS_MFCOMPRESS=0 #error in make -- available on sapiens    # MFCompress
-INS_DELIMINATE=0 #error: site not reachable -- on sapiens    # DELIMINATE
+### install methods
+INSTALL_METHODS=0
+  # FASTA
+  INS_MFCOMPRESS=0      # MFCompress -- error: make
+  INS_DELIMINATE=0      # DELIMINATE -- error: site not reachable
 
-# FASTQ
-INS_FQZCOMP=0           # fqzcomp
-INS_QUIP=0              # quip
-INS_DSRC=0              # DSRC
-INS_FQC=0 #error: site not reachable -- on sapiens           # FQC
+  # FASTQ
+  INS_FQZCOMP=0         # fqzcomp
+  INS_QUIP=0            # quip
+  INS_DSRC=0            # DSRC
+  INS_FQC=0             # FQC -- error: site not reachable
 
-
+### run methods
 
 
 # cryfa
@@ -238,7 +239,7 @@ fi
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #   install dependencies
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ $INS_DEPENDENCIES -eq 1 ]]; then
+if [[ $INSTALL_DEPENDENCIES -eq 1 ]]; then
 
     ### 7ZIP
     if [[ $INS_7ZIP -eq 1 ]]; then
@@ -309,116 +310,190 @@ fi
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   install MFCompress -- FASTA
+#   install methods
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ $INS_MFCOMPRESS -eq 1 ]]; then
+if [[ $INSTALL_METHODS -eq 1 ]]; then
 
-    rm -f MFCompress-src-1.01.tgz
+    ###################   FASTA   ###################
+    ### MFCompress
+    if [[ $INS_MFCOMPRESS -eq 1 ]]; then
+        rm -f MFCompress-src-1.01.tgz
 
-    url="http://sweet.ua.pt/ap/software/mfcompress"
-    wget $WGET_OP $url/MFCompress-src-1.01.tgz
-    tar -xzf MFCompress-src-1.01.tgz
-    mv MFCompress-src-1.01/ mfcompress
-    rm -f MFCompress-src-1.01.tgz
+        url="http://sweet.ua.pt/ap/software/mfcompress"
+        wget $WGET_OP $url/MFCompress-src-1.01.tgz
+        tar -xzf MFCompress-src-1.01.tgz
+        mv MFCompress-src-1.01/ mfcompress
+        rm -f MFCompress-src-1.01.tgz
 
-    cd mfcompress/
-    cp Makefile.linux Makefile    # make -f Makefile.linux
-    make
-    cd ..
+        cd mfcompress/
+        cp Makefile.linux Makefile    # make -f Makefile.linux
+        make
+        cd ..
+    fi
+
+    ### DELIMINATE
+    if [[ $INS_DELIMINATE -eq 1 ]]; then
+
+        rm -f DELIMINATE_LINUX_64bit.tar.gz
+
+        url="http://metagenomics.atc.tcs.com/Compression_archive"
+        wget $WGET_OP $url/DELIMINATE_LINUX_64bit.tar.gz
+        tar -xzf DELIMINATE_LINUX_64bit.tar.gz
+        mv EXECUTABLES deliminate
+        rm -f DELIMINATE_LINUX_64bit.tar.gz
+    fi
+
+    ###################   FASTQ   ###################
+    ### fqzcomp
+    if [[ $INS_FQZCOMP -eq 1 ]]; then
+
+        rm -f fqzcomp-4.6.tar.gz
+
+        url="https://downloads.sourceforge.net/project/fqzcomp"
+        wget $WGET_OP $url/fqzcomp-4.6.tar.gz
+        tar -xzf fqzcomp-4.6.tar.gz
+        mv fqzcomp-4.6/ fqzcomp/
+        rm -f fqzcomp-4.6.tar.gz
+
+        cd fqzcomp/
+        make
+        cd ..
+    fi
+
+    ### quip
+    if [[ $INS_QUIP -eq 1 ]]; then
+
+        rm -f quip-1.1.8.tar.gz
+
+        url="http://homes.cs.washington.edu/~dcjones/quip"
+        wget $WGET_OP $url/quip-1.1.8.tar.gz
+        tar -xzf quip-1.1.8.tar.gz
+        mv quip-1.1.8/ quip/
+        rm -f quip-1.1.8.tar.gz
+
+        cd quip/
+        ./configure
+        cd src/
+        make
+        cp quip ../
+        cd ../../
+    fi
+
+    ### DSRC
+    if [[ $INS_DSRC -eq 1 ]]; then
+
+        rm -fr dsrc/
+
+        git clone https://github.com/lrog/dsrc.git
+        cd dsrc/
+        make
+        cp bin/dsrc .
+        cd ..
+    fi
+
+    ### FQC
+    if [[ $INS_FQC -eq 1 ]]; then
+
+        rm -f FQC_LINUX_64bit.tar.gz
+
+        url="http://metagenomics.atc.tcs.com/Compression_archive/FQC"
+        wget $WGET_OP $url/FQC_LINUX_64bit.tar.gz
+        tar -xzf FQC_LINUX_64bit.tar.gz
+        mv FQC_LINUX_64bit/ fqc/
+        rm -f FQC_LINUX_64bit.tar.gz
+
+    #    cd fqc/
+    #    #cp 7za ../
+    #    #cp fcompfastq ../
+    #    #cp fdecompfastq ../
+    #    #cp fqc ../
+    #    cd ../
+    fi
 fi
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   install DELIMINATE -- FASTA
+#   functions
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ $INS_DELIMINATE -eq 1 ]]; then
+### check if file exists
+function FExists
+{
+  file="$1"
+  if [[ ! -e $file ]]; then
+    echo "Warning: The file \"$file\" is not available.";
+    return;
+  fi
+}
 
-    rm -f DELIMINATE_LINUX_64bit.tar.gz
+### memory1
+function ProgMemoryStart
+{
+    echo "0" > mem_ps;
+    while true; do
+        ps aux | grep $1 | awk '{ print $6; }' | sort -V | tail -n 1 >> mem_ps;
+        sleep 5;
+    done
+}
+function ProgMemoryStop
+{
+    kill $1 >/dev/null 2>&1
+    cat mem_ps | sort -V | tail -n 1 > $2;
+}
 
-    url="http://metagenomics.atc.tcs.com/Compression_archive"
-    wget $WGET_OP $url/DELIMINATE_LINUX_64bit.tar.gz
-    tar -xzf DELIMINATE_LINUX_64bit.tar.gz
-    mv EXECUTABLES deliminate
-    rm -f DELIMINATE_LINUX_64bit.tar.gz
-fi
+### memory2
+function ProgMemory2
+{
+    valgrind --tool=massif --pages-as-heap=yes --massif-out-file=massif.out ./$1
+    cat massif.out | grep mem_heap_B | sed -e 's/mem_heap_B=\(.*\)/\1/' | \
+    sort -g | tail -n 1
+}
 
+### time
+function ProgTime
+{
+    time ./$1
+}
 
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   install fqzcomp -- FASTQ
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ $INS_FQZCOMP -eq 1 ]]; then
+### gzip method
+function compGzip
+{
+    ProgMemoryStart "gzip" &
+    MEMPID=$!
+    (time gzip $1 ) &> ../../results/C_GZIP_$2
+    ls -la $1.gz > ../../results/BC_GZIP_$2
+    ProgMemoryStop $MEMPID "../../results/MC_GZIP_$2";
+    ProgMemoryStart "gunzip" &
+    MEMPID=$!
+    (time gunzip $1.gz ) &> ../../results/D_GZIP_$2
+    ProgMemoryStop $MEMPID "../../results/MD_GZIP_$2";
+}
 
-    rm -f fqzcomp-4.6.tar.gz
+### lzma method
+function compLzma
+{
+    ProgMemoryStart "lzma" &
+    MEMPID=$!
+    (time lzma $1 ) &> ../../results/LZMA_CT_$2
+    ls -la $1.lzma > ../../results/LZMA_CB_$2
+    ProgMemoryStop $MEMPID "../../results/LZMA_CM_$2";
 
-    url="https://downloads.sourceforge.net/project/fqzcomp"
-    wget $WGET_OP $url/fqzcomp-4.6.tar.gz
-    tar -xzf fqzcomp-4.6.tar.gz
-    mv fqzcomp-4.6/ fqzcomp/
-    rm -f fqzcomp-4.6.tar.gz
-
-    cd fqzcomp/
-    make
-    cd ..
-fi
-
-
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   install quip -- FASTQ
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ $INS_QUIP -eq 1 ]]; then
-
-    rm -f quip-1.1.8.tar.gz
-
-    url="http://homes.cs.washington.edu/~dcjones/quip"
-    wget $WGET_OP $url/quip-1.1.8.tar.gz
-    tar -xzf quip-1.1.8.tar.gz
-    mv quip-1.1.8/ quip/
-    rm -f quip-1.1.8.tar.gz
-
-    cd quip/
-    ./configure
-    cd src/
-    make
-    cp quip ../
-    cd ../../
-fi
-
-
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   install DSRC -- FASTQ
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ $INS_DSRC -eq 1 ]]; then
-
-    rm -fr dsrc/
-
-    git clone https://github.com/lrog/dsrc.git
-    cd dsrc/
-    make
-    cp bin/dsrc .
-    cd ..
-fi
-
-
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   install FQC -- FASTQ
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ $INS_FQC -eq 1 ]]; then
-
-    rm -f FQC_LINUX_64bit.tar.gz
-
-    url="http://metagenomics.atc.tcs.com/Compression_archive/FQC"
-    wget $WGET_OP $url/FQC_LINUX_64bit.tar.gz
-    tar -xzf FQC_LINUX_64bit.tar.gz
-    mv FQC_LINUX_64bit/ fqc/
-    rm -f FQC_LINUX_64bit.tar.gz
-
-#    cd fqc/
-#    #cp 7za ../
-#    #cp fcompfastq ../
-#    #cp fdecompfastq ../
-#    #cp fqc ../
-#    cd ../
-fi
+    ProgMemoryStart "lzma" &
+    MEMPID=$!
+    (time lzma -d $1.lzma ) &> ../../results/LZMA_DT_$2
+    ProgMemoryStop $MEMPID "../../results/LZMA_DM_$2";
+}
+#function compLzma
+#{
+#    ProgMemoryStart "lzma" &
+#    MEMPID=$!
+#    (time lzma $1 ) &> ../../results/C_LZMA_$2
+#    ls -la $1.lzma > ../../results/BC_LZMA_$2
+#    ProgMemoryStop $MEMPID "../../results/MC_LZMA_$2";
+#    ProgMemoryStart "lzma" &
+#    MEMPID=$!
+#    (time lzma -d $1.lzma ) &> ../../results/D_LZMA_$2
+#    ProgMemoryStop $MEMPID "../../results/MD_LZMA_$2";
+#}
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
