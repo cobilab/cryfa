@@ -21,16 +21,16 @@ GET_HUMAN_FQ=0          # download Human in FASTQ
 GET_DENISOVA_FQ=0       # download Denisova in FASTQ
 GEN_SYNTH_FQ=0          # generate synthetic FASTQ dataset using XS
 
-### install methods
-# dependencies
-INS_DEPENDENCIES=1
-    INS_7ZIP=0
-    INS_CMAKE=0
-    INS_LIBBOOST=0
-    INS_LIBCURL=0
-    INS_VALGRIND=0
-    INS_ZLIB=0
+### dependencies
+INS_DEPENDENCIES=0      # if this value is 0, no dependencies will be installed
+    INS_7ZIP=1          # 7zip
+    INS_CMAKE=1         # cmake
+    INS_LIBBOOST=1      # boost
+    INS_LIBCURL=1       # curl
+    INS_VALGRIND=1      # valgrind
+    INS_ZLIB=1          # zlib
 
+### methods
 # FASTA
 INS_MFCOMPRESS=0 #error in make -- available on sapiens    # MFCompress
 INS_DELIMINATE=0 #error: site not reachable -- on sapiens    # DELIMINATE
@@ -38,6 +38,11 @@ INS_DELIMINATE=0 #error: site not reachable -- on sapiens    # DELIMINATE
 # FASTQ
 INS_FQZCOMP=0           # fqzcomp
 INS_QUIP=0              # quip
+INS_DSRC=0              # DSRC
+INS_FQC=0 #error: site not reachable -- on sapiens           # FQC
+
+
+
 
 # cryfa
 SHUFFLE=1               # cryfa: shuffle -- enabled by default
@@ -237,58 +242,68 @@ if [[ $INS_DEPENDENCIES -eq 1 ]]; then
 
     ### 7ZIP
     if [[ $INS_7ZIP -eq 1 ]]; then
-#        rm -f FILES
-        url="http://sourceforge.net/projects/p7zip/files/latest";
-        wget $WGET_OP $url/download?source=typ_redirect -O FILES.tar.bz2
-        tar -xjf FILES.tar.bz2
-        cd p7zip*/
-        make all
-        cd ..
+        sudo apt-get install p7zip-full
+
+##        rm -f FILES
+#        url="http://sourceforge.net/projects/p7zip/files/latest";
+#        wget $WGET_OP $url/download?source=typ_redirect -O FILES.tar.bz2
+#        tar -xjf FILES.tar.bz2
+#        cd p7zip*/
+#        make all
+#        cd ..
     fi
 
-#    ### CMAKE
-#    if [[ $INS_CMAKE -eq 1 ]]; then
-#        rm -f cmake-3.5.2-Linux-x86_64.sh
-#        wget https://cmake.org/files/v3.5/cmake-3.5.2-Linux-x86_64.sh
-#        . cmake-3.5.2-Linux-x86_64.sh
-#    fi
+    ### CMAKE
+    if [[ $INS_CMAKE -eq 1 ]]; then
+        sudo apt-get install cmake
+
+#        rm -f cmake-3.9.2-Linux-x86_64.sh cmake-3.9.2-Linux-x86_64.tar.gz
 #
-#    ### LIBBOOST
-#    if [[ $INS_LIBBOOST -eq 1 ]]; then
-#        sudo apt-get update ;
-#        sudo apt-get install libboost1.54-dev
-#        sudo apt-get install libboost-system1.54-dev
-#        sudo apt-get install libboost-system-dev
-#        sudo apt-get install libboost-filesystem1.54-dev
-#        sudo apt-get install libboost-filesystem-dev
-#        sudo apt-get install libboost-iostreams-dev
-#        sudo apt-get install libboost-iostreams1.54-dev
-#        sudo apt-get install libboost-thread1.54-dev
-#        sudo apt-get install libboost-thread-dev
-#    fi
-#
-#    ### LIBCURL
-#    if [[ $INS_LIBCURL -eq 1 ]]; then
-#        sudo apt-get install libcurl4-nss-dev
-#        sudo apt-get install libcurl-dev
-#    fi
-#
-#    ### VALGRIND AND MASSIF
-#    if [[ $INS_VALGRIND -eq 1 ]]; then
-#        sudo apt-get install valgrind
-#    fi
+#        url="https://cmake.org/files/v3.9"
+#        wget $url/cmake-3.9.2-Linux-x86_64.tar.gz
+#        tar -xzf cmake-3.9.2-Linux-x86_64.tar.gz
+##        cp cmake-3.9.2-Linux-x86_64/bin/cmake .
+#        rm cmake-3.9.2-Linux-x86_64.tar.gz
+    fi
+
+    ### LIBBOOST
+    if [[ $INS_LIBBOOST -eq 1 ]]; then
+        sudo apt-get update
+        sudo apt-get install libboost1.54-dev
+        sudo apt-get install libboost-system1.54-dev
+        sudo apt-get install libboost-system-dev
+        sudo apt-get install libboost-filesystem1.54-dev
+        sudo apt-get install libboost-filesystem-dev
+        sudo apt-get install libboost-iostreams-dev
+        sudo apt-get install libboost-iostreams1.54-dev
+        sudo apt-get install libboost-thread1.54-dev
+        sudo apt-get install libboost-thread-dev
+    fi
+
+    ### LIBCURL
+    if [[ $INS_LIBCURL -eq 1 ]]; then
+        sudo apt-get install libcurl4-nss-dev
+        sudo apt-get install libcurl-dev
+    fi
+
+    ### VALGRIND AND MASSIF
+    if [[ $INS_VALGRIND -eq 1 ]]; then
+        sudo apt-get install valgrind
+    fi
 
     ### ZLIB
     if [[ $INS_ZLIB -eq 1 ]]; then
-        rm -f zlib_1.2.8.dfsg.orig.tar.gz
+        sudo apt-get install zlib1g-dev
 
-        url="https://launchpad.net/ubuntu/+archive/primary/+files"
-        wget $WGET_OP $url/zlib_1.2.8.dfsg.orig.tar.gz
-        tar -xzf zlib_1.2.8.dfsg.orig.tar.gz
-        cd zlib-1.2.8/
-        ./configure
-        make
-        cd ..
+#        rm -f zlib_1.2.8.dfsg.orig.tar.gz
+#
+#        url="https://launchpad.net/ubuntu/+archive/primary/+files"
+#        wget $WGET_OP $url/zlib_1.2.8.dfsg.orig.tar.gz
+#        tar -xzf zlib_1.2.8.dfsg.orig.tar.gz
+#        cd zlib-1.2.8/
+#        ./configure
+#        make
+#        cd ..
     fi
 fi
 
@@ -366,6 +381,43 @@ if [[ $INS_QUIP -eq 1 ]]; then
     make
     cp quip ../
     cd ../../
+fi
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#   install DSRC -- FASTQ
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if [[ $INS_DSRC -eq 1 ]]; then
+
+    rm -fr dsrc/
+
+    git clone https://github.com/lrog/dsrc.git
+    cd dsrc/
+    make
+    cp bin/dsrc .
+    cd ..
+fi
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#   install FQC -- FASTQ
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if [[ $INS_FQC -eq 1 ]]; then
+
+    rm -f FQC_LINUX_64bit.tar.gz
+
+    url="http://metagenomics.atc.tcs.com/Compression_archive/FQC"
+    wget $WGET_OP $url/FQC_LINUX_64bit.tar.gz
+    tar -xzf FQC_LINUX_64bit.tar.gz
+    mv FQC_LINUX_64bit/ fqc/
+    rm -f FQC_LINUX_64bit.tar.gz
+
+#    cd fqc/
+#    #cp 7za ../
+#    #cp fcompfastq ../
+#    #cp fdecompfastq ../
+#    #cp fqc ../
+#    cd ../
 fi
 
 
