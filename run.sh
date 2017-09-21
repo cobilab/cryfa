@@ -38,9 +38,9 @@ INSTALL_METHODS=0
   INS_DELIMINATE=0      # DELIMINATE -- error: site not reachable
 
   # FASTQ
-  INS_FQZCOMP=0         # fqzcomp
-  INS_QUIP=0            # quip
-  INS_DSRC=0            # DSRC
+  INS_FQZCOMP=1         # fqzcomp
+  INS_QUIP=1            # quip
+  INS_DSRC=1            # DSRC
   INS_FQC=0             # FQC -- error: site not reachable
 
 ### run methods
@@ -48,10 +48,11 @@ RUN_METHODS=1
   # FASTA
   RUN_MFCOMPRESS=0      # MFCompress
   RUN_DELIMINATE=0      # DELIMINATE
-  RUN_GZIP_FA=1         # gzip
+  RUN_GZIP_FA=0         # gzip
+  RUN_LZMA_FA=0         # lzma
 
   # FASTQ
-  RUN_FQZCOMP=0         # fqzcomp
+  RUN_FQZCOMP=1         # fqzcomp
   RUN_QUIP=0            # quip
   RUN_DSRC=0            # DSRC
   RUN_FQC=0             # FQC
@@ -322,21 +323,26 @@ fi
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $INSTALL_METHODS -eq 1 ]]; then
 
+    ### create folders, if they don't already exist
+    if [[ ! -d $progs ]]; then mkdir -p $progs; fi
+
     #----------------------- FASTA -----------------------#
     ### MFCompress
     if [[ $INS_MFCOMPRESS -eq 1 ]]; then
+
         rm -f MFCompress-src-1.01.tgz
 
         url="http://sweet.ua.pt/ap/software/mfcompress"
         wget $WGET_OP $url/MFCompress-src-1.01.tgz
         tar -xzf MFCompress-src-1.01.tgz
-        mv MFCompress-src-1.01/ mfcompress
+        mv MFCompress-src-1.01/ mfcompress/    # rename
+        mv mfcompress/ progs/
         rm -f MFCompress-src-1.01.tgz
 
-        cd mfcompress/
+        cd progs/mfcompress/
         cp Makefile.linux Makefile    # make -f Makefile.linux
         make
-        cd ..
+        cd ../..
     fi
 
     ### DELIMINATE
@@ -347,7 +353,8 @@ if [[ $INSTALL_METHODS -eq 1 ]]; then
         url="http://metagenomics.atc.tcs.com/Compression_archive"
         wget $WGET_OP $url/DELIMINATE_LINUX_64bit.tar.gz
         tar -xzf DELIMINATE_LINUX_64bit.tar.gz
-        mv EXECUTABLES deliminate
+        mv EXECUTABLES deliminate    # rename
+        mv deliminate progs/
         rm -f DELIMINATE_LINUX_64bit.tar.gz
     fi
 
@@ -360,12 +367,14 @@ if [[ $INSTALL_METHODS -eq 1 ]]; then
         url="https://downloads.sourceforge.net/project/fqzcomp"
         wget $WGET_OP $url/fqzcomp-4.6.tar.gz
         tar -xzf fqzcomp-4.6.tar.gz
-        mv fqzcomp-4.6/ fqzcomp/
+        mv fqzcomp-4.6/ fqzcomp/    # rename
+        mv fqzcomp/ progs/
         rm -f fqzcomp-4.6.tar.gz
 
-        cd fqzcomp/
+        cd progs/fqzcomp/
         make
-        cd ..
+
+        cd ../..
     fi
 
     ### quip
@@ -376,15 +385,17 @@ if [[ $INSTALL_METHODS -eq 1 ]]; then
         url="http://homes.cs.washington.edu/~dcjones/quip"
         wget $WGET_OP $url/quip-1.1.8.tar.gz
         tar -xzf quip-1.1.8.tar.gz
-        mv quip-1.1.8/ quip/
+        mv quip-1.1.8/ quip/    # rename
+        mv quip/ progs/
         rm -f quip-1.1.8.tar.gz
 
-        cd quip/
+        cd progs/quip/
         ./configure
         cd src/
         make
         cp quip ../
-        cd ../../
+
+        cd ../../..
     fi
 
     ### DSRC
@@ -393,10 +404,13 @@ if [[ $INSTALL_METHODS -eq 1 ]]; then
         rm -fr dsrc/
 
         git clone https://github.com/lrog/dsrc.git
-        cd dsrc/
+        mv dsrc/ progs/
+
+        cd progs/dsrc/
         make
         cp bin/dsrc .
-        cd ..
+
+        cd ../..
     fi
 
     ### FQC
@@ -407,15 +421,9 @@ if [[ $INSTALL_METHODS -eq 1 ]]; then
         url="http://metagenomics.atc.tcs.com/Compression_archive/FQC"
         wget $WGET_OP $url/FQC_LINUX_64bit.tar.gz
         tar -xzf FQC_LINUX_64bit.tar.gz
-        mv FQC_LINUX_64bit/ fqc/
+        mv FQC_LINUX_64bit/ fqc/    # rename
+        mv fqc/ progs/
         rm -f FQC_LINUX_64bit.tar.gz
-
-    #    cd fqc/
-    #    #cp 7za ../
-    #    #cp fcompfastq ../
-    #    #cp fdecompfastq ../
-    #    #cp fqc ../
-    #    cd ../
     fi
 fi
 
@@ -479,7 +487,7 @@ if [[ $RUN_METHODS -eq 1 ]]; then
         in="${2##*/}"                       # input file name
         inwf="${in%.*}"                     # input file name without filetype
         ft="${in##*.}"                      # filetype of input file name
-        capsIn="$(echo $1 | tr a-z A-Z)"    # input file name in uppercase
+        capsIn="$(echo $1 | tr a-z A-Z)"    # input program's name in uppercase
 
         ### compress
         ProgMemoryStart $1 &
@@ -488,14 +496,23 @@ if [[ $RUN_METHODS -eq 1 ]]; then
         case $1 in                                                  # time
           "gzip")
               cFT="gz"          # compressed filetype
+              cCmd="gzip"       # compression command
               dProg="gunzip"    # decompress program name
-              (time gzip < $2 > $in.$cFT) &> $result/${capsIn}_CT__${inwf}_$ft
+              (time $cCmd < $2 > $in.$cFT) &> $result/${capsIn}_CT__${inwf}_$ft
               ;;
 
           "lzma")
-              cFT="lzma"        # compressed filetype
-              dProg="lzma"      # decompress program name
-              (time lzma < $2 > $in.$cFT) &> $result/${capsIn}_CT__${inwf}_$ft
+              cFT="lzma"
+              cCmd="lzma"
+              dProg="lzma"
+              (time $cCmd < $2 > $in.$cFT) &> $result/${capsIn}_CT__${inwf}_$ft
+              ;;
+
+          "fqzcomp")
+              cFT="fqz"
+              cCmd="./fqz_comp"
+              dProg="fqz_comp"
+              (time $cCmd < $2 > $in.$cFT) &> $result/${capsIn}_CT__${inwf}_$ft
               ;;
         esac
 
@@ -513,7 +530,12 @@ if [[ $RUN_METHODS -eq 1 ]]; then
               ;;
 
           "lzma")
-              dCmd="lzma -d"    # decompress command
+              dCmd="lzma -d"
+              (time $dCmd < $in.$cFT > $in) &> $result/${capsIn}_DT__${inwf}_$ft
+              ;;
+
+          "fqzcomp")
+              dCmd="./fqz_comp -d"
               (time $dCmd < $in.$cFT > $in) &> $result/${capsIn}_DT__${inwf}_$ft
               ;;
         esac
@@ -521,14 +543,46 @@ if [[ $RUN_METHODS -eq 1 ]]; then
         ProgMemoryStop $MEMPID $result/${capsIn}_DM__${inwf}_$ft    # memory
     }
 
+    ### run compress and decompress on datasets. $1: program's name
+    function runOnDataset
+    {
+        method=$1
+        mkdir -p progs/$method
+        cd progs/$method
+        ds=../../$dataset
+
+        case $2 in
+            "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
+compDecomp $method $ds/$FA/$HUMAN/in.fa;
 
 
-#mkdir -p progs/lzma
-#cd progs/lzma
-#ds=../../dataset
-#compDecomp lzma $ds/$FA/$HUMAN/in.fa
-##compDecomp lzma $ds/$FA/$HUMAN/$HUMAN-1.fa
-#cd ../..
+#                for i in $HS_SEQ_RUN; do
+#                    compDecomp $method $ds/$FA/$HUMAN/$HUMAN-$i.fa
+#                done
+#                compDecomp $method "$ds/$FA/$VIRUSES/viruses.fa"
+#                for i in {1..2};do
+#                    compDecomp $method "$ds/$FA/$Synth/Synth-$i.fa"
+#                done
+                ;;
+
+            "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
+compDecomp $method $ds/$FA/$HUMAN/temp.fq
+
+#                for i in ERR013103_1 ERR015767_2 ERR031905_2 \
+#                         SRR442469_1 SRR707196_1; do
+#                    compDecomp $method "$ds/$FQ/$HUMAN/$HUMAN-$i.fq"
+#                done
+#                for i in B1087 B1088 B1110 B1128 SL3003; do
+#                    compDecomp $method "$ds/$FQ/$DENISOVA/$DENISOVA-${i}_SR.fq"
+#                done
+#                for i in {1..2};do
+#                    compDecomp $method "$ds/$FQ/$Synth/Synth-$i.fq"
+#                done
+                ;;
+        esac
+
+        cd ../..
+    }
 
     #------------------ dataset availablity ------------------#
 #    # FASTA -- human - viruses - synthetic
@@ -555,38 +609,11 @@ if [[ $RUN_METHODS -eq 1 ]]; then
 #    if [[ $RUN_DELIMINATE -eq 1 ]]; then
 #    fi
 
-    # gzip
-    if [[ $RUN_GZIP_FA -eq 1 ]]; then
-        mkdir -p progs/gzip
-        cd progs/gzip
-        ds=../../dataset
-        compDecomp gzip $ds/$FA/$HUMAN/in.fa
-        #compDecomp gzip $ds/$FA/$HUMAN/$HUMAN-1.fa
-        cd ../..
-#        mkdir -p progs/gzip
-#        cd progs/gzip
-#        mv ../../datasets/human.fna .
-#        mv ../../datasets/chimpanze.fna .
-#        mv ../../datasets/rice5.fna .
-#        mv ../../datasets/camera.fa .
-#        #
-#        compGzip "human.fna" "HUMAN_FASTA"
-#        compGzip "chimpanze.fna" "CHIMPANZE_FASTA"
-#        compGzip "rice5.fna" "RICE_FASTA"
-#        compGzip "camera.fa" "CAMERA_FASTA"
-#        #
-#        mv camera.fa ../../datasets/
-#        mv rice5.fna ../../datasets/
-#        mv chimpanze.fna ../../datasets/
-#        mv human.fna ../../datasets/
-#        cd ../../
-    fi
+    if [[ $RUN_GZIP_FA -eq 1 ]]; then runOnDataset gzip fa; fi  # gzip
+    if [[ $RUN_LZMA_FA -eq 1 ]]; then runOnDataset lzma fa; fi  # lzma
 
-#
-#    ### FASTQ
-#    # fqzcomp
-#    if [[ $RUN_FQZCOMP -eq 1 ]]; then
-#    fi
+    ### FASTQ
+    if [[ $RUN_FQZCOMP -eq 1 ]]; then runOnDataset fqzcomp fq; fi    # fqzcomp
 #
 #    # quip
 #    if [[ $RUN_QUIP -eq 1 ]]; then
