@@ -43,7 +43,17 @@ INSTALL_METHODS=0
   INS_FQC=0             # FQC -- error: site not reachable
 
 ### run methods
+RUN_METHODS=1
+  # FASTA
+  RUN_MFCOMPRESS=0      # MFCompress
+  RUN_DELIMINATE=0      # DELIMINATE
+  RUN_GZIP_FA=1         # gzip
 
+  # FASTQ
+  RUN_FQZCOMP=0         # fqzcomp
+  RUN_QUIP=0            # quip
+  RUN_DSRC=0            # DSRC
+  RUN_FQC=0             # FQC
 
 # cryfa
 SHUFFLE=1               # cryfa: shuffle -- enabled by default
@@ -57,6 +67,8 @@ CRYFA_COMP_DECOMP_COMPARE=0   # test -- cryfa: comp. + decomp. + compare results
 #   folders
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 dataset="dataset"
+progs="progs"
+result="result"
 FA="FA"
 FQ="FQ"
 XS="XS"
@@ -98,6 +110,8 @@ INF="dat"         # information (data) file type
 #   create folders, if they don't already exist
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ ! -d $dataset ]]; then mkdir -p $dataset; fi
+if [[ ! -d $progs   ]]; then mkdir -p $progs;   fi
+if [[ ! -d $result  ]]; then mkdir -p $result;  fi
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -181,13 +195,13 @@ if [[ $GET_HUMAN_FQ -eq 1 ]]; then
     # ERR031905_2: HG00501--Female--CHS (Han Chinese South)--Exome
     # SRR442469_1: HG02108--Female--ACB (African Caribbean in Barbados)--Low co.
     # SRR707196_1: HG00126--Male--GBR (British in England and Scotland)--Exome
-    for tuple in "ERR013 ERR013103 ERR013103_1" "ERR015 ERR015767 ERR015767_2"\
-                 "ERR031 ERR031905 ERR031905_2" "SRR442 SRR442469 SRR442469_1"\
-                 "SRR707 SRR707196 SRR707196_1"; do
-        set $tuple
-        wget $WGET_OP $HUMAN_FQ_URL/$1/$2/$3.fastq.gz;
-        gunzip < $3.fastq.gz > $dataset/$FQ/$HUMAN/$HUMAN-$3.fq;
-        rm $3.fastq.gz;
+    for dual in "ERR013/ERR013103 ERR013103_1" "ERR015/ERR015767 ERR015767_2"\
+                "ERR031/ERR031905 ERR031905_2" "SRR442/SRR442469 SRR442469_1"\
+                "SRR707/SRR707196 SRR707196_1"; do
+        set $dual
+        wget $WGET_OP $HUMAN_FQ_URL/$1/$2.fastq.gz;
+        gunzip < $2.fastq.gz > $dataset/$FQ/$HUMAN/$HUMAN-$2.fq;
+        rm $2.fastq.gz;
     done
 fi
 
@@ -314,7 +328,7 @@ fi
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $INSTALL_METHODS -eq 1 ]]; then
 
-    ###################   FASTA   ###################
+    #----------------------- FASTA -----------------------#
     ### MFCompress
     if [[ $INS_MFCOMPRESS -eq 1 ]]; then
         rm -f MFCompress-src-1.01.tgz
@@ -343,7 +357,7 @@ if [[ $INSTALL_METHODS -eq 1 ]]; then
         rm -f DELIMINATE_LINUX_64bit.tar.gz
     fi
 
-    ###################   FASTQ   ###################
+    #----------------------- FASTQ -----------------------#
     ### fqzcomp
     if [[ $INS_FQZCOMP -eq 1 ]]; then
 
@@ -413,87 +427,185 @@ fi
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   functions
+#   run methods
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-### check if file exists
-function FExists
-{
-  file="$1"
-  if [[ ! -e $file ]]; then
-    echo "Warning: The file \"$file\" is not available.";
-    return;
-  fi
-}
+if [[ $RUN_METHODS -eq 1 ]]; then
+#FExists -> isAvail
+    #----------------------- functions -----------------------#
+    ### check if a file is available
+    function FExists
+    {
+      file="$1"
+      if [[ ! -e $file ]]; then
+        echo "Warning: The file \"$file\" is not available.";
+        return;
+      fi
+    }
 
-### memory1
-function ProgMemoryStart
-{
-    echo "0" > mem_ps;
-    while true; do
-        ps aux | grep $1 | awk '{ print $6; }' | sort -V | tail -n 1 >> mem_ps;
-        sleep 5;
-    done
-}
-function ProgMemoryStop
-{
-    kill $1 >/dev/null 2>&1
-    cat mem_ps | sort -V | tail -n 1 > $2;
-}
+    ### memory1
+    function ProgMemoryStart
+    {
+        echo "0" > mem_ps;
+        while true; do
+            ps aux | grep $1 | awk '{ print $6; }' | \
+            sort -V | tail -n 1 >> mem_ps;
+            sleep 5;
+        done
+    }
+    function ProgMemoryStop
+    {
+        kill $1 >/dev/null 2>&1
+        cat mem_ps | sort -V | tail -n 1 > $2;
+    }
 
-### memory2
-function ProgMemory2
-{
-    valgrind --tool=massif --pages-as-heap=yes --massif-out-file=massif.out ./$1
-    cat massif.out | grep mem_heap_B | sed -e 's/mem_heap_B=\(.*\)/\1/' | \
-    sort -g | tail -n 1
-}
+    ### memory2
+    function ProgMemory2
+    {
+        valgrind --tool=massif --pages-as-heap=yes \
+                 --massif-out-file=massif.out ./$1
+        cat massif.out | grep mem_heap_B | sed -e 's/mem_heap_B=\(.*\)/\1/' | \
+        sort -g | tail -n 1
+    }
 
-### time
-function ProgTime
-{
-    time ./$1
-}
+    ### time
+    function ProgTime
+    {
+        time ./$1
+    }
 
-### gzip method
-function compGzip
-{
-    ProgMemoryStart "gzip" &
-    MEMPID=$!
-    (time gzip $1 ) &> ../../results/C_GZIP_$2
-    ls -la $1.gz > ../../results/BC_GZIP_$2
-    ProgMemoryStop $MEMPID "../../results/MC_GZIP_$2";
-    ProgMemoryStart "gunzip" &
-    MEMPID=$!
-    (time gunzip $1.gz ) &> ../../results/D_GZIP_$2
-    ProgMemoryStop $MEMPID "../../results/MD_GZIP_$2";
-}
+    ### gzip method
+    function compGzip
+    {
+        ProgMemoryStart "gzip" &
+        MEMPID=$!
+        (time gzip $1 ) &> ../../results/C_GZIP_$2
+        ls -la $1.gz > ../../results/BC_GZIP_$2
+        ProgMemoryStop $MEMPID "../../results/MC_GZIP_$2";
+        ProgMemoryStart "gunzip" &
+        MEMPID=$!
+        (time gunzip $1.gz ) &> ../../results/D_GZIP_$2
+        ProgMemoryStop $MEMPID "../../results/MD_GZIP_$2";
+    }
 
-### lzma method
-function compLzma
-{
-    ProgMemoryStart "lzma" &
-    MEMPID=$!
-    (time lzma $1 ) &> ../../results/LZMA_CT_$2
-    ls -la $1.lzma > ../../results/LZMA_CB_$2
-    ProgMemoryStop $MEMPID "../../results/LZMA_CM_$2";
+    ### lzma method
+    function compLzma
+    {
+        ProgMemoryStart "lzma" &
+        MEMPID=$!
+        (time lzma $1 ) &> ../../results/LZMA_CT_$2
+        ls -la $1.lzma > ../../results/LZMA_CB_$2
+        ProgMemoryStop $MEMPID "../../results/LZMA_CM_$2";
 
-    ProgMemoryStart "lzma" &
-    MEMPID=$!
-    (time lzma -d $1.lzma ) &> ../../results/LZMA_DT_$2
-    ProgMemoryStop $MEMPID "../../results/LZMA_DM_$2";
-}
-#function compLzma
-#{
-#    ProgMemoryStart "lzma" &
-#    MEMPID=$!
-#    (time lzma $1 ) &> ../../results/C_LZMA_$2
-#    ls -la $1.lzma > ../../results/BC_LZMA_$2
-#    ProgMemoryStop $MEMPID "../../results/MC_LZMA_$2";
-#    ProgMemoryStart "lzma" &
-#    MEMPID=$!
-#    (time lzma -d $1.lzma ) &> ../../results/D_LZMA_$2
-#    ProgMemoryStop $MEMPID "../../results/MD_LZMA_$2";
-#}
+        ProgMemoryStart "lzma" &
+        MEMPID=$!
+        (time lzma -d $1.lzma ) &> ../../results/LZMA_DT_$2
+        ProgMemoryStop $MEMPID "../../results/LZMA_DM_$2";
+    }
+
+
+
+
+    ### compress
+    # $1: program's name; $2: input data
+    function compress
+    {
+    result="../../results"
+    in="${2##*/}"
+    t1="${in%.*}"
+    t2="${in##*.}"
+
+echo $in
+echo $t1
+echo $t2
+
+#        ProgMemoryStart $1 &
+#        MEMPID=$!
+#        (time gzip $2 ) &> $result/GZIP_CT_$2
+#        ls -la $1.gz > $result/GZIP_BC_$2
+#        ProgMemoryStop $MEMPID "$result/GZIP_MC_$2";
+    }
+    ### decompress
+    # $1: program's name; $2: input data; $3:
+    function decompress
+    {
+        ProgMemoryStart "gunzip" &
+        MEMPID=$!
+        (time gunzip $1.gz ) &> ../../results/D_GZIP_$2
+        ProgMemoryStop $MEMPID "../../results/MD_GZIP_$2";
+    }
+#foo="../../dataset/FA/HS/HS-1.fa"
+#bar="${foo##*/}"
+#m="${bar%.*}"
+#k="${bar##*.}"
+#echo $bar
+#echo $m
+#echo $k
+compress "gzip" "$../../dataset/$FA/$HUMAN/$HUMAN-1.fa"
+
+    #------------------ dataset availablity ------------------#
+#    # FASTA -- human - viruses - synthetic
+#    for i in $HS_SEQ_RUN; do FExists "$dataset/$FA/$HUMAN/$HUMAN-$i.fa"; done
+#    FExists "$dataset/$FA/$VIRUSES/viruses.fa"
+#    for i in {1..2}; do FExists "$dataset/$FA/$Synth/Synth-$i.fa"; done
+#
+#    # FASTQ -- human - Denisova - synthetic
+#    for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 SRR707196_1; do
+#        FExists "$dataset/$FQ/$HUMAN/$HUMAN-$i.fq"
+#    done
+#    for i in B1087 B1088 B1110 B1128 SL3003; do
+#        FExists "$dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.fq"
+#    done
+#    for i in {1..2}; do FExists "$dataset/$FQ/$Synth/Synth-$i.fq"; done
+
+    #-------------------------- run --------------------------#
+    ### FASTA
+#    # MFCompress
+#    if [[ $RUN_MFCOMPRESS -eq 1 ]]; then
+#    fi
+#
+#    # DELIMINATE
+#    if [[ $RUN_DELIMINATE -eq 1 ]]; then
+#    fi
+
+    # gzip
+#    if [[ $RUN_GZIP_FA -eq 1 ]]; then
+#        mkdir -p progs/gzip
+#        cd progs/gzip
+#        mv ../../datasets/human.fna .
+#        mv ../../datasets/chimpanze.fna .
+#        mv ../../datasets/rice5.fna .
+#        mv ../../datasets/camera.fa .
+#        #
+#        compGzip "human.fna" "HUMAN_FASTA"
+#        compGzip "chimpanze.fna" "CHIMPANZE_FASTA"
+#        compGzip "rice5.fna" "RICE_FASTA"
+#        compGzip "camera.fa" "CAMERA_FASTA"
+#        #
+#        mv camera.fa ../../datasets/
+#        mv rice5.fna ../../datasets/
+#        mv chimpanze.fna ../../datasets/
+#        mv human.fna ../../datasets/
+#        cd ../../
+#    fi
+
+#
+#    ### FASTQ
+#    # fqzcomp
+#    if [[ $RUN_FQZCOMP -eq 1 ]]; then
+#    fi
+#
+#    # quip
+#    if [[ $RUN_QUIP -eq 1 ]]; then
+#    fi
+#
+#    # DSRC
+#    if [[ $RUN_DSRC -eq 1 ]]; then
+#    fi
+#
+#    # FQC
+#    if [[ $RUN_FQC -eq 1 ]]; then
+#    fi
+fi
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
