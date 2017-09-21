@@ -14,12 +14,13 @@
 N_THREADS=8             # number of threads
 
 ### datasets
-GET_HUMAN_FA=0          # download Human choromosomes in FASTA
-GET_VIRUSES_FA=0        # download Viruses in FASTA using downloadViruses.pl
-GEN_SYNTH_FA=0          # generate synthetic FASTA dataset using XS
-GET_HUMAN_FQ=0          # download Human in FASTQ
-GET_DENISOVA_FQ=0       # download Denisova in FASTQ
-GEN_SYNTH_FQ=0          # generate synthetic FASTQ dataset using XS
+DOWNLOAD_DATASETS=0
+  DL_HUMAN_FA=0         # download Human choromosomes in FASTA
+  DL_VIRUSES_FA=0       # download Viruses in FASTA using downloadViruses.pl
+  GEN_SYNTH_FA=0        # generate synthetic FASTA dataset using XS
+  DL_HUMAN_FQ=0         # download Human in FASTQ
+  DL_DENISOVA_FQ=0      # download Denisova in FASTQ
+  GEN_SYNTH_FQ=0        # generate synthetic FASTQ dataset using XS
 
 ### dependencies
 INSTALL_DEPENDENCIES=0  # if this value is 0, no dependencies will be installed
@@ -107,148 +108,141 @@ INF="dat"         # information (data) file type
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   create folders, if they don't already exist
+#   download datasets
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ ! -d $dataset ]]; then mkdir -p $dataset; fi
-if [[ ! -d $progs   ]]; then mkdir -p $progs;   fi
-if [[ ! -d $result  ]]; then mkdir -p $result;  fi
+if [[ $DOWNLOAD_DATASETS -eq 1 ]]; then
 
+    ### create a folder, if it doesn't already exist
+    if [[ ! -d $dataset ]]; then mkdir -p $dataset; fi
 
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   get human FASTA -- 3.1 GB
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ $GET_HUMAN_FA -eq 1 ]]; then
+    #----------------------- FASTA -----------------------#
+    ### human -- 3.1 GB
+    if [[ $DL_HUMAN_FA -eq 1 ]]; then
 
-    ### create a folder for FASTA files and one for human dataset
-    if [[ ! -d $dataset/$FA/$HUMAN ]]; then mkdir -p $dataset/$FA/$HUMAN; fi
+        # create a folder for FASTA files and one for human dataset
+        if [[ ! -d $dataset/$FA/$HUMAN ]]; then mkdir -p $dataset/$FA/$HUMAN; fi
 
-    ### download
-    for i in {1..22} X Y MT; do
-        wget $WGET_OP $HUMAN_FA_URL/$HUMAN_CHROMOSOME$i.fa.gz;
-        gunzip < $HUMAN_CHROMOSOME$i.fa.gz > $dataset/$FA/$HUMAN/$HUMAN-$i.fa;
-        rm $HUMAN_CHROMOSOME$i.fa.gz
-    done
+        # download
+        for i in {1..22} X Y MT; do
+            wget $WGET_OP $HUMAN_FA_URL/$HUMAN_CHROMOSOME$i.fa.gz;
+            gunzip< $HUMAN_CHROMOSOME$i.fa.gz > $dataset/$FA/$HUMAN/$HUMAN-$i.fa
+            rm $HUMAN_CHROMOSOME$i.fa.gz
+        done
 
-    for dual in "alts AL" "unplaced UP" "unlocalized UL"; do
-        set $dual
-        wget $WGET_OP $HUMAN_FA_URL/$HUMAN_CHR_PREFIX$1.fa.gz;
-        gunzip < $HUMAN_CHR_PREFIX$1.fa.gz > $dataset/$FA/$HUMAN/$HUMAN-$2.fa;
-        rm $HUMAN_CHR_PREFIX$1.fa.gz;
-    done
-fi
-
-
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   get viruses FASTA -- 350 MB
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ $GET_VIRUSES_FA -eq 1 ]]; then
-
-    ### create a folder for FASTA files and one for viruses dataset
-    if [[ ! -d $dataset/$FA/$VIRUSES ]]; then mkdir -p $dataset/$FA/$VIRUSES; fi
-
-    ### download
-    perl ./scripts/DownloadViruses.pl
-
-    ### move downloaded file to dataset folder
-    mv viruses.fa $dataset/$FA/$VIRUSES
-fi
-
-
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   generate synthetic dataset in FASTA -- 4 GB
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ $GEN_SYNTH_FA -eq 1 ]]; then
-
-    INSTALL_XS=1
-
-    ### create a folder for FASTA files and one for synthetic dataset
-    if [[ ! -d $dataset/$FA/$Synth ]]; then mkdir -p $dataset/$FA/$Synth; fi
-    
-    ### install XS
-    if [[ $INSTALL_XS -eq 1 ]]; then
-        rm -fr $XS
-        git clone https://github.com/pratas/XS.git
-        cd $XS
-        make
-        cd ..
+        for dual in "alts AL" "unplaced UP" "unlocalized UL"; do
+            set $dual
+            wget $WGET_OP $HUMAN_FA_URL/$HUMAN_CHR_PREFIX$1.fa.gz;
+            gunzip< $HUMAN_CHR_PREFIX$1.fa.gz > $dataset/$FA/$HUMAN/$HUMAN-$2.fa
+            rm $HUMAN_CHR_PREFIX$1.fa.gz;
+        done
     fi
 
-    ### generate dataset -- 2.3 GB - 1.7 GB
-    XS/XS -eo -es -t 1 -n 4000000 -ld 70:1000 -f 0.2,0.2,0.2,0.2,0.2  Synth-1.fa
-    XS/XS -eo -es -t 2 -n 3000000 -ls 500 -f 0.23,0.23,0.23,0.23,0.08 Synth-2.fa
+    ### viruses -- 350 MB
+    if [[ $DL_VIRUSES_FA -eq 1 ]]; then
 
-    for i in {1..2}; do mv Synth-$i.fa $dataset/$FA/$Synth/Synth-$i.fa; done
-fi
+        # create a folder for FASTA files and one for viruses dataset
+        if [[ ! -d $dataset/$FA/$VIRUSES ]]; then
+            mkdir -p $dataset/$FA/$VIRUSES;
+        fi
 
+        # download
+        perl ./scripts/DownloadViruses.pl
 
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   get Human in FASTQ -- 27 GB
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ $GET_HUMAN_FQ -eq 1 ]]; then
-
-    ### create a folder for FASTQ files and one for human dataset
-    if [[ ! -d $dataset/$FQ/$HUMAN ]]; then mkdir -p $dataset/$FQ/$HUMAN; fi
-
-    ### download -- 4.6 GB - 1.4 GB - 12 GB - 488 MB - 8.4 GB
-    # ERR013103_1: HG00190--Male--FIN (Finnish in Finland)--Low coverage WGS
-    # ERR015767_2: HG00638--Female--PUR (Puerto Rican in Puerto Rico)--Low cov.
-    # ERR031905_2: HG00501--Female--CHS (Han Chinese South)--Exome
-    # SRR442469_1: HG02108--Female--ACB (African Caribbean in Barbados)--Low co.
-    # SRR707196_1: HG00126--Male--GBR (British in England and Scotland)--Exome
-    for dual in "ERR013/ERR013103 ERR013103_1" "ERR015/ERR015767 ERR015767_2"\
-                "ERR031/ERR031905 ERR031905_2" "SRR442/SRR442469 SRR442469_1"\
-                "SRR707/SRR707196 SRR707196_1"; do
-        set $dual
-        wget $WGET_OP $HUMAN_FQ_URL/$1/$2.fastq.gz;
-        gunzip < $2.fastq.gz > $dataset/$FQ/$HUMAN/$HUMAN-$2.fq;
-        rm $2.fastq.gz;
-    done
-fi
-
-
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   get Denisova in FASTQ -- 172 GB
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ $GET_DENISOVA_FQ -eq 1 ]]; then
-
-    ### create a folder for FASTQ files and one for Denisova dataset
-    if [[ ! -d $dataset/$FQ/$DENISOVA ]];then mkdir -p $dataset/$FQ/$DENISOVA;fi
-
-    ### download -- 1.7 GB - 1.2 GB - 59 GB - 51 GB - 59 GB
-    for i in B1087 B1088 B1110 B1128 SL3003; do
-        wget $WGET_OP $DENISOVA_FQ_URL/${i}_SR.txt.gz;
-        gunzip < ${i}_SR.txt.gz > $dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.fq;
-        rm ${i}_SR.txt.gz;
-    done
-fi
-
-
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   generate synthetic dataset in FASTQ -- 6.2 GB
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ $GEN_SYNTH_FQ -eq 1 ]]; then
-
-    INSTALL_XS=1
-
-    ### create a folder for FASTQ files and one for synthetic dataset
-    if [[ ! -d $dataset/$FQ/$Synth ]]; then mkdir -p $dataset/$FQ/$Synth; fi
-
-    ### install XS
-    if [[ $INSTALL_XS -eq 1 ]]; then
-        rm -fr $XS
-        git clone https://github.com/pratas/XS.git
-        cd $XS
-        make
-        cd ..
+        # move downloaded file to dataset folder
+        mv viruses.fa $dataset/$FA/$VIRUSES
     fi
 
-    ### generate dataset -- 4.2 GB - 2 GB
-    XS/XS -t 1 -n 16000000 -ld 70:100 -o -f 0.2,0.2,0.2,0.2,0.2      Synth-1.fq
-    XS/XS -t 2 -n 10000000 -ls 70 -qt 2 -f 0.23,0.23,0.23,0.23,0.08  Synth-2.fq
+    ### synthetic -- 4 GB
+    if [[ $GEN_SYNTH_FA -eq 1 ]]; then
 
-    for i in {1..2}; do mv Synth-$i.fq $dataset/$FQ/$Synth/Synth-$i.fq; done
+        INSTALL_XS=1
+
+        # create a folder for FASTA files and one for synthetic dataset
+        if [[ ! -d $dataset/$FA/$Synth ]]; then mkdir -p $dataset/$FA/$Synth; fi
+
+        # install XS
+        if [[ $INSTALL_XS -eq 1 ]]; then
+            rm -fr $XS
+            git clone https://github.com/pratas/XS.git
+            cd $XS
+            make
+            cd ..
+        fi
+
+        # generate dataset -- 2.3 GB - 1.7 GB
+        XS/XS -eo -es -t 1 -n 4000000 -ld 70:1000 \
+                                         -f 0.2,0.2,0.2,0.2,0.2       Synth-1.fa
+        XS/XS -eo -es -t 2 -n 3000000 -ls 500 \
+                                         -f 0.23,0.23,0.23,0.23,0.08  Synth-2.fa
+
+        for i in {1..2}; do mv Synth-$i.fa $dataset/$FA/$Synth/Synth-$i.fa; done
+    fi
+
+    #----------------------- FASTQ -----------------------#
+    ### human -- 27 GB
+    if [[ $DL_HUMAN_FQ -eq 1 ]]; then
+
+        # create a folder for FASTQ files and one for human dataset
+        if [[ ! -d $dataset/$FQ/$HUMAN ]]; then mkdir -p $dataset/$FQ/$HUMAN; fi
+
+        # download -- 4.6 GB - 1.4 GB - 12 GB - 488 MB - 8.4 GB
+        # ERR013103_1: HG00190-Male-FIN (Finnish in Finland)-Low coverage WGS
+        # ERR015767_2: HG00638-Female-PUR (Puerto Rican in Puerto Rico)-Low cov.
+        # ERR031905_2: HG00501-Female-CHS (Han Chinese South)-Exome
+        # SRR442469_1: HG02108-Female-ACB (African Caribbean in Barbados)-Low c.
+        # SRR707196_1: HG00126-Male-GBR (British in England and Scotland)-Exome
+        for dual in "ERR013/ERR013103 ERR013103_1"\
+               "ERR015/ERR015767 ERR015767_2" "ERR031/ERR031905 ERR031905_2"\
+               "SRR442/SRR442469 SRR442469_1" "SRR707/SRR707196 SRR707196_1"; do
+            set $dual
+            wget $WGET_OP $HUMAN_FQ_URL/$1/$2.fastq.gz;
+            gunzip < $2.fastq.gz > $dataset/$FQ/$HUMAN/$HUMAN-$2.fq;
+            rm $2.fastq.gz;
+        done
+    fi
+
+    ### Denisova -- 172 GB
+    if [[ $DL_DENISOVA_FQ -eq 1 ]]; then
+
+        # create a folder for FASTQ files and one for Denisova dataset
+        if [[ ! -d $dataset/$FQ/$DENISOVA ]]; then
+            mkdir -p $dataset/$FQ/$DENISOVA;
+        fi
+
+        # download -- 1.7 GB - 1.2 GB - 59 GB - 51 GB - 59 GB
+        for i in B1087 B1088 B1110 B1128 SL3003; do
+            wget $WGET_OP $DENISOVA_FQ_URL/${i}_SR.txt.gz;
+            gunzip< ${i}_SR.txt.gz > $dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.fq
+            rm ${i}_SR.txt.gz;
+        done
+    fi
+
+    ### synthetic -- 6.2 GB
+    if [[ $GEN_SYNTH_FQ -eq 1 ]]; then
+
+        INSTALL_XS=1
+
+        # create a folder for FASTQ files and one for synthetic dataset
+        if [[ ! -d $dataset/$FQ/$Synth ]]; then mkdir -p $dataset/$FQ/$Synth; fi
+
+        # install XS
+        if [[ $INSTALL_XS -eq 1 ]]; then
+            rm -fr $XS
+            git clone https://github.com/pratas/XS.git
+            cd $XS
+            make
+            cd ..
+        fi
+
+        # generate dataset -- 4.2 GB - 2 GB
+        XS/XS -t 1 -n 16000000 -ld 70:100 -o \
+                                         -f 0.2,0.2,0.2,0.2,0.2       Synth-1.fq
+        XS/XS -t 2 -n 10000000 -ls 70 -qt 2 \
+                                         -f 0.23,0.23,0.23,0.23,0.08  Synth-2.fq
+
+        for i in {1..2}; do mv Synth-$i.fq $dataset/$FQ/$Synth/Synth-$i.fq; done
+    fi
 fi
-
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #   install dependencies
@@ -431,6 +425,11 @@ fi
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $RUN_METHODS -eq 1 ]]; then
 #FExists -> isAvail
+
+    ### create folders, if they don't already exist
+    if [[ ! -d $progs   ]]; then mkdir -p $progs;   fi
+    if [[ ! -d $result  ]]; then mkdir -p $result;  fi
+
     #----------------------- functions -----------------------#
     ### check if a file is available
     function FExists
@@ -473,74 +472,63 @@ if [[ $RUN_METHODS -eq 1 ]]; then
         time ./$1
     }
 
-    ### gzip method
-    function compGzip
+    ### compress and decompress. $1: program's name; $2: input data
+    function compDecomp
     {
-        ProgMemoryStart "gzip" &
+        result="../../result"
+        in="${2##*/}"                       # input file name
+        inwf="${in%.*}"                     # input file name without filetype
+        ft="${in##*.}"                      # filetype of input file name
+        capsIn="$(echo $1 | tr a-z A-Z)"    # input file name in uppercase
+
+        ### compress
+        ProgMemoryStart $1 &
         MEMPID=$!
-        (time gzip $1 ) &> ../../results/C_GZIP_$2
-        ls -la $1.gz > ../../results/BC_GZIP_$2
-        ProgMemoryStop $MEMPID "../../results/MC_GZIP_$2";
-        ProgMemoryStart "gunzip" &
+
+        case $1 in                                                  # time
+          "gzip")
+              cFT="gz"          # compressed filetype
+              dProg="gunzip"    # decompress program name
+              (time gzip < $2 > $in.$cFT) &> $result/${capsIn}_CT__${inwf}_$ft
+              ;;
+
+          "lzma")
+              cFT="lzma"        # compressed filetype
+              dProg="lzma"      # decompress program name
+              (time lzma < $2 > $in.$cFT) &> $result/${capsIn}_CT__${inwf}_$ft
+              ;;
+        esac
+
+        ls -la $in.$cFT > $result/${capsIn}_CB__${inwf}_$ft         # size
+        ProgMemoryStop $MEMPID $result/${capsIn}_CM__${inwf}_$ft    # memory
+
+        ### decompress
+        ProgMemoryStart $dProg &
         MEMPID=$!
-        (time gunzip $1.gz ) &> ../../results/D_GZIP_$2
-        ProgMemoryStop $MEMPID "../../results/MD_GZIP_$2";
+
+        case $1 in                                                  # time
+          "gzip")
+              dCmd="gunzip"     # decompress command
+              (time $dCmd < $in.$cFT > $in) &> $result/${capsIn}_DT__${inwf}_$ft
+              ;;
+
+          "lzma")
+              dCmd="lzma -d"    # decompress command
+              (time $dCmd < $in.$cFT > $in) &> $result/${capsIn}_DT__${inwf}_$ft
+              ;;
+        esac
+
+        ProgMemoryStop $MEMPID $result/${capsIn}_DM__${inwf}_$ft    # memory
     }
 
-    ### lzma method
-    function compLzma
-    {
-        ProgMemoryStart "lzma" &
-        MEMPID=$!
-        (time lzma $1 ) &> ../../results/LZMA_CT_$2
-        ls -la $1.lzma > ../../results/LZMA_CB_$2
-        ProgMemoryStop $MEMPID "../../results/LZMA_CM_$2";
-
-        ProgMemoryStart "lzma" &
-        MEMPID=$!
-        (time lzma -d $1.lzma ) &> ../../results/LZMA_DT_$2
-        ProgMemoryStop $MEMPID "../../results/LZMA_DM_$2";
-    }
 
 
-
-
-    ### compress
-    # $1: program's name; $2: input data
-    function compress
-    {
-    result="../../results"
-    in="${2##*/}"
-    t1="${in%.*}"
-    t2="${in##*.}"
-
-echo $in
-echo $t1
-echo $t2
-
-#        ProgMemoryStart $1 &
-#        MEMPID=$!
-#        (time gzip $2 ) &> $result/GZIP_CT_$2
-#        ls -la $1.gz > $result/GZIP_BC_$2
-#        ProgMemoryStop $MEMPID "$result/GZIP_MC_$2";
-    }
-    ### decompress
-    # $1: program's name; $2: input data; $3:
-    function decompress
-    {
-        ProgMemoryStart "gunzip" &
-        MEMPID=$!
-        (time gunzip $1.gz ) &> ../../results/D_GZIP_$2
-        ProgMemoryStop $MEMPID "../../results/MD_GZIP_$2";
-    }
-#foo="../../dataset/FA/HS/HS-1.fa"
-#bar="${foo##*/}"
-#m="${bar%.*}"
-#k="${bar##*.}"
-#echo $bar
-#echo $m
-#echo $k
-compress "gzip" "$../../dataset/$FA/$HUMAN/$HUMAN-1.fa"
+#mkdir -p progs/lzma
+#cd progs/lzma
+#ds=../../dataset
+#compDecomp lzma $ds/$FA/$HUMAN/in.fa
+##compDecomp lzma $ds/$FA/$HUMAN/$HUMAN-1.fa
+#cd ../..
 
     #------------------ dataset availablity ------------------#
 #    # FASTA -- human - viruses - synthetic
@@ -568,7 +556,13 @@ compress "gzip" "$../../dataset/$FA/$HUMAN/$HUMAN-1.fa"
 #    fi
 
     # gzip
-#    if [[ $RUN_GZIP_FA -eq 1 ]]; then
+    if [[ $RUN_GZIP_FA -eq 1 ]]; then
+        mkdir -p progs/gzip
+        cd progs/gzip
+        ds=../../dataset
+        compDecomp gzip $ds/$FA/$HUMAN/in.fa
+        #compDecomp gzip $ds/$FA/$HUMAN/$HUMAN-1.fa
+        cd ../..
 #        mkdir -p progs/gzip
 #        cd progs/gzip
 #        mv ../../datasets/human.fna .
@@ -586,7 +580,7 @@ compress "gzip" "$../../dataset/$FA/$HUMAN/$HUMAN-1.fa"
 #        mv chimpanze.fna ../../datasets/
 #        mv human.fna ../../datasets/
 #        cd ../../
-#    fi
+    fi
 
 #
 #    ### FASTQ
