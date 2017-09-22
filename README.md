@@ -24,10 +24,15 @@ cmake . | make | ./cryfa -t 8 -k pass.txt in.fa > out
 ```
 If you want to download datasets and compare cryfa with other methods, you should set the parameters in **run.sh**, which is an all-in-one bash script.
 
-Finally, run the **run.sh** script using:
+Finally, you can run the **run.sh** script using:
+```bash
+./run.sh
+```
+or
 ```bash
 ./run.sh INPUT_FILE > OUTPUT_FILE
 ```
+for a different parameter setting.
 Please note that when the parameter *CRYFA_COMP_DECOMP_COMPARE* is set to 1, compression, decompression and comparing results will be carried out. In this case, **run.sh** script must be run without redirection symbol, *>*, in the following way:
 ```bash
 ./run.sh INPUT_FILE OUTPUT_FILE

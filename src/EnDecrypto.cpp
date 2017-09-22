@@ -151,7 +151,7 @@ void EnDecrypto::compressFA ()
     // compression duration in seconds
     std::chrono::duration<double> elapsed = finishTime - startTime;
     
-    cerr << (verbose ? "Compaction done" : "Done") << " in "
+    cerr << (verbose ? "Compaction done," : "Done,") << " in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
     
     // close/delete input/output files
@@ -426,7 +426,7 @@ void EnDecrypto::compressFQ ()
     // compression duration in seconds
     std::chrono::duration<double> elapsed = finishTime - startTime;
     
-    cerr << (verbose ? "Compaction done" : "Done") << " in "
+    cerr << (verbose ? "Compaction done," : "Done,") << " in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
     
     // cout encrypted content
@@ -560,7 +560,7 @@ inline void EnDecrypto::encrypt ()
     // encryption duration in seconds
     std::chrono::duration<double> elapsed = finishTime - startTime;
     
-    cerr << (verbose ? "Encryption done" : "Done") << " in "
+    cerr << (verbose ? "Encryption done," : "Done,") << " in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
     
     // delete packed file
@@ -670,7 +670,7 @@ void EnDecrypto::decrypt ()
     // decryption duration in seconds
     std::chrono::duration<double> elapsed = finishTime - startTime;
     
-    cerr << (verbose ? "Decryption done" : "Done") << " in "
+    cerr << (verbose ? "Decryption done," : "Done,") << " in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
     
     in.close();
@@ -829,7 +829,7 @@ void EnDecrypto::decompressFA ()
     // decompression duration in seconds
     std::chrono::duration<double> elapsed = finishTime - startTime;
     
-    cerr << (verbose ? "Decompression done" : "Done") << " in "
+    cerr << (verbose ? "Decompression done," : "Done,") << " in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
     
     // close/delete input/output files
@@ -1252,7 +1252,7 @@ void EnDecrypto::decompressFQ ()
     // decompression duration in seconds
     std::chrono::duration<double> elapsed = finishTime - startTime;
     
-    cerr << (verbose ? "Decompression done" : "Done") << " in "
+    cerr << (verbose ? "Decompression done," : "Done,") << " in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
     
     // close/delete input/output files

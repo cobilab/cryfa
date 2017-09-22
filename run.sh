@@ -33,6 +33,8 @@ INSTALL_DEPENDENCIES=0  # if this value is 0, no dependencies will be installed
 
 ### install methods
 INSTALL_METHODS=0
+  INS_CRYFA=0           # cryfa
+
   # FASTA
   INS_MFCOMPRESS=0      # MFCompress -- error: make -- executables available
   INS_DELIMINATE=0      # DELIMINATE -- error: site not reachable -- exec avail
@@ -48,8 +50,9 @@ RUN_METHODS=1
   # FASTA
   RUN_GZIP_FA=0         # gzip
   RUN_LZMA_FA=0         # lzma
-  RUN_MFCOMPRESS=1      # MFCompress
+  RUN_MFCOMPRESS=0      # MFCompress
   RUN_DELIMINATE=0      # DELIMINATE
+  RUN_CRYFA_FA=0        # cryfa
 
   # FASTQ
   RUN_GZIP_FQ=0         # gzip
@@ -58,8 +61,10 @@ RUN_METHODS=1
   RUN_QUIP=0            # quip
   RUN_DSRC=0            # DSRC
   RUN_FQC=0             # FQC
+  RUN_CRYFA_FQ=1        # cryfa
 
-# cryfa
+
+# cryfa exclusive -- test purpose
 SHUFFLE=1               # cryfa: shuffle -- enabled by default
 VERBOSE=1               # cryga: verbose mode -- disabled by default
 CRYFA_COMP=0            # cryfa -- compress
@@ -334,6 +339,18 @@ if [[ $INSTALL_METHODS -eq 1 ]]; then
     ### create folders, if they don't already exist
     if [[ ! -d $progs ]]; then mkdir -p $progs; fi
 
+    if [[ $INS_CRYFA -eq 1 ]]; then
+
+        rm -f cryfa
+
+        cmake .
+        make
+
+        if [[ ! -d progs/cryfa ]]; then mkdir -p progs/cryfa; fi
+        mv cryfa progs/cryfa/
+        cp pass.txt progs/cryfa/
+    fi
+
     #----------------------- FASTA -----------------------#
     ### MFCompress
     if [[ $INS_MFCOMPRESS -eq 1 ]]; then
@@ -535,6 +552,14 @@ if [[ $RUN_METHODS -eq 1 ]]; then
 
           "fqc")
               cFT="fqc";   cCmd="./fqc -c";   dProg="fqc";    dCmd="./fqc -d";;
+
+          "MFCompress")
+              cFT="mfc";             cCmd="./MFCompressC";
+              dProg="MFCompress";    dCmd="./MFCompressD";;
+
+          "cryfa")
+              cFT="cryfa";           cCmd="./cryfa -k pass.txt -t 8";
+              dProg="cryfa";         dCmd="./cryfa -k pass.txt -t 8 -d";;
         esac
 
         ### compress
@@ -546,7 +571,7 @@ if [[ $RUN_METHODS -eq 1 ]]; then
           "gzip"|"lzma")
               (time $cCmd< $2 > $in.$cFT) &> $result/${capsIn}_CT__${inwf}_$ft;;
 
-          "fqzcomp"|"quip")
+          "cryfa"|"quip"|"fqzcomp")
               (time $cCmd $2 > $in.$cFT) &> $result/${capsIn}_CT__${inwf}_$ft;;
 
           "dsrc")
@@ -559,6 +584,9 @@ if [[ $RUN_METHODS -eq 1 ]]; then
           "fqc")
               (time $cCmd -i $2 -o $in.$cFT) \
               &> $result/${capsIn}_CT__${inwf}_$ft;;
+
+          "MFCompress")
+              (time $cCmd -o $in.$cFT $2) &> $result/${capsIn}_CT__${inwf}_$ft;;
         esac
 
         ls -la $in.$cFT > $result/${capsIn}_CB__${inwf}_$ft         # size
@@ -572,7 +600,7 @@ if [[ $RUN_METHODS -eq 1 ]]; then
           "gzip"|"lzma")
               (time $dCmd< $in.$cFT> $in) &> $result/${capsIn}_DT__${inwf}_$ft;;
 
-          "fqzcomp"|"quip")
+          "cryfa"|"fqzcomp"|"quip")
               (time $dCmd $in.$cFT > $in) &> $result/${capsIn}_DT__${inwf}_$ft;;
 
           "dsrc"|"delim")
@@ -581,20 +609,26 @@ if [[ $RUN_METHODS -eq 1 ]]; then
           "fqc")
               (time $dCmd -i $in.$cFT -o $in) \
               &> $result/${capsIn}_DT__${inwf}_$ft;;
+
+          "MFCompress")
+              (time $dCmd -o $in $in.$cFT)&> $result/${capsIn}_DT__${inwf}_$ft;;
         esac
 
         ProgMemoryStop $MEMPID $result/${capsIn}_DM__${inwf}_$ft    # memory
 
         ### verify if input and decompressed files are the same
-        cmp $2 $in &> $result/${capsIn}_V__${inwf}_$ft
+        cmp $2 $in &> $result/${capsIn}_V__${inwf}_$ft;
     }
 
     ### run compress and decompress on datasets. $1: program's name
     function runOnDataset
     {
         method=$1
-        mkdir -p progs/$method
-        cd progs/$method
+        methodLowCase="$(echo $method | tr A-Z a-z)"
+        if [[ ! -d progs/$methodLowCase ]]; then
+            mkdir -p $progs/$methodLowCase;
+        fi
+        cd progs/$methodLowCase
         ds=../../$dataset
 
         case $2 in
@@ -653,6 +687,7 @@ compDecomp $method $ds/$FA/$HUMAN/temp.$fastq
     if [[ $RUN_LZMA_FA    -eq 1 ]]; then runOnDataset lzma       fa; fi
     if [[ $RUN_MFCOMPRESS -eq 1 ]]; then runOnDataset MFCompress fa; fi
     if [[ $RUN_DELIMINATE -eq 1 ]]; then runOnDataset delim      fa; fi
+    if [[ $RUN_CRYFA_FA   -eq 1 ]]; then runOnDataset cryfa      fa; fi
 
     ### FASTQ
     if [[ $RUN_GZIP_FQ    -eq 1 ]]; then runOnDataset gzip       fq; fi
@@ -661,6 +696,7 @@ compDecomp $method $ds/$FA/$HUMAN/temp.$fastq
     if [[ $RUN_QUIP       -eq 1 ]]; then runOnDataset quip       fq; fi
     if [[ $RUN_DSRC       -eq 1 ]]; then runOnDataset dsrc       fq; fi
     if [[ $RUN_FQC        -eq 1 ]]; then runOnDataset fqc        fq; fi
+    if [[ $RUN_CRYFA_FQ   -eq 1 ]]; then runOnDataset cryfa      fq; fi
 fi
 
 
