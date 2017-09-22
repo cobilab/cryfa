@@ -46,13 +46,13 @@ INSTALL_METHODS=0
   INS_FQC=0             # FQC -- error: site not reachable -- exec avail
 
 ### run methods
-RUN_METHODS=0
+RUN_METHODS=1
   # FASTA
-  RUN_GZIP_FA=0         # gzip
+  RUN_GZIP_FA=0          # gzip
   RUN_LZMA_FA=0         # lzma
   RUN_MFCOMPRESS=0      # MFCompress
   RUN_DELIMINATE=0      # DELIMINATE
-  RUN_CRYFA_FA=0        # cryfa
+  RUN_CRYFA_FA=1        # cryfa
 
   # FASTQ
   RUN_GZIP_FQ=0         # gzip
@@ -469,7 +469,6 @@ fi
 #   run methods
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $RUN_METHODS -eq 1 ]]; then
-#FExists -> isAvail
 
     ### create folders, if they don't already exist
     if [[ ! -d $progs   ]]; then mkdir -p $progs;   fi
@@ -515,6 +514,22 @@ if [[ $RUN_METHODS -eq 1 ]]; then
     function progTime
     {
         time ./$1
+    }
+
+    ### correct methods' names
+    function correctMethodName
+    {
+        case $1 in
+            "gzip")       echo "gzip";;
+            "lzma")       echo "LZMA";;
+            "MFCompress") echo "MFCompress";;
+            "delim")      echo "DELIMINATE";;
+            "cryfa")      echo "Cryfa";;
+            "fqzcomp")    echo "Fqzcomp";;
+            "quip")       echo "Quip";;
+            "dsrc")       echo "DSRC";;
+            "fqc")        echo "FQC";;
+        esac
     }
 
     ### compress and decompress. $1: program's name; $2: input data
@@ -620,66 +635,104 @@ if [[ $RUN_METHODS -eq 1 ]]; then
         cmp $2 $in &> $result/${capsIn}_V__${inwf}_$ft;
     }
 
+
+
+
+    ### results
+    function results
+    {
+        result="result"
+###        result="../../result"
+##        in="${2##*/}"                       # input file name
+##        inwf="${in%.*}"                     # input file name without filetype
+##        ft="${in##*.}"                      # filetype of input file name
+##        inPath="${2%/*}"                    # path of input file name
+##        capsIn="$(echo $1 | tr a-z A-Z)"    # input program's name in uppercase
+#
+##        BC_GECO_HUMAN=`cat $result/${capsIn}_CB_HUMAN | awk '{ print $5; }'`;
+#
+        printf "Dataset\tMethod\tC_Size\tC_Time\tC_Mem\tD_Time\tD_Mem\tcmp?\n";
+        case $2 in
+          "fa"|"FA"|"fasta"|"FASTA")
+              for i in "in"; do
+                  printf "$i\t$1";
+              done
+           ;;
+
+          "fq"|"FQ"|"fastq"|"FASTQ")
+           ;;
+        esac
+    }
+
+
+
+
+
+
     ### run compress and decompress on datasets. $1: program's name
     function runOnDataset
     {
-        method=$1
-        methodLowCase="$(echo $method | tr A-Z a-z)"
-        if [[ ! -d progs/$methodLowCase ]]; then
-            mkdir -p $progs/$methodLowCase;
-        fi
-        cd progs/$methodLowCase
-        ds=../../$dataset
+#        method=$1
+#        methodLowCase="$(echo $method | tr A-Z a-z)"
+#        if [[ ! -d progs/$methodLowCase ]]; then
+#            mkdir -p $progs/$methodLowCase;
+#        fi
+#        cd progs/$methodLowCase
+#        ds=../../$dataset
+#
+#        case $2 in
+#          "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
+#compDecomp $method $ds/$FA/$HUMAN/in.$fasta;
+#
+##              for i in $HS_SEQ_RUN; do
+##                  compDecomp $method $ds/$FA/$HUMAN/$HUMAN-$i.$fasta
+##              done
+##              compDecomp $method "$ds/$FA/$VIRUSES/viruses.$fasta"
+##              for i in {1..2};do
+##                  compDecomp $method "$ds/$FA/$Synth/Synth-$i.$fasta"
+##              done
+#              ;;
+#
+#          "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
+#compDecomp $method $ds/$FA/$HUMAN/temp.$fastq
+#
+##              for i in ERR013103_1 ERR015767_2 ERR031905_2 \
+##                       SRR442469_1 SRR707196_1; do
+##                  compDecomp $method "$ds/$FQ/$HUMAN/$HUMAN-$i.$fastq"
+##              done
+##              for i in B1087 B1088 B1110 B1128 SL3003; do
+##                  compDecomp $method \
+##                             "$ds/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq"
+##              done
+##              for i in {1..2};do
+##                  compDecomp $method "$ds/$FQ/$Synth/Synth-$i.$fastq"
+##              done
+#              ;;
+#        esac
 
-        case $2 in
-          "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
-compDecomp $method $ds/$FA/$HUMAN/in.$fasta;
+        method=`correctMethodName $1`   # call the function
+        results $method $2              # call the function
 
-#              for i in $HS_SEQ_RUN; do
-#                  compDecomp $method $ds/$FA/$HUMAN/$HUMAN-$i.$fasta
-#              done
-#              compDecomp $method "$ds/$FA/$VIRUSES/viruses.$fasta"
-#              for i in {1..2};do
-#                  compDecomp $method "$ds/$FA/$Synth/Synth-$i.$fasta"
-#              done
-              ;;
-
-          "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
-compDecomp $method $ds/$FA/$HUMAN/temp.$fastq
-
-#              for i in ERR013103_1 ERR015767_2 ERR031905_2 \
-#                       SRR442469_1 SRR707196_1; do
-#                  compDecomp $method "$ds/$FQ/$HUMAN/$HUMAN-$i.$fastq"
-#              done
-#              for i in B1087 B1088 B1110 B1128 SL3003; do
-#                  compDecomp $method \
-#                             "$ds/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq"
-#              done
-#              for i in {1..2};do
-#                  compDecomp $method "$ds/$FQ/$Synth/Synth-$i.$fastq"
-#              done
-              ;;
-        esac
-
-        cd ../..
+#        cd ../..
     }
 
-    #------------------ dataset availablity ------------------#
-    # FASTA -- human - viruses - synthetic
-    for i in $HS_SEQ_RUN; do
-        isAvail "$dataset/$FA/$HUMAN/$HUMAN-$i.$fasta";
-    done
-    isAvail "$dataset/$FA/$VIRUSES/viruses.$fasta"
-    for i in {1..2}; do isAvail "$dataset/$FA/$Synth/Synth-$i.$fasta"; done
 
-    # FASTQ -- human - Denisova - synthetic
-    for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 SRR707196_1; do
-        isAvail "$dataset/$FQ/$HUMAN/$HUMAN-$i.$fastq"
-    done
-    for i in B1087 B1088 B1110 B1128 SL3003; do
-        isAvail "$dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq"
-    done
-    for i in {1..2}; do isAvail "$dataset/$FQ/$Synth/Synth-$i.$fastq"; done
+    #------------------ dataset availablity ------------------#
+#    # FASTA -- human - viruses - synthetic
+#    for i in $HS_SEQ_RUN; do
+#        isAvail "$dataset/$FA/$HUMAN/$HUMAN-$i.$fasta";
+#    done
+#    isAvail "$dataset/$FA/$VIRUSES/viruses.$fasta"
+#    for i in {1..2}; do isAvail "$dataset/$FA/$Synth/Synth-$i.$fasta"; done
+#
+#    # FASTQ -- human - Denisova - synthetic
+#    for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 SRR707196_1; do
+#        isAvail "$dataset/$FQ/$HUMAN/$HUMAN-$i.$fastq"
+#    done
+#    for i in B1087 B1088 B1110 B1128 SL3003; do
+#        isAvail "$dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq"
+#    done
+#    for i in {1..2}; do isAvail "$dataset/$FQ/$Synth/Synth-$i.$fastq"; done
 
     #-------------------------- run --------------------------#
     ### FASTA
