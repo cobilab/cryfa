@@ -38,21 +38,23 @@ INSTALL_METHODS=0
   INS_DELIMINATE=0      # DELIMINATE -- error: site not reachable
 
   # FASTQ
-  INS_FQZCOMP=1         # fqzcomp
-  INS_QUIP=1            # quip
-  INS_DSRC=1            # DSRC
+  INS_FQZCOMP=0         # fqzcomp
+  INS_QUIP=0            # quip
+  INS_DSRC=0            # DSRC
   INS_FQC=0             # FQC -- error: site not reachable
 
 ### run methods
 RUN_METHODS=1
   # FASTA
-  RUN_MFCOMPRESS=0      # MFCompress
-  RUN_DELIMINATE=0      # DELIMINATE
   RUN_GZIP_FA=0         # gzip
   RUN_LZMA_FA=0         # lzma
+  RUN_MFCOMPRESS=0      # MFCompress
+  RUN_DELIMINATE=1      # DELIMINATE
 
   # FASTQ
-  RUN_FQZCOMP=1         # fqzcomp
+  RUN_GZIP_FQ=0         # gzip
+  RUN_LZMA_FQ=0         # lzma
+  RUN_FQZCOMP=0         # fqzcomp
   RUN_QUIP=0            # quip
   RUN_DSRC=0            # DSRC
   RUN_FQC=0             # FQC
@@ -106,6 +108,8 @@ HUMAN_CHROMOSOME="$HUMAN_CHR_PREFIX$CHR"
 HS_SEQ_RUN=`seq -s' ' 1 22`; HS_SEQ_RUN+=" X Y MT AL UL UP"
 WGET_OP=" --trust-server-names "
 INF="dat"         # information (data) file type
+fasta="fasta"     # FASTA file extension
+fastq="fastq"     # FASTQ file extension
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -126,14 +130,16 @@ if [[ $DOWNLOAD_DATASETS -eq 1 ]]; then
         # download
         for i in {1..22} X Y MT; do
             wget $WGET_OP $HUMAN_FA_URL/$HUMAN_CHROMOSOME$i.fa.gz;
-            gunzip< $HUMAN_CHROMOSOME$i.fa.gz > $dataset/$FA/$HUMAN/$HUMAN-$i.fa
+            gunzip < $HUMAN_CHROMOSOME$i.fa.gz \
+                   > $dataset/$FA/$HUMAN/$HUMAN-$i.$fasta
             rm $HUMAN_CHROMOSOME$i.fa.gz
         done
 
         for dual in "alts AL" "unplaced UP" "unlocalized UL"; do
             set $dual
             wget $WGET_OP $HUMAN_FA_URL/$HUMAN_CHR_PREFIX$1.fa.gz;
-            gunzip< $HUMAN_CHR_PREFIX$1.fa.gz > $dataset/$FA/$HUMAN/$HUMAN-$2.fa
+            gunzip < $HUMAN_CHR_PREFIX$1.fa.gz \
+                   > $dataset/$FA/$HUMAN/$HUMAN-$2.$fasta
             rm $HUMAN_CHR_PREFIX$1.fa.gz;
         done
     fi
@@ -149,8 +155,9 @@ if [[ $DOWNLOAD_DATASETS -eq 1 ]]; then
         # download
         perl ./scripts/DownloadViruses.pl
 
-        # move downloaded file to dataset folder
-        mv viruses.fa $dataset/$FA/$VIRUSES
+        # rename & move downloaded file to dataset folder
+        mv viruses.fa viruses.$fasta
+        mv viruses.$fasta $dataset/$FA/$VIRUSES
     fi
 
     ### synthetic -- 4 GB
@@ -172,11 +179,11 @@ if [[ $DOWNLOAD_DATASETS -eq 1 ]]; then
 
         # generate dataset -- 2.3 GB - 1.7 GB
         XS/XS -eo -es -t 1 -n 4000000 -ld 70:1000 \
-                                         -f 0.2,0.2,0.2,0.2,0.2       Synth-1.fa
+                                     -f 0.2,0.2,0.2,0.2,0.2       Synth-1.$fasta
         XS/XS -eo -es -t 2 -n 3000000 -ls 500 \
-                                         -f 0.23,0.23,0.23,0.23,0.08  Synth-2.fa
+                                     -f 0.23,0.23,0.23,0.23,0.08  Synth-2.$fasta
 
-        for i in {1..2}; do mv Synth-$i.fa $dataset/$FA/$Synth/Synth-$i.fa; done
+        for i in {1..2}; do mv Synth-$i.$fasta $dataset/$FA/$Synth/; done
     fi
 
     #----------------------- FASTQ -----------------------#
@@ -197,7 +204,7 @@ if [[ $DOWNLOAD_DATASETS -eq 1 ]]; then
                "SRR442/SRR442469 SRR442469_1" "SRR707/SRR707196 SRR707196_1"; do
             set $dual
             wget $WGET_OP $HUMAN_FQ_URL/$1/$2.fastq.gz;
-            gunzip < $2.fastq.gz > $dataset/$FQ/$HUMAN/$HUMAN-$2.fq;
+            gunzip < $2.fastq.gz > $dataset/$FQ/$HUMAN/$HUMAN-$2.$fastq;
             rm $2.fastq.gz;
         done
     fi
@@ -213,7 +220,8 @@ if [[ $DOWNLOAD_DATASETS -eq 1 ]]; then
         # download -- 1.7 GB - 1.2 GB - 59 GB - 51 GB - 59 GB
         for i in B1087 B1088 B1110 B1128 SL3003; do
             wget $WGET_OP $DENISOVA_FQ_URL/${i}_SR.txt.gz;
-            gunzip< ${i}_SR.txt.gz > $dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.fq
+            gunzip < ${i}_SR.txt.gz \
+                   > $dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq
             rm ${i}_SR.txt.gz;
         done
     fi
@@ -237,11 +245,11 @@ if [[ $DOWNLOAD_DATASETS -eq 1 ]]; then
 
         # generate dataset -- 4.2 GB - 2 GB
         XS/XS -t 1 -n 16000000 -ld 70:100 -o \
-                                         -f 0.2,0.2,0.2,0.2,0.2       Synth-1.fq
+                                     -f 0.2,0.2,0.2,0.2,0.2       Synth-1.$fastq
         XS/XS -t 2 -n 10000000 -ls 70 -qt 2 \
-                                         -f 0.23,0.23,0.23,0.23,0.08  Synth-2.fq
+                                     -f 0.23,0.23,0.23,0.23,0.08  Synth-2.$fastq
 
-        for i in {1..2}; do mv Synth-$i.fq $dataset/$FQ/$Synth/Synth-$i.fq; done
+        for i in {1..2}; do mv Synth-$i.$fastq $dataset/$FQ/$Synth/; done
     fi
 fi
 
@@ -330,32 +338,40 @@ if [[ $INSTALL_METHODS -eq 1 ]]; then
     ### MFCompress
     if [[ $INS_MFCOMPRESS -eq 1 ]]; then
 
+        error=1
+
         rm -f MFCompress-src-1.01.tgz
 
-        url="http://sweet.ua.pt/ap/software/mfcompress"
-        wget $WGET_OP $url/MFCompress-src-1.01.tgz
-        tar -xzf MFCompress-src-1.01.tgz
-        mv MFCompress-src-1.01/ mfcompress/    # rename
-        mv mfcompress/ progs/
-        rm -f MFCompress-src-1.01.tgz
+        if [[ $error -eq 0 ]]; then
+            url="http://sweet.ua.pt/ap/software/mfcompress"
+            wget $WGET_OP $url/MFCompress-src-1.01.tgz
+            tar -xzf MFCompress-src-1.01.tgz
+            mv MFCompress-src-1.01/ mfcompress/    # rename
+            mv mfcompress/ progs/
+            rm -f MFCompress-src-1.01.tgz
 
-        cd progs/mfcompress/
-        cp Makefile.linux Makefile    # make -f Makefile.linux
-        make
-        cd ../..
+            cd progs/mfcompress/
+            cp Makefile.linux Makefile    # make -f Makefile.linux
+            make
+            cd ../..
+        fi
     fi
 
     ### DELIMINATE
     if [[ $INS_DELIMINATE -eq 1 ]]; then
 
+        error=1
+
         rm -f DELIMINATE_LINUX_64bit.tar.gz
 
-        url="http://metagenomics.atc.tcs.com/Compression_archive"
-        wget $WGET_OP $url/DELIMINATE_LINUX_64bit.tar.gz
-        tar -xzf DELIMINATE_LINUX_64bit.tar.gz
-        mv EXECUTABLES deliminate    # rename
-        mv deliminate progs/
-        rm -f DELIMINATE_LINUX_64bit.tar.gz
+        if [[ $error -eq 0 ]]; then
+            url="http://metagenomics.atc.tcs.com/Compression_archive"
+            wget $WGET_OP $url/DELIMINATE_LINUX_64bit.tar.gz
+            tar -xzf DELIMINATE_LINUX_64bit.tar.gz
+            mv EXECUTABLES deliminate    # rename
+            mv deliminate progs/
+            rm -f DELIMINATE_LINUX_64bit.tar.gz
+        fi
     fi
 
     #----------------------- FASTQ -----------------------#
@@ -416,14 +432,18 @@ if [[ $INSTALL_METHODS -eq 1 ]]; then
     ### FQC
     if [[ $INS_FQC -eq 1 ]]; then
 
+        error=1
+
         rm -f FQC_LINUX_64bit.tar.gz
 
-        url="http://metagenomics.atc.tcs.com/Compression_archive/FQC"
-        wget $WGET_OP $url/FQC_LINUX_64bit.tar.gz
-        tar -xzf FQC_LINUX_64bit.tar.gz
-        mv FQC_LINUX_64bit/ fqc/    # rename
-        mv fqc/ progs/
-        rm -f FQC_LINUX_64bit.tar.gz
+        if [[ $error -eq 0 ]]; then
+            url="http://metagenomics.atc.tcs.com/Compression_archive/FQC"
+            wget $WGET_OP $url/FQC_LINUX_64bit.tar.gz
+            tar -xzf FQC_LINUX_64bit.tar.gz
+            mv FQC_LINUX_64bit/ fqc/    # rename
+            mv fqc/ progs/
+            rm -f FQC_LINUX_64bit.tar.gz
+        fi
     fi
 fi
 
@@ -489,31 +509,43 @@ if [[ $RUN_METHODS -eq 1 ]]; then
         ft="${in##*.}"                      # filetype of input file name
         capsIn="$(echo $1 | tr a-z A-Z)"    # input program's name in uppercase
 
+        case $1 in
+          "gzip")
+              cFT="gz"          # compressed filetype
+              cCmd="gzip"       # compression command
+              dProg="gunzip"    # decompress program's name
+              dCmd="gunzip";;   # decompress command
+
+          "lzma")
+              cFT="lzma";   cCmd="lzma";   dProg="lzma";   dCmd="lzma -d";;
+
+          "fqzcomp")
+              cFT="fqz";   cCmd="./fqz_comp";   dProg="fqz_comp";
+              dCmd="./fqz_comp -d";; #dCmd="./fqz_comp -d -X"
+
+          "quip")
+              cFT="qp";  cCmd="./quip -c";  dProg="quip";  dCmd="./quip -d -c";;
+
+          "dsrc")
+              cFT="dsrc";  cCmd="./dsrc c -m2";  dProg="dsrc"; dCmd="./dsrc d";;
+
+          "delim")
+              cFT="dlim";  cCmd="./delim a";  dProg="delim"; dCmd="./dsrc e";;
+        esac
+
         ### compress
         ProgMemoryStart $1 &
         MEMPID=$!
 
         case $1 in                                                  # time
-          "gzip")
-              cFT="gz"          # compressed filetype
-              cCmd="gzip"       # compression command
-              dProg="gunzip"    # decompress program name
-              (time $cCmd < $2 > $in.$cFT) &> $result/${capsIn}_CT__${inwf}_$ft
-              ;;
+          "gzip"|"lzma"|"delim")
+              (time $cCmd< $2 > $in.$cFT) &> $result/${capsIn}_CT__${inwf}_$ft;;
 
-          "lzma")
-              cFT="lzma"
-              cCmd="lzma"
-              dProg="lzma"
-              (time $cCmd < $2 > $in.$cFT) &> $result/${capsIn}_CT__${inwf}_$ft
-              ;;
+          "fqzcomp"|"quip")
+              (time $cCmd $2 > $in.$cFT) &> $result/${capsIn}_CT__${inwf}_$ft;;
 
-          "fqzcomp")
-              cFT="fqz"
-              cCmd="./fqz_comp"
-              dProg="fqz_comp"
-              (time $cCmd < $2 > $in.$cFT) &> $result/${capsIn}_CT__${inwf}_$ft
-              ;;
+          "dsrc")
+              (time $cCmd $2 $in.$cFT) &> $result/${capsIn}_CT__${inwf}_$ft;;
         esac
 
         ls -la $in.$cFT > $result/${capsIn}_CB__${inwf}_$ft         # size
@@ -524,23 +556,20 @@ if [[ $RUN_METHODS -eq 1 ]]; then
         MEMPID=$!
 
         case $1 in                                                  # time
-          "gzip")
-              dCmd="gunzip"     # decompress command
-              (time $dCmd < $in.$cFT > $in) &> $result/${capsIn}_DT__${inwf}_$ft
-              ;;
+          "gzip"|"lzma"|"delim")
+              (time $dCmd< $in.$cFT> $in) &> $result/${capsIn}_DT__${inwf}_$ft;;
 
-          "lzma")
-              dCmd="lzma -d"
-              (time $dCmd < $in.$cFT > $in) &> $result/${capsIn}_DT__${inwf}_$ft
-              ;;
+          "fqzcomp"|"quip")
+              (time $dCmd $in.$cFT > $in) &> $result/${capsIn}_DT__${inwf}_$ft;;
 
-          "fqzcomp")
-              dCmd="./fqz_comp -d"
-              (time $dCmd < $in.$cFT > $in) &> $result/${capsIn}_DT__${inwf}_$ft
-              ;;
+          "dsrc")
+              (time $dCmd $in.$cFT $in) &> $result/${capsIn}_DT__${inwf}_$ft;;
         esac
 
         ProgMemoryStop $MEMPID $result/${capsIn}_DM__${inwf}_$ft    # memory
+
+        ### verify if input and decompressed files are the same
+        cmp $2 $in &> $result/${capsIn}_V__${inwf}_$ft
     }
 
     ### run compress and decompress on datasets. $1: program's name
@@ -552,33 +581,33 @@ if [[ $RUN_METHODS -eq 1 ]]; then
         ds=../../$dataset
 
         case $2 in
-            "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
-compDecomp $method $ds/$FA/$HUMAN/in.fa;
+          "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
+compDecomp $method $ds/$FA/$HUMAN/in.$fasta;
 
+#              for i in $HS_SEQ_RUN; do
+#                  compDecomp $method $ds/$FA/$HUMAN/$HUMAN-$i.$fasta
+#              done
+#              compDecomp $method "$ds/$FA/$VIRUSES/viruses.$fasta"
+#              for i in {1..2};do
+#                  compDecomp $method "$ds/$FA/$Synth/Synth-$i.$fasta"
+#              done
+              ;;
 
-#                for i in $HS_SEQ_RUN; do
-#                    compDecomp $method $ds/$FA/$HUMAN/$HUMAN-$i.fa
-#                done
-#                compDecomp $method "$ds/$FA/$VIRUSES/viruses.fa"
-#                for i in {1..2};do
-#                    compDecomp $method "$ds/$FA/$Synth/Synth-$i.fa"
-#                done
-                ;;
+          "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
+compDecomp $method $ds/$FA/$HUMAN/temp.$fastq
 
-            "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
-compDecomp $method $ds/$FA/$HUMAN/temp.fq
-
-#                for i in ERR013103_1 ERR015767_2 ERR031905_2 \
-#                         SRR442469_1 SRR707196_1; do
-#                    compDecomp $method "$ds/$FQ/$HUMAN/$HUMAN-$i.fq"
-#                done
-#                for i in B1087 B1088 B1110 B1128 SL3003; do
-#                    compDecomp $method "$ds/$FQ/$DENISOVA/$DENISOVA-${i}_SR.fq"
-#                done
-#                for i in {1..2};do
-#                    compDecomp $method "$ds/$FQ/$Synth/Synth-$i.fq"
-#                done
-                ;;
+#              for i in ERR013103_1 ERR015767_2 ERR031905_2 \
+#                       SRR442469_1 SRR707196_1; do
+#                  compDecomp $method "$ds/$FQ/$HUMAN/$HUMAN-$i.$fastq"
+#              done
+#              for i in B1087 B1088 B1110 B1128 SL3003; do
+#                  compDecomp $method \
+#                             "$ds/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq"
+#              done
+#              for i in {1..2};do
+#                  compDecomp $method "$ds/$FQ/$Synth/Synth-$i.$fastq"
+#              done
+              ;;
         esac
 
         cd ../..
@@ -586,46 +615,35 @@ compDecomp $method $ds/$FA/$HUMAN/temp.fq
 
     #------------------ dataset availablity ------------------#
 #    # FASTA -- human - viruses - synthetic
-#    for i in $HS_SEQ_RUN; do FExists "$dataset/$FA/$HUMAN/$HUMAN-$i.fa"; done
-#    FExists "$dataset/$FA/$VIRUSES/viruses.fa"
-#    for i in {1..2}; do FExists "$dataset/$FA/$Synth/Synth-$i.fa"; done
+#    for i in $HS_SEQ_RUN; do
+#        FExists "$dataset/$FA/$HUMAN/$HUMAN-$i.$fasta";
+#    done
+#    FExists "$dataset/$FA/$VIRUSES/viruses.$fasta"
+#    for i in {1..2}; do FExists "$dataset/$FA/$Synth/Synth-$i.$fasta"; done
 #
 #    # FASTQ -- human - Denisova - synthetic
 #    for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 SRR707196_1; do
-#        FExists "$dataset/$FQ/$HUMAN/$HUMAN-$i.fq"
+#        FExists "$dataset/$FQ/$HUMAN/$HUMAN-$i.$fastq"
 #    done
 #    for i in B1087 B1088 B1110 B1128 SL3003; do
-#        FExists "$dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.fq"
+#        FExists "$dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq"
 #    done
-#    for i in {1..2}; do FExists "$dataset/$FQ/$Synth/Synth-$i.fq"; done
+#    for i in {1..2}; do FExists "$dataset/$FQ/$Synth/Synth-$i.$fastq"; done
 
     #-------------------------- run --------------------------#
     ### FASTA
-#    # MFCompress
-#    if [[ $RUN_MFCOMPRESS -eq 1 ]]; then
-#    fi
-#
-#    # DELIMINATE
-#    if [[ $RUN_DELIMINATE -eq 1 ]]; then
-#    fi
-
-    if [[ $RUN_GZIP_FA -eq 1 ]]; then runOnDataset gzip fa; fi  # gzip
-    if [[ $RUN_LZMA_FA -eq 1 ]]; then runOnDataset lzma fa; fi  # lzma
+    if [[ $RUN_GZIP_FA    -eq 1 ]]; then runOnDataset gzip       fa; fi
+    if [[ $RUN_LZMA_FA    -eq 1 ]]; then runOnDataset lzma       fa; fi
+    if [[ $RUN_MFCOMPRESS -eq 1 ]]; then runOnDataset MFCompress fa; fi
+    if [[ $RUN_DELIMINATE -eq 1 ]]; then runOnDataset delim      fa; fi
 
     ### FASTQ
-    if [[ $RUN_FQZCOMP -eq 1 ]]; then runOnDataset fqzcomp fq; fi    # fqzcomp
-#
-#    # quip
-#    if [[ $RUN_QUIP -eq 1 ]]; then
-#    fi
-#
-#    # DSRC
-#    if [[ $RUN_DSRC -eq 1 ]]; then
-#    fi
-#
-#    # FQC
-#    if [[ $RUN_FQC -eq 1 ]]; then
-#    fi
+    if [[ $RUN_GZIP_FQ    -eq 1 ]]; then runOnDataset gzip       fq; fi
+    if [[ $RUN_LZMA_FQ    -eq 1 ]]; then runOnDataset lzma       fq; fi
+    if [[ $RUN_FQZCOMP    -eq 1 ]]; then runOnDataset fqzcomp    fq; fi
+    if [[ $RUN_QUIP       -eq 1 ]]; then runOnDataset quip       fq; fi
+    if [[ $RUN_DSRC       -eq 1 ]]; then runOnDataset dsrc       fq; fi
+    if [[ $RUN_FQC        -eq 1 ]]; then runOnDataset fqc        fq; fi
 fi
 
 
