@@ -34,22 +34,22 @@ INSTALL_DEPENDENCIES=0  # if this value is 0, no dependencies will be installed
 ### install methods
 INSTALL_METHODS=0
   # FASTA
-  INS_MFCOMPRESS=0      # MFCompress -- error: make
-  INS_DELIMINATE=0      # DELIMINATE -- error: site not reachable
+  INS_MFCOMPRESS=0      # MFCompress -- error: make -- executables available
+  INS_DELIMINATE=0      # DELIMINATE -- error: site not reachable -- exec avail
 
   # FASTQ
   INS_FQZCOMP=0         # fqzcomp
   INS_QUIP=0            # quip
   INS_DSRC=0            # DSRC
-  INS_FQC=0             # FQC -- error: site not reachable
+  INS_FQC=0             # FQC -- error: site not reachable -- exec avail
 
 ### run methods
 RUN_METHODS=1
   # FASTA
   RUN_GZIP_FA=0         # gzip
   RUN_LZMA_FA=0         # lzma
-  RUN_MFCOMPRESS=0      # MFCompress
-  RUN_DELIMINATE=1      # DELIMINATE
+  RUN_MFCOMPRESS=1      # MFCompress
+  RUN_DELIMINATE=0      # DELIMINATE
 
   # FASTQ
   RUN_GZIP_FQ=0         # gzip
@@ -507,6 +507,7 @@ if [[ $RUN_METHODS -eq 1 ]]; then
         in="${2##*/}"                       # input file name
         inwf="${in%.*}"                     # input file name without filetype
         ft="${in##*.}"                      # filetype of input file name
+        inPath="${2%/*}"                    # path of input file name
         capsIn="$(echo $1 | tr a-z A-Z)"    # input program's name in uppercase
 
         case $1 in
@@ -530,15 +531,19 @@ if [[ $RUN_METHODS -eq 1 ]]; then
               cFT="dsrc";  cCmd="./dsrc c -m2";  dProg="dsrc"; dCmd="./dsrc d";;
 
           "delim")
-              cFT="dlim";  cCmd="./delim a";  dProg="delim"; dCmd="./dsrc e";;
+              cFT="dlim";  cCmd="./delim a";  dProg="delim";  dCmd="./delim e";;
+
+          "fqc")
+              cFT="fqc";   cCmd="./fqc -c";   dProg="fqc";    dCmd="./fqc -d";;
         esac
 
         ### compress
         ProgMemoryStart $1 &
         MEMPID=$!
 
+        rm -f $in.$cFT
         case $1 in                                                  # time
-          "gzip"|"lzma"|"delim")
+          "gzip"|"lzma")
               (time $cCmd< $2 > $in.$cFT) &> $result/${capsIn}_CT__${inwf}_$ft;;
 
           "fqzcomp"|"quip")
@@ -546,6 +551,14 @@ if [[ $RUN_METHODS -eq 1 ]]; then
 
           "dsrc")
               (time $cCmd $2 $in.$cFT) &> $result/${capsIn}_CT__${inwf}_$ft;;
+
+          "delim")
+              (time $cCmd $2) &> $result/${capsIn}_CT__${inwf}_$ft
+              mv $inPath/$in.$cFT $in.$cFT;;
+
+          "fqc")
+              (time $cCmd -i $2 -o $in.$cFT) \
+              &> $result/${capsIn}_CT__${inwf}_$ft;;
         esac
 
         ls -la $in.$cFT > $result/${capsIn}_CB__${inwf}_$ft         # size
@@ -556,14 +569,18 @@ if [[ $RUN_METHODS -eq 1 ]]; then
         MEMPID=$!
 
         case $1 in                                                  # time
-          "gzip"|"lzma"|"delim")
+          "gzip"|"lzma")
               (time $dCmd< $in.$cFT> $in) &> $result/${capsIn}_DT__${inwf}_$ft;;
 
           "fqzcomp"|"quip")
               (time $dCmd $in.$cFT > $in) &> $result/${capsIn}_DT__${inwf}_$ft;;
 
-          "dsrc")
+          "dsrc"|"delim")
               (time $dCmd $in.$cFT $in) &> $result/${capsIn}_DT__${inwf}_$ft;;
+
+          "fqc")
+              (time $dCmd -i $in.$cFT -o $in) \
+              &> $result/${capsIn}_DT__${inwf}_$ft;;
         esac
 
         ProgMemoryStop $MEMPID $result/${capsIn}_DM__${inwf}_$ft    # memory
