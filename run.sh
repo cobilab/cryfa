@@ -46,7 +46,7 @@ INSTALL_METHODS=0
   INS_FQC=0             # FQC -- error: site not reachable -- exec avail
 
 ### run methods
-RUN_METHODS=1
+RUN_METHODS=0
   # FASTA
   RUN_GZIP_FA=0         # gzip
   RUN_LZMA_FA=0         # lzma
@@ -61,7 +61,7 @@ RUN_METHODS=1
   RUN_QUIP=0            # quip
   RUN_DSRC=0            # DSRC
   RUN_FQC=0             # FQC
-  RUN_CRYFA_FQ=1        # cryfa
+  RUN_CRYFA_FQ=0        # cryfa
 
 
 # cryfa exclusive -- test purpose
@@ -477,7 +477,7 @@ if [[ $RUN_METHODS -eq 1 ]]; then
 
     #----------------------- functions -----------------------#
     ### check if a file is available
-    function FExists
+    function isAvail
     {
       file="$1"
       if [[ ! -e $file ]]; then
@@ -487,7 +487,7 @@ if [[ $RUN_METHODS -eq 1 ]]; then
     }
 
     ### memory1
-    function ProgMemoryStart
+    function progMemoryStart
     {
         echo "0" > mem_ps;
         while true; do
@@ -496,14 +496,14 @@ if [[ $RUN_METHODS -eq 1 ]]; then
             sleep 5;
         done
     }
-    function ProgMemoryStop
+    function progMemoryStop
     {
         kill $1 >/dev/null 2>&1
         cat mem_ps | sort -V | tail -n 1 > $2;
     }
 
     ### memory2
-    function ProgMemory2
+    function progMemory2
     {
         valgrind --tool=massif --pages-as-heap=yes \
                  --massif-out-file=massif.out ./$1
@@ -512,7 +512,7 @@ if [[ $RUN_METHODS -eq 1 ]]; then
     }
 
     ### time
-    function ProgTime
+    function progTime
     {
         time ./$1
     }
@@ -563,7 +563,7 @@ if [[ $RUN_METHODS -eq 1 ]]; then
         esac
 
         ### compress
-        ProgMemoryStart $1 &
+        progMemoryStart $1 &
         MEMPID=$!
 
         rm -f $in.$cFT
@@ -583,17 +583,17 @@ if [[ $RUN_METHODS -eq 1 ]]; then
 
           "fqc")
               (time $cCmd -i $2 -o $in.$cFT) \
-              &> $result/${capsIn}_CT__${inwf}_$ft;;
+               &> $result/${capsIn}_CT__${inwf}_$ft;;
 
           "MFCompress")
               (time $cCmd -o $in.$cFT $2) &> $result/${capsIn}_CT__${inwf}_$ft;;
         esac
 
         ls -la $in.$cFT > $result/${capsIn}_CB__${inwf}_$ft         # size
-        ProgMemoryStop $MEMPID $result/${capsIn}_CM__${inwf}_$ft    # memory
+        progMemoryStop $MEMPID $result/${capsIn}_CM__${inwf}_$ft    # memory
 
         ### decompress
-        ProgMemoryStart $dProg &
+        progMemoryStart $dProg &
         MEMPID=$!
 
         case $1 in                                                  # time
@@ -608,13 +608,13 @@ if [[ $RUN_METHODS -eq 1 ]]; then
 
           "fqc")
               (time $dCmd -i $in.$cFT -o $in) \
-              &> $result/${capsIn}_DT__${inwf}_$ft;;
+               &> $result/${capsIn}_DT__${inwf}_$ft;;
 
           "MFCompress")
               (time $dCmd -o $in $in.$cFT)&> $result/${capsIn}_DT__${inwf}_$ft;;
         esac
 
-        ProgMemoryStop $MEMPID $result/${capsIn}_DM__${inwf}_$ft    # memory
+        progMemoryStop $MEMPID $result/${capsIn}_DM__${inwf}_$ft    # memory
 
         ### verify if input and decompressed files are the same
         cmp $2 $in &> $result/${capsIn}_V__${inwf}_$ft;
@@ -665,21 +665,21 @@ compDecomp $method $ds/$FA/$HUMAN/temp.$fastq
     }
 
     #------------------ dataset availablity ------------------#
-#    # FASTA -- human - viruses - synthetic
-#    for i in $HS_SEQ_RUN; do
-#        FExists "$dataset/$FA/$HUMAN/$HUMAN-$i.$fasta";
-#    done
-#    FExists "$dataset/$FA/$VIRUSES/viruses.$fasta"
-#    for i in {1..2}; do FExists "$dataset/$FA/$Synth/Synth-$i.$fasta"; done
-#
-#    # FASTQ -- human - Denisova - synthetic
-#    for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 SRR707196_1; do
-#        FExists "$dataset/$FQ/$HUMAN/$HUMAN-$i.$fastq"
-#    done
-#    for i in B1087 B1088 B1110 B1128 SL3003; do
-#        FExists "$dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq"
-#    done
-#    for i in {1..2}; do FExists "$dataset/$FQ/$Synth/Synth-$i.$fastq"; done
+    # FASTA -- human - viruses - synthetic
+    for i in $HS_SEQ_RUN; do
+        isAvail "$dataset/$FA/$HUMAN/$HUMAN-$i.$fasta";
+    done
+    isAvail "$dataset/$FA/$VIRUSES/viruses.$fasta"
+    for i in {1..2}; do isAvail "$dataset/$FA/$Synth/Synth-$i.$fasta"; done
+
+    # FASTQ -- human - Denisova - synthetic
+    for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 SRR707196_1; do
+        isAvail "$dataset/$FQ/$HUMAN/$HUMAN-$i.$fastq"
+    done
+    for i in B1087 B1088 B1110 B1128 SL3003; do
+        isAvail "$dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq"
+    done
+    for i in {1..2}; do isAvail "$dataset/$FQ/$Synth/Synth-$i.$fastq"; done
 
     #-------------------------- run --------------------------#
     ### FASTA
