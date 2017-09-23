@@ -61,7 +61,10 @@ RUN_METHODS=1
   RUN_QUIP=0            # quip
   RUN_DSRC=0            # DSRC
   RUN_FQC=0             # FQC
-  RUN_CRYFA_FQ=0        # cryfa
+  RUN_CRYFA_FQ=1        # cryfa
+
+### results
+PRINT_RESULTS=1
 
 
 # cryfa exclusive -- test purpose
@@ -604,7 +607,7 @@ if [[ $RUN_METHODS -eq 1 ]]; then
               (time $cCmd -o $in.$cFT $2) &> $result/${capsIn}_CT__${inwf}_$ft;;
         esac
 
-        ls -la $in.$cFT > $result/${capsIn}_CB__${inwf}_$ft         # size
+        ls -la $in.$cFT > $result/${capsIn}_CS__${inwf}_$ft         # size
         progMemoryStop $MEMPID $result/${capsIn}_CM__${inwf}_$ft    # memory
 
         ### decompress
@@ -635,85 +638,82 @@ if [[ $RUN_METHODS -eq 1 ]]; then
         cmp $2 $in &> $result/${capsIn}_V__${inwf}_$ft;
     }
 
-
-
-
-    ### results
-    function results
-    {
-        result="result"
-###        result="../../result"
-##        in="${2##*/}"                       # input file name
-##        inwf="${in%.*}"                     # input file name without filetype
-##        ft="${in##*.}"                      # filetype of input file name
-##        inPath="${2%/*}"                    # path of input file name
-##        capsIn="$(echo $1 | tr a-z A-Z)"    # input program's name in uppercase
+#    ### print results
+#    function printResults
+#    {
+#        result="../../result"
+#        dName="${2%_*}"                     # dataset name without filetype
+#        capsIn="$(echo $1 | tr a-z A-Z)"    # input program's name in uppercase
 #
-##        BC_GECO_HUMAN=`cat $result/${capsIn}_CB_HUMAN | awk '{ print $5; }'`;
+#        c="C_Size\tC_Time(real)\tC_Time(user)\tC_Time(sys)\tC_Mem"
+#        d="D_Time(real)\tD_Time(user)\tD_Time(sys)\tD_Mem"
+#        printf "Dataset\tMethod\t$c\t$d\tcmp?\n";
 #
-        printf "Dataset\tMethod\tC_Size\tC_Time\tC_Mem\tD_Time\tD_Mem\tcmp?\n";
-        case $2 in
-          "fa"|"FA"|"fasta"|"FASTA")
-              for i in "in"; do
-                  printf "$i\t$1";
-              done
-           ;;
+#        CS=`cat $result/${capsIn}_CS__$2 | awk '{ print $5; }'`;
+#        CT_r=`cat $result/${capsIn}_CT__$2 | tail -n 3 | head -n 1 \
+#                                           | awk '{ print $2;}'`;         # real
+#        CT_u=`cat $result/${capsIn}_CT__$2 | tail -n 2 | head -n 1 \
+#                                           | awk '{ print $2;}'`;         # user
+#        CT_s=`cat $result/${capsIn}_CT__$2 | tail -n 1 | awk '{ print $2;}'`;
+#        CM=`cat $result/${capsIn}_CM__$2`;
+#        DT_r=`cat $result/${capsIn}_DT__$2 | tail -n 3 | head -n 1 \
+#                                           | awk '{ print $2;}'`;         # real
+#        DT_u=`cat $result/${capsIn}_DT__$2 | tail -n 2 | head -n 1 \
+#                                           | awk '{ print $2;}'`;         # user
+#        DT_s=`cat $result/${capsIn}_DT__$2 | tail -n 1 | awk '{ print $2;}'`;
+#        DM=`cat $result/${capsIn}_DM__$2`;
+#        V=`cat $result/${capsIn}_V__$2 | wc -l`;
+#
+#        c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"   # compression results
+#        d="$DT_r\t$DT_u\t$DT_s\t$DM"        # decompression results
+#        printf "$dName\t$1\t$c\t$d\t$V";
+#    }
 
-          "fq"|"FQ"|"fastq"|"FASTQ")
-           ;;
-        esac
-    }
-
-
-
-
-
-
-    ### run compress and decompress on datasets. $1: program's name
+    ### run comp & decomp on datasets and print the results. $1: program's name
     function runOnDataset
     {
-#        method=$1
-#        methodLowCase="$(echo $method | tr A-Z a-z)"
+        method=$1
+        methodLowCase="$(echo $method | tr A-Z a-z)"
 #        if [[ ! -d progs/$methodLowCase ]]; then
 #            mkdir -p $progs/$methodLowCase;
 #        fi
-#        cd progs/$methodLowCase
-#        ds=../../$dataset
-#
-#        case $2 in
-#          "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
-#compDecomp $method $ds/$FA/$HUMAN/in.$fasta;
-#
-##              for i in $HS_SEQ_RUN; do
-##                  compDecomp $method $ds/$FA/$HUMAN/$HUMAN-$i.$fasta
-##              done
-##              compDecomp $method "$ds/$FA/$VIRUSES/viruses.$fasta"
-##              for i in {1..2};do
-##                  compDecomp $method "$ds/$FA/$Synth/Synth-$i.$fasta"
-##              done
-#              ;;
-#
-#          "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
-#compDecomp $method $ds/$FA/$HUMAN/temp.$fastq
-#
-##              for i in ERR013103_1 ERR015767_2 ERR031905_2 \
-##                       SRR442469_1 SRR707196_1; do
-##                  compDecomp $method "$ds/$FQ/$HUMAN/$HUMAN-$i.$fastq"
-##              done
-##              for i in B1087 B1088 B1110 B1128 SL3003; do
-##                  compDecomp $method \
-##                             "$ds/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq"
-##              done
-##              for i in {1..2};do
-##                  compDecomp $method "$ds/$FQ/$Synth/Synth-$i.$fastq"
-##              done
-#              ;;
-#        esac
+        cd progs/$methodLowCase
+#        dsPath=../../$dataset
+        corrMethod=`correctMethodName $1`   # modify method name for printing
 
-        method=`correctMethodName $1`   # call the function
-        results $method $2              # call the function
+        case $2 in
+          "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
+#compDecomp $method $dsPath/$FA/$HUMAN/in.$fasta;
+#printResults $corrMethod in_$fasta              # call the function
 
-#        cd ../..
+#              for i in $HS_SEQ_RUN; do
+#                  compDecomp $method $dsPath/$FA/$HUMAN/$HUMAN-$i.$fasta
+#              done
+#              compDecomp $method "$dsPath/$FA/$VIRUSES/viruses.$fasta"
+#              for i in {1..2};do
+#                  compDecomp $method "$dsPath/$FA/$Synth/Synth-$i.$fasta"
+#              done
+              ;;
+
+          "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
+#compDecomp $method $dsPath/$FA/$HUMAN/temp.$fastq
+#printResults $corrMethod temp_$fastq              # call the function
+#
+#              for i in ERR013103_1 ERR015767_2 ERR031905_2 \
+#                       SRR442469_1 SRR707196_1; do
+#                  compDecomp $method "$dsPath/$FQ/$HUMAN/$HUMAN-$i.$fastq"
+#              done
+#              for i in B1087 B1088 B1110 B1128 SL3003; do
+#                  compDecomp $method \
+#                             "$dsPath/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq"
+#              done
+#              for i in {1..2};do
+#                  compDecomp $method "$dsPath/$FQ/$Synth/Synth-$i.$fastq"
+#              done
+              ;;
+        esac
+
+        cd ../..
     }
 
 
@@ -734,6 +734,7 @@ if [[ $RUN_METHODS -eq 1 ]]; then
 #    done
 #    for i in {1..2}; do isAvail "$dataset/$FQ/$Synth/Synth-$i.$fastq"; done
 
+
     #-------------------------- run --------------------------#
     ### FASTA
     if [[ $RUN_GZIP_FA    -eq 1 ]]; then runOnDataset gzip       fa; fi
@@ -750,6 +751,68 @@ if [[ $RUN_METHODS -eq 1 ]]; then
     if [[ $RUN_DSRC       -eq 1 ]]; then runOnDataset dsrc       fq; fi
     if [[ $RUN_FQC        -eq 1 ]]; then runOnDataset fqc        fq; fi
     if [[ $RUN_CRYFA_FQ   -eq 1 ]]; then runOnDataset cryfa      fq; fi
+
+
+    #------------------------ results ------------------------#
+    if [[ $PRINT_RESULTS -eq 1 ]]; then
+
+        result="result"
+#        dName="${2%_*}"                     # dataset name without filetype
+#        capsIn="$(echo $1 | tr a-z A-Z)"    # input program's name in uppercase
+
+
+    for i in CRYFA; # GZIP LZMA MFCOMPRESS DELIMINATE FQZCOMP QUIP DSRC FQC;
+    do
+        for j in CS CT CM DT DM V;
+        do
+            # FASTA -- human - viruses - synthetic
+            for k in $HS_SEQ_RUN; do
+                isAvail "$result/${i}_${j}__$HUMAN-${k}_$fasta";
+            done
+#            for k in $HS_SEQ_RUN viruses Synth-1 Synth-2; do
+#                isAvail "$result/${i}_${j}__${k}_$fasta";
+#            done
+
+#            # FASTQ -- human - Denisova - synthetic
+#            for k in "temp"; do
+#                    isAvail "$result/${i}_${j}__${k}_$fastq";
+#            done
+
+#            for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 SRR707196_1; do
+#                isAvail "$dataset/$FQ/$HUMAN/$HUMAN-$i.$fastq"
+#            done
+#            for i in B1087 B1088 B1110 B1128 SL3003; do
+#                isAvail "$dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq"
+#            done
+#            for i in {1..2}; do isAvail "$dataset/$FQ/$Synth/Synth-$i.$fastq"; done
+        done
+    done
+
+#        c="C_Size\tC_Time(real)\tC_Time(user)\tC_Time(sys)\tC_Mem"
+#        d="D_Time(real)\tD_Time(user)\tD_Time(sys)\tD_Mem"
+#        printf "Dataset\tMethod\t$c\t$d\tcmp?\n";
+#
+#        CS=`cat $result/${capsIn}_CS__$2 | awk '{ print $5; }'`;
+#        CT_r=`cat $result/${capsIn}_CT__$2 | tail -n 3 | head -n 1 \
+#                                           | awk '{ print $2;}'`;         # real
+#        CT_u=`cat $result/${capsIn}_CT__$2 | tail -n 2 | head -n 1 \
+#                                           | awk '{ print $2;}'`;         # user
+#        CT_s=`cat $result/${capsIn}_CT__$2 | tail -n 1 | awk '{ print $2;}'`;
+#        CM=`cat $result/${capsIn}_CM__$2`;
+#        DT_r=`cat $result/${capsIn}_DT__$2 | tail -n 3 | head -n 1 \
+#                                           | awk '{ print $2;}'`;         # real
+#        DT_u=`cat $result/${capsIn}_DT__$2 | tail -n 2 | head -n 1 \
+#                                           | awk '{ print $2;}'`;         # user
+#        DT_s=`cat $result/${capsIn}_DT__$2 | tail -n 1 | awk '{ print $2;}'`;
+#        DM=`cat $result/${capsIn}_DM__$2`;
+#        V=`cat $result/${capsIn}_V__$2 | wc -l`;
+#
+#        c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"   # compression results
+#        d="$DT_r\t$DT_u\t$DT_s\t$DM"        # decompression results
+#        printf "$dName\t$1\t$c\t$d\t$V";
+
+
+    fi
 fi
 
 
