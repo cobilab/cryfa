@@ -43,9 +43,9 @@ INSTALL_METHODS=0
   INS_FQC=0             # FQC -- error: site not reachable -- exec available
 
 ### run methods
-RUN_METHODS=0
+RUN_METHODS=1
   # FASTA
-  RUN_GZIP_FA=0          # gzip
+  RUN_GZIP_FA=1         # gzip
   RUN_LZMA_FA=0         # lzma
   RUN_MFCOMPRESS=0      # MFCompress
   RUN_DELIMINATE=0      # DELIMINATE
@@ -623,13 +623,16 @@ then
 
         case $2 in
           "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
-              for i in $HS_SEQ_RUN; do
-                  compDecomp $method $dsPath/$FA/$HUMAN/$HUMAN-$i.$fasta
-              done
-              compDecomp $method "$dsPath/$FA/$VIRUSES/viruses.$fasta"
-              for i in {1..2};do
-                  compDecomp $method "$dsPath/$FA/$Synth/Synth-$i.$fasta"
-              done;;
+compDecomp $method $dsPath/$FA/$HUMAN/in.$fasta
+
+#              for i in $HS_SEQ_RUN; do
+#                  compDecomp $method $dsPath/$FA/$HUMAN/$HUMAN-$i.$fasta
+#              done
+#              compDecomp $method "$dsPath/$FA/$VIRUSES/viruses.$fasta"
+#              for i in {1..2};do
+#                  compDecomp $method "$dsPath/$FA/$Synth/Synth-$i.$fasta"
+#              done
+              ;;
 
           "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
               for i in ERR013103_1 ERR015767_2 ERR031905_2 \
@@ -642,28 +645,29 @@ then
               done
               for i in {1..2};do
                   compDecomp $method "$dsPath/$FQ/$Synth/Synth-$i.$fastq"
-              done;;
+              done
+              ;;
         esac
 
         cd ../..
     }
 
     #------------------ dataset availablity ------------------#
-    # FASTA -- human - viruses - synthetic
-    for i in $HS_SEQ_RUN; do
-        isAvail "$dataset/$FA/$HUMAN/$HUMAN-$i.$fasta";
-    done
-    isAvail "$dataset/$FA/$VIRUSES/viruses.$fasta"
-    for i in {1..2}; do isAvail "$dataset/$FA/$Synth/Synth-$i.$fasta"; done
-
-    # FASTQ -- human - Denisova - synthetic
-    for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 SRR707196_1; do
-        isAvail "$dataset/$FQ/$HUMAN/$HUMAN-$i.$fastq"
-    done
-    for i in B1087 B1088 B1110 B1128 SL3003; do
-        isAvail "$dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq"
-    done
-    for i in {1..2}; do isAvail "$dataset/$FQ/$Synth/Synth-$i.$fastq"; done
+#    # FASTA -- human - viruses - synthetic
+#    for i in $HS_SEQ_RUN; do
+#        isAvail "$dataset/$FA/$HUMAN/$HUMAN-$i.$fasta";
+#    done
+#    isAvail "$dataset/$FA/$VIRUSES/viruses.$fasta"
+#    for i in {1..2}; do isAvail "$dataset/$FA/$Synth/Synth-$i.$fasta"; done
+#
+#    # FASTQ -- human - Denisova - synthetic
+#    for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 SRR707196_1; do
+#        isAvail "$dataset/$FQ/$HUMAN/$HUMAN-$i.$fastq"
+#    done
+#    for i in B1087 B1088 B1110 B1128 SL3003; do
+#        isAvail "$dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq"
+#    done
+#    for i in {1..2}; do isAvail "$dataset/$FQ/$Synth/Synth-$i.$fastq"; done
 
     #-------------------------- run --------------------------#
     ### FASTA
