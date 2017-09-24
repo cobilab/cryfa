@@ -41,11 +41,13 @@ INSTALL_METHODS=0
   INS_QUIP=0            # quip
   INS_DSRC=0            # DSRC
   INS_FQC=0             # FQC -- error: site not reachable -- exec available
+  # Encryption
+  INS_AESCRYPT=0        # AES crypt
 
 ### run methods
 RUN_METHODS=1
   # FASTA
-  RUN_GZIP_FA=1         # gzip
+  RUN_GZIP_FA=0         # gzip
   RUN_LZMA_FA=0         # lzma
   RUN_MFCOMPRESS=0      # MFCompress
   RUN_DELIMINATE=0      # DELIMINATE
@@ -58,6 +60,8 @@ RUN_METHODS=1
   RUN_DSRC=0            # DSRC
   RUN_FQC=0             # FQC
   RUN_CRYFA_FQ=0        # cryfa
+  # Encryption
+  RUN_AESCRYPT=1        # AES crypt
 
 ### results
 PRINT_RESULTS=0
@@ -347,40 +351,32 @@ then
     ### MFCompress
     if [[ $INS_MFCOMPRESS -eq 1 ]];
     then
-        error=1
-
         rm -f MFCompress-src-1.01.tgz
 
-        if [[ $error -eq 0 ]]; then
-            url="http://sweet.ua.pt/ap/software/mfcompress"
-            wget $WGET_OP $url/MFCompress-src-1.01.tgz
-            tar -xzf MFCompress-src-1.01.tgz
-            mv MFCompress-src-1.01/ mfcompress/    # rename
-            mv mfcompress/ progs/
-            rm -f MFCompress-src-1.01.tgz
+        url="http://sweet.ua.pt/ap/software/mfcompress"
+        wget $WGET_OP $url/MFCompress-src-1.01.tgz
+        tar -xzf MFCompress-src-1.01.tgz
+        mv MFCompress-src-1.01/ mfcompress/    # rename
+        mv mfcompress/ progs/
+        rm -f MFCompress-src-1.01.tgz
 
-            cd progs/mfcompress/
-            cp Makefile.linux Makefile    # make -f Makefile.linux
-            make
-            cd ../..
-        fi
+        cd progs/mfcompress/
+        cp Makefile.linux Makefile    # make -f Makefile.linux
+        make
+        cd ../..
     fi
 
     ### DELIMINATE
     if [[ $INS_DELIMINATE -eq 1 ]];
     then
-        error=1
-
         rm -f DELIMINATE_LINUX_64bit.tar.gz
 
-        if [[ $error -eq 0 ]]; then
-            url="http://metagenomics.atc.tcs.com/Compression_archive"
-            wget $WGET_OP $url/DELIMINATE_LINUX_64bit.tar.gz
-            tar -xzf DELIMINATE_LINUX_64bit.tar.gz
-            mv EXECUTABLES deliminate    # rename
-            mv deliminate progs/
-            rm -f DELIMINATE_LINUX_64bit.tar.gz
-        fi
+         url="http://metagenomics.atc.tcs.com/Compression_archive"
+         wget $WGET_OP $url/DELIMINATE_LINUX_64bit.tar.gz
+         tar -xzf DELIMINATE_LINUX_64bit.tar.gz
+         mv EXECUTABLES deliminate    # rename
+         mv deliminate progs/
+         rm -f DELIMINATE_LINUX_64bit.tar.gz
     fi
 
     #----------------------- FASTQ -----------------------#
@@ -441,18 +437,32 @@ then
     ### FQC
     if [[ $INS_FQC -eq 1 ]];
     then
-        error=1
-
         rm -f FQC_LINUX_64bit.tar.gz
 
-        if [[ $error -eq 0 ]]; then
-            url="http://metagenomics.atc.tcs.com/Compression_archive/FQC"
-            wget $WGET_OP $url/FQC_LINUX_64bit.tar.gz
-            tar -xzf FQC_LINUX_64bit.tar.gz
-            mv FQC_LINUX_64bit/ fqc/    # rename
-            mv fqc/ progs/
-            rm -f FQC_LINUX_64bit.tar.gz
-        fi
+        url="http://metagenomics.atc.tcs.com/Compression_archive/FQC"
+        wget $WGET_OP $url/FQC_LINUX_64bit.tar.gz
+        tar -xzf FQC_LINUX_64bit.tar.gz
+        mv FQC_LINUX_64bit/ fqc/    # rename
+        mv fqc/ progs/
+        rm -f FQC_LINUX_64bit.tar.gz
+    fi
+
+    ### AES crypt
+    if [[ $INS_AESCRYPT -eq 1 ]];
+    then
+        rm -fr aescrypt-3.13/
+
+        url="https://www.aescrypt.com/download/v3/linux"
+        wget $WGET_OP $url/aescrypt-3.13.tgz
+        tar -xzvf aescrypt-3.13.tgz
+        mv aescrypt-3.13/ aescrypt/
+        mv aescrypt/ progs/
+
+        cd progs/aescrypt/src
+        make
+        sudo make install
+
+        rm -f aescrypt-3.13.tgz
     fi
 fi
 
