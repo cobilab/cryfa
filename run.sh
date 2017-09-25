@@ -45,7 +45,7 @@ INSTALL_METHODS=0
   INS_AESCRYPT=0        # AES crypt
 
 ### run methods
-RUN_METHODS=1
+RUN_METHODS=0
   # FASTA
   RUN_GZIP_FA=0         # gzip
   RUN_LZMA_FA=0         # lzma
@@ -335,6 +335,7 @@ then
     ### create folders, if they don't already exist
     if [[ ! -d $progs ]]; then mkdir -p $progs; fi
 
+    ### cryfa -- FASTA & FASTQ
     if [[ $INS_CRYFA -eq 1 ]];
     then
         rm -f cryfa
@@ -343,7 +344,7 @@ then
         make
 
         if [[ ! -d progs/cryfa ]]; then mkdir -p progs/cryfa; fi
-        mv cryfa progs/cryfa/
+        cp cryfa progs/cryfa/
         cp pass.txt progs/cryfa/
     fi
 
