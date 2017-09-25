@@ -45,26 +45,32 @@ INSTALL_METHODS=0
   INS_AESCRYPT=0        # AES crypt
 
 ### run methods
-RUN_METHODS=0
-  # FASTA
-  RUN_GZIP_FA=0         # gzip
-  RUN_LZMA_FA=0         # lzma
-  RUN_MFCOMPRESS=0      # MFCompress
-  RUN_DELIMINATE=0      # DELIMINATE
-  RUN_CRYFA_FA=0        # cryfa
-  # FASTQ
-  RUN_GZIP_FQ=0         # gzip
-  RUN_LZMA_FQ=0         # lzma
-  RUN_FQZCOMP=0         # fqzcomp
-  RUN_QUIP=0            # quip
-  RUN_DSRC=0            # DSRC
-  RUN_FQC=0             # FQC
-  RUN_CRYFA_FQ=0        # cryfa
-  # Encryption
-  RUN_AESCRYPT=1        # AES crypt
+RUN_METHODS=1
+  # only compress/decompress
+  RUN_METHODS_COMP=0
+    # FASTA
+    RUN_GZIP_FA=0         # gzip
+    RUN_LZMA_FA=0         # lzma
+    RUN_MFCOMPRESS=0      # MFCompress
+    RUN_DELIMINATE=0      # DELIMINATE
+    RUN_CRYFA_FA=0        # cryfa
+    # FASTQ
+    RUN_GZIP_FQ=0         # gzip
+    RUN_LZMA_FQ=0         # lzma
+    RUN_FQZCOMP=0         # fqzcomp
+    RUN_QUIP=0            # quip
+    RUN_DSRC=0            # DSRC
+    RUN_FQC=0             # FQC
+    RUN_CRYFA_FQ=0        # cryfa
+    ### results
+    PRINT_RESULTS_COMP=0
 
-### results
-PRINT_RESULTS=0
+  # only encrypt/decrypt
+  RUN_METHODS_ENC=0
+
+  # compress/decompress plus encrypt/decrypt
+  RUN_METHODS_COMP_ENC=0
+
 
 
 # cryfa exclusive -- test purpose
@@ -458,12 +464,11 @@ then
         tar -xzvf aescrypt-3.13.tgz
         mv aescrypt-3.13/ aescrypt/
         mv aescrypt/ progs/
+        rm -f aescrypt-3.13.tgz
 
         cd progs/aescrypt/src
         make
         sudo make install
-
-        rm -f aescrypt-3.13.tgz
     fi
 fi
 
@@ -473,339 +478,339 @@ fi
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $RUN_METHODS -eq 1 ]];
 then
-    ### create folders, if they don't already exist
-    if [[ ! -d $progs   ]]; then mkdir -p $progs;   fi
-    if [[ ! -d $result  ]]; then mkdir -p $result;  fi
+  ### create folders, if they don't already exist
+  if [[ ! -d $progs   ]]; then mkdir -p $progs;   fi
+  if [[ ! -d $result  ]]; then mkdir -p $result;  fi
 
-    #----------------------- functions -----------------------#
-    ### check if a file is available. $1: file name
-    function isAvail
-    {
-      if [[ ! -e $1 ]]; then
-        echo "Warning: The file \"$1\" is not available.";
-        return;
+  #------------------------ functions ------------------------#
+  # check if a file is available. $1: file name
+  function isAvail
+  {
+    if [[ ! -e $1 ]]; then
+      echo "Warning: The file \"$1\" is not available.";
+      return;
+    fi
+  }
+
+  # memory1
+  function progMemoryStart
+  {
+      echo "0" > mem_ps;
+      while true; do
+          ps aux | grep $1 | awk '{ print $6; }' | \
+          sort -V | tail -n 1 >> mem_ps;
+          sleep 5;
+      done
+  }
+  function progMemoryStop
+  {
+      kill $1 >/dev/null 2>&1
+      cat mem_ps | sort -V | tail -n 1 > $2;
+  }
+
+  # memory2
+  function progMemory2
+  {
+      valgrind --tool=massif --pages-as-heap=yes \
+               --massif-out-file=massif.out ./$1
+      cat massif.out | grep mem_heap_B | sed -e 's/mem_heap_B=\(.*\)/\1/' | \
+      sort -g | tail -n 1
+  }
+
+  # time
+  function progTime
+  {
+      time ./$1
+  }
+
+  # methods' names for printing in the result table
+  function printMethodName
+  {
+      methodUpCase="$(echo $1 | tr a-z A-Z)"
+
+      case $methodUpCase in
+        "GZIP")                 echo "gzip";;
+        "LZMA")                 echo "LZMA";;
+        "MFCOMPRESS")           echo "MFCompress";;
+        "DELIM"|"DELIMINATE")   echo "DELIMINATE";;
+        "CRYFA")                echo "Cryfa";;
+        "FQZCOMP")              echo "Fqzcomp";;
+        "QUIP")                 echo "Quip";;
+        "DSRC")                 echo "DSRC";;
+        "FQC")                  echo "FQC";;
+      esac
+  }
+
+  # compress and decompress. $1: program's name; $2: input data
+  function compDecomp
+  {
+      result="../../result"
+      in="${2##*/}"                     # input file name
+      inwf="${in%.*}"                   # input file name without filetype
+      ft="${in##*.}"                    # filetype of input file name
+      inPath="${2%/*}"                  # input file's path
+      upIn="$(echo $1 | tr a-z A-Z)"    # input program's name in uppercase
+
+      case $1 in
+        "gzip")
+            cFT="gz"                    # compressed filetype
+            cCmd="gzip"                 # compression command
+            dProg="gunzip"              # decompress program's name
+            dCmd="gunzip";;             # decompress command
+
+        "lzma")
+            cFT="lzma";            cCmd="lzma";
+            dProg="lzma";          dCmd="lzma -d";;
+
+        "fqzcomp")
+            cFT="fqz";             cCmd="./fqz_comp";
+            dProg="fqz_comp";      dCmd="./fqz_comp -d";; # "./fqz_comp -d -X"
+
+        "quip")
+            cFT="qp";              cCmd="./quip -c";
+            dProg="quip";          dCmd="./quip -d -c";;
+
+        "dsrc")
+            cFT="dsrc";            cCmd="./dsrc c -m2";
+            dProg="dsrc";          dCmd="./dsrc d";;
+
+        "delim")
+            cFT="dlim";            cCmd="./delim a";
+            dProg="delim";         dCmd="./delim e";;
+
+        "fqc")
+            cFT="fqc";             cCmd="./fqc -c";
+            dProg="fqc";           dCmd="./fqc -d";;
+
+        "mfcompress")
+            cFT="mfc";             cCmd="./MFCompressC";
+            dProg="MFCompress";    dCmd="./MFCompressD";;
+
+        "cryfa")
+            cFT="cryfa";           cCmd="./cryfa -k pass.txt -t 8";
+            dProg="cryfa";         dCmd="./cryfa -k pass.txt -t 8 -d";;
+      esac
+
+      ### compress
+      progMemoryStart $1 &
+      MEMPID=$!
+
+      rm -f $in.$cFT
+      case $1 in                                                # time
+        "gzip"|"lzma")
+            (time $cCmd < $2 > $in.$cFT) &> $result/${upIn}_CT__${inwf}_$ft;;
+
+        "cryfa"|"quip"|"fqzcomp")
+            (time $cCmd $2 > $in.$cFT) &> $result/${upIn}_CT__${inwf}_$ft;;
+
+        "dsrc")
+            (time $cCmd $2 $in.$cFT) &> $result/${upIn}_CT__${inwf}_$ft;;
+
+        "delim")
+            (time $cCmd $2) &> $result/${upIn}_CT__${inwf}_$ft
+            mv $inPath/$in.$cFT $in.$cFT;;
+
+        "fqc")
+            (time $cCmd -i $2 -o $in.$cFT) &>$result/${upIn}_CT__${inwf}_$ft;;
+
+        "mfcompress")
+            (time $cCmd -o $in.$cFT $2) &> $result/${upIn}_CT__${inwf}_$ft;;
+      esac
+
+      ls -la $in.$cFT > $result/${upIn}_CS__${inwf}_$ft         # size
+      progMemoryStop $MEMPID $result/${upIn}_CM__${inwf}_$ft    # memory
+
+      ### decompress
+      progMemoryStart $dProg &
+      MEMPID=$!
+
+      case $1 in                                                # time
+        "gzip"|"lzma")
+            (time $dCmd < $in.$cFT> $in) &> $result/${upIn}_DT__${inwf}_$ft;;
+
+        "cryfa"|"fqzcomp"|"quip")
+            (time $dCmd $in.$cFT > $in) &> $result/${upIn}_DT__${inwf}_$ft;;
+
+        "dsrc"|"delim")
+            (time $dCmd $in.$cFT $in) &> $result/${upIn}_DT__${inwf}_$ft;;
+
+        "fqc")
+            (time $dCmd -i $in.$cFT -o $in)&>$result/${upIn}_DT__${inwf}_$ft;;
+
+        "mfcompress")
+            (time $dCmd -o $in $in.$cFT) &> $result/${upIn}_DT__${inwf}_$ft;;
+      esac
+
+      progMemoryStop $MEMPID $result/${upIn}_DM__${inwf}_$ft    # memory
+
+      ### verify if input and decompressed files are the same
+      cmp $2 $in &> $result/${upIn}_V__${inwf}_$ft;
+  }
+
+  # run comp & decomp on datasets. $1: program's name
+  function compDecompOnDataset
+  {
+      method="$(echo $1 | tr A-Z a-z)"    # method's name in lower case
+      if [[ ! -d progs/$method ]]; then mkdir -p $progs/$method; fi
+      cd progs/$method
+      dsPath=../../$dataset
+
+      case $2 in
+        "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
+  compDecomp $method $dsPath/$FA/$HUMAN/in.$fasta
+
+  #          for i in $HS_SEQ_RUN; do
+  #              compDecomp $method $dsPath/$FA/$HUMAN/$HUMAN-$i.$fasta
+  #          done
+  #          compDecomp $method "$dsPath/$FA/$VIRUSES/viruses.$fasta"
+  #          for i in {1..2};do
+  #              compDecomp $method "$dsPath/$FA/$Synth/Synth-$i.$fasta"
+  #          done
+            ;;
+
+        "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
+            for i in ERR013103_1 ERR015767_2 ERR031905_2 \
+                     SRR442469_1 SRR707196_1; do
+                compDecomp $method "$dsPath/$FQ/$HUMAN/$HUMAN-$i.$fastq"
+            done
+            for i in B1087 B1088 B1110 B1128 SL3003; do
+                compDecomp $method \
+                           "$dsPath/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq"
+            done
+            for i in {1..2};do
+                compDecomp $method "$dsPath/$FQ/$Synth/Synth-$i.$fastq"
+            done
+            ;;
+      esac
+
+      cd ../..
+  }
+
+  # print compress/decompress results. $1: program's name, $2: dataset
+  function compDecompResult
+  {
+      CS=`cat $result/${1}_CS__${2} | awk '{ print $5; }'`;
+      CT_r=`cat $result/${1}_CT__${2} | tail -n 3 | head -n 1 \
+                                      | awk '{ print $2;}'`;     # real
+      CT_u=`cat $result/${1}_CT__${2} | tail -n 2 | head -n 1 \
+                                      | awk '{ print $2;}'`;     # user
+      CT_s=`cat $result/${1}_CT__${2} | tail -n 1 | awk '{ print $2;}'`
+      CM=`cat $result/${1}_CM__${2}`;
+      DT_r=`cat $result/${1}_DT__${2} | tail -n 3 | head -n 1 \
+                                      | awk '{ print $2;}'`;     # real
+      DT_u=`cat $result/${1}_DT__${2} | tail -n 2 | head -n 1 \
+                                      | awk '{ print $2;}'`;     # user
+      DT_s=`cat $result/${1}_DT__${2} | tail -n 1 | awk '{ print $2;}'`
+      DM=`cat $result/${1}_DM__${2}`;
+      V=`cat $result/${1}_V__${2} | wc -l`;
+
+      dName="${2%_*}"                     # dataset name without filetype
+      method=`printMethodName $1`         # methods' name for printing
+      c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"   # compression results
+      d="$DT_r\t$DT_u\t$DT_s\t$DM"        # decompression results
+
+      printf "$dName\t$method\t$c\t$d\t$V\n";
+  }
+
+  #------------------- dataset availablity -------------------#
+  #    # FASTA -- human - viruses - synthetic
+  #    for i in $HS_SEQ_RUN; do
+  #        isAvail "$dataset/$FA/$HUMAN/$HUMAN-$i.$fasta";
+  #    done
+  #    isAvail "$dataset/$FA/$VIRUSES/viruses.$fasta"
+  #    for i in {1..2}; do isAvail "$dataset/$FA/$Synth/Synth-$i.$fasta"; done
+  #
+  #    # FASTQ -- human - Denisova - synthetic
+  #    for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 SRR707196_1; do
+  #        isAvail "$dataset/$FQ/$HUMAN/$HUMAN-$i.$fastq"
+  #    done
+  #    for i in B1087 B1088 B1110 B1128 SL3003; do
+  #        isAvail "$dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq"
+  #    done
+  #    for i in {1..2}; do isAvail "$dataset/$FQ/$Synth/Synth-$i.$fastq"; done
+
+  #--------------------------- run ---------------------------#
+  ### run methods -- compress/decompress
+  if [[ $RUN_METHODS_COMP -eq 1 ]];
+  then
+      ### FASTA
+      if [[ $RUN_GZIP_FA    -eq 1 ]]; then compDecompOnDataset gzip       fa; fi
+      if [[ $RUN_LZMA_FA    -eq 1 ]]; then compDecompOnDataset lzma       fa; fi
+      if [[ $RUN_MFCOMPRESS -eq 1 ]]; then compDecompOnDataset mfcompress fa; fi
+      if [[ $RUN_DELIMINATE -eq 1 ]]; then compDecompOnDataset delim      fa; fi
+      if [[ $RUN_CRYFA_FA   -eq 1 ]]; then compDecompOnDataset cryfa      fa; fi
+
+      ### FASTQ
+      if [[ $RUN_GZIP_FQ    -eq 1 ]]; then compDecompOnDataset gzip       fq; fi
+      if [[ $RUN_LZMA_FQ    -eq 1 ]]; then compDecompOnDataset lzma       fq; fi
+      if [[ $RUN_FQZCOMP    -eq 1 ]]; then compDecompOnDataset fqzcomp    fq; fi
+      if [[ $RUN_QUIP       -eq 1 ]]; then compDecompOnDataset quip       fq; fi
+      if [[ $RUN_DSRC       -eq 1 ]]; then compDecompOnDataset dsrc       fq; fi
+      if [[ $RUN_FQC        -eq 1 ]]; then compDecompOnDataset fqc        fq; fi
+      if [[ $RUN_CRYFA_FQ   -eq 1 ]]; then compDecompOnDataset cryfa      fq; fi
+
+      #------------------------ results ------------------------#
+      if [[ $PRINT_RESULTS_COMP -eq 1 ]];
+      then
+          ### result files availability
+          result="result"
+
+  #        for i in CRYFA GZIP LZMA MFCOMPRESS DELIMINATE FQZCOMP QUIP DSRC FQC; do
+  #            for j in CS CT CM DT DM V; do
+  #                # FASTA -- human - viruses - synthetic
+  #                for k in $HS_SEQ_RUN; do
+  #                    isAvail "$result/${i}_${j}__$HUMAN-${k}_$fasta";
+  #                done
+  #                isAvail "$result/${i}_${j}__viruses_$fasta"
+  #                for k in {1..2}; do
+  #                    isAvail "$result/${i}_${j}__$Synth-${k}_$fasta";
+  #                done
+  #
+  #                # FASTQ -- human - Denisova - synthetic
+  #                for k in ERR013103_1 ERR015767_2 ERR031905_2 \
+  #                         SRR442469_1 SRR707196_1; do
+  #                    isAvail "$result/${i}_${j}__$HUMAN-${k}_$fastq";
+  #                done
+  #                for k in B1087 B1088 B1110 B1128 SL3003; do
+  #                    isAvail "$result/${i}_${j}__$DENISOVA-${k}_SR_$fastq";
+  #                done
+  #                for k in {1..2}; do
+  #                    isAvail "$result/${i}_${j}__$Synth-${k}_$fastq";
+  #                done
+  #            done
+  #        done
+
+          ### print results
+          c="C_Size\tC_Time(real)\tC_Time(user)\tC_Time(sys)\tC_Mem"
+          d="D_Time(real)\tD_Time(user)\tD_Time(sys)\tD_Mem"
+          printf "Dataset\tMethod\t$c\t$d\tEq\n" > result.$INF;
+
+          for i in CRYFA GZIP LZMA MFCOMPRESS DELIMINATE FQZCOMP QUIP DSRC FQC;
+          do
+              # FASTA -- human - viruses - synthetic
+              for j in $HS_SEQ_RUN; do
+                  compDecompResult $i $HUMAN-${j}_$fasta >> result.$INF;
+              done
+              compDecompResult $i viruses_$fasta >> result.$INF;
+              for j in {1..2}; do
+                  compDecompResult $i $Synth-${j}_$fasta >> result.$INF;
+              done
+
+              # FASTQ -- human - Denisova - synthetic
+              for j in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 SRR707196_1; do
+                  compDecompResult $i $HUMAN-${j}_$fastq >> result.$INF;
+              done
+              for j in B1087 B1088 B1110 B1128 SL3003; do
+                  compDecompResult $i $DENISOVA-${j}_SR_$fastq >> result.$INF;
+              done
+              for j in {1..2}; do
+                  compDecompResult $i $Synth-${j}_$fastq >> result.$INF;
+              done
+          done
       fi
-    }
+  fi
 
-    ### memory1
-    function progMemoryStart
-    {
-        echo "0" > mem_ps;
-        while true; do
-            ps aux | grep $1 | awk '{ print $6; }' | \
-            sort -V | tail -n 1 >> mem_ps;
-            sleep 5;
-        done
-    }
-    function progMemoryStop
-    {
-        kill $1 >/dev/null 2>&1
-        cat mem_ps | sort -V | tail -n 1 > $2;
-    }
-
-    ### memory2
-    function progMemory2
-    {
-        valgrind --tool=massif --pages-as-heap=yes \
-                 --massif-out-file=massif.out ./$1
-        cat massif.out | grep mem_heap_B | sed -e 's/mem_heap_B=\(.*\)/\1/' | \
-        sort -g | tail -n 1
-    }
-
-    ### time
-    function progTime
-    {
-        time ./$1
-    }
-
-    ### compress and decompress. $1: program's name; $2: input data
-    function compDecomp
-    {
-        result="../../result"
-        in="${2##*/}"                     # input file name
-        inwf="${in%.*}"                   # input file name without filetype
-        ft="${in##*.}"                    # filetype of input file name
-        inPath="${2%/*}"                  # input file's path
-        upIn="$(echo $1 | tr a-z A-Z)"    # input program's name in uppercase
-
-        case $1 in
-          "gzip")
-              cFT="gz"                    # compressed filetype
-              cCmd="gzip"                 # compression command
-              dProg="gunzip"              # decompress program's name
-              dCmd="gunzip";;             # decompress command
-
-          "lzma")
-              cFT="lzma";            cCmd="lzma";
-              dProg="lzma";          dCmd="lzma -d";;
-
-          "fqzcomp")
-              cFT="fqz";             cCmd="./fqz_comp";
-              dProg="fqz_comp";      dCmd="./fqz_comp -d";; # "./fqz_comp -d -X"
-
-          "quip")
-              cFT="qp";              cCmd="./quip -c";
-              dProg="quip";          dCmd="./quip -d -c";;
-
-          "dsrc")
-              cFT="dsrc";            cCmd="./dsrc c -m2";
-              dProg="dsrc";          dCmd="./dsrc d";;
-
-          "delim")
-              cFT="dlim";            cCmd="./delim a";
-              dProg="delim";         dCmd="./delim e";;
-
-          "fqc")
-              cFT="fqc";             cCmd="./fqc -c";
-              dProg="fqc";           dCmd="./fqc -d";;
-
-          "mfcompress")
-              cFT="mfc";             cCmd="./MFCompressC";
-              dProg="MFCompress";    dCmd="./MFCompressD";;
-
-          "cryfa")
-              cFT="cryfa";           cCmd="./cryfa -k pass.txt -t 8";
-              dProg="cryfa";         dCmd="./cryfa -k pass.txt -t 8 -d";;
-        esac
-
-        ### compress
-        progMemoryStart $1 &
-        MEMPID=$!
-
-        rm -f $in.$cFT
-        case $1 in                                                # time
-          "gzip"|"lzma")
-              (time $cCmd < $2 > $in.$cFT) &> $result/${upIn}_CT__${inwf}_$ft;;
-
-          "cryfa"|"quip"|"fqzcomp")
-              (time $cCmd $2 > $in.$cFT) &> $result/${upIn}_CT__${inwf}_$ft;;
-
-          "dsrc")
-              (time $cCmd $2 $in.$cFT) &> $result/${upIn}_CT__${inwf}_$ft;;
-
-          "delim")
-              (time $cCmd $2) &> $result/${upIn}_CT__${inwf}_$ft
-              mv $inPath/$in.$cFT $in.$cFT;;
-
-          "fqc")
-              (time $cCmd -i $2 -o $in.$cFT) &>$result/${upIn}_CT__${inwf}_$ft;;
-
-          "mfcompress")
-              (time $cCmd -o $in.$cFT $2) &> $result/${upIn}_CT__${inwf}_$ft;;
-        esac
-
-        ls -la $in.$cFT > $result/${upIn}_CS__${inwf}_$ft         # size
-        progMemoryStop $MEMPID $result/${upIn}_CM__${inwf}_$ft    # memory
-
-        ### decompress
-        progMemoryStart $dProg &
-        MEMPID=$!
-
-        case $1 in                                                # time
-          "gzip"|"lzma")
-              (time $dCmd < $in.$cFT> $in) &> $result/${upIn}_DT__${inwf}_$ft;;
-
-          "cryfa"|"fqzcomp"|"quip")
-              (time $dCmd $in.$cFT > $in) &> $result/${upIn}_DT__${inwf}_$ft;;
-
-          "dsrc"|"delim")
-              (time $dCmd $in.$cFT $in) &> $result/${upIn}_DT__${inwf}_$ft;;
-
-          "fqc")
-              (time $dCmd -i $in.$cFT -o $in)&>$result/${upIn}_DT__${inwf}_$ft;;
-
-          "mfcompress")
-              (time $dCmd -o $in $in.$cFT) &> $result/${upIn}_DT__${inwf}_$ft;;
-        esac
-
-        progMemoryStop $MEMPID $result/${upIn}_DM__${inwf}_$ft    # memory
-
-        ### verify if input and decompressed files are the same
-        cmp $2 $in &> $result/${upIn}_V__${inwf}_$ft;
-    }
-
-    ### run comp & decomp on datasets. $1: program's name
-    function runOnDataset
-    {
-        method="$(echo $1 | tr A-Z a-z)"    # method's name in lower case
-        if [[ ! -d progs/$method ]]; then mkdir -p $progs/$method; fi
-        cd progs/$method
-        dsPath=../../$dataset
-
-        case $2 in
-          "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
-compDecomp $method $dsPath/$FA/$HUMAN/in.$fasta
-
-#              for i in $HS_SEQ_RUN; do
-#                  compDecomp $method $dsPath/$FA/$HUMAN/$HUMAN-$i.$fasta
-#              done
-#              compDecomp $method "$dsPath/$FA/$VIRUSES/viruses.$fasta"
-#              for i in {1..2};do
-#                  compDecomp $method "$dsPath/$FA/$Synth/Synth-$i.$fasta"
-#              done
-              ;;
-
-          "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
-              for i in ERR013103_1 ERR015767_2 ERR031905_2 \
-                       SRR442469_1 SRR707196_1; do
-                  compDecomp $method "$dsPath/$FQ/$HUMAN/$HUMAN-$i.$fastq"
-              done
-              for i in B1087 B1088 B1110 B1128 SL3003; do
-                  compDecomp $method \
-                             "$dsPath/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq"
-              done
-              for i in {1..2};do
-                  compDecomp $method "$dsPath/$FQ/$Synth/Synth-$i.$fastq"
-              done
-              ;;
-        esac
-
-        cd ../..
-    }
-
-    #------------------ dataset availablity ------------------#
-#    # FASTA -- human - viruses - synthetic
-#    for i in $HS_SEQ_RUN; do
-#        isAvail "$dataset/$FA/$HUMAN/$HUMAN-$i.$fasta";
-#    done
-#    isAvail "$dataset/$FA/$VIRUSES/viruses.$fasta"
-#    for i in {1..2}; do isAvail "$dataset/$FA/$Synth/Synth-$i.$fasta"; done
-#
-#    # FASTQ -- human - Denisova - synthetic
-#    for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 SRR707196_1; do
-#        isAvail "$dataset/$FQ/$HUMAN/$HUMAN-$i.$fastq"
-#    done
-#    for i in B1087 B1088 B1110 B1128 SL3003; do
-#        isAvail "$dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq"
-#    done
-#    for i in {1..2}; do isAvail "$dataset/$FQ/$Synth/Synth-$i.$fastq"; done
-
-    #-------------------------- run --------------------------#
-    ### FASTA
-    if [[ $RUN_GZIP_FA    -eq 1 ]]; then runOnDataset gzip       fa; fi
-    if [[ $RUN_LZMA_FA    -eq 1 ]]; then runOnDataset lzma       fa; fi
-    if [[ $RUN_MFCOMPRESS -eq 1 ]]; then runOnDataset mfcompress fa; fi
-    if [[ $RUN_DELIMINATE -eq 1 ]]; then runOnDataset delim      fa; fi
-    if [[ $RUN_CRYFA_FA   -eq 1 ]]; then runOnDataset cryfa      fa; fi
-
-    ### FASTQ
-    if [[ $RUN_GZIP_FQ    -eq 1 ]]; then runOnDataset gzip       fq; fi
-    if [[ $RUN_LZMA_FQ    -eq 1 ]]; then runOnDataset lzma       fq; fi
-    if [[ $RUN_FQZCOMP    -eq 1 ]]; then runOnDataset fqzcomp    fq; fi
-    if [[ $RUN_QUIP       -eq 1 ]]; then runOnDataset quip       fq; fi
-    if [[ $RUN_DSRC       -eq 1 ]]; then runOnDataset dsrc       fq; fi
-    if [[ $RUN_FQC        -eq 1 ]]; then runOnDataset fqc        fq; fi
-    if [[ $RUN_CRYFA_FQ   -eq 1 ]]; then runOnDataset cryfa      fq; fi
 fi
-
-
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   print results
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ $PRINT_RESULTS -eq 1 ]];
-then
-    #----------------------- functions -----------------------#
-    ### methods' names for printing in the result table
-    function printMethodName
-    {
-        methodUpCase="$(echo $1 | tr a-z A-Z)"
-
-        case $methodUpCase in
-          "GZIP")                 echo "gzip";;
-          "LZMA")                 echo "LZMA";;
-          "MFCOMPRESS")           echo "MFCompress";;
-          "DELIM"|"DELIMINATE")   echo "DELIMINATE";;
-          "CRYFA")                echo "Cryfa";;
-          "FQZCOMP")              echo "Fqzcomp";;
-          "QUIP")                 echo "Quip";;
-          "DSRC")                 echo "DSRC";;
-          "FQC")                  echo "FQC";;
-        esac
-    }
-
-    ### print results. $1: program's name, $2: dataset
-    function printResult
-    {
-        CS=`cat $result/${1}_CS__${2} | awk '{ print $5; }'`;
-        CT_r=`cat $result/${1}_CT__${2} | tail -n 3 | head -n 1 \
-                                        | awk '{ print $2;}'`;     # real
-        CT_u=`cat $result/${1}_CT__${2} | tail -n 2 | head -n 1 \
-                                        | awk '{ print $2;}'`;     # user
-        CT_s=`cat $result/${1}_CT__${2} | tail -n 1 | awk '{ print $2;}'`
-        CM=`cat $result/${1}_CM__${2}`;
-        DT_r=`cat $result/${1}_DT__${2} | tail -n 3 | head -n 1 \
-                                        | awk '{ print $2;}'`;     # real
-        DT_u=`cat $result/${1}_DT__${2} | tail -n 2 | head -n 1 \
-                                        | awk '{ print $2;}'`;     # user
-        DT_s=`cat $result/${1}_DT__${2} | tail -n 1 | awk '{ print $2;}'`
-        DM=`cat $result/${1}_DM__${2}`;
-        V=`cat $result/${1}_V__${2} | wc -l`;
-
-        dName="${2%_*}"                     # dataset name without filetype
-        method=`printMethodName $1`         # methods' name for printing
-        c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"   # compression results
-        d="$DT_r\t$DT_u\t$DT_s\t$DM"        # decompression results
-
-        printf "$dName\t$method\t$c\t$d\t$V\n";
-    }
-
-    #--------------- result files availability ---------------#
-    result="result"
-
-#    for i in CRYFA GZIP LZMA MFCOMPRESS DELIMINATE FQZCOMP QUIP DSRC FQC; do
-#        for j in CS CT CM DT DM V; do
-#            # FASTA -- human - viruses - synthetic
-#            for k in $HS_SEQ_RUN; do
-#                isAvail "$result/${i}_${j}__$HUMAN-${k}_$fasta";
-#            done
-#            isAvail "$result/${i}_${j}__viruses_$fasta"
-#            for k in {1..2}; do
-#                isAvail "$result/${i}_${j}__$Synth-${k}_$fasta";
-#            done
-#
-#            # FASTQ -- human - Denisova - synthetic
-#            for k in ERR013103_1 ERR015767_2 ERR031905_2 \
-#                     SRR442469_1 SRR707196_1; do
-#                isAvail "$result/${i}_${j}__$HUMAN-${k}_$fastq";
-#            done
-#            for k in B1087 B1088 B1110 B1128 SL3003; do
-#                isAvail "$result/${i}_${j}__$DENISOVA-${k}_SR_$fastq";
-#            done
-#            for k in {1..2}; do
-#                isAvail "$result/${i}_${j}__$Synth-${k}_$fastq";
-#            done
-#        done
-#    done
-
-    #--------------------- print results ---------------------#
-    c="C_Size\tC_Time(real)\tC_Time(user)\tC_Time(sys)\tC_Mem"
-    d="D_Time(real)\tD_Time(user)\tD_Time(sys)\tD_Mem"
-    printf "Dataset\tMethod\t$c\t$d\tEq\n" > result.$INF;
-
-    for i in CRYFA GZIP LZMA MFCOMPRESS DELIMINATE FQZCOMP QUIP DSRC FQC;
-    do
-        # FASTA -- human - viruses - synthetic
-        for j in $HS_SEQ_RUN; do
-            printResult $i $HUMAN-${j}_$fasta >> result.$INF;
-        done
-        printResult $i viruses_$fasta >> result.$INF;
-        for j in {1..2}; do
-            printResult $i $Synth-${j}_$fasta >> result.$INF;
-        done
-
-        # FASTQ -- human - Denisova - synthetic
-        for j in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 SRR707196_1; do
-            printResult $i $HUMAN-${j}_$fastq >> result.$INF;
-        done
-        for j in B1087 B1088 B1110 B1128 SL3003; do
-            printResult $i $DENISOVA-${j}_SR_$fastq >> result.$INF;
-        done
-        for j in {1..2}; do
-            printResult $i $Synth-${j}_$fastq >> result.$INF;
-        done
-    done
-fi
-
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #   run cryfa -- compress
