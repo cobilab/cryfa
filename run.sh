@@ -1132,39 +1132,40 @@ compEncDecDecompress $methodComp $dsPath/$FA/$HUMAN/in.$fasta $methodEnc
           ### result files availability
           result="result"
 
-  #        for i in CRYFA GZIP LZMA MFCOMPRESS DELIMINATE FQZCOMP QUIP DSRC FQC; do
-  #            for j in CS CT CM DT DM V; do
-  #                # FASTA -- human - viruses - synthetic
-  #                for k in $HS_SEQ_RUN; do
-  #                    isAvail "$result/${i}_${j}__$HUMAN-${k}_$fasta";
-  #                done
-  #                isAvail "$result/${i}_${j}__viruses_$fasta"
-  #                for k in {1..2}; do
-  #                    isAvail "$result/${i}_${j}__$Synth-${k}_$fasta";
-  #                done
-  #
-  #                # FASTQ -- human - Denisova - synthetic
-  #                for k in ERR013103_1 ERR015767_2 ERR031905_2 \
-  #                         SRR442469_1 SRR707196_1; do
-  #                    isAvail "$result/${i}_${j}__$HUMAN-${k}_$fastq";
-  #                done
-  #                for k in B1087 B1088 B1110 B1128 SL3003; do
-  #                    isAvail "$result/${i}_${j}__$DENISOVA-${k}_SR_$fastq";
-  #                done
-  #                for k in {1..2}; do
-  #                    isAvail "$result/${i}_${j}__$Synth-${k}_$fastq";
-  #                done
-  #            done
-  #        done
+#          for i in CS CT CM DT DM V; do
+#              # FASTA -- human - viruses - synthetic
+#              for j in CRYFA GZIP LZMA MFCOMPRESS DELIMINATE; do
+#                  for k in $HS_SEQ_RUN; do
+#                      isAvail "$result/${j}_${i}__$HUMAN-${k}_$fasta";
+#                  done
+#                  isAvail "$result/${j}_${i}__viruses_$fasta"
+#                  for k in {1..2}; do
+#                      isAvail "$result/${j}_${i}__$Synth-${k}_$fasta";
+#                  done
+#              done
+#
+#              # FASTQ -- human - Denisova - synthetic
+#              for j in CRYFA GZIP LZMA FQZCOMP QUIP DSRC FQC; do
+#                  for k in ERR013103_1 ERR015767_2 ERR031905_2 \
+#                           SRR442469_1 SRR707196_1; do
+#                      isAvail "$result/${j}_${i}__$HUMAN-${k}_$fastq";
+#                  done
+#                  for k in B1087 B1088 B1110 B1128 SL3003; do
+#                      isAvail "$result/${j}_${i}__$DENISOVA-${k}_SR_$fastq";
+#                  done
+#                  for k in {1..2}; do
+#                      isAvail "$result/${j}_${i}__$Synth-${k}_$fastq";
+#                  done
+#              done
+#          done
 
           ### print results
           c="C_Size\tC_Time(real)\tC_Time(user)\tC_Time(sys)\tC_Mem"
           d="D_Time(real)\tD_Time(user)\tD_Time(sys)\tD_Mem"
           printf "Dataset\tMethod\t$c\t$d\tEq\n" > result_comp.$INF;
 
-          for i in CRYFA GZIP LZMA MFCOMPRESS DELIMINATE FQZCOMP QUIP DSRC FQC;
-          do
-              # FASTA -- human - viruses - synthetic
+          # FASTA -- human - viruses - synthetic
+          for i in CRYFA GZIP LZMA MFCOMPRESS DELIMINATE; do
               for j in $HS_SEQ_RUN; do
                   compDecompResult $i $HUMAN-${j}_$fasta >> result_comp.$INF;
               done
@@ -1172,8 +1173,10 @@ compEncDecDecompress $methodComp $dsPath/$FA/$HUMAN/in.$fasta $methodEnc
               for j in {1..2}; do
                   compDecompResult $i $Synth-${j}_$fasta >> result_comp.$INF;
               done
+          done
 
-              # FASTQ -- human - Denisova - synthetic
+          # FASTQ -- human - Denisova - synthetic
+          for i in CRYFA GZIP LZMA FQZCOMP QUIP DSRC FQC; do
               for j in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
                        SRR707196_1; do
                   compDecompResult $i $HUMAN-${j}_$fastq >> result_comp.$INF;
@@ -1300,33 +1303,31 @@ compEncDecDecompress $methodComp $dsPath/$FA/$HUMAN/in.$fasta $methodEnc
           ### result files availability
           result="result"
 
-#          for h in AESCRYPT; do
-#              # FASTA -- human - viruses - synthetic
-#              for i in CRYFA GZIP LZMA MFCOMPRESS DELIMINATE; do
-#                  for j in CS CT CM DT DM EnS EnT EnM EnT EnM V; do
-#                      for k in $HS_SEQ_RUN; do
-#                          isAvail "$result/${i}_${h}_${j}__$HUMAN-${k}_$fasta";
+#          for i in CS CT CM DT DM EnS EnT EnM EnT EnM V; do
+#              for j in AESCRYPT; do
+#                  # FASTA -- human - viruses - synthetic
+#                  for k in CRYFA GZIP LZMA MFCOMPRESS DELIMINATE; do
+#                      for l in $HS_SEQ_RUN; do
+#                          isAvail "$result/${k}_${j}_${i}__$HUMAN-${l}_$fasta";
 #                      done
-#                      isAvail "$result/${i}_${h}_${j}__viruses_$fasta"
-#                      for k in {1..2}; do
-#                          isAvail "$result/${i}_${h}_${j}__$Synth-${k}_$fasta";
+#                      isAvail "$result/${k}_${j}_${i}__viruses_$fasta"
+#                      for l in {1..2}; do
+#                          isAvail "$result/${k}_${j}_${i}__$Synth-${l}_$fasta";
 #                      done
 #                  done
-#              done
 #
-#              # FASTQ -- human - Denisova - synthetic
-#              for i in CRYFA GZIP LZMA FQZCOMP QUIP DSRC FQC; do
-#                  for j in CS CT CM DT DM EnS EnT EnM EnT EnM V; do
-#                      for k in ERR013103_1 ERR015767_2 ERR031905_2 \
+#                  # FASTQ -- human - Denisova - synthetic
+#                  for k in CRYFA GZIP LZMA FQZCOMP QUIP DSRC FQC; do
+#                      for l in ERR013103_1 ERR015767_2 ERR031905_2 \
 #                               SRR442469_1 SRR707196_1; do
-#                          isAvail "$result/${i}_${h}_${j}__$HUMAN-${k}_$fastq";
+#                          isAvail "$result/${k}_${j}_${i}__$HUMAN-${l}_$fastq";
 #                      done
-#                      for k in B1087 B1088 B1110 B1128 SL3003; do
+#                      for l in B1087 B1088 B1110 B1128 SL3003; do
 #                          isAvail \
-#                             "$result/${i}_${h}_${j}__$DENISOVA-${k}_SR_$fastq";
+#                             "$result/${k}_${j}_${i}__$DENISOVA-${l}_SR_$fastq";
 #                      done
-#                      for k in {1..2}; do
-#                          isAvail "$result/${i}_${h}_${j}__$Synth-${k}_$fastq";
+#                      for l in {1..2}; do
+#                          isAvail "$result/${k}_${j}_${i}__$Synth-${l}_$fastq";
 #                      done
 #                  done
 #              done
@@ -1340,40 +1341,37 @@ compEncDecDecompress $methodComp $dsPath/$FA/$HUMAN/in.$fasta $methodEnc
           printf "Dataset\tC_Method\tEn_Method\t$c\t$en\t$de\t$d\tEq\n" \
               > result_comp_enc.$INF;
 
-          for h in AESCRYPT; do
+          for i in AESCRYPT; do
              # FASTA -- human - viruses - synthetic
-#             for i in CRYFA GZIP LZMA MFCOMPRESS DELIMINATE; do
-             for i in MFCOMPRESS; do
-                 compEncDecDecompResult $i $h in_$fasta >> result_comp_enc.$INF;
-
-#                 for j in $HS_SEQ_RUN; do
-#                     compEncDecDecompResult $i $h $HUMAN-${j}_$fasta \
-#                         >> result_comp_enc.$INF;
-#                 done
-#                 compEncDecDecompResult $i $h viruses_$fasta \
-#                     >> result_comp_enc.$INF;
-#                 for j in {1..2}; do
-#                     compEncDecDecompResult $i $h $Synth-${j}_$fasta \
-#                         >> result_comp_enc.$INF;
-#                 done
+             for j in CRYFA GZIP LZMA MFCOMPRESS DELIMINATE; do
+                 for k in $HS_SEQ_RUN; do
+                     compEncDecDecompResult $j $i $HUMAN-${k}_$fasta \
+                         >> result_comp_enc.$INF;
+                 done
+                 compEncDecDecompResult $j $i viruses_$fasta \
+                     >> result_comp_enc.$INF;
+                 for k in {1..2}; do
+                     compEncDecDecompResult $j $i $Synth-${k}_$fasta \
+                         >> result_comp_enc.$INF;
+                 done
              done
 
-#             # FASTQ -- human - Denisova - synthetic
-#             for i in CRYFA GZIP LZMA FQZCOMP QUIP DSRC FQC; do
-#                 for j in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
-#                          SRR707196_1; do
-#                     compEncDecDecompResult $i $h $HUMAN-${j}_$fastq \
-#                         >> result_comp_enc.$INF;
-#                 done
-#                 for j in B1087 B1088 B1110 B1128 SL3003; do
-#                     compEncDecDecompResult $i $h $DENISOVA-${j}_SR_$fastq \
-#                         >> result_comp_enc.$INF;
-#                 done
-#                 for j in {1..2}; do
-#                     compEncDecDecompResult $i $h $Synth-${j}_$fastq \
-#                         >> result_comp_enc.$INF;
-#                 done
-#             done
+             # FASTQ -- human - Denisova - synthetic
+             for j in CRYFA GZIP LZMA FQZCOMP QUIP DSRC FQC; do
+                 for k in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
+                          SRR707196_1; do
+                     compEncDecDecompResult $j $i $HUMAN-${k}_$fastq \
+                         >> result_comp_enc.$INF;
+                 done
+                 for k in B1087 B1088 B1110 B1128 SL3003; do
+                     compEncDecDecompResult $j $i $DENISOVA-${k}_SR_$fastq \
+                         >> result_comp_enc.$INF;
+                 done
+                 for k in {1..2}; do
+                     compEncDecDecompResult $j $i $Synth-${k}_$fastq \
+                         >> result_comp_enc.$INF;
+                 done
+             done
           done
       fi
   fi
