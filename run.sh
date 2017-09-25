@@ -69,14 +69,14 @@ RUN_METHODS=1
   RUN_METHODS_ENC=0
       RUN_AESCRYPT=0        # AES crypt
       # results
-      PRINT_RESULTS_ENC=1
+      PRINT_RESULTS_ENC=0
 
   # compress/decompress plus encrypt/decrypt
-  RUN_METHODS_COMP_ENC=0
+  RUN_METHODS_COMP_ENC=1
       # FASTA
       RUN_GZIP_FA_AESCRYPT=0         # gzip + AES crypt
       RUN_LZMA_FA_AESCRYPT=0         # lzma + AES crypt
-      RUN_MFCOMPRESS_AESCRYPT=0      # MFCompress + AES crypt
+      RUN_MFCOMPRESS_AESCRYPT=1      # MFCompress + AES crypt
       RUN_DELIMINATE_AESCRYPT=0      # DELIMINATE + AES crypt
       # FASTQ
       RUN_GZIP_FQ_AESCRYPT=0         # gzip + AES crypt
@@ -86,7 +86,7 @@ RUN_METHODS=1
       RUN_DSRC_AESCRYPT=0            # DSRC + AES crypt
       RUN_FQC_AESCRYPT=0             # FQC + AES crypt
       # results
-      PRINT_RESULTS_COMP_ENC=0
+      PRINT_RESULTS_COMP_ENC=1
 
 
 # cryfa exclusive -- test purpose
@@ -961,16 +961,19 @@ then
 
       case $2 in
         "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
-            for i in $HS_SEQ_RUN; do
-                compEncDecDecompress \
-                    $methodComp $dsPath/$FA/$HUMAN/$HUMAN-$i.$fasta $methodEnc
-            done
-            compEncDecDecompress \
-                    $methodComp $dsPath/$FA/$VIRUSES/viruses.$fasta $methodEnc
-            for i in {1..2};do
-                compEncDecDecompress \
-                    $methodComp $dsPath/$FA/$Synth/Synth-$i.$fasta $methodEnc
-            done;;
+compEncDecDecompress $methodComp $dsPath/$FA/$HUMAN/in.$fasta $methodEnc
+
+#            for i in $HS_SEQ_RUN; do
+#                compEncDecDecompress \
+#                    $methodComp $dsPath/$FA/$HUMAN/$HUMAN-$i.$fasta $methodEnc
+#            done
+#            compEncDecDecompress \
+#                    $methodComp $dsPath/$FA/$VIRUSES/viruses.$fasta $methodEnc
+#            for i in {1..2};do
+#                compEncDecDecompress \
+#                    $methodComp $dsPath/$FA/$Synth/Synth-$i.$fasta $methodEnc
+#            done
+;;
 
         "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
             for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
