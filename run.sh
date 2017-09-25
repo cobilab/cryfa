@@ -63,7 +63,7 @@ RUN_METHODS=1
       RUN_FQC=0             # FQC
       RUN_CRYFA_FQ=0        # cryfa
       # results
-      PRINT_RESULTS_COMP=1
+      PRINT_RESULTS_COMP=0
 
   # encrypt/decrypt
   RUN_METHODS_ENC=0
@@ -812,18 +812,19 @@ then
 
       ### encrypt
       cd $progs/$3
+      compPath="../$1"    # path of compressed file
 
       progMemoryStart $3 &
       MEMPID=$!
 
-      rm -f $in.$enFT
+      rm -f $in.$cFT.$enFT
       case $3 in                                                        # time
         "aescrypt")
-            (time $enCmd -o $in.$enFT $2) \
+            (time $enCmd -o $in.$cFT.$enFT $compPath/$in.$cFT) \
                 &> $result/${upInComp}_${upInEnc}_EnT__${inwf}_$ft;;
       esac
 
-      ls -la $in.$enFT > $result/${upInComp}_${upInEnc}_EnS__${inwf}_$ft  # size
+      ls -la $in.$cFT.$enFT > $result/${upInComp}_${upInEnc}_EnS__${inwf}_$ft  # size
       progMemoryStop $MEMPID \
                      $result/${upInComp}_${upInEnc}_EnM__${inwf}_$ft    # memory
 
@@ -833,7 +834,7 @@ then
 
       case $3 in                                                        # time
         "aescrypt")
-            (time $deCmd -o $in $in.$enFT) \
+            (time $deCmd -o $in.$cFT $in.$cFT.$enFT) \
                 &> $result/${upInComp}_${upInEnc}_DeT__${inwf}_$ft;;
       esac
 
@@ -844,29 +845,30 @@ then
 
       ### decompress
       cd $progs/$1
+      encPath="../$3"    # path of encrypted file
 
       progMemoryStart $dProg &
       MEMPID=$!
 
       case $1 in                                                        # time
         "gzip"|"lzma")
-            (time $dCmd < $in.$cFT> $in) \
+            (time $dCmd < $encPath/$in.$cFT> $in) \
                 &> $result/${upInComp}_${upInEnc}_DT__${inwf}_$ft;;
 
         "cryfa"|"fqzcomp"|"quip")
-            (time $dCmd $in.$cFT > $in) \
+            (time $dCmd $encPath/$in.$cFT > $in) \
                 &> $result/${upInComp}_${upInEnc}_DT__${inwf}_$ft;;
 
         "dsrc"|"delim")
-            (time $dCmd $in.$cFT $in) \
+            (time $dCmd $encPath/$in.$cFT $in) \
                 &> $result/${upInComp}_${upInEnc}_DT__${inwf}_$ft;;
 
         "fqc")
-            (time $dCmd -i $in.$cFT -o $in) \
+            (time $dCmd -i $encPath/$in.$cFT -o $in) \
                 &> $result/${upInComp}_${upInEnc}_DT__${inwf}_$ft;;
 
         "mfcompress")
-            (time $dCmd -o $in $in.$cFT) \
+            (time $dCmd -o $in $encPath/$in.$cFT) \
                 &> $result/${upInComp}_${upInEnc}_DT__${inwf}_$ft;;
       esac
 
@@ -957,7 +959,7 @@ then
       methodEnc="$(echo $3 | tr A-Z a-z)"     # enc  method's name in lower case
       if [[ ! -d progs/$methodComp ]]; then mkdir -p $progs/$methodComp; fi
       if [[ ! -d progs/$methodEnc ]];  then mkdir -p $progs/$methodEnc;  fi
-      dsPath=$dataset
+      dsPath="../../$dataset"
 
       case $2 in
         "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
@@ -1299,10 +1301,9 @@ compEncDecDecompress $methodComp $dsPath/$FA/$HUMAN/in.$fasta $methodEnc
           result="result"
 
 #          for h in AESCRYPT; do
-#              for i in CRYFA GZIP LZMA MFCOMPRESS DELIMINATE FQZCOMP QUIP DSRC \
-#                       FQC; do
+#              # FASTA -- human - viruses - synthetic
+#              for i in CRYFA GZIP LZMA MFCOMPRESS DELIMINATE; do
 #                  for j in CS CT CM DT DM EnS EnT EnM EnT EnM V; do
-#                      # FASTA -- human - viruses - synthetic
 #                      for k in $HS_SEQ_RUN; do
 #                          isAvail "$result/${i}_${h}_${j}__$HUMAN-${k}_$fasta";
 #                      done
@@ -1310,8 +1311,12 @@ compEncDecDecompress $methodComp $dsPath/$FA/$HUMAN/in.$fasta $methodEnc
 #                      for k in {1..2}; do
 #                          isAvail "$result/${i}_${h}_${j}__$Synth-${k}_$fasta";
 #                      done
+#                  done
+#              done
 #
-#                      # FASTQ -- human - Denisova - synthetic
+#              # FASTQ -- human - Denisova - synthetic
+#              for i in CRYFA GZIP LZMA FQZCOMP QUIP DSRC FQC; do
+#                  for j in CS CT CM DT DM EnS EnT EnM EnT EnM V; do
 #                      for k in ERR013103_1 ERR015767_2 ERR031905_2 \
 #                               SRR442469_1 SRR707196_1; do
 #                          isAvail "$result/${i}_${h}_${j}__$HUMAN-${k}_$fastq";
@@ -1336,35 +1341,39 @@ compEncDecDecompress $methodComp $dsPath/$FA/$HUMAN/in.$fasta $methodEnc
               > result_comp_enc.$INF;
 
           for h in AESCRYPT; do
-             for i in CRYFA GZIP LZMA MFCOMPRESS DELIMINATE FQZCOMP QUIP DSRC \
-                      FQC; do
-                 # FASTA -- human - viruses - synthetic
-                 for j in $HS_SEQ_RUN; do
-                     compEncDecDecompResult $i $h $HUMAN-${j}_$fasta \
-                         >> result_comp_enc.$INF;
-                 done
-                 compEncDecDecompResult $i $h viruses_$fasta \
-                     >> result_comp_enc.$INF;
-                 for j in {1..2}; do
-                     compEncDecDecompResult $i $h $Synth-${j}_$fasta \
-                         >> result_comp_enc.$INF;
-                 done
+             # FASTA -- human - viruses - synthetic
+#             for i in CRYFA GZIP LZMA MFCOMPRESS DELIMINATE; do
+             for i in MFCOMPRESS; do
+                 compEncDecDecompResult $i $h in_$fasta >> result_comp_enc.$INF;
 
-                 # FASTQ -- human - Denisova - synthetic
-                 for j in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
-                          SRR707196_1; do
-                     compEncDecDecompResult $i $h $HUMAN-${j}_$fastq \
-                         >> result_comp_enc.$INF;
-                 done
-                 for j in B1087 B1088 B1110 B1128 SL3003; do
-                     compEncDecDecompResult $i $h $DENISOVA-${j}_SR_$fastq \
-                         >> result_comp_enc.$INF;
-                 done
-                 for j in {1..2}; do
-                     compEncDecDecompResult $i $h $Synth-${j}_$fastq \
-                         >> result_comp_enc.$INF;
-                 done
+#                 for j in $HS_SEQ_RUN; do
+#                     compEncDecDecompResult $i $h $HUMAN-${j}_$fasta \
+#                         >> result_comp_enc.$INF;
+#                 done
+#                 compEncDecDecompResult $i $h viruses_$fasta \
+#                     >> result_comp_enc.$INF;
+#                 for j in {1..2}; do
+#                     compEncDecDecompResult $i $h $Synth-${j}_$fasta \
+#                         >> result_comp_enc.$INF;
+#                 done
              done
+
+#             # FASTQ -- human - Denisova - synthetic
+#             for i in CRYFA GZIP LZMA FQZCOMP QUIP DSRC FQC; do
+#                 for j in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
+#                          SRR707196_1; do
+#                     compEncDecDecompResult $i $h $HUMAN-${j}_$fastq \
+#                         >> result_comp_enc.$INF;
+#                 done
+#                 for j in B1087 B1088 B1110 B1128 SL3003; do
+#                     compEncDecDecompResult $i $h $DENISOVA-${j}_SR_$fastq \
+#                         >> result_comp_enc.$INF;
+#                 done
+#                 for j in {1..2}; do
+#                     compEncDecDecompResult $i $h $Synth-${j}_$fastq \
+#                         >> result_comp_enc.$INF;
+#                 done
+#             done
           done
       fi
   fi
