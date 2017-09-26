@@ -74,9 +74,9 @@ RUN_METHODS=1
   # compress/decompress plus encrypt/decrypt
   RUN_METHODS_COMP_ENC=1
       # FASTA
-      RUN_GZIP_FA_AESCRYPT=0         # gzip + AES crypt
+      RUN_GZIP_FA_AESCRYPT=1         # gzip + AES crypt
       RUN_LZMA_FA_AESCRYPT=0         # lzma + AES crypt
-      RUN_MFCOMPRESS_AESCRYPT=1      # MFCompress + AES crypt
+      RUN_MFCOMPRESS_AESCRYPT=0      # MFCompress + AES crypt
       RUN_DELIMINATE_AESCRYPT=0      # DELIMINATE + AES crypt
       # FASTQ
       RUN_GZIP_FQ_AESCRYPT=0         # gzip + AES crypt
@@ -86,7 +86,7 @@ RUN_METHODS=1
       RUN_DSRC_AESCRYPT=0            # DSRC + AES crypt
       RUN_FQC_AESCRYPT=0             # FQC + AES crypt
       # results
-      PRINT_RESULTS_COMP_ENC=1
+      PRINT_RESULTS_COMP_ENC=0
 
 
 # cryfa exclusive -- test purpose
@@ -365,9 +365,9 @@ then
         cmake .
         make
 
-        if [[ ! -d progs/cryfa ]]; then mkdir -p progs/cryfa; fi
-        cp cryfa progs/cryfa/
-        cp pass.txt progs/cryfa/
+        if [[ ! -d $progs/cryfa ]]; then mkdir -p $progs/cryfa; fi
+        cp cryfa $progs/cryfa/
+        cp pass.txt $progs/cryfa/
     fi
 
     #----------------------- FASTA -----------------------#
@@ -380,10 +380,10 @@ then
         wget $WGET_OP $url/MFCompress-src-1.01.tgz
         tar -xzf MFCompress-src-1.01.tgz
         mv MFCompress-src-1.01/ mfcompress/    # rename
-        mv mfcompress/ progs/
+        mv mfcompress/ $progs/
         rm -f MFCompress-src-1.01.tgz
 
-        cd progs/mfcompress/
+        cd $progs/mfcompress/
         cp Makefile.linux Makefile    # make -f Makefile.linux
         make
         cd ../..
@@ -398,7 +398,7 @@ then
          wget $WGET_OP $url/DELIMINATE_LINUX_64bit.tar.gz
          tar -xzf DELIMINATE_LINUX_64bit.tar.gz
          mv EXECUTABLES deliminate    # rename
-         mv deliminate progs/
+         mv deliminate $progs/
          rm -f DELIMINATE_LINUX_64bit.tar.gz
     fi
 
@@ -412,10 +412,10 @@ then
         wget $WGET_OP $url/fqzcomp-4.6.tar.gz
         tar -xzf fqzcomp-4.6.tar.gz
         mv fqzcomp-4.6/ fqzcomp/    # rename
-        mv fqzcomp/ progs/
+        mv fqzcomp/ $progs/
         rm -f fqzcomp-4.6.tar.gz
 
-        cd progs/fqzcomp/
+        cd $progs/fqzcomp/
         make
 
         cd ../..
@@ -430,10 +430,10 @@ then
         wget $WGET_OP $url/quip-1.1.8.tar.gz
         tar -xzf quip-1.1.8.tar.gz
         mv quip-1.1.8/ quip/    # rename
-        mv quip/ progs/
+        mv quip/ $progs/
         rm -f quip-1.1.8.tar.gz
 
-        cd progs/quip/
+        cd $progs/quip/
         ./configure
         cd src/
         make
@@ -448,9 +448,9 @@ then
         rm -fr dsrc/
 
         git clone https://github.com/lrog/dsrc.git
-        mv dsrc/ progs/
+        mv dsrc/ $progs/
 
-        cd progs/dsrc/
+        cd $progs/dsrc/
         make
         cp bin/dsrc .
 
@@ -466,7 +466,7 @@ then
         wget $WGET_OP $url/FQC_LINUX_64bit.tar.gz
         tar -xzf FQC_LINUX_64bit.tar.gz
         mv FQC_LINUX_64bit/ fqc/    # rename
-        mv fqc/ progs/
+        mv fqc/ $progs/
         rm -f FQC_LINUX_64bit.tar.gz
     fi
 
@@ -479,10 +479,10 @@ then
         wget $WGET_OP $url/aescrypt-3.13.tgz
         tar -xzvf aescrypt-3.13.tgz
         mv aescrypt-3.13/ aescrypt/
-        mv aescrypt/ progs/
+        mv aescrypt/ $progs/
         rm -f aescrypt-3.13.tgz
 
-        cd progs/aescrypt/src
+        cd $progs/aescrypt/src
         make
         sudo make install
     fi
@@ -676,10 +676,10 @@ then
 
       case $1 in
         "aescrypt")
-            enFT="aescrypt"                      # encrypted filetype
-            enCmd="aescrypt -e -k pass.txt"      # encryption command
-            deProg="aescrypt"                    # decrypt program's name
-            deCmd="aescrypt -d -k pass.txt";;    # decryption command
+            enFT="aescrypt"                        # encrypted filetype
+            enCmd="./aescrypt -e -k pass.txt"      # encryption command
+            deProg="aescrypt"                      # decrypt program's name
+            deCmd="./aescrypt -d -k pass.txt";;    # decryption command
       esac
 
       ### encrypt
@@ -712,7 +712,6 @@ then
   function compEncDecDecompress
   {
       result="../../result"
-      progs="progs/"
       in="${2##*/}"                       # input file name
       inwf="${in%.*}"                     # input file name without filetype
       ft="${in##*.}"                      # input filetype
@@ -764,10 +763,10 @@ then
       ### arguments for encryption methods
       case $3 in
         "aescrypt")
-            enFT="aescrypt"                      # encrypted filetype
-            enCmd="aescrypt -e -k pass.txt"      # encryption command
-            deProg="aescrypt"                    # decrypt program's name
-            deCmd="aescrypt -d -k pass.txt";;    # decryption command
+            enFT="aescrypt"                        # encrypted filetype
+            enCmd="./aescrypt -e -k pass.txt"      # encryption command
+            deProg="aescrypt"                      # decrypt program's name
+            deCmd="./aescrypt -d -k pass.txt";;    # decryption command
       esac
 
       ### compress
@@ -808,10 +807,8 @@ then
       progMemoryStop $MEMPID \
                      $result/${upInComp}_${upInEnc}_CM__${inwf}_$ft     # memory
 
-      cd ../..
-
       ### encrypt
-      cd $progs/$3
+      cd ../$3
       compPath="../$1"    # path of compressed file
 
       progMemoryStart $3 &
@@ -824,7 +821,7 @@ then
                 &> $result/${upInComp}_${upInEnc}_EnT__${inwf}_$ft;;
       esac
 
-      ls -la $in.$cFT.$enFT > $result/${upInComp}_${upInEnc}_EnS__${inwf}_$ft  # size
+      ls -la $in.$cFT.$enFT > $result/${upInComp}_${upInEnc}_EnS__${inwf}_$ft
       progMemoryStop $MEMPID \
                      $result/${upInComp}_${upInEnc}_EnM__${inwf}_$ft    # memory
 
@@ -841,10 +838,9 @@ then
       progMemoryStop $MEMPID \
                      $result/${upInComp}_${upInEnc}_DeM__${inwf}_$ft    # memory
 
-      cd ../..
 
       ### decompress
-      cd $progs/$1
+      cd ../$1
       encPath="../$3"    # path of encrypted file
 
       progMemoryStart $dProg &
@@ -885,8 +881,8 @@ then
   function compDecompOnDataset
   {
       method="$(echo $1 | tr A-Z a-z)"    # method's name in lower case
-      if [[ ! -d progs/$method ]]; then mkdir -p $progs/$method; fi
-      cd progs/$method
+      if [[ ! -d $progs/$method ]]; then mkdir -p $progs/$method; fi
+      cd $progs/$method
       dsPath=../../$dataset
 
       case $2 in
@@ -920,8 +916,8 @@ then
   function encDecOnDataset
   {
       method="$(echo $1 | tr A-Z a-z)"    # method's name in lower case
-      if [[ ! -d progs/$method ]]; then mkdir -p $progs/$method; fi
-      cd progs/$method
+      if [[ ! -d $progs/$method ]]; then mkdir -p $progs/$method; fi
+      cd $progs/$method
       dsPath=../../$dataset
 
       case $1 in
@@ -952,23 +948,23 @@ then
       cd ../..
   }
 
-  # compress/decompress plus encrypt/decrypt on datasets. $1: com program's name
+  # compress/decompress plus encrypt/decrypt on datasets.
+  # $1: compression program, $2: filetype, $3: encryption program
   function compEncDecDecompOnDataset
   {
       methodComp="$(echo $1 | tr A-Z a-z)"    # comp method's name in lower case
       methodEnc="$(echo $3 | tr A-Z a-z)"     # enc  method's name in lower case
-      if [[ ! -d progs/$methodComp ]]; then mkdir -p $progs/$methodComp; fi
-      if [[ ! -d progs/$methodEnc ]];  then mkdir -p $progs/$methodEnc;  fi
+      if [[ ! -d $progs/$methodComp ]]; then mkdir -p $progs/$methodComp; fi
+      if [[ ! -d $progs/$methodEnc ]];  then mkdir -p $progs/$methodEnc;  fi
       dsPath="../../$dataset"
 
       case $2 in
         "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
-compEncDecDecompress $methodComp $dsPath/$FA/$HUMAN/in.$fasta $methodEnc
-
 #            for i in $HS_SEQ_RUN; do
-#                compEncDecDecompress \
-#                    $methodComp $dsPath/$FA/$HUMAN/$HUMAN-$i.$fasta $methodEnc
-#            done
+            for i in MT; do
+                compEncDecDecompress \
+                    $methodComp $dsPath/$FA/$HUMAN/$HUMAN-$i.$fasta $methodEnc
+            done
 #            compEncDecDecompress \
 #                    $methodComp $dsPath/$FA/$VIRUSES/viruses.$fasta $methodEnc
 #            for i in {1..2};do
@@ -1049,14 +1045,14 @@ compEncDecDecompress $methodComp $dsPath/$FA/$HUMAN/in.$fasta $methodEnc
   # $1: compression program's name, $2: encryption program's name, $3: dataset.
   function compEncDecDecompResult
   {
-      CS=`cat $result/${1}_${2}_CS__${3} | awk '{ print $5; }'`;
-      CT_r=`cat $result/${1}_${2}_CT__${3} | tail -n 3 | head -n 1 \
-                                           | awk '{ print $2;}'`;         # real
-      CT_u=`cat $result/${1}_${2}_CT__${3} | tail -n 2 | head -n 1 \
-                                           | awk '{ print $2;}'`;         # user
-      CT_s=`cat $result/${1}_${2}_CT__${3} | tail -n 1 | awk '{ print $2;}'` #sy
+      CS=`cat $result/${1}_${2}_CS__${3}     | awk '{ print $5; }'`;
+      CT_r=`cat $result/${1}_${2}_CT__${3}   | tail -n 3 | head -n 1 \
+                                             | awk '{ print $2;}'`;       # real
+      CT_u=`cat $result/${1}_${2}_CT__${3}   | tail -n 2 | head -n 1 \
+                                             | awk '{ print $2;}'`;       # user
+      CT_s=`cat $result/${1}_${2}_CT__${3}   | tail -n 1 | awk '{ print $2;}'`
       CM=`cat $result/${1}_${2}_CM__${3}`;
-      EnS=`cat $result/${1}_${2}_EnS__${3} | awk '{ print $5; }'`;
+      EnS=`cat $result/${1}_${2}_EnS__${3}   | awk '{ print $5; }'`;
       EnT_r=`cat $result/${1}_${2}_EnT__${3} | tail -n 3 | head -n 1 \
                                              | awk '{ print $2;}'`;       # real
       EnT_u=`cat $result/${1}_${2}_EnT__${3} | tail -n 2 | head -n 1 \
@@ -1069,13 +1065,13 @@ compEncDecDecompress $methodComp $dsPath/$FA/$HUMAN/in.$fasta $methodEnc
                                              | awk '{ print $2;}'`;       # user
       DeT_s=`cat $result/${1}_${2}_DeT__${3} | tail -n 1 | awk '{ print $2;}'`
       DeM=`cat $result/${1}_${2}_DeM__${3}`;
-      DT_r=`cat $result/${1}_${2}_DT__${3} | tail -n 3 | head -n 1 \
-                                           | awk '{ print $2;}'`;         # real
-      DT_u=`cat $result/${1}_${2}_DT__${3} | tail -n 2 | head -n 1 \
-                                           | awk '{ print $2;}'`;         # user
-      DT_s=`cat $result/${1}_${2}_DT__${3} | tail -n 1 | awk '{ print $2;}'`
+      DT_r=`cat $result/${1}_${2}_DT__${3}   | tail -n 3 | head -n 1 \
+                                             | awk '{ print $2;}'`;       # real
+      DT_u=`cat $result/${1}_${2}_DT__${3}   | tail -n 2 | head -n 1 \
+                                             | awk '{ print $2;}'`;       # user
+      DT_s=`cat $result/${1}_${2}_DT__${3}   | tail -n 1 | awk '{ print $2;}'`
       DM=`cat $result/${1}_${2}_DM__${3}`;
-      V=`cat $result/${1}_${2}_V__${3} | wc -l`;
+      V=`cat $result/${1}_${2}_V__${3}       | wc -l`;
 
       dName="${2%_*}"                          # dataset name without filetype
       methodComp=`printMethodName $1`          # comp methods' name for printing
@@ -1090,21 +1086,21 @@ compEncDecDecompress $methodComp $dsPath/$FA/$HUMAN/in.$fasta $methodEnc
 
 
   #------------------- dataset availablity -------------------#
-  #    # FASTA -- human - viruses - synthetic
-  #    for i in $HS_SEQ_RUN; do
-  #        isAvail "$dataset/$FA/$HUMAN/$HUMAN-$i.$fasta";
-  #    done
-  #    isAvail "$dataset/$FA/$VIRUSES/viruses.$fasta"
-  #    for i in {1..2}; do isAvail "$dataset/$FA/$Synth/Synth-$i.$fasta"; done
-  #
-  #    # FASTQ -- human - Denisova - synthetic
-  #    for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 SRR707196_1; do
-  #        isAvail "$dataset/$FQ/$HUMAN/$HUMAN-$i.$fastq"
-  #    done
-  #    for i in B1087 B1088 B1110 B1128 SL3003; do
-  #        isAvail "$dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq"
-  #    done
-  #    for i in {1..2}; do isAvail "$dataset/$FQ/$Synth/Synth-$i.$fastq"; done
+  # FASTA -- human - viruses - synthetic
+  for i in $HS_SEQ_RUN; do
+      isAvail "$dataset/$FA/$HUMAN/$HUMAN-$i.$fasta";
+  done
+  isAvail "$dataset/$FA/$VIRUSES/viruses.$fasta"
+  for i in {1..2}; do isAvail "$dataset/$FA/$Synth/Synth-$i.$fasta"; done
+
+  # FASTQ -- human - Denisova - synthetic
+  for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 SRR707196_1; do
+      isAvail "$dataset/$FQ/$HUMAN/$HUMAN-$i.$fastq"
+  done
+  for i in B1087 B1088 B1110 B1128 SL3003; do
+      isAvail "$dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq"
+  done
+  for i in {1..2}; do isAvail "$dataset/$FQ/$Synth/Synth-$i.$fastq"; done
 
   #--------------------------- run ---------------------------#
   ### compress/decompress
@@ -1324,7 +1320,7 @@ compEncDecDecompress $methodComp $dsPath/$FA/$HUMAN/in.$fasta $methodEnc
 #                      done
 #                      for l in B1087 B1088 B1110 B1128 SL3003; do
 #                          isAvail \
-#                             "$result/${k}_${j}_${i}__$DENISOVA-${l}_SR_$fastq";
+#                            "$result/${k}_${j}_${i}__$DENISOVA-${l}_SR_$fastq";
 #                      done
 #                      for l in {1..2}; do
 #                          isAvail "$result/${k}_${j}_${i}__$Synth-${l}_$fastq";
