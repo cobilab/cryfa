@@ -75,9 +75,9 @@ RUN_METHODS=1
   RUN_METHODS_COMP_ENC=1
       # FASTA
       RUN_GZIP_FA_AESCRYPT=0         # gzip + AES crypt
-      RUN_LZMA_FA_AESCRYPT=0         # lzma + AES crypt
+      RUN_LZMA_FA_AESCRYPT=1         # lzma + AES crypt
       RUN_MFCOMPRESS_AESCRYPT=0      # MFCompress + AES crypt
-      RUN_DELIMINATE_AESCRYPT=1      # DELIMINATE + AES crypt
+      RUN_DELIMINATE_AESCRYPT=0      # DELIMINATE + AES crypt
       # FASTQ
       RUN_GZIP_FQ_AESCRYPT=0         # gzip + AES crypt
       RUN_LZMA_FQ_AESCRYPT=0         # lzma + AES crypt
@@ -155,17 +155,17 @@ then
         # create a folder for FASTA files and one for human dataset
         if [[ ! -d $dataset/$FA/$HUMAN ]]; then mkdir -p $dataset/$FA/$HUMAN; fi
 
-        # download
+        # download and remove blank lines
         for i in {1..22} X Y MT; do
             wget $WGET_OP $HUMAN_FA_URL/$HUMAN_CHROMOSOME$i.fa.gz;
-            gunzip < $HUMAN_CHROMOSOME$i.fa.gz \
+            gunzip < $HUMAN_CHROMOSOME$i.fa.gz | grep -Ev "^$" \
                    > $dataset/$FA/$HUMAN/$HUMAN-$i.$fasta
             rm $HUMAN_CHROMOSOME$i.fa.gz
         done
         for dual in "alts AL" "unplaced UP" "unlocalized UL"; do
             set $dual
             wget $WGET_OP $HUMAN_FA_URL/$HUMAN_CHR_PREFIX$1.fa.gz;
-            gunzip < $HUMAN_CHR_PREFIX$1.fa.gz \
+            gunzip < $HUMAN_CHR_PREFIX$1.fa.gz | grep -Ev "^$" \
                    > $dataset/$FA/$HUMAN/$HUMAN-$2.$fasta
             rm $HUMAN_CHR_PREFIX$1.fa.gz;
         done
@@ -182,9 +182,9 @@ then
         # download
         perl ./scripts/DownloadViruses.pl
 
-        # rename & move downloaded file to dataset folder
-        mv viruses.fa viruses.$fasta
-        mv viruses.$fasta $dataset/$FA/$VIRUSES
+        # remove blank lines in downloaded file & move it to dataset folder
+        cat viruses.fa | grep -Ev "^$" > $dataset/$FA/$VIRUSES/viruses.$fasta
+        rm viruses.fa
     fi
 
     ### synthetic -- 4 GB
@@ -209,6 +209,11 @@ then
               -f 0.2,0.2,0.2,0.2,0.2       $dataset/$FA/$Synth/Synth-1.$fasta
         XS/XS -eo -es -t 2 -n 3000000 -ls 500 \
               -f 0.23,0.23,0.23,0.23,0.08  $dataset/$FA/$Synth/Synth-2.$fasta
+
+        # replace @ symbol with > for the headers
+        for i in {1..2}; do
+            sed -i 's/@/>/g' "$dataset/$FA/$Synth/Synth-$i.$fasta";
+        done
     fi
 
     #----------------------- FASTQ -----------------------#
@@ -775,7 +780,7 @@ then
       progMemoryStart $1 &
       MEMPID=$!
 
-      rm -f $in.$cFT
+      rm -f $in $in.$cFT
       case $1 in                                                        # time
         "gzip"|"lzma")
             (time $cCmd < $2 > $in.$cFT) \
@@ -814,7 +819,7 @@ then
       progMemoryStart $3 &
       MEMPID=$!
 
-      rm -f $in.$cFT.$enFT
+      rm -f $in.$cFT $in.$cFT.$enFT
       case $3 in                                                        # time
         "aescrypt")
             (time $enCmd -o $in.$cFT.$enFT $compPath/$in.$cFT) \
@@ -959,16 +964,18 @@ then
 
       case $2 in
         "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
-            for i in $HS_SEQ_RUN; do
-                compEncDecDecompress \
-                    $methodComp $dsPath/$FA/$HUMAN/$HUMAN-$i.$fasta $methodEnc
-            done
+#            for i in $HS_SEQ_RUN; do
+#                compEncDecDecompress \
+#                    $methodComp $dsPath/$FA/$HUMAN/$HUMAN-$i.$fasta $methodEnc
+#            done
             compEncDecDecompress \
                     $methodComp $dsPath/$FA/$VIRUSES/viruses.$fasta $methodEnc
-            for i in {1..2};do
-                compEncDecDecompress \
-                    $methodComp $dsPath/$FA/$Synth/Synth-$i.$fasta $methodEnc
-            done;;
+#            for i in {1..2}; do
+#            for i in 1; do
+#                compEncDecDecompress \
+#                    $methodComp $dsPath/$FA/$Synth/Synth-$i.$fasta $methodEnc
+#            done
+            ;;
 
         "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
             for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
@@ -1336,7 +1343,7 @@ then
 
           for i in AESCRYPT; do
              # FASTA -- human - viruses - synthetic
-             for j in GZIP LZMA MFCOMPRESS DELIMINATE; do
+             for j in GZIP LZMA MFCOMPRESS DELIM; do
                  for k in $HS_SEQ_RUN; do
                      compEncDecDecompResult $j $i $HUMAN-${k}_$fasta \
                          >> result_comp_enc.$INF;
