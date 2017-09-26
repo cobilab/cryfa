@@ -74,10 +74,10 @@ RUN_METHODS=1
   # compress/decompress plus encrypt/decrypt
   RUN_METHODS_COMP_ENC=1
       # FASTA
-      RUN_GZIP_FA_AESCRYPT=1         # gzip + AES crypt
+      RUN_GZIP_FA_AESCRYPT=0         # gzip + AES crypt
       RUN_LZMA_FA_AESCRYPT=0         # lzma + AES crypt
       RUN_MFCOMPRESS_AESCRYPT=0      # MFCompress + AES crypt
-      RUN_DELIMINATE_AESCRYPT=0      # DELIMINATE + AES crypt
+      RUN_DELIMINATE_AESCRYPT=1      # DELIMINATE + AES crypt
       # FASTQ
       RUN_GZIP_FQ_AESCRYPT=0         # gzip + AES crypt
       RUN_LZMA_FQ_AESCRYPT=0         # lzma + AES crypt
@@ -1003,7 +1003,7 @@ then
                                       | awk '{ print $2;}'`;              # user
       DT_s=`cat $result/${1}_DT__${2} | tail -n 1 | awk '{ print $2;}'`   # sys
       DM=`cat $result/${1}_DM__${2}`;
-      V=`cat $result/${1}_V__${2} | wc -l`;
+      V=`cat $result/${1}_V__${2}     | wc -l`;
 
       dName="${2%_*}"                     # dataset name without filetype
       method=`printMethodName $1`         # methods' name for printing
@@ -1016,7 +1016,7 @@ then
   # print encrypt/decrypt results. $1: program's name, $2: dataset
   function encDecResult
   {
-      EnS=`cat $result/${1}_EnS__${2} | awk '{ print $5; }'`;
+      EnS=`cat $result/${1}_EnS__${2}   | awk '{ print $5; }'`;
       EnT_r=`cat $result/${1}_EnT__${2} | tail -n 3 | head -n 1 \
                                         | awk '{ print $2;}'`;            # real
       EnT_u=`cat $result/${1}_EnT__${2} | tail -n 2 | head -n 1 \
@@ -1070,7 +1070,7 @@ then
       DM=`cat $result/${1}_${2}_DM__${3}`;
       V=`cat $result/${1}_${2}_V__${3}       | wc -l`;
 
-      dName="${2%_*}"                          # dataset name without filetype
+      dName="${3%_*}"                          # dataset name without filetype
       methodComp=`printMethodName $1`          # comp methods' name for printing
       methodEnc=`printMethodName $2`           # enc methods' name for printing
       c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"        # compression results
@@ -1336,7 +1336,7 @@ then
 
           for i in AESCRYPT; do
              # FASTA -- human - viruses - synthetic
-             for j in CRYFA GZIP LZMA MFCOMPRESS DELIMINATE; do
+             for j in GZIP LZMA MFCOMPRESS DELIMINATE; do
                  for k in $HS_SEQ_RUN; do
                      compEncDecDecompResult $j $i $HUMAN-${k}_$fasta \
                          >> result_comp_enc.$INF;
@@ -1350,7 +1350,7 @@ then
              done
 
              # FASTQ -- human - Denisova - synthetic
-             for j in CRYFA GZIP LZMA FQZCOMP QUIP DSRC FQC; do
+             for j in GZIP LZMA FQZCOMP QUIP DSRC FQC; do
                  for k in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
                           SRR707196_1; do
                      compEncDecDecompResult $j $i $HUMAN-${k}_$fastq \
