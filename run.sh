@@ -86,7 +86,7 @@ RUN_METHODS=1
       RUN_DSRC_AESCRYPT=0            # DSRC + AES crypt
       RUN_FQC_AESCRYPT=0             # FQC + AES crypt
       # results
-      PRINT_RESULTS_COMP_ENC=0
+      PRINT_RESULTS_COMP_ENC=1
 
 
 # cryfa exclusive -- test purpose
@@ -838,7 +838,6 @@ then
       progMemoryStop $MEMPID \
                      $result/${upInComp}_${upInEnc}_DeM__${inwf}_$ft    # memory
 
-
       ### decompress
       cd ../$1
       encPath="../$3"    # path of encrypted file
@@ -960,18 +959,16 @@ then
 
       case $2 in
         "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
-#            for i in $HS_SEQ_RUN; do
-            for i in MT; do
+            for i in $HS_SEQ_RUN; do
                 compEncDecDecompress \
                     $methodComp $dsPath/$FA/$HUMAN/$HUMAN-$i.$fasta $methodEnc
             done
-#            compEncDecDecompress \
-#                    $methodComp $dsPath/$FA/$VIRUSES/viruses.$fasta $methodEnc
-#            for i in {1..2};do
-#                compEncDecDecompress \
-#                    $methodComp $dsPath/$FA/$Synth/Synth-$i.$fasta $methodEnc
-#            done
-;;
+            compEncDecDecompress \
+                    $methodComp $dsPath/$FA/$VIRUSES/viruses.$fasta $methodEnc
+            for i in {1..2};do
+                compEncDecDecompress \
+                    $methodComp $dsPath/$FA/$Synth/Synth-$i.$fasta $methodEnc
+            done;;
 
         "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
             for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
