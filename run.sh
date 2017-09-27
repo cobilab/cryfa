@@ -50,12 +50,14 @@ RUN_METHODS=1
   RUN_METHODS_COMP=0
       # FASTA
       RUN_GZIP_FA=0         # gzip
+      RUN_BZIP2_FA=0        # bzip2
       RUN_LZMA_FA=0         # lzma
       RUN_MFCOMPRESS=0      # MFCompress
       RUN_DELIMINATE=0      # DELIMINATE
       RUN_CRYFA_FA=0        # cryfa
       # FASTQ
       RUN_GZIP_FQ=0         # gzip
+      RUN_BZIP2_FQ=0        # bzip2
       RUN_LZMA_FQ=0         # lzma
       RUN_FQZCOMP=0         # fqzcomp
       RUN_QUIP=0            # quip
@@ -72,21 +74,23 @@ RUN_METHODS=1
       PRINT_RESULTS_ENC=0
 
   # compress/decompress plus encrypt/decrypt
-  RUN_METHODS_COMP_ENC=1
+  RUN_METHODS_COMP_ENC=0
       # FASTA
       RUN_GZIP_FA_AESCRYPT=0         # gzip + AES crypt
+      RUN_BZIP2_FA_AESCRYPT=0        # bzip2 + AES crypt
       RUN_LZMA_FA_AESCRYPT=0         # lzma + AES crypt
       RUN_MFCOMPRESS_AESCRYPT=0      # MFCompress + AES crypt
       RUN_DELIMINATE_AESCRYPT=0      # DELIMINATE + AES crypt
       # FASTQ
       RUN_GZIP_FQ_AESCRYPT=0         # gzip + AES crypt
+      RUN_BZIP2_FQ_AESCRYPT=0        # bzip2 + AES crypt
       RUN_LZMA_FQ_AESCRYPT=0         # lzma + AES crypt
       RUN_FQZCOMP_AESCRYPT=0         # fqzcomp + AES crypt
       RUN_QUIP_AESCRYPT=0            # quip + AES crypt
       RUN_DSRC_AESCRYPT=0            # DSRC + AES crypt
       RUN_FQC_AESCRYPT=0             # FQC + AES crypt
       # results
-      PRINT_RESULTS_COMP_ENC=1
+      PRINT_RESULTS_COMP_ENC=0
 
 
 # cryfa exclusive -- test purpose
@@ -551,6 +555,7 @@ then
 
       case $methodUpCase in
         "GZIP")                 echo "gzip";;
+        "BZIP2")                echo "bzip2";;
         "LZMA")                 echo "LZMA";;
         "MFCOMPRESS")           echo "MFCompress";;
         "DELIM"|"DELIMINATE")   echo "DELIMINATE";;
@@ -566,7 +571,7 @@ then
   # compress and decompress. $1: program's name, $2: input data
   function compDecomp
   {
-      result="../../result"
+      result_FLD="../../result"
       in="${2##*/}"                     # input file name
       inwf="${in%.*}"                   # input file name without filetype
       ft="${in##*.}"                    # input filetype
@@ -579,6 +584,10 @@ then
             cCmd="gzip"                 # compression command
             dProg="gunzip"              # decompress program's name
             dCmd="gunzip";;             # decompress command
+
+        "bzip2")
+            cFT="bz2";             cCmd="bzip2";
+            dProg="bzip2";         dCmd="bunzip2";;
 
         "lzma")
             cFT="lzma";            cCmd="lzma";
@@ -618,61 +627,63 @@ then
       MEMPID=$!
 
       rm -f $in.$cFT
-      case $1 in                                                # time
-        "gzip"|"lzma")
-            (time $cCmd < $2 > $in.$cFT) &> $result/${upIn}_CT__${inwf}_$ft;;
+      case $1 in                                                    # time
+        "gzip"|"lzma"|"bzip2")
+            (time $cCmd < $2 > $in.$cFT)&> $result_FLD/${upIn}_CT__${inwf}_$ft;;
 
         "cryfa"|"quip"|"fqzcomp")
-            (time $cCmd $2 > $in.$cFT) &> $result/${upIn}_CT__${inwf}_$ft;;
+            (time $cCmd $2 > $in.$cFT) &> $result_FLD/${upIn}_CT__${inwf}_$ft;;
 
         "dsrc")
-            (time $cCmd $2 $in.$cFT) &> $result/${upIn}_CT__${inwf}_$ft;;
+            (time $cCmd $2 $in.$cFT) &> $result_FLD/${upIn}_CT__${inwf}_$ft;;
 
         "delim")
-            (time $cCmd $2) &> $result/${upIn}_CT__${inwf}_$ft
+            (time $cCmd $2) &> $result_FLD/${upIn}_CT__${inwf}_$ft
             mv $inPath/$in.$cFT $in.$cFT;;
 
         "fqc")
-            (time $cCmd -i $2 -o $in.$cFT) &>$result/${upIn}_CT__${inwf}_$ft;;
+            (time $cCmd -i $2 -o $in.$cFT) \
+                &> $result_FLD/${upIn}_CT__${inwf}_$ft;;
 
         "mfcompress")
-            (time $cCmd -o $in.$cFT $2) &> $result/${upIn}_CT__${inwf}_$ft;;
+            (time $cCmd -o $in.$cFT $2) &> $result_FLD/${upIn}_CT__${inwf}_$ft;;
       esac
 
-      ls -la $in.$cFT > $result/${upIn}_CS__${inwf}_$ft         # size
-      progMemoryStop $MEMPID $result/${upIn}_CM__${inwf}_$ft    # memory
+      ls -la $in.$cFT > $result_FLD/${upIn}_CS__${inwf}_$ft         # size
+      progMemoryStop $MEMPID $result_FLD/${upIn}_CM__${inwf}_$ft    # memory
 
       ### decompress
       progMemoryStart $dProg &
       MEMPID=$!
 
-      case $1 in                                                # time
-        "gzip"|"lzma")
-            (time $dCmd < $in.$cFT> $in) &> $result/${upIn}_DT__${inwf}_$ft;;
+      case $1 in                                                    # time
+        "gzip"|"lzma"|"bzip2")
+            (time $dCmd < $in.$cFT> $in)&> $result_FLD/${upIn}_DT__${inwf}_$ft;;
 
         "cryfa"|"fqzcomp"|"quip")
-            (time $dCmd $in.$cFT > $in) &> $result/${upIn}_DT__${inwf}_$ft;;
+            (time $dCmd $in.$cFT > $in) &> $result_FLD/${upIn}_DT__${inwf}_$ft;;
 
         "dsrc"|"delim")
-            (time $dCmd $in.$cFT $in) &> $result/${upIn}_DT__${inwf}_$ft;;
+            (time $dCmd $in.$cFT $in) &> $result_FLD/${upIn}_DT__${inwf}_$ft;;
 
         "fqc")
-            (time $dCmd -i $in.$cFT -o $in)&>$result/${upIn}_DT__${inwf}_$ft;;
+            (time $dCmd -i $in.$cFT -o $in) \
+                &> $result_FLD/${upIn}_DT__${inwf}_$ft;;
 
         "mfcompress")
-            (time $dCmd -o $in $in.$cFT) &> $result/${upIn}_DT__${inwf}_$ft;;
+            (time $dCmd -o $in $in.$cFT)&> $result_FLD/${upIn}_DT__${inwf}_$ft;;
       esac
 
-      progMemoryStop $MEMPID $result/${upIn}_DM__${inwf}_$ft    # memory
+      progMemoryStop $MEMPID $result_FLD/${upIn}_DM__${inwf}_$ft    # memory
 
       ### verify if input and decompressed files are the same
-      cmp $2 $in &> $result/${upIn}_V__${inwf}_$ft;
+      cmp $2 $in &> $result_FLD/${upIn}_V__${inwf}_$ft;
   }
 
   # encrypt/decrypt. $1: program's name, $2: input data
   function encDecrypt
   {
-      result="../../result"
+      result_FLD="../../result"
       in="${2##*/}"                     # input file name
       inwf="${in%.*}"                   # input file name without filetype
       ft="${in##*.}"                    # input filetype
@@ -692,31 +703,32 @@ then
       MEMPID=$!
 
       rm -f $in.$enFT
-      case $1 in                                                 # time
+      case $1 in                                                     # time
         "aescrypt")
-            (time $enCmd -o $in.$enFT $2) &> $result/${upIn}_EnT__${inwf}_$ft;;
+            (time $enCmd -o $in.$enFT $2) \
+                &> $result_FLD/${upIn}_EnT__${inwf}_$ft;;
       esac
 
-      ls -la $in.$enFT > $result/${upIn}_EnS__${inwf}_$ft        # size
-      progMemoryStop $MEMPID $result/${upIn}_EnM__${inwf}_$ft    # memory
+      ls -la $in.$enFT > $result_FLD/${upIn}_EnS__${inwf}_$ft        # size
+      progMemoryStop $MEMPID $result_FLD/${upIn}_EnM__${inwf}_$ft    # memory
 
       ### decrypt
       progMemoryStart $deProg &
       MEMPID=$!
 
-      case $1 in                                                 # time
+      case $1 in                                                     # time
         "aescrypt")
-            (time $deCmd -o $in $in.$enFT) &> $result/${upIn}_DeT__${inwf}_$ft;;
+            (time $deCmd -o $in $in.$enFT) \
+                &> $result_FLD/${upIn}_DeT__${inwf}_$ft;;
       esac
 
-      progMemoryStop $MEMPID $result/${upIn}_DeM__${inwf}_$ft    # memory
+      progMemoryStop $MEMPID $result_FLD/${upIn}_DeM__${inwf}_$ft    # memory
   }
-
 
   # comp/decomp plus enc/dec. $1: comp program, $2: input data, $3: enc program
   function compEncDecDecompress
   {
-      result="../../result"
+      result_FLD="../../result"
       in="${2##*/}"                       # input file name
       inwf="${in%.*}"                     # input file name without filetype
       ft="${in##*.}"                      # input filetype
@@ -732,13 +744,17 @@ then
             dProg="gunzip"                # decompress program's name
             dCmd="gunzip";;               # decompress command
 
+        "bzip2")
+            cFT="bz2";             cCmd="bzip2";
+            dProg="bzip2";         dCmd="bunzip2";;
+
         "lzma")
             cFT="lzma";            cCmd="lzma";
             dProg="lzma";          dCmd="lzma -d";;
 
         "fqzcomp")
             cFT="fqz";             cCmd="./fqz_comp";
-            dProg="fqz_comp";      dCmd="./fqz_comp -d";; # "./fqz_comp -d -X"
+            dProg="fqz_comp";      dCmd="./fqz_comp -d -X";; # "./fqz_comp -d"
 
         "quip")
             cFT="qp";              cCmd="./quip -c";
@@ -759,10 +775,6 @@ then
         "mfcompress")
             cFT="mfc";             cCmd="./MFCompressC";
             dProg="MFCompress";    dCmd="./MFCompressD";;
-
-        "cryfa")
-            cFT="cryfa";           cCmd="./cryfa -k pass.txt -t 8";
-            dProg="cryfa";         dCmd="./cryfa -k pass.txt -t 8 -d";;
       esac
 
       ### arguments for encryption methods
@@ -781,36 +793,36 @@ then
       MEMPID=$!
 
       rm -f $in $in.$cFT
-      case $1 in                                                        # time
-        "gzip"|"lzma")
+      case $1 in                                                          # time
+        "gzip"|"lzma"|"bzip2")
             (time $cCmd < $2 > $in.$cFT) \
-                &> $result/${upInComp}_${upInEnc}_CT__${inwf}_$ft;;
+                &> $result_FLD/${upInComp}_${upInEnc}_CT__${inwf}_$ft;;
 
         "cryfa"|"quip"|"fqzcomp")
             (time $cCmd $2 > $in.$cFT) \
-                &> $result/${upInComp}_${upInEnc}_CT__${inwf}_$ft;;
+                &> $result_FLD/${upInComp}_${upInEnc}_CT__${inwf}_$ft;;
 
         "dsrc")
             (time $cCmd $2 $in.$cFT) \
-                &> $result/${upInComp}_${upInEnc}_CT__${inwf}_$ft;;
+                &> $result_FLD/${upInComp}_${upInEnc}_CT__${inwf}_$ft;;
 
         "delim")
             (time $cCmd $2) \
-                &> $result/${upInComp}_${upInEnc}_CT__${inwf}_$ft
+                &> $result_FLD/${upInComp}_${upInEnc}_CT__${inwf}_$ft
             mv $inPath/$in.$cFT $in.$cFT;;
 
         "fqc")
             (time $cCmd -i $2 -o $in.$cFT) \
-                &>$result/${upInComp}_${upInEnc}_CT__${inwf}_$ft;;
+                &>$result_FLD/${upInComp}_${upInEnc}_CT__${inwf}_$ft;;
 
         "mfcompress")
             (time $cCmd -o $in.$cFT $2) \
-                &> $result/${upInComp}_${upInEnc}_CT__${inwf}_$ft;;
+                &> $result_FLD/${upInComp}_${upInEnc}_CT__${inwf}_$ft;;
       esac
 
-      ls -la $in.$cFT > $result/${upInComp}_${upInEnc}_CS__${inwf}_$ft  # size
+      ls -la $in.$cFT > $result_FLD/${upInComp}_${upInEnc}_CS__${inwf}_$ft #size
       progMemoryStop $MEMPID \
-                     $result/${upInComp}_${upInEnc}_CM__${inwf}_$ft     # memory
+                     $result_FLD/${upInComp}_${upInEnc}_CM__${inwf}_$ft    # mem
 
       ### encrypt
       cd ../$3
@@ -820,28 +832,28 @@ then
       MEMPID=$!
 
       rm -f $in.$cFT $in.$cFT.$enFT
-      case $3 in                                                        # time
+      case $3 in                                                          # time
         "aescrypt")
             (time $enCmd -o $in.$cFT.$enFT $compPath/$in.$cFT) \
-                &> $result/${upInComp}_${upInEnc}_EnT__${inwf}_$ft;;
+                &> $result_FLD/${upInComp}_${upInEnc}_EnT__${inwf}_$ft;;
       esac
 
-      ls -la $in.$cFT.$enFT > $result/${upInComp}_${upInEnc}_EnS__${inwf}_$ft
+      ls -la $in.$cFT.$enFT >$result_FLD/${upInComp}_${upInEnc}_EnS__${inwf}_$ft
       progMemoryStop $MEMPID \
-                     $result/${upInComp}_${upInEnc}_EnM__${inwf}_$ft    # memory
+                     $result_FLD/${upInComp}_${upInEnc}_EnM__${inwf}_$ft   # mem
 
       ### decrypt
       progMemoryStart $deProg &
       MEMPID=$!
 
-      case $3 in                                                        # time
+      case $3 in                                                          # time
         "aescrypt")
             (time $deCmd -o $in.$cFT $in.$cFT.$enFT) \
-                &> $result/${upInComp}_${upInEnc}_DeT__${inwf}_$ft;;
+                &> $result_FLD/${upInComp}_${upInEnc}_DeT__${inwf}_$ft;;
       esac
 
       progMemoryStop $MEMPID \
-                     $result/${upInComp}_${upInEnc}_DeM__${inwf}_$ft    # memory
+                     $result_FLD/${upInComp}_${upInEnc}_DeM__${inwf}_$ft  # mem
 
       ### decompress
       cd ../$1
@@ -850,33 +862,33 @@ then
       progMemoryStart $dProg &
       MEMPID=$!
 
-      case $1 in                                                        # time
-        "gzip"|"lzma")
+      case $1 in                                                          # time
+        "gzip"|"lzma"|"bzip2")
             (time $dCmd < $encPath/$in.$cFT> $in) \
-                &> $result/${upInComp}_${upInEnc}_DT__${inwf}_$ft;;
+                &> $result_FLD/${upInComp}_${upInEnc}_DT__${inwf}_$ft;;
 
         "cryfa"|"fqzcomp"|"quip")
             (time $dCmd $encPath/$in.$cFT > $in) \
-                &> $result/${upInComp}_${upInEnc}_DT__${inwf}_$ft;;
+                &> $result_FLD/${upInComp}_${upInEnc}_DT__${inwf}_$ft;;
 
         "dsrc"|"delim")
             (time $dCmd $encPath/$in.$cFT $in) \
-                &> $result/${upInComp}_${upInEnc}_DT__${inwf}_$ft;;
+                &> $result_FLD/${upInComp}_${upInEnc}_DT__${inwf}_$ft;;
 
         "fqc")
             (time $dCmd -i $encPath/$in.$cFT -o $in) \
-                &> $result/${upInComp}_${upInEnc}_DT__${inwf}_$ft;;
+                &> $result_FLD/${upInComp}_${upInEnc}_DT__${inwf}_$ft;;
 
         "mfcompress")
             (time $dCmd -o $in $encPath/$in.$cFT) \
-                &> $result/${upInComp}_${upInEnc}_DT__${inwf}_$ft;;
+                &> $result_FLD/${upInComp}_${upInEnc}_DT__${inwf}_$ft;;
       esac
 
       progMemoryStop $MEMPID \
-                     $result/${upInComp}_${upInEnc}_DM__${inwf}_$ft     # memory
+                     $result_FLD/${upInComp}_${upInEnc}_DM__${inwf}_$ft    # mem
 
       ### verify if input and decompressed files are the same
-      cmp $2 $in &> $result/${upInComp}_${upInEnc}_V__${inwf}_$ft;
+      cmp $2 $in &> $result_FLD/${upInComp}_${upInEnc}_V__${inwf}_$ft;
 
       cd ../..
   }
@@ -908,7 +920,7 @@ then
                 compDecomp $method \
                            $dsPath/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq
             done
-            for i in {1..2};do
+            for i in {1..2}; do
                 compDecomp $method $dsPath/$FQ/$Synth/Synth-$i.$fastq
             done;;
       esac
@@ -944,7 +956,7 @@ then
                 encDecrypt $method \
                            $dsPath/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq
             done
-            for i in {1..2};do
+            for i in {1..2}; do
                 encDecrypt $method $dsPath/$FQ/$Synth/Synth-$i.$fastq
             done;;
       esac
@@ -976,41 +988,60 @@ then
             done;;
 
         "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
-#            for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
-#                     SRR707196_1; do
-            for i in SRR442469_1; do
+            for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
+                     SRR707196_1; do
                 compEncDecDecompress \
                     $methodComp $dsPath/$FQ/$HUMAN/$HUMAN-$i.$fastq $methodEnc
             done
-#            for i in B1087 B1088 B1110 B1128 SL3003; do
-#                compEncDecDecompress $methodComp \
-#                    $dsPath/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq $methodEnc
-#            done
-#            for i in {1..2};do
-#                compEncDecDecompress \
-#                    $methodComp $dsPath/$FQ/$Synth/Synth-$i.$fastq $methodEnc
-#            done
-            ;;
+            for i in B1087 B1088 B1110 B1128 SL3003; do
+                compEncDecDecompress $methodComp \
+                    $dsPath/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq $methodEnc
+            done
+            for i in {1..2}; do
+                compEncDecDecompress \
+                    $methodComp $dsPath/$FQ/$Synth/Synth-$i.$fastq $methodEnc
+            done;;
       esac
   }
 
   # print compress/decompress results. $1: program's name, $2: dataset
   function compDecompResult
   {
-      CS=`cat $result/${1}_CS__${2} | awk '{ print $5; }'`;
-      CT_r=`cat $result/${1}_CT__${2} | tail -n 3 | head -n 1 \
-                                      | awk '{ print $2;}'`;              # real
-      CT_u=`cat $result/${1}_CT__${2} | tail -n 2 | head -n 1 \
-                                      | awk '{ print $2;}'`;              # user
-      CT_s=`cat $result/${1}_CT__${2} | tail -n 1 | awk '{ print $2;}'`   # sys
-      CM=`cat $result/${1}_CM__${2}`;
-      DT_r=`cat $result/${1}_DT__${2} | tail -n 3 | head -n 1 \
-                                      | awk '{ print $2;}'`;              # real
-      DT_u=`cat $result/${1}_DT__${2} | tail -n 2 | head -n 1 \
-                                      | awk '{ print $2;}'`;              # user
-      DT_s=`cat $result/${1}_DT__${2} | tail -n 1 | awk '{ print $2;}'`   # sys
-      DM=`cat $result/${1}_DM__${2}`;
-      V=`cat $result/${1}_V__${2}     | wc -l`;
+      CS="";       CT_r="";     CT_u="";     CT_s="";     CM="";
+      DT_r="";     DT_u="";     DT_s="";     DM="";
+      V="";
+
+      ### compressed file size
+      cs_file="$result/${1}_CS__${2}"
+      if [[ -e $cs_file ]]; then CS=`cat $cs_file | awk '{ print $5; }'`; fi
+
+      ### compression time -- real - user - system
+      ct_file="$result/${1}_CT__${2}"
+      if [[ -e $ct_file ]]; then
+          CT_r=`cat $ct_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
+          CT_u=`cat $ct_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
+          CT_s=`cat $ct_file | tail -n 1 | awk '{ print $2;}'`;
+      fi
+
+      ### compression memory
+      cm_file="$result/${1}_CM__${2}"
+      if [[ -e $cm_file ]]; then CM=`cat $cm_file`; fi
+
+      ### decompression time -- real - user - system
+      dt_file="$result/${1}_DT__${2}"
+      if [[ -e $dt_file ]]; then
+          DT_r=`cat $dt_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
+          DT_u=`cat $dt_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
+          DT_s=`cat $dt_file | tail -n 1 | awk '{ print $2;}'`;
+      fi
+
+      ### decompression memory
+      dm_file="$result/${1}_DM__${2}"
+      if [[ -e $dm_file ]]; then DM=`cat $dm_file`; fi
+
+      ### if decompressed file is the same as the original file
+      v_file="$result/${1}_V__${2}"
+      if [[ -e $v_file ]]; then V=`cat $v_file | wc -l`; fi
 
       dName="${2%_*}"                     # dataset name without filetype
       method=`printMethodName $1`         # methods' name for printing
@@ -1023,19 +1054,36 @@ then
   # print encrypt/decrypt results. $1: program's name, $2: dataset
   function encDecResult
   {
-      EnS=`cat $result/${1}_EnS__${2}   | awk '{ print $5; }'`;
-      EnT_r=`cat $result/${1}_EnT__${2} | tail -n 3 | head -n 1 \
-                                        | awk '{ print $2;}'`;            # real
-      EnT_u=`cat $result/${1}_EnT__${2} | tail -n 2 | head -n 1 \
-                                        | awk '{ print $2;}'`;            # user
-      EnT_s=`cat $result/${1}_EnT__${2} | tail -n 1 | awk '{ print $2;}'` # sys
-      EnM=`cat $result/${1}_EnM__${2}`;
-      DeT_r=`cat $result/${1}_DeT__${2} | tail -n 3 | head -n 1 \
-                                        | awk '{ print $2;}'`;            # real
-      DeT_u=`cat $result/${1}_DeT__${2} | tail -n 2 | head -n 1 \
-                                        | awk '{ print $2;}'`;            # user
-      DeT_s=`cat $result/${1}_DeT__${2} | tail -n 1 | awk '{ print $2;}'` # sys
-      DeM=`cat $result/${1}_DeM__${2}`;
+      EnS="";      EnT_r="";    EnT_u="";    EnT_s="";    EnM="";
+      DeT_r="";    DeT_u="";    DeT_s="";    DeM="";
+
+      ### encrypted file size
+      ens_file="$result/${1}_EnS__${2}"
+      if [[ -e $ens_file ]]; then EnS=`cat $ens_file | awk '{ print $5; }'`; fi
+
+      ### encryption time -- real - user - system
+      ent_file="$result/${1}_EnT__${2}"
+      if [[ -e $ent_file ]]; then
+          EnT_r=`cat $ent_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
+          EnT_u=`cat $ent_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
+          EnT_s=`cat $ent_file | tail -n 1 | awk '{ print $2;}'`;
+      fi
+
+      ### encryption memory
+      enm_file="$result/${1}_EnM__${2}"
+      if [[ -e $enm_file ]]; then EnM=`cat $enm_file`; fi
+
+      ### decryption time -- real - user - system
+      det_file="$result/${1}_DeT__${2}"
+      if [[ -e $det_file ]]; then
+          DeT_r=`cat $det_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
+          DeT_u=`cat $det_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
+          DeT_s=`cat $det_file | tail -n 1 | awk '{ print $2;}'`;
+      fi
+
+      ### decryption memory
+      dem_file="$result/${1}_DeM__${2}"
+      if [[ -e $dem_file ]]; then DeM=`cat $dem_file`; fi
 
       dName="${2%_*}"                            # dataset name without filetype
       method=`printMethodName $1`                # methods' name for printing
@@ -1049,35 +1097,71 @@ then
   # $1: compression program's name, $2: encryption program's name, $3: dataset.
   function compEncDecDecompResult
   {
-      CS=`cat $result/${1}_${2}_CS__${3}     | awk '{ print $5; }'`;
-      CT_r=`cat $result/${1}_${2}_CT__${3}   | tail -n 3 | head -n 1 \
-                                             | awk '{ print $2;}'`;       # real
-      CT_u=`cat $result/${1}_${2}_CT__${3}   | tail -n 2 | head -n 1 \
-                                             | awk '{ print $2;}'`;       # user
-      CT_s=`cat $result/${1}_${2}_CT__${3}   | tail -n 1 | awk '{ print $2;}'`
-      CM=`cat $result/${1}_${2}_CM__${3}`;
-      EnS=`cat $result/${1}_${2}_EnS__${3}   | awk '{ print $5; }'`;
-      EnT_r=`cat $result/${1}_${2}_EnT__${3} | tail -n 3 | head -n 1 \
-                                             | awk '{ print $2;}'`;       # real
-      EnT_u=`cat $result/${1}_${2}_EnT__${3} | tail -n 2 | head -n 1 \
-                                             | awk '{ print $2;}'`;       # user
-      EnT_s=`cat $result/${1}_${2}_EnT__${3} | tail -n 1 | awk '{ print $2;}'`
-      EnM=`cat $result/${1}_${2}_EnM__${3}`;
-      DeT_r=`cat $result/${1}_${2}_DeT__${3} | tail -n 3 | head -n 1 \
-                                             | awk '{ print $2;}'`;       # real
-      DeT_u=`cat $result/${1}_${2}_DeT__${3} | tail -n 2 | head -n 1 \
-                                             | awk '{ print $2;}'`;       # user
-      DeT_s=`cat $result/${1}_${2}_DeT__${3} | tail -n 1 | awk '{ print $2;}'`
-      DeM=`cat $result/${1}_${2}_DeM__${3}`;
-      DT_r=`cat $result/${1}_${2}_DT__${3}   | tail -n 3 | head -n 1 \
-                                             | awk '{ print $2;}'`;       # real
-      DT_u=`cat $result/${1}_${2}_DT__${3}   | tail -n 2 | head -n 1 \
-                                             | awk '{ print $2;}'`;       # user
-      DT_s=`cat $result/${1}_${2}_DT__${3}   | tail -n 1 | awk '{ print $2;}'`
-      DM=`cat $result/${1}_${2}_DM__${3}`;
-      if [[ -e ${1}_${2}_V__${3} ]]; then
-          V=`cat $result/${1}_${2}_V__${3} | wc -l`;
+      CS="";       CT_r="";     CT_u="";     CT_s="";     CM="";
+      EnS="";      EnT_r="";    EnT_u="";    EnT_s="";    EnM="";
+      DeT_r="";    DeT_u="";    DeT_s="";    DeM="";
+      DT_r="";     DT_u="";     DT_s="";     DM="";
+      V="";
+
+      ### compressed file size
+      cs_file="$result/${1}_${2}_CS__${3}"
+      if [[ -e $cs_file ]]; then CS=`cat $cs_file | awk '{ print $5; }'`; fi
+
+      ### compression time -- real - user - system
+      ct_file="$result/${1}_${2}_CT__${3}"
+      if [[ -e $ct_file ]]; then
+          CT_r=`cat $ct_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
+          CT_u=`cat $ct_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
+          CT_s=`cat $ct_file | tail -n 1 | awk '{ print $2;}'`;
       fi
+
+      ### compression memory
+      cm_file="$result/${1}_${2}_CM__${3}"
+      if [[ -e $cm_file ]]; then CM=`cat $cm_file`; fi
+
+      ### encrypted file size
+      ens_file="$result/${1}_${2}_EnS__${3}"
+      if [[ -e $ens_file ]]; then EnS=`cat $ens_file | awk '{ print $5; }'`; fi
+
+      ### encryption time -- real - user - system
+      ent_file="$result/${1}_${2}_EnT__${3}"
+      if [[ -e $ent_file ]]; then
+          EnT_r=`cat $ent_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
+          EnT_u=`cat $ent_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
+          EnT_s=`cat $ent_file | tail -n 1 | awk '{ print $2;}'`;
+      fi
+
+      ### encryption memory
+      enm_file="$result/${1}_${2}_EnM__${3}"
+      if [[ -e $enm_file ]]; then EnM=`cat $enm_file`; fi
+
+      ### decryption time -- real - user - system
+      det_file="$result/${1}_${2}_DeT__${3}"
+      if [[ -e $det_file ]]; then
+          DeT_r=`cat $det_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
+          DeT_u=`cat $det_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
+          DeT_s=`cat $det_file | tail -n 1 | awk '{ print $2;}'`;
+      fi
+
+      ### decryption memory
+      dem_file="$result/${1}_${2}_DeM__${3}"
+      if [[ -e $dem_file ]]; then DeM=`cat $dem_file`; fi
+
+      ### decompression time -- real - user - system
+      dt_file="$result/${1}_${2}_DT__${3}"
+      if [[ -e $dt_file ]]; then
+          DT_r=`cat $dt_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
+          DT_u=`cat $dt_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
+          DT_s=`cat $dt_file | tail -n 1 | awk '{ print $2;}'`;
+      fi
+
+      ### decompression memory
+      dm_file="$result/${1}_${2}_DM__${3}"
+      if [[ -e $dm_file ]]; then DM=`cat $dm_file`; fi
+
+      ### if decompressed file is the same as the original file
+      v_file="$result/${1}_${2}_V__${3}"
+      if [[ -e $v_file ]]; then V=`cat $v_file | wc -l`; fi
 
       dName="${3%_*}"                          # dataset name without filetype
       methodComp=`printMethodName $1`          # comp methods' name for printing
@@ -1089,7 +1173,6 @@ then
 
       printf "$dName\t$methodComp\t$methodEnc\t$c\t$en\t$de\t$d\t$V\n";
   }
-
 
   #------------------- dataset availablity -------------------#
   # FASTA -- human - viruses - synthetic
@@ -1114,6 +1197,7 @@ then
   then
       ### FASTA
       if [[ $RUN_GZIP_FA    -eq 1 ]]; then compDecompOnDataset gzip       fa; fi
+      if [[ $RUN_BZIP2_FA   -eq 1 ]]; then compDecompOnDataset bzip2      fa; fi
       if [[ $RUN_LZMA_FA    -eq 1 ]]; then compDecompOnDataset lzma       fa; fi
       if [[ $RUN_MFCOMPRESS -eq 1 ]]; then compDecompOnDataset mfcompress fa; fi
       if [[ $RUN_DELIMINATE -eq 1 ]]; then compDecompOnDataset delim      fa; fi
@@ -1121,6 +1205,7 @@ then
 
       ### FASTQ
       if [[ $RUN_GZIP_FQ    -eq 1 ]]; then compDecompOnDataset gzip       fq; fi
+      if [[ $RUN_BZIP2_FQ   -eq 1 ]]; then compDecompOnDataset bzip2      fq; fi
       if [[ $RUN_LZMA_FQ    -eq 1 ]]; then compDecompOnDataset lzma       fq; fi
       if [[ $RUN_FQZCOMP    -eq 1 ]]; then compDecompOnDataset fqzcomp    fq; fi
       if [[ $RUN_QUIP       -eq 1 ]]; then compDecompOnDataset quip       fq; fi
@@ -1131,43 +1216,13 @@ then
       #---------------- results ----------------#
       if [[ $PRINT_RESULTS_COMP -eq 1 ]];
       then
-          ### result files availability
-          result="result"
-
-#          for i in CS CT CM DT DM V; do
-#              # FASTA -- human - viruses - synthetic
-#              for j in CRYFA GZIP LZMA MFCOMPRESS DELIMINATE; do
-#                  for k in $HS_SEQ_RUN; do
-#                      isAvail "$result/${j}_${i}__$HUMAN-${k}_$fasta";
-#                  done
-#                  isAvail "$result/${j}_${i}__viruses_$fasta"
-#                  for k in {1..2}; do
-#                      isAvail "$result/${j}_${i}__$Synth-${k}_$fasta";
-#                  done
-#              done
-#
-#              # FASTQ -- human - Denisova - synthetic
-#              for j in CRYFA GZIP LZMA FQZCOMP QUIP DSRC FQC; do
-#                  for k in ERR013103_1 ERR015767_2 ERR031905_2 \
-#                           SRR442469_1 SRR707196_1; do
-#                      isAvail "$result/${j}_${i}__$HUMAN-${k}_$fastq";
-#                  done
-#                  for k in B1087 B1088 B1110 B1128 SL3003; do
-#                      isAvail "$result/${j}_${i}__$DENISOVA-${k}_SR_$fastq";
-#                  done
-#                  for k in {1..2}; do
-#                      isAvail "$result/${j}_${i}__$Synth-${k}_$fastq";
-#                  done
-#              done
-#          done
-
           ### print results
           c="C_Size\tC_Time(real)\tC_Time(user)\tC_Time(sys)\tC_Mem"
           d="D_Time(real)\tD_Time(user)\tD_Time(sys)\tD_Mem"
           printf "Dataset\tMethod\t$c\t$d\tEq\n" > result_comp.$INF;
 
           # FASTA -- human - viruses - synthetic
-          for i in CRYFA GZIP LZMA MFCOMPRESS DELIMINATE; do
+          for i in CRYFA GZIP BZIP2 LZMA MFCOMPRESS DELIMINATE; do
               for j in $HS_SEQ_RUN; do
                   compDecompResult $i $HUMAN-${j}_$fasta >> result_comp.$INF;
               done
@@ -1178,7 +1233,7 @@ then
           done
 
           # FASTQ -- human - Denisova - synthetic
-          for i in CRYFA GZIP LZMA FQZCOMP QUIP DSRC FQC; do
+          for i in CRYFA GZIP BZIP2 LZMA FQZCOMP QUIP DSRC FQC; do
               for j in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
                        SRR707196_1; do
                   compDecompResult $i $HUMAN-${j}_$fastq >> result_comp.$INF;
@@ -1203,34 +1258,6 @@ then
       #---------------- results ----------------#
       if [[ $PRINT_RESULTS_ENC -eq 1 ]];
       then
-          ### result files availability
-          result="result"
-
-#          for i in AESCRYPT; do
-#              for j in EnS EnT EnM DeT DeM; do
-#                  # FASTA -- human - viruses - synthetic
-#                  for k in $HS_SEQ_RUN; do
-#                      isAvail "$result/${i}_${j}__$HUMAN-${k}_$fasta";
-#                  done
-#                  isAvail "$result/${i}_${j}__viruses_$fasta"
-#                  for k in {1..2}; do
-#                      isAvail "$result/${i}_${j}__$Synth-${k}_$fasta";
-#                  done
-#
-#                  # FASTQ -- human - Denisova - synthetic
-#                  for k in ERR013103_1 ERR015767_2 ERR031905_2 \
-#                           SRR442469_1 SRR707196_1; do
-#                      isAvail "$result/${i}_${j}__$HUMAN-${k}_$fastq";
-#                  done
-#                  for k in B1087 B1088 B1110 B1128 SL3003; do
-#                      isAvail "$result/${i}_${j}__$DENISOVA-${k}_SR_$fastq";
-#                  done
-#                  for k in {1..2}; do
-#                      isAvail "$result/${i}_${j}__$Synth-${k}_$fastq";
-#                  done
-#              done
-#          done
-
           ### print results
           en="En_Size\tEn_Time(real)\tEn_Time(user)\tEn_Time(sys)\tEn_Mem"
           de="De_Time(real)\tDe_Time(user)\tDe_Time(sys)\tDe_Mem"
@@ -1269,6 +1296,9 @@ then
       if [[ $RUN_GZIP_FA_AESCRYPT -eq 1 ]]; then
         compEncDecDecompOnDataset gzip fa aescrypt;
       fi
+      if [[ $RUN_BZIP2_FA_AESCRYPT -eq 1 ]]; then
+        compEncDecDecompOnDataset bzip2 fa aescrypt;
+      fi
       if [[ $RUN_LZMA_FA_AESCRYPT -eq 1 ]]; then
         compEncDecDecompOnDataset lzma fa aescrypt;
       fi
@@ -1282,6 +1312,9 @@ then
       ### FASTQ + AEScrypt
       if [[ $RUN_GZIP_FQ_AESCRYPT -eq 1 ]]; then
         compEncDecDecompOnDataset gzip fq aescrypt;
+      fi
+      if [[ $RUN_BZIP2_FQ_AESCRYPT -eq 1 ]]; then
+        compEncDecDecompOnDataset bzip2 fq aescrypt;
       fi
       if [[ $RUN_LZMA_FQ_AESCRYPT -eq 1 ]]; then
         compEncDecDecompOnDataset lzma fq aescrypt;
@@ -1302,39 +1335,6 @@ then
       #---------------- results ----------------#
       if [[ $PRINT_RESULTS_COMP_ENC -eq 1 ]];
       then
-          ### result files availability
-          result="result"
-
-#          for i in CS CT CM DT DM EnS EnT EnM EnT EnM V; do
-#              for j in AESCRYPT; do
-#                  # FASTA -- human - viruses - synthetic
-#                  for k in CRYFA GZIP LZMA MFCOMPRESS DELIMINATE; do
-#                      for l in $HS_SEQ_RUN; do
-#                          isAvail "$result/${k}_${j}_${i}__$HUMAN-${l}_$fasta";
-#                      done
-#                      isAvail "$result/${k}_${j}_${i}__viruses_$fasta"
-#                      for l in {1..2}; do
-#                          isAvail "$result/${k}_${j}_${i}__$Synth-${l}_$fasta";
-#                      done
-#                  done
-#
-#                  # FASTQ -- human - Denisova - synthetic
-#                  for k in CRYFA GZIP LZMA FQZCOMP QUIP DSRC FQC; do
-#                      for l in ERR013103_1 ERR015767_2 ERR031905_2 \
-#                               SRR442469_1 SRR707196_1; do
-#                          isAvail "$result/${k}_${j}_${i}__$HUMAN-${l}_$fastq";
-#                      done
-#                      for l in B1087 B1088 B1110 B1128 SL3003; do
-#                          isAvail \
-#                            "$result/${k}_${j}_${i}__$DENISOVA-${l}_SR_$fastq";
-#                      done
-#                      for l in {1..2}; do
-#                          isAvail "$result/${k}_${j}_${i}__$Synth-${l}_$fastq";
-#                      done
-#                  done
-#              done
-#          done
-
           ### print results
           c="C_Size\tC_Time(real)\tC_Time(user)\tC_Time(sys)\tC_Mem"
           en="En_Size\tEn_Time(real)\tEn_Time(user)\tEn_Time(sys)\tEn_Mem"
@@ -1345,7 +1345,7 @@ then
 
           for i in AESCRYPT; do
              # FASTA -- human - viruses - synthetic
-             for j in GZIP LZMA MFCOMPRESS DELIM; do
+             for j in GZIP BZIP2 LZMA MFCOMPRESS DELIM; do
                  for k in $HS_SEQ_RUN; do
                      compEncDecDecompResult $j $i $HUMAN-${k}_$fasta \
                          >> result_comp_enc.$INF;
@@ -1359,7 +1359,7 @@ then
              done
 
              # FASTQ -- human - Denisova - synthetic
-             for j in GZIP LZMA FQZCOMP QUIP DSRC FQC; do
+             for j in GZIP BZIP2 LZMA FQZCOMP QUIP DSRC FQC; do
                  for k in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
                           SRR707196_1; do
                      compEncDecDecompResult $j $i $HUMAN-${k}_$fastq \
