@@ -45,7 +45,7 @@ INSTALL_METHODS=0
   INS_AESCRYPT=0        # AES crypt
 
 ### run methods
-RUN_METHODS=1
+RUN_METHODS=0
   # compress/decompress
   RUN_METHODS_COMP=0
       # FASTA
@@ -93,9 +93,15 @@ RUN_METHODS=1
       PRINT_RESULTS_COMP_ENC=0
 
   # cryfa exclusive
-  CRYFA_EXCLUSIVE=1
+  CRYFA_EXCLUSIVE=0
       MAX_N_THR=8                  # max number of threads
       CRYFA_XCL_DATASET="dataset/FA/V/viruses.fasta"
+#      CRYFA_XCL_DATASET="dataset/FQ/HS/HS-SRR442469_1.fastq"
+      RUN_CRYFA_XCL=0
+      PRINT_RESULTS_CRYFA_XCL=0
+
+### plot results
+PLOT_RESULTS=1
 
 
 # test purpose
@@ -155,140 +161,140 @@ fastq="fastq"     # FASTQ file extension
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $GET_DATASETS -eq 1 ]];
 then
-    ### create a folder, if it doesn't already exist
-    if [[ ! -d $dataset ]]; then mkdir -p $dataset; fi
+  ### create a folder, if it doesn't already exist
+  if [[ ! -d $dataset ]]; then mkdir -p $dataset; fi
 
-    #----------------------- FASTA -----------------------#
-    ### human -- 3.1 GB
-    if [[ $DL_HUMAN_FA -eq 1 ]];
-    then
-        # create a folder for FASTA files and one for human dataset
-        if [[ ! -d $dataset/$FA/$HUMAN ]]; then mkdir -p $dataset/$FA/$HUMAN; fi
+  #----------------------- FASTA -----------------------#
+  ### human -- 3.1 GB
+  if [[ $DL_HUMAN_FA -eq 1 ]];
+  then
+      # create a folder for FASTA files and one for human dataset
+      if [[ ! -d $dataset/$FA/$HUMAN ]]; then mkdir -p $dataset/$FA/$HUMAN; fi
 
-        # download and remove blank lines
-        for i in {1..22} X Y MT; do
-            wget $WGET_OP $HUMAN_FA_URL/$HUMAN_CHROMOSOME$i.fa.gz;
-            gunzip < $HUMAN_CHROMOSOME$i.fa.gz | grep -Ev "^$" \
-                   > $dataset/$FA/$HUMAN/$HUMAN-$i.$fasta
-            rm $HUMAN_CHROMOSOME$i.fa.gz
-        done
-        for dual in "alts AL" "unplaced UP" "unlocalized UL"; do
-            set $dual
-            wget $WGET_OP $HUMAN_FA_URL/$HUMAN_CHR_PREFIX$1.fa.gz;
-            gunzip < $HUMAN_CHR_PREFIX$1.fa.gz | grep -Ev "^$" \
-                   > $dataset/$FA/$HUMAN/$HUMAN-$2.$fasta
-            rm $HUMAN_CHR_PREFIX$1.fa.gz;
-        done
-    fi
+      # download and remove blank lines
+      for i in {1..22} X Y MT; do
+          wget $WGET_OP $HUMAN_FA_URL/$HUMAN_CHROMOSOME$i.fa.gz;
+          gunzip < $HUMAN_CHROMOSOME$i.fa.gz | grep -Ev "^$" \
+                 > $dataset/$FA/$HUMAN/$HUMAN-$i.$fasta
+          rm $HUMAN_CHROMOSOME$i.fa.gz
+      done
+      for dual in "alts AL" "unplaced UP" "unlocalized UL"; do
+          set $dual
+          wget $WGET_OP $HUMAN_FA_URL/$HUMAN_CHR_PREFIX$1.fa.gz;
+          gunzip < $HUMAN_CHR_PREFIX$1.fa.gz | grep -Ev "^$" \
+                 > $dataset/$FA/$HUMAN/$HUMAN-$2.$fasta
+          rm $HUMAN_CHR_PREFIX$1.fa.gz;
+      done
+  fi
 
-    ### viruses -- 350 MB
-    if [[ $DL_VIRUSES_FA -eq 1 ]];
-    then
-        # create a folder for FASTA files and one for viruses dataset
-        if [[ ! -d $dataset/$FA/$VIRUSES ]]; then
-            mkdir -p $dataset/$FA/$VIRUSES;
-        fi
+  ### viruses -- 350 MB
+  if [[ $DL_VIRUSES_FA -eq 1 ]];
+  then
+      # create a folder for FASTA files and one for viruses dataset
+      if [[ ! -d $dataset/$FA/$VIRUSES ]]; then
+          mkdir -p $dataset/$FA/$VIRUSES;
+      fi
 
-        # download
-        perl ./scripts/DownloadViruses.pl
+      # download
+      perl ./scripts/DownloadViruses.pl
 
-        # remove blank lines in downloaded file & move it to dataset folder
-        cat viruses.fa | grep -Ev "^$" > $dataset/$FA/$VIRUSES/viruses.$fasta
-        rm viruses.fa
-    fi
+      # remove blank lines in downloaded file & move it to dataset folder
+      cat viruses.fa | grep -Ev "^$" > $dataset/$FA/$VIRUSES/viruses.$fasta
+      rm viruses.fa
+  fi
 
-    ### synthetic -- 4 GB
-    if [[ $GEN_SYNTH_FA -eq 1 ]];
-    then
-        INSTALL_XS=1
+  ### synthetic -- 4 GB
+  if [[ $GEN_SYNTH_FA -eq 1 ]];
+  then
+      INSTALL_XS=1
 
-        # create a folder for FASTA files and one for synthetic dataset
-        if [[ ! -d $dataset/$FA/$Synth ]]; then mkdir -p $dataset/$FA/$Synth; fi
+      # create a folder for FASTA files and one for synthetic dataset
+      if [[ ! -d $dataset/$FA/$Synth ]]; then mkdir -p $dataset/$FA/$Synth; fi
 
-        # install XS
-        if [[ $INSTALL_XS -eq 1 ]]; then
-            rm -fr $XS
-            git clone https://github.com/pratas/XS.git
-            cd $XS
-            make
-            cd ..
-        fi
+      # install XS
+      if [[ $INSTALL_XS -eq 1 ]]; then
+          rm -fr $XS
+          git clone https://github.com/pratas/XS.git
+          cd $XS
+          make
+          cd ..
+      fi
 
-        # generate dataset -- 2.3 GB - 1.7 GB
-        XS/XS -eo -es -t 1 -n 4000000 -ld 70:1000 \
-              -f 0.2,0.2,0.2,0.2,0.2       $dataset/$FA/$Synth/Synth-1.$fasta
-        XS/XS -eo -es -t 2 -n 3000000 -ls 500 \
-              -f 0.23,0.23,0.23,0.23,0.08  $dataset/$FA/$Synth/Synth-2.$fasta
+      # generate dataset -- 2.3 GB - 1.7 GB
+      XS/XS -eo -es -t 1 -n 4000000 -ld 70:1000 \
+            -f 0.2,0.2,0.2,0.2,0.2       $dataset/$FA/$Synth/Synth-1.$fasta
+      XS/XS -eo -es -t 2 -n 3000000 -ls 500 \
+            -f 0.23,0.23,0.23,0.23,0.08  $dataset/$FA/$Synth/Synth-2.$fasta
 
-        # replace @ symbol with > for the headers
-        for i in {1..2}; do
-            sed -i 's/@/>/g' "$dataset/$FA/$Synth/Synth-$i.$fasta";
-        done
-    fi
+      # replace @ symbol with > for the headers
+      for i in {1..2}; do
+          sed -i 's/@/>/g' "$dataset/$FA/$Synth/Synth-$i.$fasta";
+      done
+  fi
 
-    #----------------------- FASTQ -----------------------#
-    ### human -- 27 GB
-    if [[ $DL_HUMAN_FQ -eq 1 ]];
-    then
-        # create a folder for FASTQ files and one for human dataset
-        if [[ ! -d $dataset/$FQ/$HUMAN ]]; then mkdir -p $dataset/$FQ/$HUMAN; fi
+  #----------------------- FASTQ -----------------------#
+  ### human -- 27 GB
+  if [[ $DL_HUMAN_FQ -eq 1 ]];
+  then
+      # create a folder for FASTQ files and one for human dataset
+      if [[ ! -d $dataset/$FQ/$HUMAN ]]; then mkdir -p $dataset/$FQ/$HUMAN; fi
 
-        # download -- 4.6 GB - 1.4 GB - 12 GB - 488 MB - 8.4 GB
-        # ERR013103_1: HG00190-Male-FIN (Finnish in Finland)-Low coverage WGS
-        # ERR015767_2: HG00638-Female-PUR (Puerto Rican in Puerto Rico)-Low cov.
-        # ERR031905_2: HG00501-Female-CHS (Han Chinese South)-Exome
-        # SRR442469_1: HG02108-Female-ACB (African Caribbean in Barbados)-Low c.
-        # SRR707196_1: HG00126-Male-GBR (British in England and Scotland)-Exome
-        for dual in "ERR013/ERR013103 ERR013103_1"\
-               "ERR015/ERR015767 ERR015767_2" "ERR031/ERR031905 ERR031905_2"\
-               "SRR442/SRR442469 SRR442469_1" "SRR707/SRR707196 SRR707196_1"; do
-            set $dual
-            wget $WGET_OP $HUMAN_FQ_URL/$1/$2.fastq.gz;
-            gunzip < $2.fastq.gz > $dataset/$FQ/$HUMAN/$HUMAN-$2.$fastq;
-            rm $2.fastq.gz;
-        done
-    fi
+      # download -- 4.6 GB - 1.4 GB - 12 GB - 488 MB - 8.4 GB
+      # ERR013103_1: HG00190-Male-FIN (Finnish in Finland)-Low coverage WGS
+      # ERR015767_2: HG00638-Female-PUR (Puerto Rican in Puerto Rico)-Low cov.
+      # ERR031905_2: HG00501-Female-CHS (Han Chinese South)-Exome
+      # SRR442469_1: HG02108-Female-ACB (African Caribbean in Barbados)-Low c.
+      # SRR707196_1: HG00126-Male-GBR (British in England and Scotland)-Exome
+      for dual in "ERR013/ERR013103 ERR013103_1"\
+             "ERR015/ERR015767 ERR015767_2" "ERR031/ERR031905 ERR031905_2"\
+             "SRR442/SRR442469 SRR442469_1" "SRR707/SRR707196 SRR707196_1"; do
+          set $dual
+          wget $WGET_OP $HUMAN_FQ_URL/$1/$2.fastq.gz;
+          gunzip < $2.fastq.gz > $dataset/$FQ/$HUMAN/$HUMAN-$2.$fastq;
+          rm $2.fastq.gz;
+      done
+  fi
 
-    ### Denisova -- 172 GB
-    if [[ $DL_DENISOVA_FQ -eq 1 ]];
-    then
-        # create a folder for FASTQ files and one for Denisova dataset
-        if [[ ! -d $dataset/$FQ/$DENISOVA ]]; then
-            mkdir -p $dataset/$FQ/$DENISOVA;
-        fi
+  ### Denisova -- 172 GB
+  if [[ $DL_DENISOVA_FQ -eq 1 ]];
+  then
+      # create a folder for FASTQ files and one for Denisova dataset
+      if [[ ! -d $dataset/$FQ/$DENISOVA ]]; then
+          mkdir -p $dataset/$FQ/$DENISOVA;
+      fi
 
-        # download -- 1.7 GB - 1.2 GB - 59 GB - 51 GB - 59 GB
-        for i in B1087 B1088 B1110 B1128 SL3003; do
-            wget $WGET_OP $DENISOVA_FQ_URL/${i}_SR.txt.gz;
-            gunzip < ${i}_SR.txt.gz \
-                   > $dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq
-            rm ${i}_SR.txt.gz;
-        done
-    fi
+      # download -- 1.7 GB - 1.2 GB - 59 GB - 51 GB - 59 GB
+      for i in B1087 B1088 B1110 B1128 SL3003; do
+          wget $WGET_OP $DENISOVA_FQ_URL/${i}_SR.txt.gz;
+          gunzip < ${i}_SR.txt.gz \
+                 > $dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq
+          rm ${i}_SR.txt.gz;
+      done
+  fi
 
-    ### synthetic -- 6.2 GB
-    if [[ $GEN_SYNTH_FQ -eq 1 ]];
-    then
-        INSTALL_XS=1
+  ### synthetic -- 6.2 GB
+  if [[ $GEN_SYNTH_FQ -eq 1 ]];
+  then
+      INSTALL_XS=1
 
-        # create a folder for FASTQ files and one for synthetic dataset
-        if [[ ! -d $dataset/$FQ/$Synth ]]; then mkdir -p $dataset/$FQ/$Synth; fi
+      # create a folder for FASTQ files and one for synthetic dataset
+      if [[ ! -d $dataset/$FQ/$Synth ]]; then mkdir -p $dataset/$FQ/$Synth; fi
 
-        # install XS
-        if [[ $INSTALL_XS -eq 1 ]]; then
-            rm -fr $XS
-            git clone https://github.com/pratas/XS.git
-            cd $XS
-            make
-            cd ..
-        fi
+      # install XS
+      if [[ $INSTALL_XS -eq 1 ]]; then
+          rm -fr $XS
+          git clone https://github.com/pratas/XS.git
+          cd $XS
+          make
+          cd ..
+      fi
 
-        # generate dataset -- 4.2 GB - 2 GB
-        XS/XS -t 1 -n 16000000 -ld 70:100 -o \
-              -f 0.2,0.2,0.2,0.2,0.2       $dataset/$FQ/$Synth/Synth-1.$fastq
-        XS/XS -t 2 -n 10000000 -ls 70 -qt 2 \
-              -f 0.23,0.23,0.23,0.23,0.08  $dataset/$FQ/$Synth/Synth-2.$fastq
-    fi
+      # generate dataset -- 4.2 GB - 2 GB
+      XS/XS -t 1 -n 16000000 -ld 70:100 -o \
+            -f 0.2,0.2,0.2,0.2,0.2       $dataset/$FQ/$Synth/Synth-1.$fastq
+      XS/XS -t 2 -n 10000000 -ls 70 -qt 2 \
+            -f 0.23,0.23,0.23,0.23,0.08  $dataset/$FQ/$Synth/Synth-2.$fastq
+  fi
 fi
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -296,71 +302,71 @@ fi
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $INSTALL_DEPENDENCIES -eq 1 ]];
 then
-    ### 7ZIP
-    if [[ $INS_7ZIP -eq 1 ]]; then
-        sudo apt-get install p7zip-full
+  ### 7ZIP
+  if [[ $INS_7ZIP -eq 1 ]]; then
+      sudo apt-get install p7zip-full
 
-##        rm -f FILES
-#        url="http://sourceforge.net/projects/p7zip/files/latest";
-#        wget $WGET_OP $url/download?source=typ_redirect -O FILES.tar.bz2
-#        tar -xjf FILES.tar.bz2
-#        cd p7zip*/
-#        make all
-#        cd ..
-    fi
+##      rm -f FILES
+#      url="http://sourceforge.net/projects/p7zip/files/latest";
+#      wget $WGET_OP $url/download?source=typ_redirect -O FILES.tar.bz2
+#      tar -xjf FILES.tar.bz2
+#      cd p7zip*/
+#      make all
+#      cd ..
+  fi
 
-    ### CMAKE
-    if [[ $INS_CMAKE -eq 1 ]]; then
-        sudo apt-get install cmake
+  ### CMAKE
+  if [[ $INS_CMAKE -eq 1 ]]; then
+      sudo apt-get install cmake
 
-#        rm -f cmake-3.9.2-Linux-x86_64.sh cmake-3.9.2-Linux-x86_64.tar.gz
+#      rm -f cmake-3.9.2-Linux-x86_64.sh cmake-3.9.2-Linux-x86_64.tar.gz
 #
-#        url="https://cmake.org/files/v3.9"
-#        wget $url/cmake-3.9.2-Linux-x86_64.tar.gz
-#        tar -xzf cmake-3.9.2-Linux-x86_64.tar.gz
-##        cp cmake-3.9.2-Linux-x86_64/bin/cmake .
-#        rm cmake-3.9.2-Linux-x86_64.tar.gz
-    fi
+#      url="https://cmake.org/files/v3.9"
+#      wget $url/cmake-3.9.2-Linux-x86_64.tar.gz
+#      tar -xzf cmake-3.9.2-Linux-x86_64.tar.gz
+##      cp cmake-3.9.2-Linux-x86_64/bin/cmake .
+#      rm cmake-3.9.2-Linux-x86_64.tar.gz
+  fi
 
-    ### LIBBOOST
-    if [[ $INS_LIBBOOST -eq 1 ]]; then
-        sudo apt-get update
-        sudo apt-get install libboost1.54-dev
-        sudo apt-get install libboost-system1.54-dev
-        sudo apt-get install libboost-system-dev
-        sudo apt-get install libboost-filesystem1.54-dev
-        sudo apt-get install libboost-filesystem-dev
-        sudo apt-get install libboost-iostreams-dev
-        sudo apt-get install libboost-iostreams1.54-dev
-        sudo apt-get install libboost-thread1.54-dev
-        sudo apt-get install libboost-thread-dev
-    fi
+  ### LIBBOOST
+  if [[ $INS_LIBBOOST -eq 1 ]]; then
+      sudo apt-get update
+      sudo apt-get install libboost1.54-dev
+      sudo apt-get install libboost-system1.54-dev
+      sudo apt-get install libboost-system-dev
+      sudo apt-get install libboost-filesystem1.54-dev
+      sudo apt-get install libboost-filesystem-dev
+      sudo apt-get install libboost-iostreams-dev
+      sudo apt-get install libboost-iostreams1.54-dev
+      sudo apt-get install libboost-thread1.54-dev
+      sudo apt-get install libboost-thread-dev
+  fi
 
-    ### LIBCURL
-    if [[ $INS_LIBCURL -eq 1 ]]; then
-        sudo apt-get install libcurl4-nss-dev
-        sudo apt-get install libcurl-dev
-    fi
+  ### LIBCURL
+  if [[ $INS_LIBCURL -eq 1 ]]; then
+      sudo apt-get install libcurl4-nss-dev
+      sudo apt-get install libcurl-dev
+  fi
 
-    ### VALGRIND AND MASSIF
-    if [[ $INS_VALGRIND -eq 1 ]]; then
-        sudo apt-get install valgrind
-    fi
+  ### VALGRIND AND MASSIF
+  if [[ $INS_VALGRIND -eq 1 ]]; then
+      sudo apt-get install valgrind
+  fi
 
-    ### ZLIB
-    if [[ $INS_ZLIB -eq 1 ]]; then
-        sudo apt-get install zlib1g-dev
+  ### ZLIB
+  if [[ $INS_ZLIB -eq 1 ]]; then
+      sudo apt-get install zlib1g-dev
 
-#        rm -f zlib_1.2.8.dfsg.orig.tar.gz
+#      rm -f zlib_1.2.8.dfsg.orig.tar.gz
 #
-#        url="https://launchpad.net/ubuntu/+archive/primary/+files"
-#        wget $WGET_OP $url/zlib_1.2.8.dfsg.orig.tar.gz
-#        tar -xzf zlib_1.2.8.dfsg.orig.tar.gz
-#        cd zlib-1.2.8/
-#        ./configure
-#        make
-#        cd ..
-    fi
+#      url="https://launchpad.net/ubuntu/+archive/primary/+files"
+#      wget $WGET_OP $url/zlib_1.2.8.dfsg.orig.tar.gz
+#      tar -xzf zlib_1.2.8.dfsg.orig.tar.gz
+#      cd zlib-1.2.8/
+#      ./configure
+#      make
+#      cd ..
+  fi
 fi
 
 
@@ -369,138 +375,138 @@ fi
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $INSTALL_METHODS -eq 1 ]];
 then
-    ### create folders, if they don't already exist
-    if [[ ! -d $progs ]]; then mkdir -p $progs; fi
+  ### create folders, if they don't already exist
+  if [[ ! -d $progs ]]; then mkdir -p $progs; fi
 
-    ### cryfa -- FASTA & FASTQ
-    if [[ $INS_CRYFA -eq 1 ]];
-    then
-        rm -f cryfa
+  ### cryfa -- FASTA & FASTQ
+  if [[ $INS_CRYFA -eq 1 ]];
+  then
+      rm -f cryfa
 
-        cmake .
-        make
+      cmake .
+      make
 
-        if [[ ! -d $progs/cryfa ]]; then mkdir -p $progs/cryfa; fi
-        cp cryfa $progs/cryfa/
-        cp pass.txt $progs/cryfa/
-    fi
+      if [[ ! -d $progs/cryfa ]]; then mkdir -p $progs/cryfa; fi
+      cp cryfa $progs/cryfa/
+      cp pass.txt $progs/cryfa/
+  fi
 
-    #----------------------- FASTA -----------------------#
-    ### MFCompress
-    if [[ $INS_MFCOMPRESS -eq 1 ]];
-    then
-        rm -f MFCompress-src-1.01.tgz
+  #----------------------- FASTA -----------------------#
+  ### MFCompress
+  if [[ $INS_MFCOMPRESS -eq 1 ]];
+  then
+      rm -f MFCompress-src-1.01.tgz
 
-        url="http://sweet.ua.pt/ap/software/mfcompress"
-        wget $WGET_OP $url/MFCompress-src-1.01.tgz
-        tar -xzf MFCompress-src-1.01.tgz
-        mv MFCompress-src-1.01/ mfcompress/    # rename
-        mv mfcompress/ $progs/
-        rm -f MFCompress-src-1.01.tgz
+      url="http://sweet.ua.pt/ap/software/mfcompress"
+      wget $WGET_OP $url/MFCompress-src-1.01.tgz
+      tar -xzf MFCompress-src-1.01.tgz
+      mv MFCompress-src-1.01/ mfcompress/    # rename
+      mv mfcompress/ $progs/
+      rm -f MFCompress-src-1.01.tgz
 
-        cd $progs/mfcompress/
-        cp Makefile.linux Makefile    # make -f Makefile.linux
-        make
-        cd ../..
-    fi
+      cd $progs/mfcompress/
+      cp Makefile.linux Makefile    # make -f Makefile.linux
+      make
+      cd ../..
+  fi
 
-    ### DELIMINATE
-    if [[ $INS_DELIMINATE -eq 1 ]];
-    then
-        rm -f DELIMINATE_LINUX_64bit.tar.gz
+  ### DELIMINATE
+  if [[ $INS_DELIMINATE -eq 1 ]];
+  then
+      rm -f DELIMINATE_LINUX_64bit.tar.gz
 
-         url="http://metagenomics.atc.tcs.com/Compression_archive"
-         wget $WGET_OP $url/DELIMINATE_LINUX_64bit.tar.gz
-         tar -xzf DELIMINATE_LINUX_64bit.tar.gz
-         mv EXECUTABLES deliminate    # rename
-         mv deliminate $progs/
-         rm -f DELIMINATE_LINUX_64bit.tar.gz
-    fi
+       url="http://metagenomics.atc.tcs.com/Compression_archive"
+       wget $WGET_OP $url/DELIMINATE_LINUX_64bit.tar.gz
+       tar -xzf DELIMINATE_LINUX_64bit.tar.gz
+       mv EXECUTABLES deliminate    # rename
+       mv deliminate $progs/
+       rm -f DELIMINATE_LINUX_64bit.tar.gz
+  fi
 
-    #----------------------- FASTQ -----------------------#
-    ### fqzcomp
-    if [[ $INS_FQZCOMP -eq 1 ]];
-    then
-        rm -f fqzcomp-4.6.tar.gz
+  #----------------------- FASTQ -----------------------#
+  ### fqzcomp
+  if [[ $INS_FQZCOMP -eq 1 ]];
+  then
+      rm -f fqzcomp-4.6.tar.gz
 
-        url="https://downloads.sourceforge.net/project/fqzcomp"
-        wget $WGET_OP $url/fqzcomp-4.6.tar.gz
-        tar -xzf fqzcomp-4.6.tar.gz
-        mv fqzcomp-4.6/ fqzcomp/    # rename
-        mv fqzcomp/ $progs/
-        rm -f fqzcomp-4.6.tar.gz
+      url="https://downloads.sourceforge.net/project/fqzcomp"
+      wget $WGET_OP $url/fqzcomp-4.6.tar.gz
+      tar -xzf fqzcomp-4.6.tar.gz
+      mv fqzcomp-4.6/ fqzcomp/    # rename
+      mv fqzcomp/ $progs/
+      rm -f fqzcomp-4.6.tar.gz
 
-        cd $progs/fqzcomp/
-        make
+      cd $progs/fqzcomp/
+      make
 
-        cd ../..
-    fi
+      cd ../..
+  fi
 
-    ### quip
-    if [[ $INS_QUIP -eq 1 ]];
-    then
-        rm -f quip-1.1.8.tar.gz
+  ### quip
+  if [[ $INS_QUIP -eq 1 ]];
+  then
+      rm -f quip-1.1.8.tar.gz
 
-        url="http://homes.cs.washington.edu/~dcjones/quip"
-        wget $WGET_OP $url/quip-1.1.8.tar.gz
-        tar -xzf quip-1.1.8.tar.gz
-        mv quip-1.1.8/ quip/    # rename
-        mv quip/ $progs/
-        rm -f quip-1.1.8.tar.gz
+      url="http://homes.cs.washington.edu/~dcjones/quip"
+      wget $WGET_OP $url/quip-1.1.8.tar.gz
+      tar -xzf quip-1.1.8.tar.gz
+      mv quip-1.1.8/ quip/    # rename
+      mv quip/ $progs/
+      rm -f quip-1.1.8.tar.gz
 
-        cd $progs/quip/
-        ./configure
-        cd src/
-        make
-        cp quip ../
+      cd $progs/quip/
+      ./configure
+      cd src/
+      make
+      cp quip ../
 
-        cd ../../..
-    fi
+      cd ../../..
+  fi
 
-    ### DSRC
-    if [[ $INS_DSRC -eq 1 ]];
-    then
-        rm -fr dsrc/
+  ### DSRC
+  if [[ $INS_DSRC -eq 1 ]];
+  then
+      rm -fr dsrc/
 
-        git clone https://github.com/lrog/dsrc.git
-        mv dsrc/ $progs/
+      git clone https://github.com/lrog/dsrc.git
+      mv dsrc/ $progs/
 
-        cd $progs/dsrc/
-        make
-        cp bin/dsrc .
+      cd $progs/dsrc/
+      make
+      cp bin/dsrc .
 
-        cd ../..
-    fi
+      cd ../..
+  fi
 
-    ### FQC
-    if [[ $INS_FQC -eq 1 ]];
-    then
-        rm -f FQC_LINUX_64bit.tar.gz
+  ### FQC
+  if [[ $INS_FQC -eq 1 ]];
+  then
+      rm -f FQC_LINUX_64bit.tar.gz
 
-        url="http://metagenomics.atc.tcs.com/Compression_archive/FQC"
-        wget $WGET_OP $url/FQC_LINUX_64bit.tar.gz
-        tar -xzf FQC_LINUX_64bit.tar.gz
-        mv FQC_LINUX_64bit/ fqc/    # rename
-        mv fqc/ $progs/
-        rm -f FQC_LINUX_64bit.tar.gz
-    fi
+      url="http://metagenomics.atc.tcs.com/Compression_archive/FQC"
+      wget $WGET_OP $url/FQC_LINUX_64bit.tar.gz
+      tar -xzf FQC_LINUX_64bit.tar.gz
+      mv FQC_LINUX_64bit/ fqc/    # rename
+      mv fqc/ $progs/
+      rm -f FQC_LINUX_64bit.tar.gz
+  fi
 
-    ### AES crypt
-    if [[ $INS_AESCRYPT -eq 1 ]];
-    then
-        rm -fr aescrypt-3.13/
+  ### AES crypt
+  if [[ $INS_AESCRYPT -eq 1 ]];
+  then
+      rm -fr aescrypt-3.13/
 
-        url="https://www.aescrypt.com/download/v3/linux"
-        wget $WGET_OP $url/aescrypt-3.13.tgz
-        tar -xzvf aescrypt-3.13.tgz
-        mv aescrypt-3.13/ aescrypt/
-        mv aescrypt/ $progs/
-        rm -f aescrypt-3.13.tgz
+      url="https://www.aescrypt.com/download/v3/linux"
+      wget $WGET_OP $url/aescrypt-3.13.tgz
+      tar -xzvf aescrypt-3.13.tgz
+      mv aescrypt-3.13/ aescrypt/
+      mv aescrypt/ $progs/
+      rm -f aescrypt-3.13.tgz
 
-        cd $progs/aescrypt/src
-        make
-        sudo make install
-    fi
+      cd $progs/aescrypt/src
+      make
+      sudo make install
+  fi
 fi
 
 
@@ -601,7 +607,7 @@ then
 
         "fqzcomp")
             cFT="fqz";             cCmd="./fqz_comp";
-            dProg="fqz_comp";      dCmd="./fqz_comp -d";; # "./fqz_comp -d -X"
+            dProg="fqz_comp";      dCmd="./fqz_comp -d -X";; # "./fqz_comp -d"
 
         "quip")
             cFT="qp";              cCmd="./quip -c";
@@ -1390,10 +1396,6 @@ then
       ### create folder, if it doesn't already exist
       if [[ ! -d $cryfa_xcl ]]; then mkdir -p $cryfa_xcl; fi
 
-      ### run for different number of threads
-      cp $progs/cryfa/cryfa    $cryfa_xcl
-      cp $progs/cryfa/pass.txt $cryfa_xcl
-
       inData="../$CRYFA_XCL_DATASET"
       in="${inData##*/}"                  # input file name
       inDataWF="${in%.*}"                 # input file name without filetype
@@ -1401,86 +1403,197 @@ then
       result_FLD="../$result"
       CRYFA_THR_RUN=`seq -s' ' 1 $MAX_N_THR`;
 
-      c="C_Size\tC_Time(real)\tC_Time(user)\tC_Time(sys)\tC_Mem"
-      d="D_Time(real)\tD_Time(user)\tD_Time(sys)\tD_Mem"
-      printf "Dataset\tThread\t$c\t$d\tEq\n" > result_cryfa_thr.$INF;
+      ### run for different number of threads
+      if [[ $RUN_CRYFA_XCL -eq 1 ]];
+      then
+          cp $progs/cryfa/cryfa    $cryfa_xcl
+          cp $progs/cryfa/pass.txt $cryfa_xcl
+          cd $cryfa_xcl
 
-      cd $cryfa_xcl
+          for nThr in $CRYFA_THR_RUN; do
+              cFT="cryfa";           cCmd="./cryfa -k pass.txt -t $nThr";
+              dCmd="./cryfa -k pass.txt -t $nThr -d";
 
-      for nThr in $CRYFA_THR_RUN; do
-          cFT="cryfa";           cCmd="./cryfa -k pass.txt -t $nThr";
-          dCmd="./cryfa -k pass.txt -t $nThr -d";
+              # compress
+              progMemoryStart cryfa &
+              MEMPID=$!
 
-          # compress
-          progMemoryStart cryfa &
-          MEMPID=$!
+              rm -f CRYFA_THR_${nThr}_CT__${inDataWF}_$ft
 
-          rm -f CRYFA_THR_${nThr}_CT__${inDataWF}_$ft
+              (time $cCmd $inData > $in.$cFT) \
+                  &> $result_FLD/CRYFA_THR_${nThr}_CT__${inDataWF}_$ft
 
-          (time $cCmd $inData > $in.$cFT) \
-              &> $result_FLD/CRYFA_THR_${nThr}_CT__${inDataWF}_$ft
+              ls -la $in.$cFT \
+                  > $result_FLD/CRYFA_THR_${nThr}_CS__${inDataWF}_$ft
 
-          ls -la $in.$cFT > $result_FLD/CRYFA_THR_${nThr}_CS__${inDataWF}_$ft
-          progMemoryStop $MEMPID \
-                         $result_FLD/CRYFA_THR_${nThr}_CM__${inDataWF}_$ft
+              progMemoryStop $MEMPID \
+                             $result_FLD/CRYFA_THR_${nThr}_CM__${inDataWF}_$ft
 
-          # decompress
-          progMemoryStart cryfa &
-          MEMPID=$!
+              # decompress
+              progMemoryStart cryfa &
+              MEMPID=$!
 
-          (time $dCmd $in.$cFT > $in) \
-              &> $result_FLD/CRYFA_THR_${nThr}_DT__${inDataWF}_$ft
+              (time $dCmd $in.$cFT > $in) \
+                  &> $result_FLD/CRYFA_THR_${nThr}_DT__${inDataWF}_$ft
 
-          progMemoryStop $MEMPID \
-                         $result_FLD/CRYFA_THR_${nThr}_DM__${inDataWF}_$ft
+              progMemoryStop $MEMPID \
+                             $result_FLD/CRYFA_THR_${nThr}_DM__${inDataWF}_$ft
 
-          # verify if input and decompressed files are the same
-          cmp $inData $in &> $result_FLD/CRYFA_THR_${nThr}_V__${inDataWF}_$ft
+              # verify if input and decompressed files are the same
+              cmp $inData $in &>$result_FLD/CRYFA_THR_${nThr}_V__${inDataWF}_$ft
+          done
 
-          ### print compress/decompress results
-          CS="";       CT_r="";     CT_u="";     CT_s="";     CM="";
-          DT_r="";     DT_u="";     DT_s="";     DM="";       V="";
+          cd ..
+      fi
 
-          ### compressed file size
-          cs_file="$result_FLD/CRYFA_THR_${nThr}_CS__${inDataWF}_$ft"
-          if [[ -e $cs_file ]]; then CS=`cat $cs_file | awk '{ print $5; }'`; fi
+      ### run for different number of threads
+      if [[ $PRINT_RESULTS_CRYFA_XCL -eq 1 ]];
+      then
+          c="C_Size\tC_Time(real)\tC_Time(user)\tC_Time(sys)\tC_Mem"
+          d="D_Time(real)\tD_Time(user)\tD_Time(sys)\tD_Mem"
+          printf "Dataset\tThread\t$c\t$d\tEq\n" > result_cryfa_thr.$INF;
 
-          ### compression time -- real - user - system
-          ct_file="$result_FLD/CRYFA_THR_${nThr}_CT__${inDataWF}_$ft"
-          if [[ -e $ct_file ]]; then
-              CT_r=`cat $ct_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
-              CT_u=`cat $ct_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
-              CT_s=`cat $ct_file | tail -n 1 | awk '{ print $2;}'`;
-          fi
+          for nThr in $CRYFA_THR_RUN; do
+              ### print compress/decompress results
+              CS="";       CT_r="";     CT_u="";     CT_s="";     CM="";
+              DT_r="";     DT_u="";     DT_s="";     DM="";       V="";
 
-          ### compression memory
-          cm_file="$result_FLD/CRYFA_THR_${nThr}_CM__${inDataWF}_$ft"
-          if [[ -e $cm_file ]]; then CM=`cat $cm_file`; fi
+              ### compressed file size
+              cs_file="$result/CRYFA_THR_${nThr}_CS__${inDataWF}_$ft"
+              if [[ -e $cs_file ]];
+                  then CS=`cat $cs_file | awk '{ print $5; }'`;
+              fi
 
-          ### decompression time -- real - user - system
-          dt_file="$result_FLD/CRYFA_THR_${nThr}_DT__${inDataWF}_$ft"
-          if [[ -e $dt_file ]]; then
-              DT_r=`cat $dt_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
-              DT_u=`cat $dt_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
-              DT_s=`cat $dt_file | tail -n 1 | awk '{ print $2;}'`;
-          fi
+              ### compression time -- real - user - system
+              ct_file="$result/CRYFA_THR_${nThr}_CT__${inDataWF}_$ft"
+              if [[ -e $ct_file ]]; then
+                  CT_r=`cat $ct_file |tail -n 3 |head -n 1 | awk '{ print $2;}'`
+                  CT_u=`cat $ct_file |tail -n 2 |head -n 1 | awk '{ print $2;}'`
+                  CT_s=`cat $ct_file |tail -n 1 |awk '{ print $2;}'`
+              fi
 
-          ### decompression memory
-          dm_file="$result_FLD/CRYFA_THR_${nThr}_DM__${inDataWF}_$ft"
-          if [[ -e $dm_file ]]; then DM=`cat $dm_file`; fi
+              ### compression memory
+              cm_file="$result/CRYFA_THR_${nThr}_CM__${inDataWF}_$ft"
+              if [[ -e $cm_file ]]; then CM=`cat $cm_file`; fi
 
-          ### if decompressed file is the same as the original file
-          v_file="$result_FLD/CRYFA_THR_${nThr}_V__${inDataWF}_$ft"
-          if [[ -e $v_file ]]; then V=`cat $v_file | wc -l`; fi
+              ### decompression time -- real - user - system
+              dt_file="$result/CRYFA_THR_${nThr}_DT__${inDataWF}_$ft"
+              if [[ -e $dt_file ]]; then
+                  DT_r=`cat $dt_file |tail -n 3 |head -n 1 | awk '{ print $2;}'`
+                  DT_u=`cat $dt_file |tail -n 2 |head -n 1 | awk '{ print $2;}'`
+                  DT_s=`cat $dt_file |tail -n 1 |awk '{ print $2;}'`
+              fi
 
-          c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"   # compression results
-          d="$DT_r\t$DT_u\t$DT_s\t$DM"        # decompression results
+              ### decompression memory
+              dm_file="$result/CRYFA_THR_${nThr}_DM__${inDataWF}_$ft"
+              if [[ -e $dm_file ]]; then DM=`cat $dm_file`; fi
 
-          printf "$inDataWF\t$nThr\t$c\t$d\t$V\n" >> ../result_cryfa_thr.$INF;
-      done
+              ### if decompressed file is the same as the original file
+              v_file="$result/CRYFA_THR_${nThr}_V__${inDataWF}_$ft"
+              if [[ -e $v_file ]]; then V=`cat $v_file | wc -l`; fi
 
-      cd ..
+              c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"   # compression results
+              d="$DT_r\t$DT_u\t$DT_s\t$DM"        # decompression results
+
+              printf "$inDataWF\t$nThr\t$c\t$d\t$V\n" >> result_cryfa_thr.$INF;
+          done
+      fi
   fi
+fi
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#   plot results
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if [[ $PLOT_RESULTS -eq 1 ]]; then
+
+  #------------------------ functions ------------------------#
+  function plotResult
+  {
+      in=$1    # input file
+      # output format: pdf, png, svg, eps, epslatex (set output x.y)
+      PIX_FORMAT=pdf
+
+gnuplot <<- EOF
+set term $PIX_FORMAT        # set terminal for output picture format
+set xlabel "Compression time"                 # set label of x axis
+set ylabel "Number of threads"                        # set label of y axis
+#set xtics 0,5,100                      # set steps for x axis
+#set xtics add ("1" 1)
+set key bottom right                    # legend position
+set output "thr_c_time.$PIX_FORMAT"      # set output name
+#set title "IR=$ir,   Alpha=$alphaDen"
+
+#plot '$in' with linespoints ls 1
+
+plot '$in' using 4:2 with linespoints ls 1
+
+## for [i=10:12]  "$FLD_dat/$IR$ir-$AL$alphaDen-HS".i.".$INF_FTYPE" \
+##   using 1:2  with linespoints ls "".i."" title "${CHR} ".i."", \
+#
+#
+############################    ctx    ##########################
+###set ylabel "context-order size"
+###set terminal pngcairo size 600, 850
+##set terminal $PIX_FORMAT size 600, 850
+##set output "$IR$ir-$AL$alphaDen-ctx.$PIX_FORMAT"
+##set multiplot layout 12,2 columnsfirst margins 0.08,0.98,0.06,0.98 \
+##   spacing 0.013,0.0
+##set offset 0,0,graph 0.1, graph 0.1
+##set key top right samplen 2 spacing 1.5 font ",11"
+##
+##LT=7                # linetype
+##LW=2.0              # linewidth
+##AxisNumScale=0.35   # axis numbers scale
+##
+##set grid
+##set label 1 '%mutation' at screen 0.47,0.015
+##set label 2 'context-order size' at screen 0.02,0.47 rotate by 90
+##set xtics 5,5,50 scale 0.35                             # set steps for x axis
+##set ytics 2,2,10 scale 0.5 offset 0.4,0 font ",10"      # set steps for y axis
+##set yrange [2:10]
+##
+#######   first column   #####
+##do for [i=1:11] {
+##set xtics format ''
+##plot "$FLD_dat/$IR$ir-$AL$alphaDen-HS".i.".$INF_FTYPE" using 1:3 \
+##     with lines linetype LT linewidth LW title "".i.""
+##}
+#####   chromosome 12   ###
+##set xtics add ("1" 1, "5" 5, "10" 10, "15" 15, "20" 20, "25" 25, "30" 30, \
+##   "35" 35, "40" 40, "45" 45, "50  " 50) \
+##    scale AxisNumScale offset 0.25,0.4 font ",10"
+##plot "$FLD_dat/$IR$ir-$AL$alphaDen-HS12.$INF_FTYPE" using 1:3 \
+##     with lines linetype LT linewidth LW title "12"
+##
+#######   second column   #####
+##do for [i=13:22] {
+##set xtics 5,5,50 scale AxisNumScale
+##set xtics format ''
+##set ytics format ''
+##plot "$FLD_dat/$IR$ir-$AL$alphaDen-HS".i.".$INF_FTYPE" using 1:3 \
+##     with lines linetype LT linewidth LW title "".i.""
+##}
+#####   chromosome X   ###
+##plot "$FLD_dat/$IR$ir-$AL$alphaDen-HS23.$INF_FTYPE" using 1:3 \
+##     with lines linetype LT linewidth LW title "X"
+#####   chromosome Y   ###
+##set xtics add ("  1" 1, "5" 5, "10" 10, "15" 15, "20" 20, "25" 25, "30" 30, \
+##   "35" 35, "40" 40, "45" 45, "50" 50) \
+##    scale AxisNumScale offset 0.25,0.4 font ",10"
+##plot "$FLD_dat/$IR$ir-$AL$alphaDen-HS24.$INF_FTYPE" using 1:3 \
+##     with lines linetype LT linewidth LW title "Y"
+##
+##unset multiplot; set output
+#
+## the following line (EOF) MUST be left as it is; i.e. no indent
+EOF
+
+  }
+
+
+#  plotResult "mori.$INF"
+  plotResult "result_cryfa_thr.$INF"
 fi
 
 
