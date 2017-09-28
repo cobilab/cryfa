@@ -49,51 +49,55 @@ RUN_METHODS=1
   # compress/decompress
   RUN_METHODS_COMP=0
       # FASTA
-      RUN_GZIP_FA=0         # gzip
-      RUN_BZIP2_FA=0        # bzip2
-      RUN_LZMA_FA=0         # lzma
-      RUN_MFCOMPRESS=0      # MFCompress
-      RUN_DELIMINATE=0      # DELIMINATE
-      RUN_CRYFA_FA=0        # cryfa
+      RUN_GZIP_FA=0                # gzip
+      RUN_BZIP2_FA=0               # bzip2
+      RUN_LZMA_FA=0                # lzma
+      RUN_MFCOMPRESS=0             # MFCompress
+      RUN_DELIMINATE=0             # DELIMINATE
+      RUN_CRYFA_FA=0               # cryfa
       # FASTQ
-      RUN_GZIP_FQ=0         # gzip
-      RUN_BZIP2_FQ=0        # bzip2
-      RUN_LZMA_FQ=0         # lzma
-      RUN_FQZCOMP=0         # fqzcomp
-      RUN_QUIP=0            # quip
-      RUN_DSRC=0            # DSRC
-      RUN_FQC=0             # FQC
-      RUN_CRYFA_FQ=0        # cryfa
+      RUN_GZIP_FQ=0                # gzip
+      RUN_BZIP2_FQ=0               # bzip2
+      RUN_LZMA_FQ=0                # lzma
+      RUN_FQZCOMP=0                # fqzcomp
+      RUN_QUIP=0                   # quip
+      RUN_DSRC=0                   # DSRC
+      RUN_FQC=0                    # FQC
+      RUN_CRYFA_FQ=0               # cryfa
       # results
       PRINT_RESULTS_COMP=0
 
   # encrypt/decrypt
   RUN_METHODS_ENC=0
-      RUN_AESCRYPT=0        # AES crypt
+      RUN_AESCRYPT=0               # AES crypt
       # results
       PRINT_RESULTS_ENC=0
 
   # compress/decompress plus encrypt/decrypt
   RUN_METHODS_COMP_ENC=0
       # FASTA
-      RUN_GZIP_FA_AESCRYPT=0         # gzip + AES crypt
-      RUN_BZIP2_FA_AESCRYPT=0        # bzip2 + AES crypt
-      RUN_LZMA_FA_AESCRYPT=0         # lzma + AES crypt
-      RUN_MFCOMPRESS_AESCRYPT=0      # MFCompress + AES crypt
-      RUN_DELIMINATE_AESCRYPT=0      # DELIMINATE + AES crypt
+      RUN_GZIP_FA_AESCRYPT=0       # gzip + AES crypt
+      RUN_BZIP2_FA_AESCRYPT=0      # bzip2 + AES crypt
+      RUN_LZMA_FA_AESCRYPT=0       # lzma + AES crypt
+      RUN_MFCOMPRESS_AESCRYPT=0    # MFCompress + AES crypt
+      RUN_DELIMINATE_AESCRYPT=0    # DELIMINATE + AES crypt
       # FASTQ
-      RUN_GZIP_FQ_AESCRYPT=0         # gzip + AES crypt
-      RUN_BZIP2_FQ_AESCRYPT=0        # bzip2 + AES crypt
-      RUN_LZMA_FQ_AESCRYPT=0         # lzma + AES crypt
-      RUN_FQZCOMP_AESCRYPT=0         # fqzcomp + AES crypt
-      RUN_QUIP_AESCRYPT=0            # quip + AES crypt
-      RUN_DSRC_AESCRYPT=0            # DSRC + AES crypt
-      RUN_FQC_AESCRYPT=0             # FQC + AES crypt
+      RUN_GZIP_FQ_AESCRYPT=0       # gzip + AES crypt
+      RUN_BZIP2_FQ_AESCRYPT=0      # bzip2 + AES crypt
+      RUN_LZMA_FQ_AESCRYPT=0       # lzma + AES crypt
+      RUN_FQZCOMP_AESCRYPT=0       # fqzcomp + AES crypt
+      RUN_QUIP_AESCRYPT=0          # quip + AES crypt
+      RUN_DSRC_AESCRYPT=0          # DSRC + AES crypt
+      RUN_FQC_AESCRYPT=0           # FQC + AES crypt
       # results
       PRINT_RESULTS_COMP_ENC=0
 
+  # cryfa exclusive
+  CRYFA_EXCLUSIVE=1
+      MAX_N_THR=8                  # max number of threads
 
-# cryfa exclusive -- test purpose
+
+# test purpose
 N_THREADS=8             # cryfa: number of threads
 SHUFFLE=1               # cryfa: shuffle -- enabled by default
 VERBOSE=1               # cryga: verbose mode -- disabled by default
@@ -107,6 +111,7 @@ CRYFA_COMP_DECOMP_COMPARE=0   # test -- cryfa: comp. + decomp. + compare results
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 dataset="dataset"
 progs="progs"
+cryfa_xcl="cryfa_xcl"
 result="result"
 FA="FA"
 FQ="FQ"
@@ -1377,10 +1382,174 @@ then
           done
       fi
   fi
+
+  ### cryfa exclusive
+  if [[ $CRYFA_EXCLUSIVE -eq 1 ]];
+  then
+      ### create folder, if it doesn't already exist
+      if [[ ! -d $cryfa_xcl ]]; then mkdir -p $cryfa_xcl; fi
+
+      ### run for different number of threads
+      cd $cryfa_xcl
+
+      for nThr in {1..$MAX_N_THR}; do
+          cFT="cryfa";           cCmd="./cryfa -k pass.txt -t $nThr";
+          dProg="cryfa";         dCmd="./cryfa -k pass.txt -t $nThr -d";
+
+          # compress
+          progMemoryStart $1 &
+          MEMPID=$!
+
+          rm -f $in.$cFT
+          (time $cCmd $2 > $in.$cFT) &> $result_FLD/${upIn}_CT__${inwf}_$ft;
+
+          ls -la $in.$cFT > $result_FLD/${upIn}_CS__${inwf}_$ft         # size
+          progMemoryStop $MEMPID $result_FLD/${upIn}_CM__${inwf}_$ft    # memory
+
+          # decompress
+          progMemoryStart $dProg &
+          MEMPID=$!
+
+          (time $dCmd $in.$cFT > $in) &> $result_FLD/${upIn}_DT__${inwf}_$ft;
+
+          progMemoryStop $MEMPID $result_FLD/${upIn}_DM__${inwf}_$ft    # memory
+
+          ### verify if input and decompressed files are the same
+          cmp $2 $in &> $result_FLD/${upIn}_V__${inwf}_$ft;
+      done
+  fi
 fi
 
+#  #------------------------ functions ------------------------#
+#  # compress and decompress. $1: program's name, $2: input data
+#  function compDecomp
+#  {
+#      result_FLD="../../result"
+#      in="${2##*/}"                     # input file name
+#      inwf="${in%.*}"                   # input file name without filetype
+#      ft="${in##*.}"                    # input filetype
+#      inPath="${2%/*}"                  # input file's path
+#      upIn="$(echo $1 | tr a-z A-Z)"    # input program's name in uppercase
+#
+#      case $1 in
+#        "cryfa")
+#            cFT="cryfa";           cCmd="./cryfa -k pass.txt -t 8";
+#            dProg="cryfa";         dCmd="./cryfa -k pass.txt -t 8 -d";;
+#      esac
+#
+#      ### compress
+#      progMemoryStart $1 &
+#      MEMPID=$!
+#
+#      rm -f $in.$cFT
+#      case $1 in
+#        "cryfa")
+#            (time $cCmd $2 > $in.$cFT) &> $result_FLD/${upIn}_CT__${inwf}_$ft;;
+#      esac
+#
+#      ls -la $in.$cFT > $result_FLD/${upIn}_CS__${inwf}_$ft         # size
+#      progMemoryStop $MEMPID $result_FLD/${upIn}_CM__${inwf}_$ft    # memory
+#
+#      ### decompress
+#      progMemoryStart $dProg &
+#      MEMPID=$!
+#
+#      case $1 in
+#        "cryfa")
+#            (time $dCmd $in.$cFT > $in) &> $result_FLD/${upIn}_DT__${inwf}_$ft;;
+#      esac
+#
+#      progMemoryStop $MEMPID $result_FLD/${upIn}_DM__${inwf}_$ft    # memory
+#
+#      ### verify if input and decompressed files are the same
+#      cmp $2 $in &> $result_FLD/${upIn}_V__${inwf}_$ft;
+#  }
+#
+#  # compress/decompress on datasets. $1: program's name
+#  function compDecompOnDataset
+#  {
+#      method="$(echo $1 | tr A-Z a-z)"    # method's name in lower case
+#      if [[ ! -d $progs/$method ]]; then mkdir -p $progs/$method; fi
+#      cd $progs/$method
+#      dsPath=../../$dataset
+#
+#      case $2 in
+#        "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
+#            for i in $HS_SEQ_RUN; do
+#                compDecomp $method $dsPath/$FA/$HUMAN/$HUMAN-$i.$fasta
+#            done
+#            compDecomp $method $dsPath/$FA/$VIRUSES/viruses.$fasta
+#            for i in {1..2};do
+#                compDecomp $method $dsPath/$FA/$Synth/Synth-$i.$fasta
+#            done;;
+#
+#        "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
+#            for i in ERR013103_1 ERR015767_2 ERR031905_2 \
+#                     SRR442469_1 SRR707196_1; do
+#                compDecomp $method $dsPath/$FQ/$HUMAN/$HUMAN-$i.$fastq
+#            done
+#            for i in B1087 B1088 B1110 B1128 SL3003; do
+#                compDecomp $method \
+#                           $dsPath/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq
+#            done
+#            for i in {1..2}; do
+#                compDecomp $method $dsPath/$FQ/$Synth/Synth-$i.$fastq
+#            done;;
+#      esac
+#
+#      cd ../..
+#  }
+#
+#  # print compress/decompress results. $1: program's name, $2: dataset
+#  function compDecompResult
+#  {
+#      CS="";       CT_r="";     CT_u="";     CT_s="";     CM="";
+#      DT_r="";     DT_u="";     DT_s="";     DM="";
+#      V="";
+#
+#      ### compressed file size
+#      cs_file="$result/${1}_CS__${2}"
+#      if [[ -e $cs_file ]]; then CS=`cat $cs_file | awk '{ print $5; }'`; fi
+#
+#      ### compression time -- real - user - system
+#      ct_file="$result/${1}_CT__${2}"
+#      if [[ -e $ct_file ]]; then
+#          CT_r=`cat $ct_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
+#          CT_u=`cat $ct_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
+#          CT_s=`cat $ct_file | tail -n 1 | awk '{ print $2;}'`;
+#      fi
+#
+#      ### compression memory
+#      cm_file="$result/${1}_CM__${2}"
+#      if [[ -e $cm_file ]]; then CM=`cat $cm_file`; fi
+#
+#      ### decompression time -- real - user - system
+#      dt_file="$result/${1}_DT__${2}"
+#      if [[ -e $dt_file ]]; then
+#          DT_r=`cat $dt_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
+#          DT_u=`cat $dt_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
+#          DT_s=`cat $dt_file | tail -n 1 | awk '{ print $2;}'`;
+#      fi
+#
+#      ### decompression memory
+#      dm_file="$result/${1}_DM__${2}"
+#      if [[ -e $dm_file ]]; then DM=`cat $dm_file`; fi
+#
+#      ### if decompressed file is the same as the original file
+#      v_file="$result/${1}_V__${2}"
+#      if [[ -e $v_file ]]; then V=`cat $v_file | wc -l`; fi
+#
+#      dName="${2%_*}"                     # dataset name without filetype
+#      method=`printMethodName $1`         # methods' name for printing
+#      c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"   # compression results
+#      d="$DT_r\t$DT_u\t$DT_s\t$DM"        # decompression results
+#
+#      printf "$dName\t$method\t$c\t$d\t$V\n";
+#  }
+
+
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   run cryfa -- compress
+#   test purpose -- run cryfa - compress
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $CRYFA_COMP -eq 1 ]]; then
 
@@ -1404,7 +1573,7 @@ fi
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   run cryfa -- decompress
+#   test purpose -- run cryfa - decompress
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $CRYFA_DECOMP -eq 1 ]]; then
 
@@ -1420,7 +1589,7 @@ fi
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   run cryfa -- testing purpose -- compress + decompress + compare results
+#   test purpose -- run cryfa -- compress + decompress + compare results
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $CRYFA_COMP_DECOMP_COMPARE -eq 1 ]]; then
 
