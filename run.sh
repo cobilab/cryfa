@@ -1437,19 +1437,16 @@ then
           # verify if input and decompressed files are the same
           cmp $inData $in &> $result_FLD/CRYFA_THR_${nThr}_V__${inDataWF}_$ft
 
-          cd ..
-
           ### print compress/decompress results
           CS="";       CT_r="";     CT_u="";     CT_s="";     CM="";
-          DT_r="";     DT_u="";     DT_s="";     DM="";
-          V="";
+          DT_r="";     DT_u="";     DT_s="";     DM="";       V="";
 
           ### compressed file size
-          cs_file="$result/CRYFA_THR_${nThr}_CS__${inDataWF}_$ft"
+          cs_file="$result_FLD/CRYFA_THR_${nThr}_CS__${inDataWF}_$ft"
           if [[ -e $cs_file ]]; then CS=`cat $cs_file | awk '{ print $5; }'`; fi
 
           ### compression time -- real - user - system
-          ct_file="$result/CRYFA_THR_${nThr}_CT__${inDataWF}_$ft"
+          ct_file="$result_FLD/CRYFA_THR_${nThr}_CT__${inDataWF}_$ft"
           if [[ -e $ct_file ]]; then
               CT_r=`cat $ct_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
               CT_u=`cat $ct_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
@@ -1457,11 +1454,11 @@ then
           fi
 
           ### compression memory
-          cm_file="$result/CRYFA_THR_${nThr}_CM__${inDataWF}_$ft"
+          cm_file="$result_FLD/CRYFA_THR_${nThr}_CM__${inDataWF}_$ft"
           if [[ -e $cm_file ]]; then CM=`cat $cm_file`; fi
 
           ### decompression time -- real - user - system
-          dt_file="$result/CRYFA_THR_${nThr}_DT__${inDataWF}_$ft"
+          dt_file="$result_FLD/CRYFA_THR_${nThr}_DT__${inDataWF}_$ft"
           if [[ -e $dt_file ]]; then
               DT_r=`cat $dt_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
               DT_u=`cat $dt_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
@@ -1469,18 +1466,20 @@ then
           fi
 
           ### decompression memory
-          dm_file="$result/CRYFA_THR_${nThr}_DM__${inDataWF}_$ft"
+          dm_file="$result_FLD/CRYFA_THR_${nThr}_DM__${inDataWF}_$ft"
           if [[ -e $dm_file ]]; then DM=`cat $dm_file`; fi
 
           ### if decompressed file is the same as the original file
-          v_file="$result/CRYFA_THR_${nThr}_V__${inDataWF}_$ft"
+          v_file="$result_FLD/CRYFA_THR_${nThr}_V__${inDataWF}_$ft"
           if [[ -e $v_file ]]; then V=`cat $v_file | wc -l`; fi
 
           c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"   # compression results
           d="$DT_r\t$DT_u\t$DT_s\t$DM"        # decompression results
 
-          printf "$inDataWF\t$nThr\t$c\t$d\t$V\n" >> result_cryfa_thr.$INF;
+          printf "$inDataWF\t$nThr\t$c\t$d\t$V\n" >> ../result_cryfa_thr.$INF;
       done
+
+      cd ..
   fi
 fi
 
