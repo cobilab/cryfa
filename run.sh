@@ -1558,25 +1558,47 @@ EOF
   function convertCryfa
   {
       IN=$1
-      c="C_Size(MB)\tC_Time_real(sec)\tC_Time_cpu(sec)\tC_Mem(MB)"
-      d="D_Timereal(sec)\tD_Time_cpu(sec)\tD_Mem(MB)"
-      printf "Dataset\tThread\t$c\t$d\tEq\n" > $IN.tmp
+      c="C_Size(MB)\tC_Time_real(min)\tC_Time_cpu(min)\tC_Mem(MB)"
+      d="D_Time_real(min)\tD_Time_cpu(min)\tD_Mem(MB)"
+      printf "Dataset\tThr\t$c\t$d\tEq\n" > $IN.tmp
 
-#      in="${inData##*/}"                  # input file name
-#      inDataWF="${in%.*}"                 # input file name without filetype
-#      ft="${in##*.}"                      # input filetype
+      cat $IN | awk 'NR>1' | awk 'BEGIN {}{
+      printf "%s\t%s\t%.2f", $1, $2, $3/1024/1024;
 
-#      l=$4
-#      a=${l##*m}
-#      echo a;
+      split($4, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
+      split(c_arrMinReal[2], c_arrSecReal, "s");    c_secReal=c_arrSecReal[1];
+      c_realTime=(c_minReal*60+c_secReal)/60;
+      printf "\t%.2f", c_realTime;
 
-      cat $IN | awk 'NR>1' \
-      | awk 'BEGIN {}{
-      printf "%s\t%s\t%.1f", $1, $2, $3/1024/1024; \
-      split($4, arr, "m")
-      print '\tarr[1]\n'
-      }' \
-      >> $IN.tmp
+      split($5, c_arrMinUser, "m");                 c_minUser=c_arrMinUser[1];
+      split(c_arrMinUser[2], c_arrSecUser, "s");    c_secUser=c_arrSecUser[1];
+      c_userTime=(c_minUser*60+c_secUser)/60;
+      split($6, c_arrMinSys, "m");                  c_minSys=c_arrMinSys[1];
+      split(c_arrMinSys[2], c_arrSecSys, "s");      c_secSys=c_arrSecSys[1];
+      c_sysTime=(c_minSys*60+c_secSys)/60;
+      c_cpuTime=c_userTime+c_sysTime;
+      printf "\t%.2f", c_cpuTime;
+
+      printf "\t%.2f", $7/1024;
+
+      split($8, d_arrMinReal, "m");                 d_minReal=d_arrMinReal[1];
+      split(d_arrMinReal[2], d_arrSecReal, "s");    d_secReal=d_arrSecReal[1];
+      d_realTime=(d_minReal*60+d_secReal)/60;
+      printf "\t%.2f", d_realTime;
+
+      split($9, d_arrMinUser, "m");                 d_minUser=d_arrMinUser[1];
+      split(d_arrMinUser[2], d_arrSecUser, "s");    d_secUser=d_arrSecUser[1];
+      d_userTime=(d_minUser*60+d_secUser)/60;
+      split($10, d_arrMinSys, "m");                  d_minSys=d_arrMinSys[1];
+      split(d_arrMinSys[2], d_arrSecSys, "s");      d_secSys=d_arrSecSys[1];
+      d_sysTime=(d_minSys*60+d_secSys)/60;
+      d_cpuTime=d_userTime+d_sysTime;
+      printf "\t%.2f", d_cpuTime;
+
+      printf "\t%.2f", $11/1024;
+
+      printf "\t%d\n", $12;
+      }' >> $IN.tmp
   }
 
 
