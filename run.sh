@@ -1562,9 +1562,20 @@ EOF
       d="D_Timereal(sec)\tD_Time_cpu(sec)\tD_Mem(MB)"
       printf "Dataset\tThread\t$c\t$d\tEq\n" > $IN.tmp
 
+#      in="${inData##*/}"                  # input file name
+#      inDataWF="${in%.*}"                 # input file name without filetype
+#      ft="${in##*.}"                      # input filetype
+
+#      l=$4
+#      a=${l##*m}
+#      echo a;
+
       cat $IN | awk 'NR>1' \
-      | awk '{printf "%s\t%s\t%.1f\t%.3f\n", $1, $2, $3/1024/1024} \
-      {'BEGIN {print $4}'} ' \
+      | awk 'BEGIN {}{
+      printf "%s\t%s\t%.1f", $1, $2, $3/1024/1024; \
+      split($4, arr, "m")
+      print '\tarr[1]\n'
+      }' \
       >> $IN.tmp
   }
 
