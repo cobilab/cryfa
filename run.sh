@@ -97,8 +97,8 @@ RUN_METHODS=0
       MAX_N_THR=8                  # max number of threads
       CRYFA_XCL_DATASET="dataset/FA/V/viruses.fasta"
 #      CRYFA_XCL_DATASET="dataset/FQ/HS/HS-SRR442469_1.fastq"
-      RUN_CRYFA_XCL=0
-      PRINT_RESULTS_CRYFA_XCL=0
+      RUN_CRYFA_XCL=1
+      PRINT_RESULTS_CRYFA_XCL=1
 
 ### plot results
 PLOT_RESULTS=1
@@ -1402,6 +1402,7 @@ then
       ft="${in##*.}"                      # input filetype
       result_FLD="../$result"
       CRYFA_THR_RUN=`seq -s' ' 1 $MAX_N_THR`;
+#      CRYFA_THR_RUN=$MAX_N_THR;
 
       ### run for different number of threads
       if [[ $RUN_CRYFA_XCL -eq 1 ]];
@@ -1508,92 +1509,73 @@ fi
 if [[ $PLOT_RESULTS -eq 1 ]]; then
 
   #------------------------ functions ------------------------#
+  # $1: input file, $2: X axis label, $3: column regarding X axis, in input file
+  # $4: Y axis label, $5: column regarding Y axis, in input file
+  # $6: output file name
   function plotResult
   {
-      in=$1    # input file
-      # output format: pdf, png, svg, eps, epslatex (set output x.y)
-      PIX_FORMAT=pdf
+      IN=$1             # input file
+      X_LABEL=$2        # X axis label
+      X_COL=$3          # X column
+      Y_LABEL=$4        # Y axis label
+      Y_COL=$5          # Y column
+      OUT=$6            # output file name
+      PIX_FORMAT=pdf    # output format: pdf, png, svg, eps, epslatex
 
 gnuplot <<- EOF
-set term $PIX_FORMAT        # set terminal for output picture format
-set xlabel "Compression time"                 # set label of x axis
-set ylabel "Number of threads"                        # set label of y axis
-#set xtics 0,5,100                      # set steps for x axis
-#set xtics add ("1" 1)
-set key bottom right                    # legend position
-set output "thr_c_time.$PIX_FORMAT"      # set output name
-#set title "IR=$ir,   Alpha=$alphaDen"
+set term $PIX_FORMAT    # terminal for output picture format
+set output "$OUT.$PIX_FORMAT"    # output file name
+set xlabel '$X_LABEL'   # label of x axis
+set ylabel '$Y_LABEL'   # label of y axis
+set key bottom right    # legend position
+LT=6                    # linetype
+LW=2.5                  # linewidth
 
-#plot '$in' with linespoints ls 1
+plot '$IN' using $X_COL:$Y_COL every ::1 \
+           with lines linetype LT linewidth LW title ""
 
-plot '$in' using 4:2 with linespoints ls 1
-
-## for [i=10:12]  "$FLD_dat/$IR$ir-$AL$alphaDen-HS".i.".$INF_FTYPE" \
-##   using 1:2  with linespoints ls "".i."" title "${CHR} ".i."", \
-#
-#
-############################    ctx    ##########################
-###set ylabel "context-order size"
-###set terminal pngcairo size 600, 850
-##set terminal $PIX_FORMAT size 600, 850
-##set output "$IR$ir-$AL$alphaDen-ctx.$PIX_FORMAT"
-##set multiplot layout 12,2 columnsfirst margins 0.08,0.98,0.06,0.98 \
-##   spacing 0.013,0.0
-##set offset 0,0,graph 0.1, graph 0.1
-##set key top right samplen 2 spacing 1.5 font ",11"
-##
-##LT=7                # linetype
-##LW=2.0              # linewidth
-##AxisNumScale=0.35   # axis numbers scale
-##
-##set grid
-##set label 1 '%mutation' at screen 0.47,0.015
-##set label 2 'context-order size' at screen 0.02,0.47 rotate by 90
-##set xtics 5,5,50 scale 0.35                             # set steps for x axis
-##set ytics 2,2,10 scale 0.5 offset 0.4,0 font ",10"      # set steps for y axis
-##set yrange [2:10]
-##
-#######   first column   #####
-##do for [i=1:11] {
-##set xtics format ''
-##plot "$FLD_dat/$IR$ir-$AL$alphaDen-HS".i.".$INF_FTYPE" using 1:3 \
-##     with lines linetype LT linewidth LW title "".i.""
-##}
-#####   chromosome 12   ###
-##set xtics add ("1" 1, "5" 5, "10" 10, "15" 15, "20" 20, "25" 25, "30" 30, \
-##   "35" 35, "40" 40, "45" 45, "50  " 50) \
-##    scale AxisNumScale offset 0.25,0.4 font ",10"
-##plot "$FLD_dat/$IR$ir-$AL$alphaDen-HS12.$INF_FTYPE" using 1:3 \
-##     with lines linetype LT linewidth LW title "12"
-##
-#######   second column   #####
-##do for [i=13:22] {
-##set xtics 5,5,50 scale AxisNumScale
-##set xtics format ''
-##set ytics format ''
-##plot "$FLD_dat/$IR$ir-$AL$alphaDen-HS".i.".$INF_FTYPE" using 1:3 \
-##     with lines linetype LT linewidth LW title "".i.""
-##}
-#####   chromosome X   ###
-##plot "$FLD_dat/$IR$ir-$AL$alphaDen-HS23.$INF_FTYPE" using 1:3 \
-##     with lines linetype LT linewidth LW title "X"
-#####   chromosome Y   ###
-##set xtics add ("  1" 1, "5" 5, "10" 10, "15" 15, "20" 20, "25" 25, "30" 30, \
-##   "35" 35, "40" 40, "45" 45, "50" 50) \
-##    scale AxisNumScale offset 0.25,0.4 font ",10"
-##plot "$FLD_dat/$IR$ir-$AL$alphaDen-HS24.$INF_FTYPE" using 1:3 \
-##     with lines linetype LT linewidth LW title "Y"
-##
-##unset multiplot; set output
-#
-## the following line (EOF) MUST be left as it is; i.e. no indent
+### the following line (EOF) MUST be left as it is; i.e. no indent
 EOF
+  }
 
+#  ### convert numbers in result files of compression methods
+#  function convertComp
+#  {
+#  }
+#
+#  ### convert numbers in result files of encryption methods
+#  function convertEnc
+#  {
+#  }
+#
+#  ### convert numbers in result files of compression+encryption methods
+#  function convertCompEnc
+#  {
+#  }
+
+  ### convert numbers in result files of cryfa exclusive for different threads
+  ### $1: input file name
+  function convertCryfa
+  {
+      IN=$1
+      c="C_Size(MB)\tC_Time_real(sec)\tC_Time_cpu(sec)\tC_Mem(MB)"
+      d="D_Timereal(sec)\tD_Time_cpu(sec)\tD_Mem(MB)"
+      printf "Dataset\tThread\t$c\t$d\tEq\n" > $IN.tmp
+
+      cat $IN | awk 'NR>1' \
+      | awk '{printf "%s\t%s\t%.1f\t%.3f\n", $1, $2, $3/1024/1024} \
+      {'BEGIN {print $4}'} ' \
+      >> $IN.tmp
   }
 
 
-#  plotResult "mori.$INF"
-  plotResult "result_cryfa_thr.$INF"
+  ### convert memory numbers scale to MB and times to fractional minutes
+  convertCryfa "result_cryfa_thr_HS-SRR442469_1.dat"
+
+##  plotResult "mori.$INF"
+##  plotResult "result_cryfa_thr.$INF"
+#  plotResult "result_cryfa_thr_HS-SRR442469_1.$INF" "Number of threads" 2 \
+#             "Compression Memory" 7 "Cryfa_thr_comp_mem"
 fi
 
 
