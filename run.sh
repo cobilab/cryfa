@@ -152,6 +152,7 @@ HUMAN_CHROMOSOME="$HUMAN_CHR_PREFIX$CHR"
 HS_SEQ_RUN=`seq -s' ' 1 22`; HS_SEQ_RUN+=" X Y MT AL UL UP"
 WGET_OP=" --trust-server-names "
 INF="dat"         # information (data) file type
+RES="res"         # result file type
 fasta="fasta"     # FASTA file extension
 fastq="fastq"     # FASTQ file extension
 
@@ -1450,9 +1451,12 @@ then
       ### run for different number of threads
       if [[ $PRINT_RESULTS_CRYFA_XCL -eq 1 ]];
       then
+          result_FLD="../$result"
+          cd $cryfa_xcl
+
           c="C_Size\tC_Time(real)\tC_Time(user)\tC_Time(sys)\tC_Mem"
           d="D_Time(real)\tD_Time(user)\tD_Time(sys)\tD_Mem"
-          printf "Dataset\tThread\t$c\t$d\tEq\n" > result_cryfa_thr.$INF;
+          printf "Dataset\tThread\t$c\t$d\tEq\n" > CRYFA_THR.$RES;
 
           for nThr in $CRYFA_THR_RUN; do
               ### print compress/decompress results
@@ -1460,13 +1464,13 @@ then
               DT_r="";     DT_u="";     DT_s="";     DM="";       V="";
 
               ### compressed file size
-              cs_file="$result/CRYFA_THR_${nThr}_CS__${inDataWF}_$ft"
+              cs_file="$result_FLD/CRYFA_THR_${nThr}_CS__${inDataWF}_$ft"
               if [[ -e $cs_file ]];
                   then CS=`cat $cs_file | awk '{ print $5; }'`;
               fi
 
               ### compression time -- real - user - system
-              ct_file="$result/CRYFA_THR_${nThr}_CT__${inDataWF}_$ft"
+              ct_file="$result_FLD/CRYFA_THR_${nThr}_CT__${inDataWF}_$ft"
               if [[ -e $ct_file ]]; then
                   CT_r=`cat $ct_file |tail -n 3 |head -n 1 | awk '{ print $2;}'`
                   CT_u=`cat $ct_file |tail -n 2 |head -n 1 | awk '{ print $2;}'`
@@ -1474,11 +1478,11 @@ then
               fi
 
               ### compression memory
-              cm_file="$result/CRYFA_THR_${nThr}_CM__${inDataWF}_$ft"
+              cm_file="$result_FLD/CRYFA_THR_${nThr}_CM__${inDataWF}_$ft"
               if [[ -e $cm_file ]]; then CM=`cat $cm_file`; fi
 
               ### decompression time -- real - user - system
-              dt_file="$result/CRYFA_THR_${nThr}_DT__${inDataWF}_$ft"
+              dt_file="$result_FLD/CRYFA_THR_${nThr}_DT__${inDataWF}_$ft"
               if [[ -e $dt_file ]]; then
                   DT_r=`cat $dt_file |tail -n 3 |head -n 1 | awk '{ print $2;}'`
                   DT_u=`cat $dt_file |tail -n 2 |head -n 1 | awk '{ print $2;}'`
@@ -1486,18 +1490,20 @@ then
               fi
 
               ### decompression memory
-              dm_file="$result/CRYFA_THR_${nThr}_DM__${inDataWF}_$ft"
+              dm_file="$result_FLD/CRYFA_THR_${nThr}_DM__${inDataWF}_$ft"
               if [[ -e $dm_file ]]; then DM=`cat $dm_file`; fi
 
               ### if decompressed file is the same as the original file
-              v_file="$result/CRYFA_THR_${nThr}_V__${inDataWF}_$ft"
+              v_file="$result_FLD/CRYFA_THR_${nThr}_V__${inDataWF}_$ft"
               if [[ -e $v_file ]]; then V=`cat $v_file | wc -l`; fi
 
               c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"   # compression results
               d="$DT_r\t$DT_u\t$DT_s\t$DM"        # decompression results
 
-              printf "$inDataWF\t$nThr\t$c\t$d\t$V\n" >> result_cryfa_thr.$INF;
+              printf "$inDataWF\t$nThr\t$c\t$d\t$V\n" >> CRYFA_THR.$RES;
           done
+
+          cd ..
       fi
   fi
 fi
@@ -1506,25 +1512,30 @@ fi
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #   plot results
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ $PLOT_RESULTS -eq 1 ]]; then
-
+if [[ $PLOT_RESULTS -eq 1 ]];
+then
   #------------------------ functions ------------------------#
-  # $1: input file, $2: X axis label, $3: column regarding X axis, in input file
-  # $4: Y axis label, $5: column regarding Y axis, in input file
-  # $6: output file name
+  # $1: input file,
+  # $2: dataset,
+  # $3: X axis label, $4: column regarding X axis, in input file
+  # $5: Y axis label, $6: column regarding Y axis, in input file
+  # $7: output file name
   function plotResult
   {
       IN=$1             # input file
-      X_LABEL=$2        # X axis label
-      X_COL=$3          # X column
-      Y_LABEL=$4        # Y axis label
-      Y_COL=$5          # Y column
-      OUT=$6            # output file name
+      DATASET=$2        # dataset name
+      X_LABEL=$3        # X axis label
+      X_COL=$4          # X column
+      Y_LABEL=$5        # Y axis label
+      Y_COL=$6          # Y column
+      OUT=$7            # output file name
       PIX_FORMAT=pdf    # output format: pdf, png, svg, eps, epslatex
+      TITLE=${DATASET//_/'\\\_'}    # title of figure -- replace _ with \\\_
 
 gnuplot <<- EOF
 set term $PIX_FORMAT    # terminal for output picture format
 set output "$OUT.$PIX_FORMAT"    # output file name
+set title font ",14" "$TITLE"    # title
 set xlabel '$X_LABEL'   # label of x axis
 set ylabel '$Y_LABEL'   # label of y axis
 set key bottom right    # legend position
@@ -1557,10 +1568,12 @@ EOF
   ### $1: input file name
   function convertCryfa
   {
-      IN=$1
-      c="C_Size(MB)\tC_Time_real(min)\tC_Time_cpu(min)\tC_Mem(MB)"
-      d="D_Time_real(min)\tD_Time_cpu(min)\tD_Mem(MB)"
-      printf "Dataset\tThr\t$c\t$d\tEq\n" > $IN.tmp
+      IN=$1              # input file name
+      INWF="${IN%.*}"    # input file name without filetype
+
+      c="C_Size(MB)\tC_Time_real(m)\tC_Time_cpu(m)\tC_Mem(MB)"
+      d="D_Time_real(m)\tD_Time_cpu(m)\tD_Mem(MB)"
+      printf "Dataset\tThr\t$c\t$d\tEq\n" > $INWF.$INF
 
       cat $IN | awk 'NR>1' | awk 'BEGIN {}{
       printf "%s\t%s\t%.2f", $1, $2, $3/1024/1024;
@@ -1598,17 +1611,35 @@ EOF
       printf "\t%.2f", $11/1024;
 
       printf "\t%d\n", $12;
-      }' >> $IN.tmp
+      }' >> $INWF.$INF
   }
 
 
+  cd $cryfa_xcl
   ### convert memory numbers scale to MB and times to fractional minutes
-  convertCryfa "result_cryfa_thr_HS-SRR442469_1.dat"
+#  convertCryfa "CRYFA_THR.$RES"
 
-##  plotResult "mori.$INF"
-##  plotResult "result_cryfa_thr.$INF"
-#  plotResult "result_cryfa_thr_HS-SRR442469_1.$INF" "Number of threads" 2 \
-#             "Compression Memory" 7 "Cryfa_thr_comp_mem"
+  ### identify datasets names
+  dataArr=($(cat CRYFA_THR.dat | awk '{print $1}' | uniq));
+#  for i in ${dataArr[@]}; do echo $i; done
+
+  for tuple in "yLbl='Compression Time - real (min)' yCol='4'\
+                out='CRYFA_THR_COMP_TIME_REAL'"                      \
+                "yLbl='Compression Time - cpu (min)' yCol='5'\
+                out='CRYFA_THR_COMP_TIME_CPU'"                       \
+                "yLbl='Compression Memory (MB)' yCol='6'\
+                out='CRYFA_THR_COMP_MEM'"                            \
+                "yLbl='Decompression Time - real (min)' yCol='7'\
+                out='CRYFA_THR_DECOMP_TIME_REAL'"                    \
+                "yLbl='Decompression Time - cpu (min)' yCol='8'\
+                out='CRYFA_THR_DECOMP_TIME_CPU'"                     \
+                "yLbl='Decompression Memory (MB)' yCol='9'\
+                out='CRYFA_THR_DECOMP_MEM'"; do
+      eval $tuple;
+      plotResult "CRYFA_THR.dat" ${dataArr[1]} "Number of threads" 2 "$yLbl" \
+                 "$yCol" "$out";
+  done
+  cd ..
 fi
 
 
