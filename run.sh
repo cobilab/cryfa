@@ -1618,12 +1618,14 @@ then
       ### run for different number of threads
       if [[ $RUN_CRYFA_XCL -eq 1 ]];
       then
-          if [[ ! -e $cryfa_xcl/cryfa ]]; then
-              cp $progs/cryfa/cryfa $cryfa_xcl;
-          fi
-          if [[ ! -e $cryfa_xcl/pass.txt ]]; then
-              cp $progs/cryfa/pass.txt $cryfa_xcl;
-          fi
+###          if [[ ! -e $cryfa_xcl/cryfa ]]; then
+###              cp $progs/cryfa/cryfa $cryfa_xcl;
+###          fi
+###          if [[ ! -e $cryfa_xcl/pass.txt ]]; then
+###              cp $progs/cryfa/pass.txt $cryfa_xcl;
+###          fi
+          cp $progs/cryfa/cryfa    $cryfa_xcl;
+          cp $progs/cryfa/pass.txt $cryfa_xcl;
 
           cd $cryfa_xcl
 
@@ -1735,19 +1737,16 @@ if [[ $PLOT_RESULTS -eq 1 ]];
 then
   #------------------------ functions ------------------------#
   ### plot result -- single plot
-  # $1: input file,
-  # $2: dataset,
-  # $3: X axis label, $4: column regarding X axis, in input file
-  # $5: Y axis label, $6: column regarding Y axis, in input file
-  # $7: output file name
+  # $1: input file, $2: dataset, $3: X axis label, $4: X tics, $5: Y axis label,
+  # $6: Y tics, $7: output file name
   function plotResult
   {
       IN=$1             # input file
       DATASET=$2        # dataset name
       X_LABEL=$3        # X axis label
-      X_COL=$4          # X column
+      X_TICS=$4         # X tics
       Y_LABEL=$5        # Y axis label
-      Y_COL=$6          # Y column
+      Y_TICS=$6         # Y tics
       OUT=$7            # output file name
       PIX_FORMAT=pdf    # output format: pdf, png, svg, eps, epslatex
       TITLE=${DATASET//_/'\\\_'}    # title of figure -- replace _ with \\\_
@@ -1762,8 +1761,21 @@ set key bottom right    # legend position
 LT=6                    # linetype
 LW=2.5                  # linewidth
 
-plot '$IN' using $X_COL:$Y_COL every ::1 \
-           with lines linetype LT linewidth LW title ""
+
+set xrange [0.5:8.5]
+#set style data histogram
+#set style histogram cluster gap 1
+#set style fill solid border -0
+set style fill solid noborder
+set boxwidth 0.7 relative
+unset key
+#plot '$IN' using $X_TICS:ytic($Y_TICS) ti col
+
+
+plot '$IN' using $X_TICS:$Y_TICS with boxes linecolor rgb"blue" notitle
+
+#plot '$IN' using $X_TICS:$Y_TICS every ::1 \
+#           with lines linetype LT linewidth LW title ""
 
 ### the following line (EOF) MUST be left as it is; i.e. no indent
 EOF
@@ -1772,9 +1784,12 @@ EOF
   ### plot for cryfa excusive method
   cd $cryfa_xcl
 
-  ### identify datasets names
+  ### identify unique datasets names
   dataArr=($(cat CRYFA_THR.dat | awk '{print $1}' | uniq));
 ###  for i in ${dataArr[@]}; do echo $i; done
+
+ plotResult "CRYFA_THR.dat" ${dataArr[1]} "Number of threads" 2 \
+ "Compression Memory (MB)" "6" "CRYFA_THR_COMP_MEM";
 
 #  for tuple in "yLbl='Compression Time - real (min)' yCol='4'\
 #                out='CRYFA_THR_COMP_TIME_REAL'"                      \
@@ -1787,7 +1802,8 @@ EOF
 #                "yLbl='Decompression Time - cpu (min)' yCol='8'\
 #                out='CRYFA_THR_DECOMP_TIME_CPU'"                     \
 #                "yLbl='Decompression Memory (MB)' yCol='9'\
-#                out='CRYFA_THR_DECOMP_MEM'"; do
+#                out='CRYFA_THR_DECOMP_MEM'"
+#  ; do
 #      eval $tuple;
 #      plotResult "CRYFA_THR.dat" ${dataArr[1]} "Number of threads" 2 "$yLbl" \
 #                 "$yCol" "$out";
