@@ -1736,10 +1736,10 @@ fi
 if [[ $PLOT_RESULTS -eq 1 ]];
 then
   #------------------------ functions ------------------------#
-  ### plot result -- single plot
+  ### plot result
   # $1: input file, $2: dataset, $3: X axis label, $4: X tics, $5: Y axis label,
   # $6: Y tics, $7: output file name
-  function plotResult
+  function plotResultCryfaXcl
   {
       IN=$1             # input file
       DATASET=$2        # dataset name
@@ -1761,18 +1761,24 @@ set key bottom right    # legend position
 LT=6                    # linetype
 LW=2.5                  # linewidth
 
-
-set xrange [0.5:8.5]
+dx=5.
+n=2
+total_box_width_relative=0.75
+gap_width_relative=0.1
+d_width=(gap_width_relative+total_box_width_relative)*dx/2.
+#set xrange [0.5:8.5]
 #set style data histogram
 #set style histogram cluster gap 1
 #set style fill solid border -0
 set style fill solid noborder
-set boxwidth 0.7 relative
+#set boxwidth 0.7 relative
+set boxwidth total_box_width_relative/n relative
 unset key
+plot '$IN' using $X_TICS:$Y_TICS with boxes linecolor rgb"blue", \
+     '' using $X_TICS:9 linecolor rgb"red", \
+     '' using $X_TICS:($9+0.1):2 with labels
+
 #plot '$IN' using $X_TICS:ytic($Y_TICS) ti col
-
-
-plot '$IN' using $X_TICS:$Y_TICS with boxes linecolor rgb"blue" notitle
 
 #plot '$IN' using $X_TICS:$Y_TICS every ::1 \
 #           with lines linetype LT linewidth LW title ""
@@ -1788,7 +1794,7 @@ EOF
   dataArr=($(cat CRYFA_THR.dat | awk '{print $1}' | uniq));
 ###  for i in ${dataArr[@]}; do echo $i; done
 
- plotResult "CRYFA_THR.dat" ${dataArr[1]} "Number of threads" 2 \
+ plotResultCryfaXcl "CRYFA_THR.dat" ${dataArr[1]} "Number of threads" 2 \
  "Compression Memory (MB)" "6" "CRYFA_THR_COMP_MEM";
 
 #  for tuple in "yLbl='Compression Time - real (min)' yCol='4'\
@@ -1802,10 +1808,10 @@ EOF
 #                "yLbl='Decompression Time - cpu (min)' yCol='8'\
 #                out='CRYFA_THR_DECOMP_TIME_CPU'"                     \
 #                "yLbl='Decompression Memory (MB)' yCol='9'\
-#                out='CRYFA_THR_DECOMP_MEM'"
+#                out='CRYFA_THR_DECOMP_MEM'" \
 #  ; do
 #      eval $tuple;
-#      plotResult "CRYFA_THR.dat" ${dataArr[1]} "Number of threads" 2 "$yLbl" \
+#      plotResultCryfaXcl "CRYFA_THR.dat" ${dataArr[1]} "Number of threads" 2 "$yLbl" \
 #                 "$yCol" "$out";
 #  done
 
