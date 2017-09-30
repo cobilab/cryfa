@@ -1187,6 +1187,213 @@ then
       printf "$dName\t$methodComp\t$methodEnc\t$c\t$en\t$de\t$d\t$V\n";
   }
 
+  # convert memory numbers scale to MB and times to fractional minutes in
+  # result files associated with comression methods. $1: input file name
+  function compResHumanReadable
+  {
+      IN=$1              # input file name
+      INWF="${IN%.*}"    # input file name without filetype
+
+      c="C_Size(MB)\tC_Time_real(m)\tC_Time_cpu(m)\tC_Mem(MB)"
+      d="D_Time_real(m)\tD_Time_cpu(m)\tD_Mem(MB)"
+      printf "Dataset\tMethod\t$c\t$d\tEq\n" > $INWF.$INF
+
+      cat $IN | awk 'NR>1' | awk 'BEGIN {}{
+      printf "%s\t%s\t%.2f", $1, $2, $3/1024/1024;
+
+      split($4, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
+      split(c_arrMinReal[2], c_arrSecReal, "s");    c_secReal=c_arrSecReal[1];
+      c_realTime=(c_minReal*60+c_secReal)/60;
+      printf "\t%.2f", c_realTime;
+
+      split($5, c_arrMinUser, "m");                 c_minUser=c_arrMinUser[1];
+      split(c_arrMinUser[2], c_arrSecUser, "s");    c_secUser=c_arrSecUser[1];
+      c_userTime=(c_minUser*60+c_secUser)/60;
+      split($6, c_arrMinSys, "m");                  c_minSys=c_arrMinSys[1];
+      split(c_arrMinSys[2], c_arrSecSys, "s");      c_secSys=c_arrSecSys[1];
+      c_sysTime=(c_minSys*60+c_secSys)/60;
+      c_cpuTime=c_userTime+c_sysTime;
+      printf "\t%.2f\t%.2f", c_cpuTime, $7/1024;
+
+      split($8, d_arrMinReal, "m");                 d_minReal=d_arrMinReal[1];
+      split(d_arrMinReal[2], d_arrSecReal, "s");    d_secReal=d_arrSecReal[1];
+      d_realTime=(d_minReal*60+d_secReal)/60;
+      printf "\t%.2f", d_realTime;
+
+      split($9, d_arrMinUser, "m");                 d_minUser=d_arrMinUser[1];
+      split(d_arrMinUser[2], d_arrSecUser, "s");    d_secUser=d_arrSecUser[1];
+      d_userTime=(d_minUser*60+d_secUser)/60;
+      split($10, d_arrMinSys, "m");                  d_minSys=d_arrMinSys[1];
+      split(d_arrMinSys[2], d_arrSecSys, "s");      d_secSys=d_arrSecSys[1];
+      d_sysTime=(d_minSys*60+d_secSys)/60;
+      d_cpuTime=d_userTime+d_sysTime;
+      printf "\t%.2f\t%.2f\t%d\n", d_cpuTime, $11/1024, $12;
+      }' >> $INWF.$INF
+  }
+
+  # convert memory numbers scale to MB and times to fractional minutes in
+  # result files associated with encryption methods. $1: input file name
+  function encResHumanReadable
+  {
+      IN=$1              # input file name
+      INWF="${IN%.*}"    # input file name without filetype
+
+      en="En_Size(MB)\tEn_Time_real(m)\tEn_Time_cpu(m)\tEn_Mem(MB)"
+      de="De_Time_real(m)\tDe_Time_cpu(m)\tDe_Mem(MB)"
+      printf "Dataset\tMethod\t$en\t$de\n" > $INWF.$INF
+
+      cat $IN | awk 'NR>1' | awk 'BEGIN {}{
+      printf "%s\t%s\t%.2f", $1, $2, $3/1024/1024;
+
+      split($4, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
+      split(c_arrMinReal[2], c_arrSecReal, "s");    c_secReal=c_arrSecReal[1];
+      c_realTime=(c_minReal*60+c_secReal)/60;
+      printf "\t%.2f", c_realTime;
+
+      split($5, c_arrMinUser, "m");                 c_minUser=c_arrMinUser[1];
+      split(c_arrMinUser[2], c_arrSecUser, "s");    c_secUser=c_arrSecUser[1];
+      c_userTime=(c_minUser*60+c_secUser)/60;
+      split($6, c_arrMinSys, "m");                  c_minSys=c_arrMinSys[1];
+      split(c_arrMinSys[2], c_arrSecSys, "s");      c_secSys=c_arrSecSys[1];
+      c_sysTime=(c_minSys*60+c_secSys)/60;
+      c_cpuTime=c_userTime+c_sysTime;
+      printf "\t%.2f\t%.2f", c_cpuTime, $7/1024;
+
+      split($8, d_arrMinReal, "m");                 d_minReal=d_arrMinReal[1];
+      split(d_arrMinReal[2], d_arrSecReal, "s");    d_secReal=d_arrSecReal[1];
+      d_realTime=(d_minReal*60+d_secReal)/60;
+      printf "\t%.2f", d_realTime;
+
+      split($9, d_arrMinUser, "m");                 d_minUser=d_arrMinUser[1];
+      split(d_arrMinUser[2], d_arrSecUser, "s");    d_secUser=d_arrSecUser[1];
+      d_userTime=(d_minUser*60+d_secUser)/60;
+      split($10, d_arrMinSys, "m");                  d_minSys=d_arrMinSys[1];
+      split(d_arrMinSys[2], d_arrSecSys, "s");      d_secSys=d_arrSecSys[1];
+      d_sysTime=(d_minSys*60+d_secSys)/60;
+      d_cpuTime=d_userTime+d_sysTime;
+      printf "\t%.2f\t%.2f\n", d_cpuTime, $11/1024;
+      }' >> $INWF.$INF
+  }
+
+  # convert memory numbers scale to MB and times to fractional minutes in
+  # result files associated with comression+encryption methods
+  # $1: input file name
+  function compEncResHumanReadable
+  {
+      IN=$1              # input file name
+      INWF="${IN%.*}"    # input file name without filetype
+
+      c="C_Size(MB)\tC_Time_real(m)\tC_Time_cpu(m)\tC_Mem(MB)"
+      en="En_Size(MB)\tEn_Time_real(m)\tEn_Time_cpu(m)\tEn_Mem(MB)"
+      de="De_Time_real(m)\tDe_Time_cpu(m)\tDe_Mem(MB)"
+      d="D_Time_real(m)\tD_Time_cpu(m)\tD_Mem(MB)"
+      printf "Dataset\tC_Method\tEn_Method\t$c\t$en\t$de\t$d\tEq\n" > $INWF.$INF
+
+      cat $IN | awk 'NR>1' | awk 'BEGIN {}{
+      printf "%s\t%s\t%s\t%.2f", $1, $2, $3, $4/1024/1024;
+
+      split($5, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
+      split(c_arrMinReal[2], c_arrSecReal, "s");    c_secReal=c_arrSecReal[1];
+      c_realTime=(c_minReal*60+c_secReal)/60;
+      printf "\t%.2f", c_realTime;
+
+      split($6, c_arrMinUser, "m");                 c_minUser=c_arrMinUser[1];
+      split(c_arrMinUser[2], c_arrSecUser, "s");    c_secUser=c_arrSecUser[1];
+      c_userTime=(c_minUser*60+c_secUser)/60;
+      split($7, c_arrMinSys, "m");                  c_minSys=c_arrMinSys[1];
+      split(c_arrMinSys[2], c_arrSecSys, "s");      c_secSys=c_arrSecSys[1];
+      c_sysTime=(c_minSys*60+c_secSys)/60;
+      c_cpuTime=c_userTime+c_sysTime;
+      printf "\t%.2f\t%.2f\t%.2f", c_cpuTime, $8/1024, $9/1024/1024;
+
+      split($10, en_arrMinReal, "m");               en_minReal=en_arrMinReal[1];
+      split(en_arrMinReal[2], en_arrSecReal, "s");  en_secReal=en_arrSecReal[1];
+      en_realTime=(en_minReal*60+en_secReal)/60;
+      printf "\t%.2f", en_realTime;
+
+      split($11, en_arrMinUser, "m");               en_minUser=en_arrMinUser[1];
+      split(en_arrMinUser[2], en_arrSecUser, "s");  en_secUser=en_arrSecUser[1];
+      en_userTime=(en_minUser*60+en_secUser)/60;
+      split($12, en_arrMinSys, "m");                en_minSys=en_arrMinSys[1];
+      split(en_arrMinSys[2], en_arrSecSys, "s");    en_secSys=en_arrSecSys[1];
+      en_sysTime=(en_minSys*60+en_secSys)/60;
+      en_cpuTime=en_userTime+en_sysTime;
+      printf "\t%.2f\t%.2f", en_cpuTime, $13/1024;
+
+      split($14, de_arrMinReal, "m");               de_minReal=de_arrMinReal[1];
+      split(de_arrMinReal[2], de_arrSecReal, "s");  de_secReal=de_arrSecReal[1];
+      de_realTime=(de_minReal*60+de_secReal)/60;
+      printf "\t%.2f", de_realTime;
+
+      split($15, de_arrMinUser, "m");               de_minUser=de_arrMinUser[1];
+      split(de_arrMinUser[2], de_arrSecUser, "s");  de_secUser=de_arrSecUser[1];
+      de_userTime=(de_minUser*60+de_secUser)/60;
+      split($16, de_arrMinSys, "m");                de_minSys=de_arrMinSys[1];
+      split(de_arrMinSys[2], de_arrSecSys, "s");    de_secSys=de_arrSecSys[1];
+      de_sysTime=(de_minSys*60+de_secSys)/60;
+      de_cpuTime=de_userTime+de_sysTime;
+      printf "\t%.2f\t%.2f", de_cpuTime, $17/1024;
+
+      split($18, d_arrMinReal, "m");                d_minReal=d_arrMinReal[1];
+      split(d_arrMinReal[2], d_arrSecReal, "s");    d_secReal=d_arrSecReal[1];
+      d_realTime=(d_minReal*60+d_secReal)/60;
+      printf "\t%.2f", d_realTime;
+
+      split($19, d_arrMinUser, "m");                d_minUser=d_arrMinUser[1];
+      split(d_arrMinUser[2], d_arrSecUser, "s");    d_secUser=d_arrSecUser[1];
+      d_userTime=(d_minUser*60+d_secUser)/60;
+      split($20, d_arrMinSys, "m");                 d_minSys=d_arrMinSys[1];
+      split(d_arrMinSys[2], d_arrSecSys, "s");      d_secSys=d_arrSecSys[1];
+      d_sysTime=(d_minSys*60+d_secSys)/60;
+      d_cpuTime=d_userTime+d_sysTime;
+      printf "\t%.2f\t%.2f\t%d\n", d_cpuTime, $21/1024, $22;
+      }' >> $INWF.$INF
+  }
+
+  # convert memory numbers scale to MB and times to fractional minutes in
+  # result files associated with cryfa method. $1: input file name
+  function cryfaXclResHumanReadable
+  {
+      IN=$1              # input file name
+      INWF="${IN%.*}"    # input file name without filetype
+
+      c="C_Size(MB)\tC_Time_real(m)\tC_Time_cpu(m)\tC_Mem(MB)"
+      d="D_Time_real(m)\tD_Time_cpu(m)\tD_Mem(MB)"
+      printf "Dataset\tThr\t$c\t$d\tEq\n" > $INWF.$INF
+
+      cat $IN | awk 'NR>1' | awk 'BEGIN {}{
+      printf "%s\t%s\t%.2f", $1, $2, $3/1024/1024;
+
+      split($4, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
+      split(c_arrMinReal[2], c_arrSecReal, "s");    c_secReal=c_arrSecReal[1];
+      c_realTime=(c_minReal*60+c_secReal)/60;
+      printf "\t%.2f", c_realTime;
+
+      split($5, c_arrMinUser, "m");                 c_minUser=c_arrMinUser[1];
+      split(c_arrMinUser[2], c_arrSecUser, "s");    c_secUser=c_arrSecUser[1];
+      c_userTime=(c_minUser*60+c_secUser)/60;
+      split($6, c_arrMinSys, "m");                  c_minSys=c_arrMinSys[1];
+      split(c_arrMinSys[2], c_arrSecSys, "s");      c_secSys=c_arrSecSys[1];
+      c_sysTime=(c_minSys*60+c_secSys)/60;
+      c_cpuTime=c_userTime+c_sysTime;
+      printf "\t%.2f\t%.2f", c_cpuTime, $7/1024;
+
+      split($8, d_arrMinReal, "m");                 d_minReal=d_arrMinReal[1];
+      split(d_arrMinReal[2], d_arrSecReal, "s");    d_secReal=d_arrSecReal[1];
+      d_realTime=(d_minReal*60+d_secReal)/60;
+      printf "\t%.2f", d_realTime;
+
+      split($9, d_arrMinUser, "m");                 d_minUser=d_arrMinUser[1];
+      split(d_arrMinUser[2], d_arrSecUser, "s");    d_secUser=d_arrSecUser[1];
+      d_userTime=(d_minUser*60+d_secUser)/60;
+      split($10, d_arrMinSys, "m");                  d_minSys=d_arrMinSys[1];
+      split(d_arrMinSys[2], d_arrSecSys, "s");      d_secSys=d_arrSecSys[1];
+      d_sysTime=(d_minSys*60+d_secSys)/60;
+      d_cpuTime=d_userTime+d_sysTime;
+      printf "\t%.2f\t%.2f\t%d\n", d_cpuTime, $11/1024, $12;
+      }' >> $INWF.$INF
+  }
+
   #------------------- dataset availablity -------------------#
   # FASTA -- human - viruses - synthetic
   for i in $HS_SEQ_RUN; do
@@ -1257,6 +1464,9 @@ then
               done
               for j in {1..2};do compDecompRes $i $Synth-${j}_$fastq >>$OUT;done
           done
+
+          ### convert the result file into a human readable file
+          compResHumanReadable $OUT;
       fi
   fi
 
@@ -1296,6 +1506,9 @@ then
               done
               for j in {1..2}; do encDecRes $i $Synth-${j}_$fastq >> $OUT; done
           done
+
+          ### convert the result file into a human readable file
+          encResHumanReadable $OUT;
       fi
   fi
 
@@ -1382,6 +1595,9 @@ then
                  done
              done
           done
+
+          ### convert the result file into a human readable file
+          compEncResHumanReadable $OUT;
       fi
   fi
 
@@ -1402,8 +1618,13 @@ then
       ### run for different number of threads
       if [[ $RUN_CRYFA_XCL -eq 1 ]];
       then
-          cp $progs/cryfa/cryfa    $cryfa_xcl
-          cp $progs/cryfa/pass.txt $cryfa_xcl
+          if [[ ! -e $cryfa_xcl/cryfa ]]; then
+              cp $progs/cryfa/cryfa $cryfa_xcl;
+          fi
+          if [[ ! -e $cryfa_xcl/pass.txt ]]; then
+              cp $progs/cryfa/pass.txt $cryfa_xcl;
+          fi
+
           cd $cryfa_xcl
 
           for nThr in $CRYFA_THR_RUN; do
@@ -1498,6 +1719,9 @@ then
               printf "$inDataWF\t$nThr\t$c\t$d\t$V\n" >> $OUT;
           done
 
+          ### convert the result file into a human readable file
+          cryfaXclResHumanReadable $OUT;
+
           cd ..
       fi
   fi
@@ -1510,7 +1734,7 @@ fi
 if [[ $PLOT_RESULTS -eq 1 ]];
 then
   #------------------------ functions ------------------------#
-  ### plot result -- single
+  ### plot result -- single plot
   # $1: input file,
   # $2: dataset,
   # $3: X axis label, $4: column regarding X axis, in input file
@@ -1545,207 +1769,8 @@ plot '$IN' using $X_COL:$Y_COL every ::1 \
 EOF
   }
 
-  ### convert numbers in result files of compression methods
-  function convertComp
-  {
-      IN=$1              # input file name
-      INWF="${IN%.*}"    # input file name without filetype
-
-      c="C_Size(MB)\tC_Time_real(m)\tC_Time_cpu(m)\tC_Mem(MB)"
-      d="D_Time_real(m)\tD_Time_cpu(m)\tD_Mem(MB)"
-      printf "Dataset\tMethod\t$c\t$d\tEq\n" > $INWF.$INF
-
-      cat $IN | awk 'NR>1' | awk 'BEGIN {}{
-      printf "%s\t%s\t%.2f", $1, $2, $3/1024/1024;
-
-      split($4, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
-      split(c_arrMinReal[2], c_arrSecReal, "s");    c_secReal=c_arrSecReal[1];
-      c_realTime=(c_minReal*60+c_secReal)/60;
-      printf "\t%.2f", c_realTime;
-
-      split($5, c_arrMinUser, "m");                 c_minUser=c_arrMinUser[1];
-      split(c_arrMinUser[2], c_arrSecUser, "s");    c_secUser=c_arrSecUser[1];
-      c_userTime=(c_minUser*60+c_secUser)/60;
-      split($6, c_arrMinSys, "m");                  c_minSys=c_arrMinSys[1];
-      split(c_arrMinSys[2], c_arrSecSys, "s");      c_secSys=c_arrSecSys[1];
-      c_sysTime=(c_minSys*60+c_secSys)/60;
-      c_cpuTime=c_userTime+c_sysTime;
-      printf "\t%.2f", c_cpuTime;
-
-      printf "\t%.2f", $7/1024;
-
-      split($8, d_arrMinReal, "m");                 d_minReal=d_arrMinReal[1];
-      split(d_arrMinReal[2], d_arrSecReal, "s");    d_secReal=d_arrSecReal[1];
-      d_realTime=(d_minReal*60+d_secReal)/60;
-      printf "\t%.2f", d_realTime;
-
-      split($9, d_arrMinUser, "m");                 d_minUser=d_arrMinUser[1];
-      split(d_arrMinUser[2], d_arrSecUser, "s");    d_secUser=d_arrSecUser[1];
-      d_userTime=(d_minUser*60+d_secUser)/60;
-      split($10, d_arrMinSys, "m");                  d_minSys=d_arrMinSys[1];
-      split(d_arrMinSys[2], d_arrSecSys, "s");      d_secSys=d_arrSecSys[1];
-      d_sysTime=(d_minSys*60+d_secSys)/60;
-      d_cpuTime=d_userTime+d_sysTime;
-      printf "\t%.2f", d_cpuTime;
-
-      printf "\t%.2f", $11/1024;
-
-      printf "\t%d\n", $12;
-      }' >> $INWF.$INF
-  }
-
-  ### convert numbers in result files of encryption methods
-  function convertEnc
-  {
-      IN=$1              # input file name
-      INWF="${IN%.*}"    # input file name without filetype
-
-      en="En_Size(MB)\tEn_Time_real(m)\tEn_Time_cpu(m)\tEn_Mem(MB)"
-      de="De_Time_real(m)\tDe_Time_cpu(m)\tDe_Mem(MB)"
-      printf "Dataset\tMethod\t$en\t$de\n" > $INWF.$INF
-
-      cat $IN | awk 'NR>1' | awk 'BEGIN {}{
-      printf "%s\t%s\t%.2f", $1, $2, $3/1024/1024;
-
-      split($4, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
-      split(c_arrMinReal[2], c_arrSecReal, "s");    c_secReal=c_arrSecReal[1];
-      c_realTime=(c_minReal*60+c_secReal)/60;
-      printf "\t%.2f", c_realTime;
-
-      split($5, c_arrMinUser, "m");                 c_minUser=c_arrMinUser[1];
-      split(c_arrMinUser[2], c_arrSecUser, "s");    c_secUser=c_arrSecUser[1];
-      c_userTime=(c_minUser*60+c_secUser)/60;
-      split($6, c_arrMinSys, "m");                  c_minSys=c_arrMinSys[1];
-      split(c_arrMinSys[2], c_arrSecSys, "s");      c_secSys=c_arrSecSys[1];
-      c_sysTime=(c_minSys*60+c_secSys)/60;
-      c_cpuTime=c_userTime+c_sysTime;
-      printf "\t%.2f", c_cpuTime;
-
-      printf "\t%.2f", $7/1024;
-
-      split($8, d_arrMinReal, "m");                 d_minReal=d_arrMinReal[1];
-      split(d_arrMinReal[2], d_arrSecReal, "s");    d_secReal=d_arrSecReal[1];
-      d_realTime=(d_minReal*60+d_secReal)/60;
-      printf "\t%.2f", d_realTime;
-
-      split($9, d_arrMinUser, "m");                 d_minUser=d_arrMinUser[1];
-      split(d_arrMinUser[2], d_arrSecUser, "s");    d_secUser=d_arrSecUser[1];
-      d_userTime=(d_minUser*60+d_secUser)/60;
-      split($10, d_arrMinSys, "m");                  d_minSys=d_arrMinSys[1];
-      split(d_arrMinSys[2], d_arrSecSys, "s");      d_secSys=d_arrSecSys[1];
-      d_sysTime=(d_minSys*60+d_secSys)/60;
-      d_cpuTime=d_userTime+d_sysTime;
-      printf "\t%.2f", d_cpuTime;
-
-      printf "\t%.2f\n", $11/1024;
-      }' >> $INWF.$INF
-  }
-
-  ### convert numbers in result files of comression+encryption methods
-  function convertCompEnc
-  {
-      IN=$1              # input file name
-      INWF="${IN%.*}"    # input file name without filetype
-
-      c="C_Size(MB)\tC_Time_real(m)\tC_Time_cpu(m)\tC_Mem(MB)"
-      en="En_Size(MB)\tEn_Time_real(m)\tEn_Time_cpu(m)\tEn_Mem(MB)"
-      de="De_Time_real(m)\tDe_Time_cpu(m)\tDe_Mem(MB)"
-      d="D_Time_real(m)\tD_Time_cpu(m)\tD_Mem(MB)"
-      printf "Dataset\tC_Method\tEn_Method\t$c\t$en\t$de\t$d\tEq\n" > $INWF.$INF
-
-      cat $IN | awk 'NR>1' | awk 'BEGIN {}{
-      printf "%s\t%s\t%s\t%.2f", $1, $2, $3, $4/1024/1024;
-
-      split($5, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
-      split(c_arrMinReal[2], c_arrSecReal, "s");    c_secReal=c_arrSecReal[1];
-      c_realTime=(c_minReal*60+c_secReal)/60;
-      printf "\t%.2f", c_realTime;
-
-      split($6, c_arrMinUser, "m");                 c_minUser=c_arrMinUser[1];
-      split(c_arrMinUser[2], c_arrSecUser, "s");    c_secUser=c_arrSecUser[1];
-      c_userTime=(c_minUser*60+c_secUser)/60;
-      split($7, c_arrMinSys, "m");                  c_minSys=c_arrMinSys[1];
-      split(c_arrMinSys[2], c_arrSecSys, "s");      c_secSys=c_arrSecSys[1];
-      c_sysTime=(c_minSys*60+c_secSys)/60;
-      c_cpuTime=c_userTime+c_sysTime;
-      printf "\t%.2f", c_cpuTime;
-
-      printf "\t%.2f", $8/1024;
-
-      split($9, d_arrMinReal, "m");                 d_minReal=d_arrMinReal[1];
-      split(d_arrMinReal[2], d_arrSecReal, "s");    d_secReal=d_arrSecReal[1];
-      d_realTime=(d_minReal*60+d_secReal)/60;
-      printf "\t%.2f", d_realTime;
-
-      split($10, d_arrMinUser, "m");                d_minUser=d_arrMinUser[1];
-      split(d_arrMinUser[2], d_arrSecUser, "s");    d_secUser=d_arrSecUser[1];
-      d_userTime=(d_minUser*60+d_secUser)/60;
-      split($11, d_arrMinSys, "m");                 d_minSys=d_arrMinSys[1];
-      split(d_arrMinSys[2], d_arrSecSys, "s");      d_secSys=d_arrSecSys[1];
-      d_sysTime=(d_minSys*60+d_secSys)/60;
-      d_cpuTime=d_userTime+d_sysTime;
-      printf "\t%.2f", d_cpuTime;
-
-      printf "\t%.2f", $12/1024;
-
-      printf "\t%d\n", $13;
-      }' >> $INWF.$INF
-  }
-
-  ### convert memory numbers scale to MB and times to fractional minutes
-  ### $1: input file name
-  function convertCryfa
-  {
-      IN=$1              # input file name
-      INWF="${IN%.*}"    # input file name without filetype
-
-      c="C_Size(MB)\tC_Time_real(m)\tC_Time_cpu(m)\tC_Mem(MB)"
-      d="D_Time_real(m)\tD_Time_cpu(m)\tD_Mem(MB)"
-      printf "Dataset\tThr\t$c\t$d\tEq\n" > $INWF.$INF
-
-      cat $IN | awk 'NR>1' | awk 'BEGIN {}{
-      printf "%s\t%s\t%.2f", $1, $2, $3/1024/1024;
-
-      split($4, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
-      split(c_arrMinReal[2], c_arrSecReal, "s");    c_secReal=c_arrSecReal[1];
-      c_realTime=(c_minReal*60+c_secReal)/60;
-      printf "\t%.2f", c_realTime;
-
-      split($5, c_arrMinUser, "m");                 c_minUser=c_arrMinUser[1];
-      split(c_arrMinUser[2], c_arrSecUser, "s");    c_secUser=c_arrSecUser[1];
-      c_userTime=(c_minUser*60+c_secUser)/60;
-      split($6, c_arrMinSys, "m");                  c_minSys=c_arrMinSys[1];
-      split(c_arrMinSys[2], c_arrSecSys, "s");      c_secSys=c_arrSecSys[1];
-      c_sysTime=(c_minSys*60+c_secSys)/60;
-      c_cpuTime=c_userTime+c_sysTime;
-      printf "\t%.2f", c_cpuTime;
-
-      printf "\t%.2f", $7/1024;
-
-      split($8, d_arrMinReal, "m");                 d_minReal=d_arrMinReal[1];
-      split(d_arrMinReal[2], d_arrSecReal, "s");    d_secReal=d_arrSecReal[1];
-      d_realTime=(d_minReal*60+d_secReal)/60;
-      printf "\t%.2f", d_realTime;
-
-      split($9, d_arrMinUser, "m");                 d_minUser=d_arrMinUser[1];
-      split(d_arrMinUser[2], d_arrSecUser, "s");    d_secUser=d_arrSecUser[1];
-      d_userTime=(d_minUser*60+d_secUser)/60;
-      split($10, d_arrMinSys, "m");                  d_minSys=d_arrMinSys[1];
-      split(d_arrMinSys[2], d_arrSecSys, "s");      d_secSys=d_arrSecSys[1];
-      d_sysTime=(d_minSys*60+d_secSys)/60;
-      d_cpuTime=d_userTime+d_sysTime;
-      printf "\t%.2f", d_cpuTime;
-
-      printf "\t%.2f", $11/1024;
-
-      printf "\t%d\n", $12;
-      }' >> $INWF.$INF
-  }
-
-
+  ### plot for cryfa excusive method
   cd $cryfa_xcl
-  ### convert memory numbers scale to MB and times to fractional minutes
-#  convertCryfa "CRYFA_THR.$RES"
 
   ### identify datasets names
   dataArr=($(cat CRYFA_THR.dat | awk '{print $1}' | uniq));
@@ -1767,7 +1792,9 @@ EOF
 #      plotResult "CRYFA_THR.dat" ${dataArr[1]} "Number of threads" 2 "$yLbl" \
 #                 "$yCol" "$out";
 #  done
+
   cd ..
+
 fi
 
 
