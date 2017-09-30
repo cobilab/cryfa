@@ -97,8 +97,8 @@ RUN_METHODS=0
       MAX_N_THR=8                  # max number of threads
       CRYFA_XCL_DATASET="dataset/FA/V/viruses.fasta"
 #      CRYFA_XCL_DATASET="dataset/FQ/HS/HS-SRR442469_1.fastq"
-      RUN_CRYFA_XCL=1
-      PRINT_RESULTS_CRYFA_XCL=1
+      RUN_CRYFA_XCL=0
+      PRINT_RESULTS_CRYFA_XCL=0
 
 ### plot results
 PLOT_RESULTS=1
@@ -1018,7 +1018,7 @@ then
   }
 
   # print compress/decompress results. $1: program's name, $2: dataset
-  function compDecompResult
+  function compDecompRes
   {
       CS="";       CT_r="";     CT_u="";     CT_s="";     CM="";
       DT_r="";     DT_u="";     DT_s="";     DM="";
@@ -1065,7 +1065,7 @@ then
   }
 
   # print encrypt/decrypt results. $1: program's name, $2: dataset
-  function encDecResult
+  function encDecRes
   {
       EnS="";      EnT_r="";    EnT_u="";    EnT_s="";    EnM="";
       DeT_r="";    DeT_u="";    DeT_s="";    DeM="";
@@ -1108,7 +1108,7 @@ then
 
   # print comp/decomp plus enc/dec results.
   # $1: compression program's name, $2: encryption program's name, $3: dataset.
-  function compEncDecDecompResult
+  function compEncDecDecompRes
   {
       CS="";       CT_r="";     CT_u="";     CT_s="";     CM="";
       EnS="";      EnT_r="";    EnT_u="";    EnT_s="";    EnM="";
@@ -1229,35 +1229,33 @@ then
       #---------------- results ----------------#
       if [[ $PRINT_RESULTS_COMP -eq 1 ]];
       then
+          OUT="$result/COMP.$RES"    # output file name
+
           ### print results
-          c="C_Size\tC_Time(real)\tC_Time(user)\tC_Time(sys)\tC_Mem"
-          d="D_Time(real)\tD_Time(user)\tD_Time(sys)\tD_Mem"
-          printf "Dataset\tMethod\t$c\t$d\tEq\n" > result_comp.$INF;
+          c="C_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)\t"
+          c+="C_Mem(KB)"
+          d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
+          printf "Dataset\tMethod\t$c\t$d\tEq\n" > $OUT;
 
           # FASTA -- human - viruses - synthetic
           for i in CRYFA GZIP BZIP2 LZMA MFCOMPRESS DELIMINATE; do
               for j in $HS_SEQ_RUN; do
-                  compDecompResult $i $HUMAN-${j}_$fasta >> result_comp.$INF;
+                  compDecompRes $i $HUMAN-${j}_$fasta >> $OUT;
               done
-              compDecompResult $i viruses_$fasta >> result_comp.$INF;
-              for j in {1..2}; do
-                  compDecompResult $i $Synth-${j}_$fasta >> result_comp.$INF;
-              done
+              compDecompRes $i viruses_$fasta >> $OUT;
+              for j in {1..2};do compDecompRes $i $Synth-${j}_$fasta >>$OUT;done
           done
 
           # FASTQ -- human - Denisova - synthetic
           for i in CRYFA GZIP BZIP2 LZMA FQZCOMP QUIP DSRC FQC; do
               for j in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
                        SRR707196_1; do
-                  compDecompResult $i $HUMAN-${j}_$fastq >> result_comp.$INF;
+                  compDecompRes $i $HUMAN-${j}_$fastq >> $OUT;
               done
               for j in B1087 B1088 B1110 B1128 SL3003; do
-                  compDecompResult $i \
-                                   $DENISOVA-${j}_SR_$fastq >> result_comp.$INF;
+                  compDecompRes $i $DENISOVA-${j}_SR_$fastq >> $OUT;
               done
-              for j in {1..2}; do
-                  compDecompResult $i $Synth-${j}_$fastq >> result_comp.$INF;
-              done
+              for j in {1..2};do compDecompRes $i $Synth-${j}_$fastq >>$OUT;done
           done
       fi
   fi
@@ -1271,33 +1269,32 @@ then
       #---------------- results ----------------#
       if [[ $PRINT_RESULTS_ENC -eq 1 ]];
       then
+          OUT="$result/ENC.$RES"    # output file name
+
           ### print results
-          en="En_Size\tEn_Time(real)\tEn_Time(user)\tEn_Time(sys)\tEn_Mem"
-          de="De_Time(real)\tDe_Time(user)\tDe_Time(sys)\tDe_Mem"
-          printf "Dataset\tMethod\t$en\t$de\n" > result_enc.$INF;
+          en="En_Size(B)\tEn_Time_real(s)\tEn_Time_user(s)\tEn_Time_sys(s)\t"
+          en+="En_Mem(KB)"
+          de="De_Time_real(s)\tDe_Time_user(s)\tDe_Time_sys(s)\tDe_Mem(KB)"
+          printf "Dataset\tMethod\t$en\t$de\n" > $OUT;
 
           for i in AESCRYPT;
           do
               # FASTA -- human - viruses - synthetic
               for j in $HS_SEQ_RUN; do
-                  encDecResult $i $HUMAN-${j}_$fasta >> result_enc.$INF;
+                  encDecRes $i $HUMAN-${j}_$fasta >> $OUT;
               done
-              encDecResult $i viruses_$fasta >> result_enc.$INF;
-              for j in {1..2}; do
-                  encDecResult $i $Synth-${j}_$fasta >> result_enc.$INF;
-              done
+              encDecRes $i viruses_$fasta >> $OUT;
+              for j in {1..2}; do encDecRes $i $Synth-${j}_$fasta >> $OUT; done
 
               # FASTQ -- human - Denisova - synthetic
               for j in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
                        SRR707196_1; do
-                  encDecResult $i $HUMAN-${j}_$fastq >> result_enc.$INF;
+                  encDecRes $i $HUMAN-${j}_$fastq >> $OUT;
               done
               for j in B1087 B1088 B1110 B1128 SL3003; do
-                  encDecResult $i $DENISOVA-${j}_SR_$fastq >> result_enc.$INF;
+                  encDecRes $i $DENISOVA-${j}_SR_$fastq >> $OUT;
               done
-              for j in {1..2}; do
-                  encDecResult $i $Synth-${j}_$fastq >> result_enc.$INF;
-              done
+              for j in {1..2}; do encDecRes $i $Synth-${j}_$fastq >> $OUT; done
           done
       fi
   fi
@@ -1348,26 +1345,26 @@ then
       #---------------- results ----------------#
       if [[ $PRINT_RESULTS_COMP_ENC -eq 1 ]];
       then
+          OUT="$result/COMP_ENC.$RES"    # output file name
+
           ### print results
-          c="C_Size\tC_Time(real)\tC_Time(user)\tC_Time(sys)\tC_Mem"
-          en="En_Size\tEn_Time(real)\tEn_Time(user)\tEn_Time(sys)\tEn_Mem"
-          d="D_Time(real)\tD_Time(user)\tD_Time(sys)\tD_Mem"
-          de="De_Time(real)\tDe_Time(user)\tDe_Time(sys)\tDe_Mem"
-          printf "Dataset\tC_Method\tEn_Method\t$c\t$en\t$de\t$d\tEq\n" \
-              > result_comp_enc.$INF;
+          c="C_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)\t"
+          c+="C_Mem(KB)"
+          en="En_Size(B)\tEn_Time_real(s)\tEn_Time_user(s)\tEn_Time_sys(s)\t"
+          en+="En_Mem(KB)"
+          de="De_Time_real(s)\tDe_Time_user(s)\tDe_Time_sys(s)\tDe_Mem(KB)"
+          d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
+          printf "Dataset\tC_Method\tEn_Method\t$c\t$en\t$de\t$d\tEq\n" > $OUT;
 
           for i in AESCRYPT; do
              # FASTA -- human - viruses - synthetic
              for j in GZIP BZIP2 LZMA MFCOMPRESS DELIM; do
                  for k in $HS_SEQ_RUN; do
-                     compEncDecDecompResult $j $i $HUMAN-${k}_$fasta \
-                         >> result_comp_enc.$INF;
+                     compEncDecDecompRes $j $i $HUMAN-${k}_$fasta >> $OUT;
                  done
-                 compEncDecDecompResult $j $i viruses_$fasta \
-                     >> result_comp_enc.$INF;
+                 compEncDecDecompRes $j $i viruses_$fasta >> $OUT;
                  for k in {1..2}; do
-                     compEncDecDecompResult $j $i $Synth-${k}_$fasta \
-                         >> result_comp_enc.$INF;
+                     compEncDecDecompRes $j $i $Synth-${k}_$fasta >> $OUT;
                  done
              done
 
@@ -1375,16 +1372,13 @@ then
              for j in GZIP BZIP2 LZMA FQZCOMP QUIP DSRC FQC; do
                  for k in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
                           SRR707196_1; do
-                     compEncDecDecompResult $j $i $HUMAN-${k}_$fastq \
-                         >> result_comp_enc.$INF;
+                     compEncDecDecompRes $j $i $HUMAN-${k}_$fastq >> $OUT;
                  done
                  for k in B1087 B1088 B1110 B1128 SL3003; do
-                     compEncDecDecompResult $j $i $DENISOVA-${k}_SR_$fastq \
-                         >> result_comp_enc.$INF;
+                     compEncDecDecompRes $j $i $DENISOVA-${k}_SR_$fastq >> $OUT;
                  done
                  for k in {1..2}; do
-                     compEncDecDecompResult $j $i $Synth-${k}_$fastq \
-                         >> result_comp_enc.$INF;
+                     compEncDecDecompRes $j $i $Synth-${k}_$fastq >> $OUT;
                  done
              done
           done
@@ -1452,11 +1446,12 @@ then
       if [[ $PRINT_RESULTS_CRYFA_XCL -eq 1 ]];
       then
           result_FLD="../$result"
+          OUT="CRYFA_THR.$RES"       # output file name
           cd $cryfa_xcl
 
           c="C_Size\tC_Time(real)\tC_Time(user)\tC_Time(sys)\tC_Mem"
           d="D_Time(real)\tD_Time(user)\tD_Time(sys)\tD_Mem"
-          printf "Dataset\tThread\t$c\t$d\tEq\n" > CRYFA_THR.$RES;
+          printf "Dataset\tThread\t$c\t$d\tEq\n" > $OUT;
 
           for nThr in $CRYFA_THR_RUN; do
               ### print compress/decompress results
@@ -1500,7 +1495,7 @@ then
               c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"   # compression results
               d="$DT_r\t$DT_u\t$DT_s\t$DM"        # decompression results
 
-              printf "$inDataWF\t$nThr\t$c\t$d\t$V\n" >> CRYFA_THR.$RES;
+              printf "$inDataWF\t$nThr\t$c\t$d\t$V\n" >> $OUT;
           done
 
           cd ..
@@ -1515,6 +1510,7 @@ fi
 if [[ $PLOT_RESULTS -eq 1 ]];
 then
   #------------------------ functions ------------------------#
+  ### plot result -- single
   # $1: input file,
   # $2: dataset,
   # $3: X axis label, $4: column regarding X axis, in input file
@@ -1549,22 +1545,154 @@ plot '$IN' using $X_COL:$Y_COL every ::1 \
 EOF
   }
 
-#  ### convert numbers in result files of compression methods
-#  function convertComp
-#  {
-#  }
-#
-#  ### convert numbers in result files of encryption methods
-#  function convertEnc
-#  {
-#  }
-#
-#  ### convert numbers in result files of compression+encryption methods
-#  function convertCompEnc
-#  {
-#  }
+  ### convert numbers in result files of compression methods
+  function convertComp
+  {
+      IN=$1              # input file name
+      INWF="${IN%.*}"    # input file name without filetype
 
-  ### convert numbers in result files of cryfa exclusive for different threads
+      c="C_Size(MB)\tC_Time_real(m)\tC_Time_cpu(m)\tC_Mem(MB)"
+      d="D_Time_real(m)\tD_Time_cpu(m)\tD_Mem(MB)"
+      printf "Dataset\tMethod\t$c\t$d\tEq\n" > $INWF.$INF
+
+      cat $IN | awk 'NR>1' | awk 'BEGIN {}{
+      printf "%s\t%s\t%.2f", $1, $2, $3/1024/1024;
+
+      split($4, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
+      split(c_arrMinReal[2], c_arrSecReal, "s");    c_secReal=c_arrSecReal[1];
+      c_realTime=(c_minReal*60+c_secReal)/60;
+      printf "\t%.2f", c_realTime;
+
+      split($5, c_arrMinUser, "m");                 c_minUser=c_arrMinUser[1];
+      split(c_arrMinUser[2], c_arrSecUser, "s");    c_secUser=c_arrSecUser[1];
+      c_userTime=(c_minUser*60+c_secUser)/60;
+      split($6, c_arrMinSys, "m");                  c_minSys=c_arrMinSys[1];
+      split(c_arrMinSys[2], c_arrSecSys, "s");      c_secSys=c_arrSecSys[1];
+      c_sysTime=(c_minSys*60+c_secSys)/60;
+      c_cpuTime=c_userTime+c_sysTime;
+      printf "\t%.2f", c_cpuTime;
+
+      printf "\t%.2f", $7/1024;
+
+      split($8, d_arrMinReal, "m");                 d_minReal=d_arrMinReal[1];
+      split(d_arrMinReal[2], d_arrSecReal, "s");    d_secReal=d_arrSecReal[1];
+      d_realTime=(d_minReal*60+d_secReal)/60;
+      printf "\t%.2f", d_realTime;
+
+      split($9, d_arrMinUser, "m");                 d_minUser=d_arrMinUser[1];
+      split(d_arrMinUser[2], d_arrSecUser, "s");    d_secUser=d_arrSecUser[1];
+      d_userTime=(d_minUser*60+d_secUser)/60;
+      split($10, d_arrMinSys, "m");                  d_minSys=d_arrMinSys[1];
+      split(d_arrMinSys[2], d_arrSecSys, "s");      d_secSys=d_arrSecSys[1];
+      d_sysTime=(d_minSys*60+d_secSys)/60;
+      d_cpuTime=d_userTime+d_sysTime;
+      printf "\t%.2f", d_cpuTime;
+
+      printf "\t%.2f", $11/1024;
+
+      printf "\t%d\n", $12;
+      }' >> $INWF.$INF
+  }
+
+  ### convert numbers in result files of encryption methods
+  function convertEnc
+  {
+      IN=$1              # input file name
+      INWF="${IN%.*}"    # input file name without filetype
+
+      en="En_Size(MB)\tEn_Time_real(m)\tEn_Time_cpu(m)\tEn_Mem(MB)"
+      de="De_Time_real(m)\tDe_Time_cpu(m)\tDe_Mem(MB)"
+      printf "Dataset\tMethod\t$en\t$de\n" > $INWF.$INF
+
+      cat $IN | awk 'NR>1' | awk 'BEGIN {}{
+      printf "%s\t%s\t%.2f", $1, $2, $3/1024/1024;
+
+      split($4, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
+      split(c_arrMinReal[2], c_arrSecReal, "s");    c_secReal=c_arrSecReal[1];
+      c_realTime=(c_minReal*60+c_secReal)/60;
+      printf "\t%.2f", c_realTime;
+
+      split($5, c_arrMinUser, "m");                 c_minUser=c_arrMinUser[1];
+      split(c_arrMinUser[2], c_arrSecUser, "s");    c_secUser=c_arrSecUser[1];
+      c_userTime=(c_minUser*60+c_secUser)/60;
+      split($6, c_arrMinSys, "m");                  c_minSys=c_arrMinSys[1];
+      split(c_arrMinSys[2], c_arrSecSys, "s");      c_secSys=c_arrSecSys[1];
+      c_sysTime=(c_minSys*60+c_secSys)/60;
+      c_cpuTime=c_userTime+c_sysTime;
+      printf "\t%.2f", c_cpuTime;
+
+      printf "\t%.2f", $7/1024;
+
+      split($8, d_arrMinReal, "m");                 d_minReal=d_arrMinReal[1];
+      split(d_arrMinReal[2], d_arrSecReal, "s");    d_secReal=d_arrSecReal[1];
+      d_realTime=(d_minReal*60+d_secReal)/60;
+      printf "\t%.2f", d_realTime;
+
+      split($9, d_arrMinUser, "m");                 d_minUser=d_arrMinUser[1];
+      split(d_arrMinUser[2], d_arrSecUser, "s");    d_secUser=d_arrSecUser[1];
+      d_userTime=(d_minUser*60+d_secUser)/60;
+      split($10, d_arrMinSys, "m");                  d_minSys=d_arrMinSys[1];
+      split(d_arrMinSys[2], d_arrSecSys, "s");      d_secSys=d_arrSecSys[1];
+      d_sysTime=(d_minSys*60+d_secSys)/60;
+      d_cpuTime=d_userTime+d_sysTime;
+      printf "\t%.2f", d_cpuTime;
+
+      printf "\t%.2f\n", $11/1024;
+      }' >> $INWF.$INF
+  }
+
+  ### convert numbers in result files of comression+encryption methods
+  function convertCompEnc
+  {
+      IN=$1              # input file name
+      INWF="${IN%.*}"    # input file name without filetype
+
+      c="C_Size(MB)\tC_Time_real(m)\tC_Time_cpu(m)\tC_Mem(MB)"
+      en="En_Size(MB)\tEn_Time_real(m)\tEn_Time_cpu(m)\tEn_Mem(MB)"
+      de="De_Time_real(m)\tDe_Time_cpu(m)\tDe_Mem(MB)"
+      d="D_Time_real(m)\tD_Time_cpu(m)\tD_Mem(MB)"
+      printf "Dataset\tC_Method\tEn_Method\t$c\t$en\t$de\t$d\tEq\n" > $INWF.$INF
+
+      cat $IN | awk 'NR>1' | awk 'BEGIN {}{
+      printf "%s\t%s\t%s\t%.2f", $1, $2, $3, $4/1024/1024;
+
+      split($5, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
+      split(c_arrMinReal[2], c_arrSecReal, "s");    c_secReal=c_arrSecReal[1];
+      c_realTime=(c_minReal*60+c_secReal)/60;
+      printf "\t%.2f", c_realTime;
+
+      split($6, c_arrMinUser, "m");                 c_minUser=c_arrMinUser[1];
+      split(c_arrMinUser[2], c_arrSecUser, "s");    c_secUser=c_arrSecUser[1];
+      c_userTime=(c_minUser*60+c_secUser)/60;
+      split($7, c_arrMinSys, "m");                  c_minSys=c_arrMinSys[1];
+      split(c_arrMinSys[2], c_arrSecSys, "s");      c_secSys=c_arrSecSys[1];
+      c_sysTime=(c_minSys*60+c_secSys)/60;
+      c_cpuTime=c_userTime+c_sysTime;
+      printf "\t%.2f", c_cpuTime;
+
+      printf "\t%.2f", $8/1024;
+
+      split($9, d_arrMinReal, "m");                 d_minReal=d_arrMinReal[1];
+      split(d_arrMinReal[2], d_arrSecReal, "s");    d_secReal=d_arrSecReal[1];
+      d_realTime=(d_minReal*60+d_secReal)/60;
+      printf "\t%.2f", d_realTime;
+
+      split($10, d_arrMinUser, "m");                d_minUser=d_arrMinUser[1];
+      split(d_arrMinUser[2], d_arrSecUser, "s");    d_secUser=d_arrSecUser[1];
+      d_userTime=(d_minUser*60+d_secUser)/60;
+      split($11, d_arrMinSys, "m");                 d_minSys=d_arrMinSys[1];
+      split(d_arrMinSys[2], d_arrSecSys, "s");      d_secSys=d_arrSecSys[1];
+      d_sysTime=(d_minSys*60+d_secSys)/60;
+      d_cpuTime=d_userTime+d_sysTime;
+      printf "\t%.2f", d_cpuTime;
+
+      printf "\t%.2f", $12/1024;
+
+      printf "\t%d\n", $13;
+      }' >> $INWF.$INF
+  }
+
+  ### convert memory numbers scale to MB and times to fractional minutes
   ### $1: input file name
   function convertCryfa
   {
@@ -1621,24 +1749,24 @@ EOF
 
   ### identify datasets names
   dataArr=($(cat CRYFA_THR.dat | awk '{print $1}' | uniq));
-#  for i in ${dataArr[@]}; do echo $i; done
+###  for i in ${dataArr[@]}; do echo $i; done
 
-  for tuple in "yLbl='Compression Time - real (min)' yCol='4'\
-                out='CRYFA_THR_COMP_TIME_REAL'"                      \
-                "yLbl='Compression Time - cpu (min)' yCol='5'\
-                out='CRYFA_THR_COMP_TIME_CPU'"                       \
-                "yLbl='Compression Memory (MB)' yCol='6'\
-                out='CRYFA_THR_COMP_MEM'"                            \
-                "yLbl='Decompression Time - real (min)' yCol='7'\
-                out='CRYFA_THR_DECOMP_TIME_REAL'"                    \
-                "yLbl='Decompression Time - cpu (min)' yCol='8'\
-                out='CRYFA_THR_DECOMP_TIME_CPU'"                     \
-                "yLbl='Decompression Memory (MB)' yCol='9'\
-                out='CRYFA_THR_DECOMP_MEM'"; do
-      eval $tuple;
-      plotResult "CRYFA_THR.dat" ${dataArr[1]} "Number of threads" 2 "$yLbl" \
-                 "$yCol" "$out";
-  done
+#  for tuple in "yLbl='Compression Time - real (min)' yCol='4'\
+#                out='CRYFA_THR_COMP_TIME_REAL'"                      \
+#                "yLbl='Compression Time - cpu (min)' yCol='5'\
+#                out='CRYFA_THR_COMP_TIME_CPU'"                       \
+#                "yLbl='Compression Memory (MB)' yCol='6'\
+#                out='CRYFA_THR_COMP_MEM'"                            \
+#                "yLbl='Decompression Time - real (min)' yCol='7'\
+#                out='CRYFA_THR_DECOMP_TIME_REAL'"                    \
+#                "yLbl='Decompression Time - cpu (min)' yCol='8'\
+#                out='CRYFA_THR_DECOMP_TIME_CPU'"                     \
+#                "yLbl='Decompression Memory (MB)' yCol='9'\
+#                out='CRYFA_THR_DECOMP_MEM'"; do
+#      eval $tuple;
+#      plotResult "CRYFA_THR.dat" ${dataArr[1]} "Number of threads" 2 "$yLbl" \
+#                 "$yCol" "$out";
+#  done
   cd ..
 fi
 
