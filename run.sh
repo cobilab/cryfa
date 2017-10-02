@@ -45,7 +45,7 @@ INSTALL_METHODS=0
   INS_AESCRYPT=0        # AES crypt
 
 ### run methods
-RUN_METHODS=0
+RUN_METHODS=1
   # compress/decompress
   RUN_METHODS_COMP=0
       # FASTA
@@ -93,12 +93,12 @@ RUN_METHODS=0
       PRINT_RESULTS_COMP_ENC=0
 
   # cryfa exclusive
-  CRYFA_EXCLUSIVE=0
+  CRYFA_EXCLUSIVE=1
       MAX_N_THR=8                  # max number of threads
       CRYFA_XCL_DATASET="dataset/FA/V/viruses.fasta"
 #      CRYFA_XCL_DATASET="dataset/FQ/HS/HS-SRR442469_1.fastq"
-      RUN_CRYFA_XCL=0
-      PRINT_RESULTS_CRYFA_XCL=0
+      RUN_CRYFA_XCL=1
+      PRINT_RESULTS_CRYFA_XCL=1
 
 ### plot results
 PLOT_RESULTS=1
@@ -1199,7 +1199,7 @@ then
       printf "Dataset\tMethod\t$c\t$d\tEq\n" > $INWF.$INF
 
       cat $IN | awk 'NR>1' | awk 'BEGIN {}{
-      printf "%s\t%s\t%.2f", $1, $2, $3/1024/1024;
+      printf "%s\t%s\t%.f", $1, $2, $3/1024/1024;
 
       split($4, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
       split(c_arrMinReal[2], c_arrSecReal, "s");    c_secReal=c_arrSecReal[1];
@@ -1243,7 +1243,7 @@ then
       printf "Dataset\tMethod\t$en\t$de\n" > $INWF.$INF
 
       cat $IN | awk 'NR>1' | awk 'BEGIN {}{
-      printf "%s\t%s\t%.2f", $1, $2, $3/1024/1024;
+      printf "%s\t%s\t%.f", $1, $2, $3/1024/1024;
 
       split($4, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
       split(c_arrMinReal[2], c_arrSecReal, "s");    c_secReal=c_arrSecReal[1];
@@ -1290,7 +1290,7 @@ then
       printf "Dataset\tC_Method\tEn_Method\t$c\t$en\t$de\t$d\tEq\n" > $INWF.$INF
 
       cat $IN | awk 'NR>1' | awk 'BEGIN {}{
-      printf "%s\t%s\t%s\t%.2f", $1, $2, $3, $4/1024/1024;
+      printf "%s\t%s\t%s\t%.f", $1, $2, $3, $4/1024/1024;
 
       split($5, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
       split(c_arrMinReal[2], c_arrSecReal, "s");    c_secReal=c_arrSecReal[1];
@@ -1304,7 +1304,7 @@ then
       split(c_arrMinSys[2], c_arrSecSys, "s");      c_secSys=c_arrSecSys[1];
       c_sysTime=(c_minSys*60+c_secSys)/60;
       c_cpuTime=c_userTime+c_sysTime;
-      printf "\t%.2f\t%.2f\t%.2f", c_cpuTime, $8/1024, $9/1024/1024;
+      printf "\t%.2f\t%.2f\t%.f", c_cpuTime, $8/1024, $9/1024/1024;
 
       split($10, en_arrMinReal, "m");               en_minReal=en_arrMinReal[1];
       split(en_arrMinReal[2], en_arrSecReal, "s");  en_secReal=en_arrSecReal[1];
@@ -1362,7 +1362,7 @@ then
       printf "Dataset\tThr\t$c\t$d\tEq\n" > $INWF.$INF
 
       cat $IN | awk 'NR>1' | awk 'BEGIN {}{
-      printf "%s\t%s\t%.2f", $1, $2, $3/1024/1024;
+      printf "%s\t%s\t%.f", $1, $2, $3/1024/1024;
 
       split($4, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
       split(c_arrMinReal[2], c_arrSecReal, "s");    c_secReal=c_arrSecReal[1];
@@ -1413,7 +1413,7 @@ then
 
   #--------------------------- run ---------------------------#
   ### compress/decompress
-  if [[ $RUN_METHODS_COMP -eq 1 ]];
+  if [[ $RUN_METHODS_COMP -eq 1 ]]; #todo. maybe cmake . | make is neede
   then
       ### FASTA
       if [[ $RUN_GZIP_FA    -eq 1 ]]; then compDecompOnDataset gzip       fa; fi
@@ -1618,14 +1618,10 @@ then
       ### run for different number of threads
       if [[ $RUN_CRYFA_XCL -eq 1 ]];
       then
-###          if [[ ! -e $cryfa_xcl/cryfa ]]; then
-###              cp $progs/cryfa/cryfa $cryfa_xcl;
-###          fi
-###          if [[ ! -e $cryfa_xcl/pass.txt ]]; then
-###              cp $progs/cryfa/pass.txt $cryfa_xcl;
-###          fi
-          cp $progs/cryfa/cryfa    $cryfa_xcl;
-          cp $progs/cryfa/pass.txt $cryfa_xcl;
+          cmake .
+          make
+          cp cryfa    $cryfa_xcl;
+          cp pass.txt $cryfa_xcl;
 
           cd $cryfa_xcl
 
@@ -1736,52 +1732,50 @@ fi
 if [[ $PLOT_RESULTS -eq 1 ]];
 then
   #------------------------ functions ------------------------#
-  ### plot result
-  # $1: input file, $2: dataset, $3: X axis label, $4: X tics, $5: Y axis label,
-  # $6: Y tics, $7: output file name
+  ### plot result. $1: input file, $2: dataset
   function plotResultCryfaXcl
   {
       IN=$1             # input file
       DATASET=$2        # dataset name
-      X_LABEL=$3        # X axis label
-      X_TICS=$4         # X tics
-      Y_LABEL=$5        # Y axis label
-      Y_TICS=$6         # Y tics
-      OUT=$7            # output file name
       PIX_FORMAT=pdf    # output format: pdf, png, svg, eps, epslatex
-      TITLE=${DATASET//_/'\\\_'}    # title of figure -- replace _ with \\\_
+      TITLE=${DATASET//_/'\\\_'}        # title of figure -- replace _ with \\\_
+      dsSize=`grep "$DATASET" $IN | awk '{print $3; exit}'`  #input dataset size
 
 gnuplot <<- EOF
 set term $PIX_FORMAT    # terminal for output picture format
-set output "$OUT.$PIX_FORMAT"    # output file name
-set title font ",14" "$TITLE"    # title
-set xlabel '$X_LABEL'   # label of x axis
-set ylabel '$Y_LABEL'   # label of y axis
-set key bottom right    # legend position
-LT=6                    # linetype
-LW=2.5                  # linewidth
+set title font ",16" "Cryfa on $TITLE ($dsSize MB)"    # title
+set xlabel 'Number of threads'                         # label of x axis
+set xrange [0.5:8.5]
+set style data histogram
+set style histogram cluster gap 1
+set style fill solid # border
+set boxwidth 1
+#set xtics format ""
+set grid ytics
 
-dx=5.
-n=2
-total_box_width_relative=0.75
-gap_width_relative=0.1
-d_width=(gap_width_relative+total_box_width_relative)*dx/2.
-#set xrange [0.5:8.5]
-#set style data histogram
-#set style histogram cluster gap 1
-#set style fill solid border -0
-set style fill solid noborder
-#set boxwidth 0.7 relative
-set boxwidth total_box_width_relative/n relative
-unset key
-plot '$IN' using $X_TICS:$Y_TICS with boxes linecolor rgb"blue", \
-     '' using $X_TICS:9 linecolor rgb"red", \
-     '' using $X_TICS:($9+0.1):2 with labels
+# - - - - - - - - - -  memory  - - - - - - - - - - #
+set output "CRYFA_THR_MEM.$PIX_FORMAT"  # output file name
+set ylabel 'Memory (MB)'                # label of y axis
+set key top left                        # legend position
+#unset key
+plot '$IN' using 6:xtic(2) title "Compression"   linecolor rgb"blue", \
+     ''    using 9         title "Decompression" linecolor rgb"red"
 
-#plot '$IN' using $X_TICS:ytic($Y_TICS) ti col
+# - - - - - - - - -  real time  - - - - - - - - - #
+set output "CRYFA_THR_TIME_REAL.$PIX_FORMAT"    # output file name
+set ylabel 'Real Time (min)'                    # label of y axis
+set key top right                               # legend position
+#unset key
+plot '$IN' using 4:xtic(2) title "Compression"   linecolor rgb"blue", \
+     ''    using 7         title "Decompression" linecolor rgb"red"
 
-#plot '$IN' using $X_TICS:$Y_TICS every ::1 \
-#           with lines linetype LT linewidth LW title ""
+# - - - - - - - - -  cpu time  - - - - - - - - - #
+set output "CRYFA_THR_TIME_CPU.$PIX_FORMAT"     # output file name
+set ylabel 'CPU Time (min)'                     # label of y axis
+set key top left                                # legend position
+#unset key
+plot '$IN' using 5:xtic(2) title "Compression"   linecolor rgb"blue", \
+     ''    using 8         title "Decompression" linecolor rgb"red"
 
 ### the following line (EOF) MUST be left as it is; i.e. no indent
 EOF
@@ -1794,8 +1788,7 @@ EOF
   dataArr=($(cat CRYFA_THR.dat | awk '{print $1}' | uniq));
 ###  for i in ${dataArr[@]}; do echo $i; done
 
- plotResultCryfaXcl "CRYFA_THR.dat" ${dataArr[1]} "Number of threads" 2 \
- "Compression Memory (MB)" "6" "CRYFA_THR_COMP_MEM";
+ plotResultCryfaXcl "CRYFA_THR.dat" ${dataArr[1]}
 
 #  for tuple in "yLbl='Compression Time - real (min)' yCol='4'\
 #                out='CRYFA_THR_COMP_TIME_REAL'"                      \
