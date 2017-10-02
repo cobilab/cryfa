@@ -96,8 +96,7 @@ RUN_METHODS=1
   CRYFA_EXCLUSIVE=1
       MAX_N_THR=8                  # max number of threads
       CRYFA_XCL_DATASET="dataset/FA/V/viruses.fasta"
-#      CRYFA_XCL_DATASET="dataset/FQ/HS/HS-SRR442469_1.fastq"
-      RUN_CRYFA_XCL=1
+      RUN_CRYFA_XCL=0
       PRINT_RESULTS_CRYFA_XCL=1
 
 ### plot results
@@ -186,6 +185,16 @@ then
                  > $dataset/$FA/$HUMAN/$HUMAN-$2.$fasta
           rm $HUMAN_CHR_PREFIX$1.fa.gz;
       done
+
+      ### join all files
+      cat HS-1.$fasta HS-2.$fasta HS-3.$fasta HS-4.$fasta HS-5.$fasta      \
+          HS-6.$fasta HS-7.$fasta HS-8.$fasta HS-9.$fasta HS-10.$fasta     \
+          HS-11.$fasta HS-12.$fasta HS-13.$fasta HS-14.$fasta HS-15.$fasta \
+          HS-16.$fasta HS-17.$fasta HS-18.$fasta HS-19.$fasta HS-20.$fasta \
+          HS-21.$fasta HS-22.$fasta HS-X.$fasta HS-Y.$fasta HS-AL.$fasta   \
+          HS-UL.$fasta HS-UP.$fasta HS-MT.$fasta > HS.$fasta.tmp
+      rm *.$fasta
+      mv HS.$fasta.tmp > HS.$fasta
   fi
 
   ### viruses -- 350 MB
@@ -537,7 +546,7 @@ then
       while true; do
           ps aux | grep $1 | awk '{ print $6; }' | \
           sort -V | tail -n 1 >> mem_ps;
-          sleep 5;
+          sleep 0.01;
       done
   }
   function progMemoryStop
@@ -1359,38 +1368,38 @@ then
 
       c="C_Size(MB)\tC_Time_real(m)\tC_Time_cpu(m)\tC_Mem(MB)"
       d="D_Time_real(m)\tD_Time_cpu(m)\tD_Mem(MB)"
-      printf "Dataset\tThr\t$c\t$d\tEq\n" > $INWF.$INF
+      printf "Dataset\tSize(MB)\tThr\t$c\t$d\tEq\n" > $INWF.$INF
 
       cat $IN | awk 'NR>1' | awk 'BEGIN {}{
-      printf "%s\t%s\t%.f", $1, $2, $3/1024/1024;
+      printf "%s\t%.f\t%s\t%.f", $1, $2/1024/1024, $3, $4/1024/1024;
 
-      split($4, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
+      split($5, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
       split(c_arrMinReal[2], c_arrSecReal, "s");    c_secReal=c_arrSecReal[1];
       c_realTime=(c_minReal*60+c_secReal)/60;
       printf "\t%.2f", c_realTime;
 
-      split($5, c_arrMinUser, "m");                 c_minUser=c_arrMinUser[1];
+      split($6, c_arrMinUser, "m");                 c_minUser=c_arrMinUser[1];
       split(c_arrMinUser[2], c_arrSecUser, "s");    c_secUser=c_arrSecUser[1];
       c_userTime=(c_minUser*60+c_secUser)/60;
-      split($6, c_arrMinSys, "m");                  c_minSys=c_arrMinSys[1];
+      split($7, c_arrMinSys, "m");                  c_minSys=c_arrMinSys[1];
       split(c_arrMinSys[2], c_arrSecSys, "s");      c_secSys=c_arrSecSys[1];
       c_sysTime=(c_minSys*60+c_secSys)/60;
       c_cpuTime=c_userTime+c_sysTime;
-      printf "\t%.2f\t%.2f", c_cpuTime, $7/1024;
+      printf "\t%.2f\t%.2f", c_cpuTime, $8/1024;
 
-      split($8, d_arrMinReal, "m");                 d_minReal=d_arrMinReal[1];
+      split($9, d_arrMinReal, "m");                 d_minReal=d_arrMinReal[1];
       split(d_arrMinReal[2], d_arrSecReal, "s");    d_secReal=d_arrSecReal[1];
       d_realTime=(d_minReal*60+d_secReal)/60;
       printf "\t%.2f", d_realTime;
 
-      split($9, d_arrMinUser, "m");                 d_minUser=d_arrMinUser[1];
+      split($10, d_arrMinUser, "m");                d_minUser=d_arrMinUser[1];
       split(d_arrMinUser[2], d_arrSecUser, "s");    d_secUser=d_arrSecUser[1];
       d_userTime=(d_minUser*60+d_secUser)/60;
-      split($10, d_arrMinSys, "m");                  d_minSys=d_arrMinSys[1];
+      split($11, d_arrMinSys, "m");                 d_minSys=d_arrMinSys[1];
       split(d_arrMinSys[2], d_arrSecSys, "s");      d_secSys=d_arrSecSys[1];
       d_sysTime=(d_minSys*60+d_secSys)/60;
       d_cpuTime=d_userTime+d_sysTime;
-      printf "\t%.2f\t%.2f\t%d\n", d_cpuTime, $11/1024, $12;
+      printf "\t%.2f\t%.2f\t%d\n", d_cpuTime, $12/1024, $13;
       }' >> $INWF.$INF
   }
 
@@ -1611,9 +1620,10 @@ then
       in="${inData##*/}"                  # input file name
       inDataWF="${in%.*}"                 # input file name without filetype
       ft="${in##*.}"                      # input filetype
+      fs=`stat --printf="%s" $CRYFA_XCL_DATASET`    # file size (bytes)
       result_FLD="../$result"
-      CRYFA_THR_RUN=`seq -s' ' 1 $MAX_N_THR`;
-#      CRYFA_THR_RUN=$MAX_N_THR;
+#      CRYFA_THR_RUN=`seq -s' ' 1 $MAX_N_THR`;
+      CRYFA_THR_RUN=$MAX_N_THR;
 
       ### run for different number of threads
       if [[ $RUN_CRYFA_XCL -eq 1 ]];
@@ -1670,7 +1680,7 @@ then
 
           c="C_Size\tC_Time(real)\tC_Time(user)\tC_Time(sys)\tC_Mem"
           d="D_Time(real)\tD_Time(user)\tD_Time(sys)\tD_Mem"
-          printf "Dataset\tThread\t$c\t$d\tEq\n" > $OUT;
+          printf "Dataset\tSize(MB)\tThread\t$c\t$d\tEq\n" > $OUT;
 
           for nThr in $CRYFA_THR_RUN; do
               ### print compress/decompress results
@@ -1714,7 +1724,7 @@ then
               c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"   # compression results
               d="$DT_r\t$DT_u\t$DT_s\t$DM"        # decompression results
 
-              printf "$inDataWF\t$nThr\t$c\t$d\t$V\n" >> $OUT;
+              printf "$inDataWF\t$fs\t$nThr\t$c\t$d\t$V\n" >> $OUT;
           done
 
           ### convert the result file into a human readable file
@@ -1739,7 +1749,7 @@ then
       DATASET=$2        # dataset name
       PIX_FORMAT=pdf    # output format: pdf, png, svg, eps, epslatex
       TITLE=${DATASET//_/'\\\_'}        # title of figure -- replace _ with \\\_
-      dsSize=`grep "$DATASET" $IN | awk '{print $3; exit}'`  #input dataset size
+      dsSize=`grep "$DATASET" $IN | awk '{print $2; exit}'`  #input dataset size
 
 gnuplot <<- EOF
 set term $PIX_FORMAT    # terminal for output picture format
@@ -1758,24 +1768,24 @@ set output "CRYFA_THR_MEM.$PIX_FORMAT"  # output file name
 set ylabel 'Memory (MB)'                # label of y axis
 set key top left                        # legend position
 #unset key
-plot '$IN' using 6:xtic(2) title "Compression"   linecolor rgb"blue", \
-     ''    using 9         title "Decompression" linecolor rgb"red"
+plot '$IN' using 7:xtic(3) title "Compression"   linecolor rgb"blue", \
+     ''    using 10        title "Decompression" linecolor rgb"red"
 
 # - - - - - - - - -  real time  - - - - - - - - - #
 set output "CRYFA_THR_TIME_REAL.$PIX_FORMAT"    # output file name
 set ylabel 'Real Time (min)'                    # label of y axis
 set key top right                               # legend position
 #unset key
-plot '$IN' using 4:xtic(2) title "Compression"   linecolor rgb"blue", \
-     ''    using 7         title "Decompression" linecolor rgb"red"
+plot '$IN' using 5:xtic(3) title "Compression"   linecolor rgb"blue", \
+     ''    using 8         title "Decompression" linecolor rgb"red"
 
 # - - - - - - - - -  cpu time  - - - - - - - - - #
 set output "CRYFA_THR_TIME_CPU.$PIX_FORMAT"     # output file name
 set ylabel 'CPU Time (min)'                     # label of y axis
 set key top left                                # legend position
 #unset key
-plot '$IN' using 5:xtic(2) title "Compression"   linecolor rgb"blue", \
-     ''    using 8         title "Decompression" linecolor rgb"red"
+plot '$IN' using 6:xtic(3) title "Compression"   linecolor rgb"blue", \
+     ''    using 9         title "Decompression" linecolor rgb"red"
 
 ### the following line (EOF) MUST be left as it is; i.e. no indent
 EOF
@@ -1804,8 +1814,8 @@ EOF
 #                out='CRYFA_THR_DECOMP_MEM'" \
 #  ; do
 #      eval $tuple;
-#      plotResultCryfaXcl "CRYFA_THR.dat" ${dataArr[1]} "Number of threads" 2 "$yLbl" \
-#                 "$yCol" "$out";
+#      plotResultCryfaXcl "CRYFA_THR.dat" ${dataArr[1]} \
+#                         "Number of threads" 2 "$yLbl" "$yCol" "$out";
 #  done
 
   cd ..

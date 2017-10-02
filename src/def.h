@@ -77,7 +77,7 @@ struct POWER<B, 0>
 #define DEFAULT_N_THR   1            // default number of threads
 //#define L_BUF_OneFourth 150000//4//12//8//6000//16//36000//
 //#define LINE_BUFFER     L_BUF_OneFourth<<2
-#define LINE_BUFFER     600000//200000//36000//6000//4//12//8//16//
+#define LINE_BUFFER     200//200000//36000//6000//4//12//8//16//
                                      // buffer size (lines) to separate fastq
                                      // files for multithreading. MUST be x4
 #define LARGE_NUMBER    std::numeric_limits<std::streamsize>::max()
