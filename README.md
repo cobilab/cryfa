@@ -85,7 +85,7 @@ Please cite the followings, if you use cryfa:
 ## RELEASES
 https://github.com/pratas/cryfa/releases:
 
-* Release 2: FASTA and FASTQ handling (in development).
+* Release 2: FASTA and FASTQ handling.
 * Release 1: FASTA handling.
 
 ## ISSUES
