@@ -542,7 +542,7 @@ then
       echo "0" > mem_ps;
       while true; do
           ps aux | grep $1 | awk '{print $6;}' | sort -V | tail -n 1 >> mem_ps;
-          sleep 0.01;
+          sleep 0.001;    # 1 milisecond
       done
   }
   function progMemoryStop
@@ -1426,7 +1426,7 @@ then
 
   #--------------------------- run ---------------------------#
   ### compress/decompress
-  if [[ $RUN_METHODS_COMP -eq 1 ]]; #todo. maybe cmake . | make is neede
+  if [[ $RUN_METHODS_COMP -eq 1 ]];
   then
       ### FASTA
       if [[ $RUN_GZIP_FA    -eq 1 ]]; then compDecompOnDataset gzip       fa; fi
@@ -1656,8 +1656,8 @@ then
       ft="${in##*.}"                      # input filetype
       fsize=`stat --printf="%s" $CRYFA_XCL_DATASET`    # file size (bytes)
       result_FLD="../$result"
-#      CRYFA_THR_RUN=`seq -s' ' 1 $MAX_N_THR`;
-      CRYFA_THR_RUN=$MAX_N_THR;
+      CRYFA_THR_RUN=`seq -s' ' 1 $MAX_N_THR`;
+#      CRYFA_THR_RUN=$MAX_N_THR;
 
       ### run for different number of threads
       if [[ $RUN_CRYFA_XCL -eq 1 ]];
