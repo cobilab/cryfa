@@ -47,7 +47,7 @@ INSTALL_METHODS=0
 ### run methods
 RUN_METHODS=1
   # compress/decompress
-  RUN_METHODS_COMP=1
+  RUN_METHODS_COMP=0
       # FASTA
       RUN_GZIP_FA=0                # gzip
       RUN_BZIP2_FA=0               # bzip2
@@ -93,7 +93,7 @@ RUN_METHODS=1
       PRINT_RESULTS_COMP_ENC=0
 
   # cryfa exclusive
-  CRYFA_EXCLUSIVE=1
+  CRYFA_EXCLUSIVE=0
       MAX_N_THR=8                  # max number of threads
       CRYFA_XCL_DATASET="dataset/FA/V/viruses.fasta"
       RUN_CRYFA_XCL=1
@@ -394,10 +394,8 @@ then
 
       cmake .
       make
-
       if [[ ! -d $progs/cryfa ]]; then mkdir -p $progs/cryfa; fi
-      cp cryfa $progs/cryfa/
-      cp pass.txt $progs/cryfa/
+      cp cryfa pass.txt  $progs/cryfa/
   fi
 
   #----------------------- FASTA -----------------------#
@@ -1437,7 +1435,15 @@ then
       if [[ $RUN_LZMA_FA    -eq 1 ]]; then compDecompOnDataset lzma       fa; fi
       if [[ $RUN_MFCOMPRESS -eq 1 ]]; then compDecompOnDataset mfcompress fa; fi
       if [[ $RUN_DELIMINATE -eq 1 ]]; then compDecompOnDataset delim      fa; fi
-      if [[ $RUN_CRYFA_FA   -eq 1 ]]; then compDecompOnDataset cryfa      fa; fi
+      if [[ $RUN_CRYFA_FA   -eq 1 ]];
+      then
+          cmake .
+          make
+          if [[ ! -d $progs/cryfa ]]; then mkdir -p $progs/cryfa; fi
+          cp cryfa pass.txt  $progs/cryfa/
+
+          compDecompOnDataset cryfa fa;
+      fi
 
       ### FASTQ
       if [[ $RUN_GZIP_FQ    -eq 1 ]]; then compDecompOnDataset gzip       fq; fi
@@ -1447,7 +1453,15 @@ then
       if [[ $RUN_QUIP       -eq 1 ]]; then compDecompOnDataset quip       fq; fi
       if [[ $RUN_DSRC       -eq 1 ]]; then compDecompOnDataset dsrc       fq; fi
       if [[ $RUN_FQC        -eq 1 ]]; then compDecompOnDataset fqc        fq; fi
-      if [[ $RUN_CRYFA_FQ   -eq 1 ]]; then compDecompOnDataset cryfa      fq; fi
+      if [[ $RUN_CRYFA_FQ   -eq 1 ]];
+      then
+          cmake .
+          make
+          if [[ ! -d $progs/cryfa ]]; then mkdir -p $progs/cryfa; fi
+          cp cryfa pass.txt  $progs/cryfa/
+
+          compDecompOnDataset cryfa fq;
+      fi
 
       #---------------- results ----------------#
       if [[ $PRINT_RESULTS_COMP -eq 1 ]];
@@ -1643,16 +1657,15 @@ then
       ft="${in##*.}"                      # input filetype
       fsize=`stat --printf="%s" $CRYFA_XCL_DATASET`    # file size (bytes)
       result_FLD="../$result"
-#      CRYFA_THR_RUN=`seq -s' ' 1 $MAX_N_THR`;
-      CRYFA_THR_RUN=$MAX_N_THR;
+      CRYFA_THR_RUN=`seq -s' ' 1 $MAX_N_THR`;
+#      CRYFA_THR_RUN=$MAX_N_THR;
 
       ### run for different number of threads
       if [[ $RUN_CRYFA_XCL -eq 1 ]];
       then
           cmake .
           make
-          cp cryfa    $cryfa_xcl;
-          cp pass.txt $cryfa_xcl;
+          cp cryfa pass.txt  $cryfa_xcl;
 
           cd $cryfa_xcl
 
