@@ -73,7 +73,7 @@ int main (int argc, char* argv[])
                 
             case 'k':
                 k_flag = true;
-                cryptObj.keyFileName = (string) optarg;
+                cryptObj.keyFileName = string(optarg);
                 break;
                 
             case 'h': h_flag = 1;    Help();                              break;
@@ -81,7 +81,7 @@ int main (int argc, char* argv[])
             case 'v': v_flag = 1;    cryptObj.verbose = true;             break;
             case 's': s_flag = 1;    cryptObj.disable_shuffle = true;     break;
             case 'd': d_flag = 1;                                         break;
-            case 't': cryptObj.n_threads = (byte) stoi((string) optarg);  break;
+            case 't': cryptObj.n_threads = (byte) stoi(string(optarg));   break;
 
             default:
                 cerr << "Option '" << (char) optopt << "' is invalid.\n"; break;
@@ -114,7 +114,7 @@ int main (int argc, char* argv[])
 
         return 0;
     }
-
+    
     if (!h_flag && !a_flag)
     {
         char file_type = fileType(cryptObj.inFileName); //file type: FASTA/FASTQ

@@ -93,7 +93,7 @@ RUN_METHODS=1
       PRINT_RESULTS_COMP_ENC=0
 
   # cryfa exclusive
-  CRYFA_EXCLUSIVE=0
+  CRYFA_EXCLUSIVE=1
       MAX_N_THR=8                  # max number of threads
       CRYFA_XCL_DATASET="dataset/FA/V/viruses.fasta"
       RUN_CRYFA_XCL=1
@@ -541,8 +541,7 @@ then
   {
       echo "0" > mem_ps;
       while true; do
-          ps aux | grep $1 | awk '{ print $6; }' | \
-          sort -V | tail -n 1 >> mem_ps;
+          ps aux | grep $1 | awk '{print $6;}' | sort -V | tail -n 1 >> mem_ps;
           sleep 0.01;
       done
   }
@@ -1657,8 +1656,8 @@ then
       ft="${in##*.}"                      # input filetype
       fsize=`stat --printf="%s" $CRYFA_XCL_DATASET`    # file size (bytes)
       result_FLD="../$result"
-      CRYFA_THR_RUN=`seq -s' ' 1 $MAX_N_THR`;
-#      CRYFA_THR_RUN=$MAX_N_THR;
+#      CRYFA_THR_RUN=`seq -s' ' 1 $MAX_N_THR`;
+      CRYFA_THR_RUN=$MAX_N_THR;
 
       ### run for different number of threads
       if [[ $RUN_CRYFA_XCL -eq 1 ]];
