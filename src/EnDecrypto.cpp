@@ -469,7 +469,7 @@ inline void EnDecrypto::packFQ (const pack_s& pkStruct, byte threadID)
 
     ifstream in(inFileName);
     string   context;       // output string
-    string   inTempStr, line;
+    string   line;
     ofstream pkfile(PK_FILENAME+to_string(threadID), std::ios_base::app);
 
     // lines ignored at the beginning
@@ -1628,28 +1628,108 @@ inline void EnDecrypto::gatherHdr (string& headers) const
 /*******************************************************************************
     gather all chars of headers and quality scores, excluding '@' in headers
 *******************************************************************************/
+//inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores) const
+//{
+//    bool hChars[127], qChars[127];
+//    std::memset(hChars+32, false, 95);
+//    std::memset(qChars+32, false, 95);
+//
+//    ifstream in(inFileName);
+//    string   line;
+//    while (!in.eof())
+//    {
+//        if (getline(in,line).good())  for(const char &c : line)  hChars[c]=true;
+//        in.ignore(LARGE_NUMBER, '\n');                        // ignore sequence
+//        in.ignore(LARGE_NUMBER, '\n');                        // ignore +
+//        if (getline(in,line).good())  for(const char &c : line)  qChars[c]=true;
+//    }
+//    in.close();
+//
+//    // gather the characters -- ignore '@'=64 for headers
+//    for (byte i = 32; i != 64;  ++i)    if (*(hChars+i))  headers += i;
+//    for (byte i = 65; i != 127; ++i)    if (*(hChars+i))  headers += i;
+//    for (byte i = 32; i != 127; ++i)    if (*(qChars+i))  qscores += i;
+//
+//
+//    /** IDEA -- slower
+//    u32 hL=0, qL=0;
+//    u64 hH=0, qH=0;
+//    string headers, qscores;
+//    ifstream in(inFileName);
+//    string line;
+//    while (!in.eof())
+//    {
+//        if (getline(in, line).good())
+//            for (const char &c : line)
+//                (c & 0xC0) ? (hH |= 1ULL<<(c-64)) : (hL |= 1U<<(c-32));
+//        in.ignore(LARGE_NUMBER, '\n');                        // ignore sequence
+//        in.ignore(LARGE_NUMBER, '\n');                        // ignore +
+//        if (getline(in, line).good())
+//            for (const char &c : line)
+//                (c & 0xC0) ? (qH |= 1ULL<<(c-64)) : (qL |= 1U<<(c-32));
+//    }
+//    in.close();
+//
+//    // gather the characters -- ignore '@'=64 for headers
+//    for (byte i = 0; i != 32; ++i)    if (hL>>i & 1)  headers += i+32;
+//    for (byte i = 1; i != 62; ++i)    if (hH>>i & 1)  headers += i+64;
+//    for (byte i = 0; i != 32; ++i)    if (qL>>i & 1)  qscores += i+32;
+//    for (byte i = 1; i != 62; ++i)    if (qH>>i & 1)  qscores += i+64;
+//    */
+//}
+
 inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores) const
 {
     bool hChars[127], qChars[127];
     std::memset(hChars+32, false, 95);
     std::memset(qChars+32, false, 95);
     
+    
+    vector<int> vecHLen, vecQLen, vecReadLen;
+    
     ifstream in(inFileName);
     string   line;
     while (!in.eof())
     {
-        if (getline(in,line).good())  for(const char &c : line)  hChars[c]=true;
+        if (getline(in, line).good())
+        {
+            for (const char &c : line)
+                hChars[c] = true;
+            
+            vecHLen.push_back(line.size());
+        }
         in.ignore(LARGE_NUMBER, '\n');                        // ignore sequence
         in.ignore(LARGE_NUMBER, '\n');                        // ignore +
-        if (getline(in,line).good())  for(const char &c : line)  qChars[c]=true;
+        if (getline(in, line).good())
+        {
+            for (const char &c : line)
+                qChars[c] = true;
+    
+            vecQLen.push_back(line.size());
+        }
     }
     in.close();
+    
+//    for(int i:vecQLen)
+//        cerr<<i<<' ';
+
+
+    for(int i=0;i!=vecHLen.size();++i)
+    {
+        vecReadLen.push_back(vecHLen[i] + 2*vecQLen[i]);
+
+//        cerr<<vecReadLen[i];
+    }
+    
+    vector<int>::iterator it=std::max_element(vecReadLen.begin(),vecReadLen.end());
+    cerr<<vecReadLen[std::distance(vecReadLen.begin(), it)];
+    
     
     // gather the characters -- ignore '@'=64 for headers
     for (byte i = 32; i != 64;  ++i)    if (*(hChars+i))  headers += i;
     for (byte i = 65; i != 127; ++i)    if (*(hChars+i))  headers += i;
     for (byte i = 32; i != 127; ++i)    if (*(qChars+i))  qscores += i;
-
+    
     
     /** IDEA -- slower
     u32 hL=0, qL=0;

@@ -20,7 +20,7 @@ using std::unordered_map;
     version and release
 *******************************************************************************/
 #define VERSION_CRYFA 1
-#define RELEASE_CRYFA 09.17
+#define RELEASE_CRYFA 10.17
 
 /*******************************************************************************
     typedefs
@@ -79,6 +79,7 @@ struct POWER<B, 0>
 //#define LINE_BUFFER     L_BUF_OneFourth<<2
 #define LINE_BUFFER     100//600000//  // buffer size (lines) to separate fastq
                                      // files for multithreading. MUST be x4
+#define BLOCK_SIZE      5120         // 5 KB -- to read from input file
 #define LARGE_NUMBER    std::numeric_limits<std::streamsize>::max()
 #define C1              2            //       cat 1  =  2
 #define C2              3            //       cat 2  =  3
