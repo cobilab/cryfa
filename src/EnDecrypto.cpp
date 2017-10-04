@@ -55,7 +55,7 @@ void EnDecrypto::compressFA ()
     if (verbose)    cerr << "Calculating number of different characters...\n";
     
     // gather all chars in headers
-    gatherHdr(headers);
+    gatherHdrBs(headers);
     
     const size_t headersLen = headers.length();
     
@@ -473,13 +473,13 @@ inline void EnDecrypto::packFQ (const pack_s& pkStruct, byte threadID)
     ofstream pkfile(PK_FILENAME+to_string(threadID), std::ios_base::app);
 
     // lines ignored at the beginning
-    for (u64 l=(u64) threadID*LINE_BUFFER; l--;)  in.ignore(LARGE_NUMBER, '\n');
+    for (u64 l=(u64) threadID*BlockLine; l--;)   in.ignore(LARGE_NUMBER, '\n');
 
     while (in.peek() != EOF)
     {
         context.clear();
 
-        for (u64 l = 0; l != LINE_BUFFER; l += 4)  // process 4 lines by 4 lines
+        for (u64 l = 0; l != BlockLine; l += 4)  // process 4 lines by 4 lines
         {
             if (getline(in, line).good())          // header -- ignore '@'
             { packHdr(context, line.substr(1), HdrMap);   context+=(char) 254; }
@@ -517,7 +517,7 @@ inline void EnDecrypto::packFQ (const pack_s& pkStruct, byte threadID)
         pkfile << context << '\n';
 
         // ignore to go to the next related chunk
-        for (u64 l = (u64) (n_threads-1)*LINE_BUFFER; l--;)
+        for (u64 l = (u64) (n_threads-1)*BlockLine; l--;)
             in.ignore(LARGE_NUMBER, '\n');
     }
 
@@ -1599,10 +1599,11 @@ inline bool EnDecrypto::hasFQjustPlus () const
 }
 
 /*******************************************************************************
-    gather all chars of headers in FASTA, excluding '>'
+    gather all chars of headers in FASTA, excluding '>' todo. fekr e bishtar
 *******************************************************************************/
-inline void EnDecrypto::gatherHdr (string& headers) const
+inline void EnDecrypto::gatherHdrBs (string &headers) const
 {
+    u32  maxHLen=0, maxBLen=0;    // max length of headers & each line of bases
     bool hChars[127];
     std::memset(hChars+32, false, 95);
     
@@ -1614,11 +1615,20 @@ inline void EnDecrypto::gatherHdr (string& headers) const
         {
             getline(in, line);
             for (const char &c : line)    hChars[c] = true;
+            if (line.size() > maxHLen)    maxHLen = (u32) line.size();
         }
-        else    in.ignore(LARGE_NUMBER, '\n');
+//        else    in.ignore(LARGE_NUMBER, '\n');
+        else
+        {
+            getline(in, line);
+            if (line.size() > maxBLen)    maxBLen = (u32) line.size();
+        }
     }
-    
     in.close();
+    
+//    // number of lines read from input file while compression
+//    BlockLine = (u32) (4 * (BLOCK_SIZE / (maxHLen + 2*maxQLen)));
+//    if (!BlockLine)   BlockLine = 4;
     
     // gather the characters -- ignore '>'=62 for headers
     for (byte i = 32; i != 62;  ++i)    if (*(hChars+i))  headers += i;
@@ -1628,62 +1638,12 @@ inline void EnDecrypto::gatherHdr (string& headers) const
 /*******************************************************************************
     gather all chars of headers and quality scores, excluding '@' in headers
 *******************************************************************************/
-//inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores) const
-//{
-//    bool hChars[127], qChars[127];
-//    std::memset(hChars+32, false, 95);
-//    std::memset(qChars+32, false, 95);
-//
-//    ifstream in(inFileName);
-//    string   line;
-//    while (!in.eof())
-//    {
-//        if (getline(in,line).good())  for(const char &c : line)  hChars[c]=true;
-//        in.ignore(LARGE_NUMBER, '\n');                        // ignore sequence
-//        in.ignore(LARGE_NUMBER, '\n');                        // ignore +
-//        if (getline(in,line).good())  for(const char &c : line)  qChars[c]=true;
-//    }
-//    in.close();
-//
-//    // gather the characters -- ignore '@'=64 for headers
-//    for (byte i = 32; i != 64;  ++i)    if (*(hChars+i))  headers += i;
-//    for (byte i = 65; i != 127; ++i)    if (*(hChars+i))  headers += i;
-//    for (byte i = 32; i != 127; ++i)    if (*(qChars+i))  qscores += i;
-//
-//
-//    /** IDEA -- slower
-//    u32 hL=0, qL=0;
-//    u64 hH=0, qH=0;
-//    string headers, qscores;
-//    ifstream in(inFileName);
-//    string line;
-//    while (!in.eof())
-//    {
-//        if (getline(in, line).good())
-//            for (const char &c : line)
-//                (c & 0xC0) ? (hH |= 1ULL<<(c-64)) : (hL |= 1U<<(c-32));
-//        in.ignore(LARGE_NUMBER, '\n');                        // ignore sequence
-//        in.ignore(LARGE_NUMBER, '\n');                        // ignore +
-//        if (getline(in, line).good())
-//            for (const char &c : line)
-//                (c & 0xC0) ? (qH |= 1ULL<<(c-64)) : (qL |= 1U<<(c-32));
-//    }
-//    in.close();
-//
-//    // gather the characters -- ignore '@'=64 for headers
-//    for (byte i = 0; i != 32; ++i)    if (hL>>i & 1)  headers += i+32;
-//    for (byte i = 1; i != 62; ++i)    if (hH>>i & 1)  headers += i+64;
-//    for (byte i = 0; i != 32; ++i)    if (qL>>i & 1)  qscores += i+32;
-//    for (byte i = 1; i != 62; ++i)    if (qH>>i & 1)  qscores += i+64;
-//    */
-//}
-
 inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores)
 {
+    u32  maxHLen=0,   maxQLen=0;       // max length of headers & quality scores
     bool hChars[127], qChars[127];
     std::memset(hChars+32, false, 95);
     std::memset(qChars+32, false, 95);
-    u32 maxHLen=0, maxQLen=0;   // max length of headers & quality scores
     
     ifstream in(inFileName);
     string line;
@@ -1705,13 +1665,11 @@ inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores)
         }
     }
     in.close();
-    cerr<<maxHLen<<' '<<(1<<maxQLen)<<' '<<(maxHLen + 1<<maxQLen)<<' '
-        <<(BLOCK_SIZE / (maxHLen + 1<<maxQLen))<<' '
-        <<(2<<(BLOCK_SIZE / (maxHLen + 1<<maxQLen)))<<' '
-        <<(u32) (2<<(BLOCK_SIZE / (maxHLen + 1<<maxQLen)));
     
-    BlockLine = (u32) 2<<(BLOCK_SIZE / (maxHLen + 1<<maxQLen));
-
+    // number of lines read from input file while compression
+    BlockLine = (u32) (4 * (BLOCK_SIZE / (maxHLen + 2*maxQLen)));
+    if (!BlockLine)   BlockLine = 4;
+    
     // gather the characters -- ignore '@'=64 for headers
     for (byte i = 32; i != 64;  ++i)    if (*(hChars+i))  headers += i;
     for (byte i = 65; i != 127; ++i)    if (*(hChars+i))  headers += i;

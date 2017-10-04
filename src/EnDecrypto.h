@@ -76,7 +76,7 @@ private:
     inline void printKey      (byte*)            const;  // print key
     inline string extractPass ()                 const;  // extract password
     inline bool hasFQjustPlus ()                 const;  // check '+' line
-    inline void gatherHdr     (string&)          const;  // gather hdrs -- FA
+    inline void gatherHdrBs   (string &)         const;  // gather hdr Base - FA
     inline void gatherHdrQs   (string&, string&);        // gather hdrs & qss
     inline void my_srand      (const u32);               // random no. seed
     inline int  my_rand       ();                        // random no generate
