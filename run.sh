@@ -95,8 +95,8 @@ RUN_METHODS=1
   # cryfa exclusive
   CRYFA_EXCLUSIVE=1
       MAX_N_THR=8                  # max number of threads
-#      CRYFA_XCL_DATASET="dataset/FA/V/viruses.fasta"
-      CRYFA_XCL_DATASET="dataset/FQ/HS/HS-SRR442469_1.fastq"
+      CRYFA_XCL_DATASET="dataset/FA/V/viruses.fasta"
+#      CRYFA_XCL_DATASET="dataset/FQ/HS/HS-SRR442469_1.fastq"
 #      CRYFA_XCL_DATASET="dataset/FQ/DS/DS-B1088_SR.fastq"
       RUN_CRYFA_XCL=1
       PRINT_RESULTS_CRYFA_XCL=1

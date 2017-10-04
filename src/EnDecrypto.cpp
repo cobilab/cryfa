@@ -54,7 +54,7 @@ void EnDecrypto::compressFA ()
     
     if (verbose)    cerr << "Calculating number of different characters...\n";
     
-    // gather all chars in headers
+    // gather different chars in all headers and max length in all bases
     gatherHdrBs(headers);
     
     const size_t headersLen = headers.length();
@@ -180,14 +180,14 @@ inline void EnDecrypto::packFA (const pack_s& pkStruct, byte threadID)
     ofstream    pkfile(PK_FILENAME+to_string(threadID), std::ios_base::app);
 
     // lines ignored at the beginning
-    for (u64 l=(u64) threadID*LINE_BUFFER; l--;)  in.ignore(LARGE_NUMBER, '\n');
+    for (u64 l = (u64) threadID*BlockLine; l--;)  in.ignore(LARGE_NUMBER, '\n');
     
     while (in.peek() != EOF)
     {
         context.clear();
         seq.clear();
         
-        for (u64 l = LINE_BUFFER; l-- && getline(in, line).good();)
+        for (u64 l = BlockLine; l-- && getline(in, line).good();)
         {
             // header
             if (line[0] == '>')
@@ -255,7 +255,7 @@ inline void EnDecrypto::packFA (const pack_s& pkStruct, byte threadID)
         pkfile << context << '\n';
 
         // ignore to go to the next related chunk
-        for (u64 l = (u64) (n_threads-1)*LINE_BUFFER; l--;)
+        for (u64 l = (u64) (n_threads-1)*BlockLine; l--;)
             in.ignore(LARGE_NUMBER, '\n');
     }
 
@@ -279,7 +279,7 @@ void EnDecrypto::compressFQ ()
     
     if (verbose)    cerr << "Calculating number of different characters...\n";
     
-    // gather all headers and quality scores
+    // gather different chars and max length in all headers and quality scores
     gatherHdrQs(headers, qscores);
     
     const size_t headersLen = headers.length();
@@ -473,7 +473,7 @@ inline void EnDecrypto::packFQ (const pack_s& pkStruct, byte threadID)
     ofstream pkfile(PK_FILENAME+to_string(threadID), std::ios_base::app);
 
     // lines ignored at the beginning
-    for (u64 l=(u64) threadID*BlockLine; l--;)   in.ignore(LARGE_NUMBER, '\n');
+    for (u64 l = (u64) threadID*BlockLine; l--;)  in.ignore(LARGE_NUMBER, '\n');
 
     while (in.peek() != EOF)
     {
@@ -1599,44 +1599,36 @@ inline bool EnDecrypto::hasFQjustPlus () const
 }
 
 /*******************************************************************************
-    gather all chars of headers in FASTA, excluding '>' todo. fekr e bishtar
+    gather all chars of headers & max len of bases lines in FASTA, excluding '>'
 *******************************************************************************/
-inline void EnDecrypto::gatherHdrBs (string &headers) const
+inline void EnDecrypto::gatherHdrBs (string &headers)
 {
-    u32  maxHLen=0, maxBLen=0;    // max length of headers & each line of bases
+    u32  maxBLen=0;           // max length of each line of bases
     bool hChars[127];
     std::memset(hChars+32, false, 95);
     
     ifstream in(inFileName);
     string   line;
-    while (!in.eof())
+    while (getline(in, line).good())
     {
-        if (in.peek() == 62)    // '>' = (char) 62
-        {
-            getline(in, line);
+        if (line[0] == 62)    // '>' = (char) 62
             for (const char &c : line)    hChars[c] = true;
-            if (line.size() > maxHLen)    maxHLen = (u32) line.size();
-        }
-//        else    in.ignore(LARGE_NUMBER, '\n');
         else
-        {
-            getline(in, line);
             if (line.size() > maxBLen)    maxBLen = (u32) line.size();
-        }
     }
     in.close();
     
-//    // number of lines read from input file while compression
-//    BlockLine = (u32) (4 * (BLOCK_SIZE / (maxHLen + 2*maxQLen)));
-//    if (!BlockLine)   BlockLine = 4;
-    
+    // number of lines read from input file while compression
+    BlockLine = (u32) (BLOCK_SIZE / maxBLen);
+    if (!BlockLine)   BlockLine = 2;
+
     // gather the characters -- ignore '>'=62 for headers
     for (byte i = 32; i != 62;  ++i)    if (*(hChars+i))  headers += i;
     for (byte i = 63; i != 127; ++i)    if (*(hChars+i))  headers += i;
 }
 
 /*******************************************************************************
-    gather all chars of headers and quality scores, excluding '@' in headers
+    gather all chars of headers & quality scores, excluding '@' in headers
 *******************************************************************************/
 inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores)
 {
