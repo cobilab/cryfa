@@ -67,6 +67,7 @@ private:
     string QSsX;                                         // extended QSs
     htbl_t HdrMap;                                       // Hdrs hash table
     htbl_t QsMap;                                        // QSs hash table
+    u32    BlockLine;                                    // max block lines
     
     inline void encrypt       ();                        // encrypt
     inline void buildIV       (byte*, const string&);    // build IV
@@ -76,7 +77,7 @@ private:
     inline string extractPass ()                 const;  // extract password
     inline bool hasFQjustPlus ()                 const;  // check '+' line
     inline void gatherHdr     (string&)          const;  // gather hdrs -- FA
-    inline void gatherHdrQs   (string&, string&) const;  // gather hdrs & qss
+    inline void gatherHdrQs   (string&, string&);        // gather hdrs & qss
     inline void my_srand      (const u32);               // random no. seed
     inline int  my_rand       ();                        // random no generate
     inline std::minstd_rand0 &randomEngine ();           // random no. engine
