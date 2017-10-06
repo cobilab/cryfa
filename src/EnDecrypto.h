@@ -27,12 +27,12 @@ struct pack_s
 *******************************************************************************/
 struct unpack_s
 {
-    char  XChar_hdr;                // extra char if headers length > 39
-    char  XChar_qs;                 // extra char if quality scores length > 39
-    pos_t begPos;                   // begin position for each thread
-    u64   chunkSize;                // chunk size
-    vector<string> hdrUnpack;       // table for unpacking headers
-    vector<string> qsUnpack;        // table for unpacking quality scores
+    char  XChar_hdr;                 // extra char if headers length > 39
+    char  XChar_qs;                  // extra char if quality scores length > 39
+    pos_t begPos;                    // begin position for each thread
+    u64   chunkSize;                 // chunk size
+    vector<string> hdrUnpack;        // table for unpacking headers
+    vector<string> qsUnpack;         // table for unpacking quality scores
     void (*unpackHdrFPtr) (string&, string::iterator&, const vector<string>&);
     void (*unpackQSFPtr)  (string&, string::iterator&, const vector<string>&);
 };
@@ -78,13 +78,13 @@ private:
     inline bool hasFQjustPlus ()                 const;  // check '+' line
     inline void gatherHdrBs   (string &);                // gather hdr Base - FA
     inline void gatherHdrQs   (string&, string&);        // gather hdrs & qss
-    inline void my_srand      (const u32);               // random no. seed
+    inline void my_srand      (u32);                     // random no. seed
     inline int  my_rand       ();                        // random no generate
     inline std::minstd_rand0 &randomEngine ();           // random no. engine
 //    inline u64  un_shuffleSeedGen (const u32);         // (un)shuffle seed gen
     inline void un_shuffleSeedGen ();                    // (un)shuffle seed gen
     inline void shufflePkd    (string&);                 // shuffle packed
-    inline void unshufflePkd  (string::iterator&, const u64);// unshuffle packed
+    inline void unshufflePkd  (string::iterator&, u64);  // unshuffle packed
     inline void packFA        (const pack_s&,   byte);   // pack FA
     inline void unpackHS      (const unpack_s&, byte);   // unpack H:Small -- FA
     inline void unpackHL      (const unpack_s&, byte);   // unpack H:Large -- FA

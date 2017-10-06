@@ -1707,7 +1707,7 @@ inline std::minstd_rand0 &EnDecrypto::randomEngine ()
 /*******************************************************************************
     random number seed -- emulate C srand()
 *******************************************************************************/
-inline void EnDecrypto::my_srand (const u32 s)
+inline void EnDecrypto::my_srand (u32 s)
 {
     randomEngine().seed(s);
 }
@@ -1767,7 +1767,7 @@ inline void EnDecrypto::shufflePkd (string &in)
 /*******************************************************************************
     unshuffle
 *******************************************************************************/
-inline void EnDecrypto::unshufflePkd (string::iterator &i, const u64 size)
+inline void EnDecrypto::unshufflePkd (string::iterator &i, u64 size)
 {
     string shuffledStr;     // copy of shuffled string
     for (u64 j = 0; j != size; ++j, ++i)    shuffledStr += *i;

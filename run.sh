@@ -47,25 +47,25 @@ INSTALL_METHODS=0
 ### run methods
 RUN_METHODS=1
   # compress/decompress
-  RUN_METHODS_COMP=0
+  RUN_METHODS_COMP=1
       # FASTA
       RUN_GZIP_FA=0                # gzip
       RUN_BZIP2_FA=0               # bzip2
-      RUN_LZMA_FA=0                # lzma
+###      RUN_LZMA_FA=0                # lzma
       RUN_MFCOMPRESS=0             # MFCompress
       RUN_DELIMINATE=0             # DELIMINATE
-      RUN_CRYFA_FA=0               # cryfa
+      RUN_CRYFA_FA=1               # cryfa
       # FASTQ
       RUN_GZIP_FQ=0                # gzip
       RUN_BZIP2_FQ=0               # bzip2
-      RUN_LZMA_FQ=0                # lzma
+###      RUN_LZMA_FQ=0                # lzma
       RUN_FQZCOMP=0                # fqzcomp
       RUN_QUIP=0                   # quip
       RUN_DSRC=0                   # DSRC
       RUN_FQC=0                    # FQC
       RUN_CRYFA_FQ=0               # cryfa
       # results
-      PRINT_RESULTS_COMP=0
+      PRINT_RESULTS_COMP=1
 
   # encrypt/decrypt
   RUN_METHODS_ENC=0
@@ -74,17 +74,17 @@ RUN_METHODS=1
       PRINT_RESULTS_ENC=0
 
   # compress/decompress plus encrypt/decrypt
-  RUN_METHODS_COMP_ENC=0
+  RUN_METHODS_COMP_ENC=1
       # FASTA
-      RUN_GZIP_FA_AESCRYPT=0       # gzip + AES crypt
-      RUN_BZIP2_FA_AESCRYPT=0      # bzip2 + AES crypt
-      RUN_LZMA_FA_AESCRYPT=0       # lzma + AES crypt
-      RUN_MFCOMPRESS_AESCRYPT=0    # MFCompress + AES crypt
-      RUN_DELIMINATE_AESCRYPT=0    # DELIMINATE + AES crypt
+      RUN_GZIP_FA_AESCRYPT=1       # gzip + AES crypt
+      RUN_BZIP2_FA_AESCRYPT=1      # bzip2 + AES crypt
+###      RUN_LZMA_FA_AESCRYPT=1       # lzma + AES crypt
+      RUN_MFCOMPRESS_AESCRYPT=1    # MFCompress + AES crypt
+      RUN_DELIMINATE_AESCRYPT=1    # DELIMINATE + AES crypt
       # FASTQ
       RUN_GZIP_FQ_AESCRYPT=0       # gzip + AES crypt
       RUN_BZIP2_FQ_AESCRYPT=0      # bzip2 + AES crypt
-      RUN_LZMA_FQ_AESCRYPT=0       # lzma + AES crypt
+###      RUN_LZMA_FQ_AESCRYPT=0       # lzma + AES crypt
       RUN_FQZCOMP_AESCRYPT=0       # fqzcomp + AES crypt
       RUN_QUIP_AESCRYPT=0          # quip + AES crypt
       RUN_DSRC_AESCRYPT=0          # DSRC + AES crypt
@@ -93,7 +93,7 @@ RUN_METHODS=1
       PRINT_RESULTS_COMP_ENC=0
 
   # cryfa exclusive
-  CRYFA_EXCLUSIVE=1
+  CRYFA_EXCLUSIVE=0
       MAX_N_THR=8                  # max number of threads
       CRYFA_XCL_DATASET="dataset/FA/V/viruses.fasta"
 #      CRYFA_XCL_DATASET="dataset/FQ/HS/HS-SRR442469_1.fastq"
@@ -102,7 +102,7 @@ RUN_METHODS=1
       PRINT_RESULTS_CRYFA_XCL=1
 
 ### plot results
-PLOT_RESULTS=1
+PLOT_RESULTS=0
 
 
 # test purpose
@@ -923,11 +923,12 @@ then
 
       case $2 in
         "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
-            compDecomp $method $dsPath/$FA/$HUMAN/HS.$fasta
+#            compDecomp $method $dsPath/$FA/$HUMAN/HS.$fasta
             compDecomp $method $dsPath/$FA/$VIRUSES/viruses.$fasta
-            for i in 1 2; do
-                compDecomp $method $dsPath/$FA/$Synth/Synth-$i.$fasta
-            done;;
+#            for i in 1 2; do
+#                compDecomp $method $dsPath/$FA/$Synth/Synth-$i.$fasta
+#            done
+            ;;
 
         "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
             for i in ERR013103_1 ERR015767_2 ERR031905_2 \
@@ -991,14 +992,15 @@ then
 
       case $2 in
         "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
-            compEncDecDecompress \
-                    $methodComp $dsPath/$FA/$HUMAN/HS.$fasta $methodEnc
+#            compEncDecDecompress \
+#                    $methodComp $dsPath/$FA/$HUMAN/HS.$fasta $methodEnc
             compEncDecDecompress \
                     $methodComp $dsPath/$FA/$VIRUSES/viruses.$fasta $methodEnc
-            for i in 1 2; do
-                compEncDecDecompress \
-                    $methodComp $dsPath/$FA/$Synth/Synth-$i.$fasta $methodEnc
-            done;;
+#            for i in 1 2; do
+#                compEncDecDecompress \
+#                    $methodComp $dsPath/$FA/$Synth/Synth-$i.$fasta $methodEnc
+#            done
+            ;;
 
         "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
             for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
@@ -1658,8 +1660,8 @@ then
       ft="${in##*.}"                      # input filetype
       fsize=`stat --printf="%s" $CRYFA_XCL_DATASET`    # file size (bytes)
       result_FLD="../$result"
-#      CRYFA_THR_RUN=`seq -s' ' 1 $MAX_N_THR`;
-      CRYFA_THR_RUN=$MAX_N_THR;
+      CRYFA_THR_RUN=`seq -s' ' 1 $MAX_N_THR`;
+#      CRYFA_THR_RUN=$MAX_N_THR;
 
       ### run for different number of threads
       if [[ $RUN_CRYFA_XCL -eq 1 ]];
