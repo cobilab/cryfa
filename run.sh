@@ -47,14 +47,14 @@ INSTALL_METHODS=0
 ### run methods
 RUN_METHODS=1
   # compress/decompress
-  RUN_METHODS_COMP=1
+  RUN_METHODS_COMP=0
       # FASTA
       RUN_GZIP_FA=0                # gzip
       RUN_BZIP2_FA=0               # bzip2
 ###      RUN_LZMA_FA=0                # lzma
       RUN_MFCOMPRESS=0             # MFCompress
       RUN_DELIMINATE=0             # DELIMINATE
-      RUN_CRYFA_FA=1               # cryfa
+      RUN_CRYFA_FA=0               # cryfa
       # FASTQ
       RUN_GZIP_FQ=0                # gzip
       RUN_BZIP2_FQ=0               # bzip2
@@ -65,7 +65,7 @@ RUN_METHODS=1
       RUN_FQC=0                    # FQC
       RUN_CRYFA_FQ=0               # cryfa
       # results
-      PRINT_RESULTS_COMP=1
+      PRINT_RESULTS_COMP=0
 
   # encrypt/decrypt
   RUN_METHODS_ENC=0
@@ -76,11 +76,11 @@ RUN_METHODS=1
   # compress/decompress plus encrypt/decrypt
   RUN_METHODS_COMP_ENC=1
       # FASTA
-      RUN_GZIP_FA_AESCRYPT=1       # gzip + AES crypt
-      RUN_BZIP2_FA_AESCRYPT=1      # bzip2 + AES crypt
-###      RUN_LZMA_FA_AESCRYPT=1       # lzma + AES crypt
-      RUN_MFCOMPRESS_AESCRYPT=1    # MFCompress + AES crypt
-      RUN_DELIMINATE_AESCRYPT=1    # DELIMINATE + AES crypt
+      RUN_GZIP_FA_AESCRYPT=0       # gzip + AES crypt
+      RUN_BZIP2_FA_AESCRYPT=0      # bzip2 + AES crypt
+###      RUN_LZMA_FA_AESCRYPT=0       # lzma + AES crypt
+      RUN_MFCOMPRESS_AESCRYPT=0    # MFCompress + AES crypt
+      RUN_DELIMINATE_AESCRYPT=0    # DELIMINATE + AES crypt
       # FASTQ
       RUN_GZIP_FQ_AESCRYPT=0       # gzip + AES crypt
       RUN_BZIP2_FQ_AESCRYPT=0      # bzip2 + AES crypt
@@ -90,13 +90,14 @@ RUN_METHODS=1
       RUN_DSRC_AESCRYPT=0          # DSRC + AES crypt
       RUN_FQC_AESCRYPT=0           # FQC + AES crypt
       # results
-      PRINT_RESULTS_COMP_ENC=0
+      PRINT_RESULTS_COMP_ENC=1
 
   # cryfa exclusive
   CRYFA_EXCLUSIVE=0
       MAX_N_THR=8                  # max number of threads
-      CRYFA_XCL_DATASET="dataset/FA/V/viruses.fasta"
-#      CRYFA_XCL_DATASET="dataset/FQ/HS/HS-SRR442469_1.fastq"
+#      CRYFA_XCL_DATASET="dataset/FA/V/viruses.fasta"
+      CRYFA_XCL_DATASET="dataset/FA/HS/HS.fasta"
+#      CRYFA_XCL_DATASET="dataset/FQ/HS/HS-ERR013103_1.fastq"
 #      CRYFA_XCL_DATASET="dataset/FQ/DS/DS-B1088_SR.fastq"
       RUN_CRYFA_XCL=1
       PRINT_RESULTS_CRYFA_XCL=1
@@ -992,10 +993,10 @@ then
 
       case $2 in
         "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
-#            compEncDecDecompress \
-#                    $methodComp $dsPath/$FA/$HUMAN/HS.$fasta $methodEnc
             compEncDecDecompress \
-                    $methodComp $dsPath/$FA/$VIRUSES/viruses.$fasta $methodEnc
+                    $methodComp $dsPath/$FA/$HUMAN/HS.$fasta $methodEnc
+#            compEncDecDecompress \
+#                    $methodComp $dsPath/$FA/$VIRUSES/viruses.$fasta $methodEnc
 #            for i in 1 2; do
 #                compEncDecDecompress \
 #                    $methodComp $dsPath/$FA/$Synth/Synth-$i.$fasta $methodEnc
@@ -1296,25 +1297,27 @@ then
   # convert memory numbers scale to MB and times to fractional minutes in
   # result files associated with comression+encryption methods
   # $1: input file name
-  function compEncResHumanReadable
+    function compEncResHumanReadable
   {
       IN=$1              # input file name
       INWF="${IN%.*}"    # input file name without filetype
 
-      c="C_Size(MB)\tC_Time_real(m)\tC_Time_cpu(m)\tC_Mem(MB)"
-      en="En_Size(MB)\tEn_Time_real(m)\tEn_Time_cpu(m)\tEn_Mem(MB)"
-      de="De_Time_real(m)\tDe_Time_cpu(m)\tDe_Mem(MB)"
-      d="D_Time_real(m)\tD_Time_cpu(m)\tD_Mem(MB)"
-      printf "Dataset\tSize(MB)\tC_Method\tEn_Method\t$c\t$en\t$de\t$d\tEq\n" \
+      cen="CEn_Size(MB)\tCEn_Time_real(m)\tCEn_Time_cpu(m)\tCEn_Mem(MB)"
+      ded="DeD_Time_real(m)\tDeD_Time_cpu(m)\tDeD_Mem(MB)"
+      printf "Dataset\tSize(MB)\tC_Method\tEn_Method\t$cen\t$ded\tEq\n" \
              > $INWF.$INF
 
       cat $IN | awk 'NR>1' | awk 'BEGIN {}{
-      printf "%s\t%.f\t%s\t%s\t%.f", $1, $2/1024/1024, $3, $4, $5/1024/1024;
+      printf "%s\t%.f\t%s\t%s\t%.f", $1, $2/1024/1024, $3, $4, $10/1024/1024;
 
       split($6, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
       split(c_arrMinReal[2], c_arrSecReal, "s");    c_secReal=c_arrSecReal[1];
       c_realTime=(c_minReal*60+c_secReal)/60;
-      printf "\t%.2f", c_realTime;
+      split($11, en_arrMinReal, "m");               en_minReal=en_arrMinReal[1];
+      split(en_arrMinReal[2], en_arrSecReal, "s");  en_secReal=en_arrSecReal[1];
+      en_realTime=(en_minReal*60+en_secReal)/60;
+      cen_realTime=c_realTime+en_realTime;
+      printf "\t%.2f", cen_realTime;
 
       split($7, c_arrMinUser, "m");                 c_minUser=c_arrMinUser[1];
       split(c_arrMinUser[2], c_arrSecUser, "s");    c_secUser=c_arrSecUser[1];
@@ -1323,13 +1326,6 @@ then
       split(c_arrMinSys[2], c_arrSecSys, "s");      c_secSys=c_arrSecSys[1];
       c_sysTime=(c_minSys*60+c_secSys)/60;
       c_cpuTime=c_userTime+c_sysTime;
-      printf "\t%.2f\t%.2f\t%.f", c_cpuTime, $9/1024, $10/1024/1024;
-
-      split($11, en_arrMinReal, "m");               en_minReal=en_arrMinReal[1];
-      split(en_arrMinReal[2], en_arrSecReal, "s");  en_secReal=en_arrSecReal[1];
-      en_realTime=(en_minReal*60+en_secReal)/60;
-      printf "\t%.2f", en_realTime;
-
       split($12, en_arrMinUser, "m");               en_minUser=en_arrMinUser[1];
       split(en_arrMinUser[2], en_arrSecUser, "s");  en_secUser=en_arrSecUser[1];
       en_userTime=(en_minUser*60+en_secUser)/60;
@@ -1337,12 +1333,21 @@ then
       split(en_arrMinSys[2], en_arrSecSys, "s");    en_secSys=en_arrSecSys[1];
       en_sysTime=(en_minSys*60+en_secSys)/60;
       en_cpuTime=en_userTime+en_sysTime;
-      printf "\t%.2f\t%.2f", en_cpuTime, $14/1024;
+      cen_cpuTime=c_cpuTime+en_cpuTime;
+      printf "\t%.2f", cen_cpuTime;
+
+      max_cen_mem=($9 > $14 ? $9 : $14);
+      cen_mem=max_cen_mem/1024;
+      printf "\t%.2f", cen_mem;
 
       split($15, de_arrMinReal, "m");               de_minReal=de_arrMinReal[1];
       split(de_arrMinReal[2], de_arrSecReal, "s");  de_secReal=de_arrSecReal[1];
       de_realTime=(de_minReal*60+de_secReal)/60;
-      printf "\t%.2f", de_realTime;
+      split($19, d_arrMinReal, "m");                d_minReal=d_arrMinReal[1];
+      split(d_arrMinReal[2], d_arrSecReal, "s");    d_secReal=d_arrSecReal[1];
+      d_realTime=(d_minReal*60+d_secReal)/60;
+      ded_realTime=de_realTime+d_realTime;
+      printf "\t%.2f", ded_realTime;
 
       split($16, de_arrMinUser, "m");               de_minUser=de_arrMinUser[1];
       split(de_arrMinUser[2], de_arrSecUser, "s");  de_secUser=de_arrSecUser[1];
@@ -1351,13 +1356,6 @@ then
       split(de_arrMinSys[2], de_arrSecSys, "s");    de_secSys=de_arrSecSys[1];
       de_sysTime=(de_minSys*60+de_secSys)/60;
       de_cpuTime=de_userTime+de_sysTime;
-      printf "\t%.2f\t%.2f", de_cpuTime, $18/1024;
-
-      split($19, d_arrMinReal, "m");                d_minReal=d_arrMinReal[1];
-      split(d_arrMinReal[2], d_arrSecReal, "s");    d_secReal=d_arrSecReal[1];
-      d_realTime=(d_minReal*60+d_secReal)/60;
-      printf "\t%.2f", d_realTime;
-
       split($20, d_arrMinUser, "m");                d_minUser=d_arrMinUser[1];
       split(d_arrMinUser[2], d_arrSecUser, "s");    d_secUser=d_arrSecUser[1];
       d_userTime=(d_minUser*60+d_secUser)/60;
@@ -1365,7 +1363,14 @@ then
       split(d_arrMinSys[2], d_arrSecSys, "s");      d_secSys=d_arrSecSys[1];
       d_sysTime=(d_minSys*60+d_secSys)/60;
       d_cpuTime=d_userTime+d_sysTime;
-      printf "\t%.2f\t%.2f\t%d\n", d_cpuTime, $22/1024, $23;
+      ded_cpuTime=de_cpuTime+d_cpuTime;
+      printf "\t%.2f", ded_cpuTime;
+
+      max_ded_mem=($18 > $22 ? $18 : $22);
+      ded_mem=max_ded_mem/1024;
+      printf "\t%.2f", ded_mem;
+
+      printf "\t%d\n", $23;
       }' >> $INWF.$INF
   }
 
@@ -1603,45 +1608,45 @@ then
           FAdsPath=$dataset/$FA
           FQdsPath=$dataset/$FQ
 
-          ### print results
-          c="C_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)\t"
-          c+="C_Mem(KB)"
-          en="En_Size(B)\tEn_Time_real(s)\tEn_Time_user(s)\tEn_Time_sys(s)\t"
-          en+="En_Mem(KB)"
-          de="De_Time_real(s)\tDe_Time_user(s)\tDe_Time_sys(s)\tDe_Mem(KB)"
-          d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
-          printf "Dataset\tSize\tC_Method\tEn_Method\t$c\t$en\t$de\t$d\tEq\n" \
-                 > $OUT;
-
-          for i in AESCRYPT; do
-             # FASTA -- human - viruses - synthetic
-             for j in GZIP BZIP2 LZMA MFCOMPRESS DELIM; do
-                 compEncDecDecompRes $j $i $FAdsPath/$HUMAN/HS.$fasta >> $OUT;
-                 compEncDecDecompRes $j $i \
-                                     $FAdsPath/$VIRUSES/viruses.$fasta >> $OUT;
-                 for k in 1 2; do
-                     compEncDecDecompRes $j $i \
-                                     $FAdsPath/$Synth/Synth-${k}.$fasta >> $OUT;
-                 done
-             done
-
-             # FASTQ -- human - Denisova - synthetic
-             for j in GZIP BZIP2 LZMA FQZCOMP QUIP DSRC FQC; do
-                 for k in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
-                          SRR707196_1; do
-                     compEncDecDecompRes $j $i \
-                                  $FQdsPath/$HUMAN/HS-${k}.$fastq >> $OUT;
-                 done
-                 for k in B1087 B1088 B1110 B1128 SL3003; do
-                     compEncDecDecompRes $j $i \
-                                  $FQdsPath/$DENISOVA/DS-${k}_SR.$fastq >> $OUT;
-                 done
-                 for k in 1 2; do
-                     compEncDecDecompRes $j $i \
-                                  $FQdsPath/$Synth/Synth-${k}.$fastq >> $OUT;
-                 done
-             done
-          done
+#          ### print results
+#          c="C_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)\t"
+#          c+="C_Mem(KB)"
+#          en="En_Size(B)\tEn_Time_real(s)\tEn_Time_user(s)\tEn_Time_sys(s)\t"
+#          en+="En_Mem(KB)"
+#          de="De_Time_real(s)\tDe_Time_user(s)\tDe_Time_sys(s)\tDe_Mem(KB)"
+#          d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
+#          printf "Dataset\tSize\tC_Method\tEn_Method\t$c\t$en\t$de\t$d\tEq\n" \
+#                 > $OUT;
+#
+#          for i in AESCRYPT; do
+#             # FASTA -- human - viruses - synthetic
+#             for j in GZIP BZIP2 LZMA MFCOMPRESS DELIM; do
+#                 compEncDecDecompRes $j $i $FAdsPath/$HUMAN/HS.$fasta >> $OUT;
+#                 compEncDecDecompRes $j $i \
+#                                     $FAdsPath/$VIRUSES/viruses.$fasta >> $OUT;
+#                 for k in 1 2; do
+#                     compEncDecDecompRes $j $i \
+#                                     $FAdsPath/$Synth/Synth-${k}.$fasta >> $OUT;
+#                 done
+#             done
+#
+#             # FASTQ -- human - Denisova - synthetic
+#             for j in GZIP BZIP2 LZMA FQZCOMP QUIP DSRC FQC; do
+#                 for k in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
+#                          SRR707196_1; do
+#                     compEncDecDecompRes $j $i \
+#                                  $FQdsPath/$HUMAN/HS-${k}.$fastq >> $OUT;
+#                 done
+#                 for k in B1087 B1088 B1110 B1128 SL3003; do
+#                     compEncDecDecompRes $j $i \
+#                                  $FQdsPath/$DENISOVA/DS-${k}_SR.$fastq >> $OUT;
+#                 done
+#                 for k in 1 2; do
+#                     compEncDecDecompRes $j $i \
+#                                  $FQdsPath/$Synth/Synth-${k}.$fastq >> $OUT;
+#                 done
+#             done
+#          done
 
           ### convert the result file into a human readable file
           compEncResHumanReadable $OUT;
@@ -1660,8 +1665,8 @@ then
       ft="${in##*.}"                      # input filetype
       fsize=`stat --printf="%s" $CRYFA_XCL_DATASET`    # file size (bytes)
       result_FLD="../$result"
-      CRYFA_THR_RUN=`seq -s' ' 1 $MAX_N_THR`;
-#      CRYFA_THR_RUN=$MAX_N_THR;
+#      CRYFA_THR_RUN=`seq -s' ' 1 $MAX_N_THR`;
+      CRYFA_THR_RUN=$MAX_N_THR;
 
       ### run for different number of threads
       if [[ $RUN_CRYFA_XCL -eq 1 ]];
