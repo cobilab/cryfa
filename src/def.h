@@ -75,7 +75,7 @@ struct POWER<B, 0>
 #define DEC_FILENAME    "CRYFA_DEC"  // decrypted file name
 #define UPK_FILENAME    "CRYFA_UPK"  // unpacked file name
 #define DEFAULT_N_THR   1            // default number of threads
-#define BLOCK_SIZE      1024*1024       // to read from input file
+#define BLOCK_SIZE      10*1024       // to read from input file
 #define LARGE_NUMBER    std::numeric_limits<std::streamsize>::max()
 #define C1              2            //       cat 1  =  2
 #define C2              3            //       cat 2  =  3
