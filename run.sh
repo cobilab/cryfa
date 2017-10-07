@@ -74,7 +74,7 @@ RUN_METHODS=1
       PRINT_RESULTS_ENC=0
 
   # compress/decompress plus encrypt/decrypt
-  RUN_METHODS_COMP_ENC=1
+  RUN_METHODS_COMP_ENC=0
       # FASTA
       RUN_GZIP_FA_AESCRYPT=0       # gzip + AES crypt
       RUN_BZIP2_FA_AESCRYPT=0      # bzip2 + AES crypt

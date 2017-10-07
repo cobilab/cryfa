@@ -129,7 +129,7 @@ int main (int argc, char* argv[])
 
         cerr << "Compacting...\n";
         (file_type == 'A') ? cryptObj.compressFA() : cryptObj.compressFQ();
-
+    
 //        // stop timer
 //        high_resolution_clock::time_point finishTime =
 //                high_resolution_clock::now();
