@@ -63,7 +63,7 @@ RUN_METHODS=1
       RUN_QUIP=0                   # quip
       RUN_DSRC=0                   # DSRC
       RUN_FQC=0                    # FQC
-      RUN_CRYFA_FQ=1               # cryfa
+      RUN_CRYFA_FQ=0               # cryfa
       # results
       PRINT_RESULTS_COMP=1
 
@@ -82,15 +82,15 @@ RUN_METHODS=1
       RUN_MFCOMPRESS_AESCRYPT=0    # MFCompress + AES crypt
       RUN_DELIMINATE_AESCRYPT=0    # DELIMINATE + AES crypt
       # FASTQ
-      RUN_GZIP_FQ_AESCRYPT=1       # gzip + AES crypt
-      RUN_BZIP2_FQ_AESCRYPT=1      # bzip2 + AES crypt
+      RUN_GZIP_FQ_AESCRYPT=0       # gzip + AES crypt
+      RUN_BZIP2_FQ_AESCRYPT=0      # bzip2 + AES crypt
 ###      RUN_LZMA_FQ_AESCRYPT=0       # lzma + AES crypt
-      RUN_FQZCOMP_AESCRYPT=1       # fqzcomp + AES crypt
-      RUN_QUIP_AESCRYPT=1          # quip + AES crypt
-      RUN_DSRC_AESCRYPT=1          # DSRC + AES crypt
-      RUN_FQC_AESCRYPT=1           # FQC + AES crypt
+      RUN_FQZCOMP_AESCRYPT=0       # fqzcomp + AES crypt
+      RUN_QUIP_AESCRYPT=0          # quip + AES crypt
+      RUN_DSRC_AESCRYPT=0          # DSRC + AES crypt
+      RUN_FQC_AESCRYPT=0           # FQC + AES crypt
       # results
-      PRINT_RESULTS_COMP_ENC=1
+      PRINT_RESULTS_COMP_ENC=0
 
   # cryfa exclusive
   CRYFA_EXCLUSIVE=0
@@ -156,6 +156,9 @@ INF="dat"         # information (data) file type
 RES="res"         # result file type
 fasta="fasta"     # FASTA file extension
 fastq="fastq"     # FASTQ file extension
+FASTA_METHODS="GZIP BZIP2 LZMA MFCOMPRESS DELIMINATE"
+FASTQ_METHODS="GZIP BZIP2 LZMA FQZCOMP QUIP DSRC FQC"
+ENC_METHODS="AESCRYPT"
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -931,18 +934,16 @@ then
             done;;
 
         "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
-#            for i in ERR013103_1 ERR015767_2 ERR031905_2 \
-#                     SRR442469_1 SRR707196_1; do
-            for i in ERR013103_1 SRR442469_1; do
+            for i in ERR013103_1 ERR015767_2 ERR031905_2 \
+                     SRR442469_1 SRR707196_1; do
                 compDecomp $method $dsPath/$FQ/$HUMAN/HS-$i.$fastq
             done
-#            for i in B1087 B1088 B1110 B1128 SL3003; do
-#                compDecomp $method $dsPath/$FQ/$DENISOVA/DS-${i}_SR.$fastq
-#            done
-#            for i in 1 2; do
-#                compDecomp $method $dsPath/$FQ/$Synth/SynFQ-$i.$fastq
-#            done
-            ;;
+            for i in B1087 B1088 B1110 B1128 SL3003; do
+                compDecomp $method $dsPath/$FQ/$DENISOVA/DS-${i}_SR.$fastq
+            done
+            for i in 1 2; do
+                compDecomp $method $dsPath/$FQ/$Synth/SynFQ-$i.$fastq
+            done;;
       esac
 
       cd ../..
@@ -1004,21 +1005,19 @@ then
             done;;
 
         "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
-#            for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
-#                     SRR707196_1; do
-            for i in ERR013103_1 SRR442469_1; do
+            for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
+                     SRR707196_1; do
                 compEncDecDecompress \
                     $methodComp $dsPath/$FQ/$HUMAN/$HUMAN-$i.$fastq $methodEnc
             done
-#            for i in B1087 B1088 B1110 B1128 SL3003; do
-#                compEncDecDecompress $methodComp \
-#                    $dsPath/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq $methodEnc
-#            done
-#            for i in 1 2; do
-#                compEncDecDecompress \
-#                    $methodComp $dsPath/$FQ/$Synth/SynFQ-$i.$fastq $methodEnc
-#            done
-            ;;
+            for i in B1087 B1088 B1110 B1128 SL3003; do
+                compEncDecDecompress $methodComp \
+                    $dsPath/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq $methodEnc
+            done
+            for i in 1 2; do
+                compEncDecDecompress \
+                    $methodComp $dsPath/$FQ/$Synth/SynFQ-$i.$fastq $methodEnc
+            done;;
       esac
   }
 
@@ -1487,7 +1486,7 @@ then
           printf "Dataset\tSize\tMethod\t$c\t$d\tEq\n" > $OUT;
 
           # FASTA -- human - viruses - synthetic
-          for i in CRYFA GZIP BZIP2 LZMA MFCOMPRESS DELIMINATE; do
+          for i in CRYFA $FASTA_METHODS; do
               compDecompRes $i $FAdsPath/$HUMAN/HS.$fasta >> $OUT;
               compDecompRes $i $FAdsPath/$VIRUSES/viruses.$fasta >> $OUT;
               for j in 1 2; do
@@ -1496,7 +1495,7 @@ then
           done
 
           # FASTQ -- human - Denisova - synthetic
-          for i in CRYFA GZIP BZIP2 LZMA FQZCOMP QUIP DSRC FQC; do
+          for i in CRYFA $FASTQ_METHODS; do
               for j in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
                        SRR707196_1; do
                   compDecompRes $i $FQdsPath/$HUMAN/HS-${j}.$fastq >> $OUT;
@@ -1533,7 +1532,7 @@ then
           de="De_Time_real(s)\tDe_Time_user(s)\tDe_Time_sys(s)\tDe_Mem(KB)"
           printf "Dataset\tSize\tMethod\t$en\t$de\n" > $OUT;
 
-          for i in AESCRYPT;
+          for i in $ENC_METHODS;
           do
               # FASTA -- human - viruses - synthetic
               encDecRes $i $FAdsPath/$HUMAN/HS.$fasta >> $OUT;
@@ -1620,9 +1619,9 @@ then
           printf "Dataset\tSize\tC_Method\tEn_Method\t$c\t$en\t$de\t$d\tEq\n" \
                  > $OUT;
 
-          for i in AESCRYPT; do
+          for i in $ENC_METHODS; do
              # FASTA -- human - viruses - synthetic
-             for j in GZIP BZIP2 LZMA MFCOMPRESS DELIM; do
+             for j in $FASTA_METHODS; do
                  compEncDecDecompRes $j $i $FAdsPath/$HUMAN/HS.$fasta >> $OUT;
                  compEncDecDecompRes $j $i \
                                      $FAdsPath/$VIRUSES/viruses.$fasta >> $OUT;
@@ -1633,7 +1632,7 @@ then
              done
 
              # FASTQ -- human - Denisova - synthetic
-             for j in GZIP BZIP2 LZMA FQZCOMP QUIP DSRC FQC; do
+             for j in $FASTQ_METHODS; do
                  for k in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
                           SRR707196_1; do
                      compEncDecDecompRes $j $i \
