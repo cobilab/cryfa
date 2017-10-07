@@ -74,7 +74,7 @@ RUN_METHODS=1
       PRINT_RESULTS_ENC=0
 
   # compress/decompress plus encrypt/decrypt
-  RUN_METHODS_COMP_ENC=1
+  RUN_METHODS_COMP_ENC=0
       # FASTA
       RUN_GZIP_FA_AESCRYPT=0       # gzip + AES crypt
       RUN_BZIP2_FA_AESCRYPT=0      # bzip2 + AES crypt
@@ -234,13 +234,13 @@ then
 
       # generate dataset -- 2.3 GB - 1.7 GB
       XS/XS -eo -es -t 1 -n 4000000 -ld 70:1000 \
-            -f 0.2,0.2,0.2,0.2,0.2       $dataset/$FA/$Synth/Synth-1.$fasta
+            -f 0.2,0.2,0.2,0.2,0.2       $dataset/$FA/$Synth/SynFA-1.$fasta
       XS/XS -eo -es -t 2 -n 3000000 -ls 500 \
-            -f 0.23,0.23,0.23,0.23,0.08  $dataset/$FA/$Synth/Synth-2.$fasta
+            -f 0.23,0.23,0.23,0.23,0.08  $dataset/$FA/$Synth/SynFA-2.$fasta
 
       # replace @ symbol with > for the headers
       for i in 1 2; do
-          sed -i 's/@/>/g' "$dataset/$FA/$Synth/Synth-$i.$fasta";
+          sed -i 's/@/>/g' "$dataset/$FA/$Synth/SynFA-$i.$fasta";
       done
   fi
 
@@ -303,9 +303,9 @@ then
 
       # generate dataset -- 4.2 GB - 2 GB
       XS/XS -t 1 -n 16000000 -ld 70:100 -o \
-            -f 0.2,0.2,0.2,0.2,0.2       $dataset/$FQ/$Synth/Synth-1.$fastq
+            -f 0.2,0.2,0.2,0.2,0.2       $dataset/$FQ/$Synth/SynFQ-1.$fastq
       XS/XS -t 2 -n 10000000 -ls 70 -qt 2 \
-            -f 0.23,0.23,0.23,0.23,0.08  $dataset/$FQ/$Synth/Synth-2.$fastq
+            -f 0.23,0.23,0.23,0.23,0.08  $dataset/$FQ/$Synth/SynFQ-2.$fastq
   fi
 fi
 
@@ -927,7 +927,7 @@ then
             compDecomp $method $dsPath/$FA/$HUMAN/HS.$fasta
             compDecomp $method $dsPath/$FA/$VIRUSES/viruses.$fasta
             for i in 1 2; do
-                compDecomp $method $dsPath/$FA/$Synth/Synth-$i.$fasta
+                compDecomp $method $dsPath/$FA/$Synth/SynFA-$i.$fasta
             done;;
 
         "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
@@ -940,7 +940,7 @@ then
 #                compDecomp $method $dsPath/$FQ/$DENISOVA/DS-${i}_SR.$fastq
 #            done
 #            for i in 1 2; do
-#                compDecomp $method $dsPath/$FQ/$Synth/Synth-$i.$fastq
+#                compDecomp $method $dsPath/$FQ/$Synth/SynFQ-$i.$fastq
 #            done
             ;;
       esac
@@ -961,8 +961,8 @@ then
             # FASTA
             encDecrypt $method $dsPath/$FA/$HUMAN/HS.$fasta
             encDecrypt $method $dsPath/$FA/$VIRUSES/viruses.$fasta
-            for i in 1 2;do
-                encDecrypt $method $dsPath/$FA/$Synth/Synth-$i.$fasta
+            for i in 1 2; do
+                encDecrypt $method $dsPath/$FA/$Synth/SynFA-$i.$fasta
             done
 
             # FASTQ
@@ -975,7 +975,7 @@ then
                            $dsPath/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq
             done
             for i in 1 2; do
-                encDecrypt $method $dsPath/$FQ/$Synth/Synth-$i.$fastq
+                encDecrypt $method $dsPath/$FQ/$Synth/SynFQ-$i.$fastq
             done;;
       esac
 
@@ -1000,7 +1000,7 @@ then
                     $methodComp $dsPath/$FA/$VIRUSES/viruses.$fasta $methodEnc
             for i in 1 2; do
                 compEncDecDecompress \
-                    $methodComp $dsPath/$FA/$Synth/Synth-$i.$fasta $methodEnc
+                    $methodComp $dsPath/$FA/$Synth/SynFA-$i.$fasta $methodEnc
             done;;
 
         "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
@@ -1016,7 +1016,7 @@ then
 #            done
 #            for i in 1 2; do
 #                compEncDecDecompress \
-#                    $methodComp $dsPath/$FQ/$Synth/Synth-$i.$fastq $methodEnc
+#                    $methodComp $dsPath/$FQ/$Synth/SynFQ-$i.$fastq $methodEnc
 #            done
             ;;
       esac
@@ -1424,7 +1424,7 @@ then
   # FASTA -- human - viruses - synthetic
   isAvail "$dataset/$FA/$HUMAN/HS.$fasta";
   isAvail "$dataset/$FA/$VIRUSES/viruses.$fasta"
-  for i in 1 2; do isAvail "$dataset/$FA/$Synth/Synth-$i.$fasta"; done
+  for i in 1 2; do isAvail "$dataset/$FA/$Synth/SynFA-$i.$fasta"; done
 
   # FASTQ -- human - Denisova - synthetic
   for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 SRR707196_1; do
@@ -1433,7 +1433,7 @@ then
   for i in B1087 B1088 B1110 B1128 SL3003; do
       isAvail "$dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq"
   done
-  for i in 1 2; do isAvail "$dataset/$FQ/$Synth/Synth-$i.$fastq"; done
+  for i in 1 2; do isAvail "$dataset/$FQ/$Synth/SynFQ-$i.$fastq"; done
 
   #--------------------------- run ---------------------------#
   ### compress/decompress
@@ -1491,7 +1491,7 @@ then
               compDecompRes $i $FAdsPath/$HUMAN/HS.$fasta >> $OUT;
               compDecompRes $i $FAdsPath/$VIRUSES/viruses.$fasta >> $OUT;
               for j in 1 2; do
-                  compDecompRes $i $FAdsPath/$Synth/Synth-${j}.$fasta >> $OUT;
+                  compDecompRes $i $FAdsPath/$Synth/SynFA-${j}.$fasta >> $OUT;
               done
           done
 
@@ -1505,7 +1505,7 @@ then
                   compDecompRes $i $FQdsPath/$DENISOVA/DS-${j}_SR.$fastq >> $OUT
               done
               for j in 1 2; do
-                  compDecompRes $i $FQdsPath/$Synth/Synth-${j}.$fastq >> $OUT;
+                  compDecompRes $i $FQdsPath/$Synth/SynFQ-${j}.$fastq >> $OUT;
               done
           done
 
@@ -1539,7 +1539,7 @@ then
               encDecRes $i $FAdsPath/$HUMAN/HS.$fasta >> $OUT;
               encDecRes $i $FAdsPath/$VIRUSES/viruses.$fasta >> $OUT;
               for j in 1 2; do
-                  encDecRes $i $FAdsPath/$Synth/Synth-${j}.$fasta >> $OUT;
+                  encDecRes $i $FAdsPath/$Synth/SynFA-${j}.$fasta >> $OUT;
               done
 
               # FASTQ -- human - Denisova - synthetic
@@ -1551,7 +1551,7 @@ then
                   encDecRes $i $FQdsPath/$DENISOVA/DS-${j}_SR.$fastq >> $OUT;
               done
               for j in 1 2; do
-                  encDecRes $i $FQdsPath/$Synth/Synth-${j}.$fastq >> $OUT;
+                  encDecRes $i $FQdsPath/$Synth/SynFQ-${j}.$fastq >> $OUT;
               done
           done
 
@@ -1628,7 +1628,7 @@ then
                                      $FAdsPath/$VIRUSES/viruses.$fasta >> $OUT;
                  for k in 1 2; do
                      compEncDecDecompRes $j $i \
-                                     $FAdsPath/$Synth/Synth-${k}.$fasta >> $OUT;
+                                     $FAdsPath/$Synth/SynFA-${k}.$fasta >> $OUT;
                  done
              done
 
@@ -1645,7 +1645,7 @@ then
                  done
                  for k in 1 2; do
                      compEncDecDecompRes $j $i \
-                                  $FQdsPath/$Synth/Synth-${k}.$fastq >> $OUT;
+                                  $FQdsPath/$Synth/SynFQ-${k}.$fastq >> $OUT;
                  done
              done
           done
