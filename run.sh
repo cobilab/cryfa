@@ -54,7 +54,7 @@ RUN_METHODS=1
 ###      RUN_LZMA_FA=0                # lzma
       RUN_MFCOMPRESS=0             # MFCompress
       RUN_DELIMINATE=0             # DELIMINATE
-      RUN_CRYFA_FA=0               # cryfa
+      RUN_CRYFA_FA=1               # cryfa
       # FASTQ
       RUN_GZIP_FQ=0                # gzip
       RUN_BZIP2_FQ=0               # bzip2
@@ -65,7 +65,7 @@ RUN_METHODS=1
       RUN_FQC=0                    # FQC
       RUN_CRYFA_FQ=0               # cryfa
       # results
-      PRINT_RESULTS_COMP=0
+      PRINT_RESULTS_COMP=1
 
   # encrypt/decrypt
   RUN_METHODS_ENC=0
@@ -74,13 +74,13 @@ RUN_METHODS=1
       PRINT_RESULTS_ENC=0
 
   # compress/decompress plus encrypt/decrypt
-  RUN_METHODS_COMP_ENC=0
+  RUN_METHODS_COMP_ENC=1
       # FASTA
-      RUN_GZIP_FA_AESCRYPT=0       # gzip + AES crypt
-      RUN_BZIP2_FA_AESCRYPT=0      # bzip2 + AES crypt
+      RUN_GZIP_FA_AESCRYPT=1       # gzip + AES crypt
+      RUN_BZIP2_FA_AESCRYPT=1      # bzip2 + AES crypt
 ###      RUN_LZMA_FA_AESCRYPT=0       # lzma + AES crypt
-      RUN_MFCOMPRESS_AESCRYPT=0    # MFCompress + AES crypt
-      RUN_DELIMINATE_AESCRYPT=0    # DELIMINATE + AES crypt
+      RUN_MFCOMPRESS_AESCRYPT=1    # MFCompress + AES crypt
+      RUN_DELIMINATE_AESCRYPT=1    # DELIMINATE + AES crypt
       # FASTQ
       RUN_GZIP_FQ_AESCRYPT=0       # gzip + AES crypt
       RUN_BZIP2_FQ_AESCRYPT=0      # bzip2 + AES crypt
@@ -543,11 +543,20 @@ then
   }
 
   # memory1
-  function progMemoryStart
+  function progMemoryNonParallelStart
   {
       echo "0" > mem_ps;
       while true; do
           ps aux | grep $1 | awk '{print $6;}' | sort -V | tail -n 1 >> mem_ps;
+          sleep 0.001;    # 1 milisecond
+      done
+  }
+  function progMemoryStart
+  {
+      echo "0" > mem_ps;
+      while true; do
+          ps aux | grep $1 | awk '{print $6;}' | sort -V | tail -n +2 \
+                 | awk 'BEGIN {tot=0;}{tot+=$1} END {print tot}' >> mem_ps;
           sleep 0.001;    # 1 milisecond
       done
   }
@@ -927,11 +936,12 @@ then
 
       case $2 in
         "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
-            compDecomp $method $dsPath/$FA/$HUMAN/HS.$fasta
+#            compDecomp $method $dsPath/$FA/$HUMAN/HS.$fasta
             compDecomp $method $dsPath/$FA/$VIRUSES/viruses.$fasta
-            for i in 1 2; do
-                compDecomp $method $dsPath/$FA/$Synth/SynFA-$i.$fasta
-            done;;
+#            for i in 1 2; do
+#                compDecomp $method $dsPath/$FA/$Synth/SynFA-$i.$fasta
+#            done
+;;
 
         "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
             for i in ERR013103_1 ERR015767_2 ERR031905_2 \
@@ -995,14 +1005,15 @@ then
 
       case $2 in
         "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
-            compEncDecDecompress \
-                    $methodComp $dsPath/$FA/$HUMAN/HS.$fasta $methodEnc
+#            compEncDecDecompress \
+#                    $methodComp $dsPath/$FA/$HUMAN/HS.$fasta $methodEnc
             compEncDecDecompress \
                     $methodComp $dsPath/$FA/$VIRUSES/viruses.$fasta $methodEnc
-            for i in 1 2; do
-                compEncDecDecompress \
-                    $methodComp $dsPath/$FA/$Synth/SynFA-$i.$fasta $methodEnc
-            done;;
+#            for i in 1 2; do
+#                compEncDecDecompress \
+#                    $methodComp $dsPath/$FA/$Synth/SynFA-$i.$fasta $methodEnc
+#            done
+;;
 
         "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
             for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
@@ -1615,45 +1626,45 @@ then
           FAdsPath=$dataset/$FA
           FQdsPath=$dataset/$FQ
 
-#          ### print results
-#          c="C_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)\t"
-#          c+="C_Mem(KB)"
-#          en="En_Size(B)\tEn_Time_real(s)\tEn_Time_user(s)\tEn_Time_sys(s)\t"
-#          en+="En_Mem(KB)"
-#          de="De_Time_real(s)\tDe_Time_user(s)\tDe_Time_sys(s)\tDe_Mem(KB)"
-#          d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
-#          printf "Dataset\tSize\tC_Method\tEn_Method\t$c\t$en\t$de\t$d\tEq\n" \
-#                 > $OUT;
-#
-#          for i in $ENC_METHODS; do
-#             # FASTA -- human - viruses - synthetic
-#             for j in $FASTA_METHODS; do
-#                 compEncDecDecompRes $j $i $FAdsPath/$HUMAN/HS.$fasta >> $OUT;
-#                 compEncDecDecompRes $j $i \
-#                                     $FAdsPath/$VIRUSES/viruses.$fasta >> $OUT;
-#                 for k in 1 2; do
-#                     compEncDecDecompRes $j $i \
-#                                     $FAdsPath/$Synth/SynFA-${k}.$fasta >> $OUT;
-#                 done
-#             done
-#
-#             # FASTQ -- human - Denisova - synthetic
-#             for j in $FASTQ_METHODS; do
-#                 for k in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
-#                          SRR707196_1; do
-#                     compEncDecDecompRes $j $i \
-#                                  $FQdsPath/$HUMAN/HS-${k}.$fastq >> $OUT;
-#                 done
-#                 for k in B1087 B1088 B1110 B1128 SL3003; do
-#                     compEncDecDecompRes $j $i \
-#                                  $FQdsPath/$DENISOVA/DS-${k}_SR.$fastq >> $OUT;
-#                 done
-#                 for k in 1 2; do
-#                     compEncDecDecompRes $j $i \
-#                                  $FQdsPath/$Synth/SynFQ-${k}.$fastq >> $OUT;
-#                 done
-#             done
-#          done
+          ### print results
+          c="C_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)\t"
+          c+="C_Mem(KB)"
+          en="En_Size(B)\tEn_Time_real(s)\tEn_Time_user(s)\tEn_Time_sys(s)\t"
+          en+="En_Mem(KB)"
+          de="De_Time_real(s)\tDe_Time_user(s)\tDe_Time_sys(s)\tDe_Mem(KB)"
+          d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
+          printf "Dataset\tSize\tC_Method\tEn_Method\t$c\t$en\t$de\t$d\tEq\n" \
+                 > $OUT;
+
+          for i in $ENC_METHODS; do
+             # FASTA -- human - viruses - synthetic
+             for j in $FASTA_METHODS; do
+                 compEncDecDecompRes $j $i $FAdsPath/$HUMAN/HS.$fasta >> $OUT;
+                 compEncDecDecompRes $j $i \
+                                     $FAdsPath/$VIRUSES/viruses.$fasta >> $OUT;
+                 for k in 1 2; do
+                     compEncDecDecompRes $j $i \
+                                     $FAdsPath/$Synth/SynFA-${k}.$fasta >> $OUT;
+                 done
+             done
+
+             # FASTQ -- human - Denisova - synthetic
+             for j in $FASTQ_METHODS; do
+                 for k in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
+                          SRR707196_1; do
+                     compEncDecDecompRes $j $i \
+                                  $FQdsPath/$HUMAN/HS-${k}.$fastq >> $OUT;
+                 done
+                 for k in B1087 B1088 B1110 B1128 SL3003; do
+                     compEncDecDecompRes $j $i \
+                                  $FQdsPath/$DENISOVA/DS-${k}_SR.$fastq >> $OUT;
+                 done
+                 for k in 1 2; do
+                     compEncDecDecompRes $j $i \
+                                  $FQdsPath/$Synth/SynFQ-${k}.$fastq >> $OUT;
+                 done
+             done
+          done
 
           ### convert the result file into a human readable file
           compEncResHumanReadable $OUT;
