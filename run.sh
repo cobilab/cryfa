@@ -156,8 +156,8 @@ INF="dat"         # information (data) file type
 RES="res"         # result file type
 fasta="fasta"     # FASTA file extension
 fastq="fastq"     # FASTQ file extension
-FASTA_METHODS="GZIP BZIP2 LZMA MFCOMPRESS DELIMINATE"
-FASTQ_METHODS="GZIP BZIP2 LZMA FQZCOMP QUIP DSRC FQC"
+FASTA_METHODS="GZIP BZIP2 MFCOMPRESS DELIMINATE"    # LZMA
+FASTQ_METHODS="GZIP BZIP2 FQZCOMP QUIP DSRC FQC"    # LZMA
 ENC_METHODS="AESCRYPT"
 FASTA_DATASET="HS viruses SynFA-1 SynFA-2"
 FASTQ_DATASET="HS-ERR013103_1 HS-ERR015767_2 HS-ERR031905_2 HS-SRR442469_1"
@@ -1317,18 +1317,18 @@ then
   # convert memory numbers scale to MB and times to fractional minutes in
   # result files associated with comression+encryption methods
   # $1: input file name
-    function compEncResHumanReadable
+  function compEncResHumanReadable
   {
       IN=$1              # input file name
       INWF="${IN%.*}"    # input file name without filetype
 
-      cen="CEn_Ratio\tCEn_Speed(MB/s)\tCEn_Time_cpu(m)\tCEn_Mem(MB)"
-      ded="DeD_Speed(MB/s)\tDeD_Time_cpu(m)\tDeD_Mem(MB)"
-      printf "Dataset\tSize(MB)\tC_Method\tEn_Method\t$cen\t$ded\tEq\n" \
+      cen="CEn_Size(B)\tCEn_Time_real(s)\tCEn_Time_cpu(s)\tCEn_Mem(KB)"
+      ded="DeD_Time_real(s)\tDeD_Time_cpu(s)\tDeD_Mem(KB)"
+      printf "Dataset\tSize(B)\tC_Method\tEn_Method\t$cen\t$ded\tEq\n" \
              > ${INWF}.tmp
 
       cat $IN | awk 'NR>1' | awk 'BEGIN {}{
-      printf "%s\t%.f\t%s\t%s\t%.2f", $1, $2/1024/1024, $3, $4, $2/$10;
+      printf "%s\t%.f\t%s\t%s\t%.f", $1, $2, $3, $4, $10;
 
       split($6, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
       split(c_arrMinReal[2], c_arrSecReal, "s");    c_secReal=c_arrSecReal[1];
@@ -1336,29 +1336,29 @@ then
       split($11, en_arrMinReal, "m");               en_minReal=en_arrMinReal[1];
       split(en_arrMinReal[2], en_arrSecReal, "s");  en_secReal=en_arrSecReal[1];
       en_realTime=en_minReal*60+en_secReal;
-      cen_speed=($2/1024/1024)/(c_realTime+en_realTime);
-      printf "\t%.2f", cen_speed;
+      cen_realTime=c_realTime+en_realTime;
+      printf "\t%.3f", cen_realTime;
 
       split($7, c_arrMinUser, "m");                 c_minUser=c_arrMinUser[1];
       split(c_arrMinUser[2], c_arrSecUser, "s");    c_secUser=c_arrSecUser[1];
-      c_userTime=(c_minUser*60+c_secUser)/60;
+      c_userTime=c_minUser*60+c_secUser;
       split($8, c_arrMinSys, "m");                  c_minSys=c_arrMinSys[1];
       split(c_arrMinSys[2], c_arrSecSys, "s");      c_secSys=c_arrSecSys[1];
-      c_sysTime=(c_minSys*60+c_secSys)/60;
+      c_sysTime=c_minSys*60+c_secSys;
       c_cpuTime=c_userTime+c_sysTime;
       split($12, en_arrMinUser, "m");               en_minUser=en_arrMinUser[1];
       split(en_arrMinUser[2], en_arrSecUser, "s");  en_secUser=en_arrSecUser[1];
-      en_userTime=(en_minUser*60+en_secUser)/60;
+      en_userTime=en_minUser*60+en_secUser;
       split($13, en_arrMinSys, "m");                en_minSys=en_arrMinSys[1];
       split(en_arrMinSys[2], en_arrSecSys, "s");    en_secSys=en_arrSecSys[1];
-      en_sysTime=(en_minSys*60+en_secSys)/60;
+      en_sysTime=en_minSys*60+en_secSys;
       en_cpuTime=en_userTime+en_sysTime;
       cen_cpuTime=c_cpuTime+en_cpuTime;
-      printf "\t%.2f", cen_cpuTime;
+      printf "\t%.3f", cen_cpuTime;
 
       max_cen_mem=($9 > $14 ? $9 : $14);
-      cen_mem=max_cen_mem/1024;
-      printf "\t%.2f", cen_mem;
+      cen_mem=max_cen_mem;
+      printf "\t%.f", cen_mem;
 
       split($15, de_arrMinReal, "m");               de_minReal=de_arrMinReal[1];
       split(de_arrMinReal[2], de_arrSecReal, "s");  de_secReal=de_arrSecReal[1];
@@ -1366,29 +1366,29 @@ then
       split($19, d_arrMinReal, "m");                d_minReal=d_arrMinReal[1];
       split(d_arrMinReal[2], d_arrSecReal, "s");    d_secReal=d_arrSecReal[1];
       d_realTime=d_minReal*60+d_secReal;
-      ded_speed=($10/1024/1024)/(de_realTime+d_realTime);
-      printf "\t%.2f", ded_speed;
+      ded_realTime=de_realTime+d_realTime;
+      printf "\t%.3f", ded_realTime;
 
       split($16, de_arrMinUser, "m");               de_minUser=de_arrMinUser[1];
       split(de_arrMinUser[2], de_arrSecUser, "s");  de_secUser=de_arrSecUser[1];
-      de_userTime=(de_minUser*60+de_secUser)/60;
+      de_userTime=de_minUser*60+de_secUser;
       split($17, de_arrMinSys, "m");                de_minSys=de_arrMinSys[1];
       split(de_arrMinSys[2], de_arrSecSys, "s");    de_secSys=de_arrSecSys[1];
-      de_sysTime=(de_minSys*60+de_secSys)/60;
+      de_sysTime=de_minSys*60+de_secSys;
       de_cpuTime=de_userTime+de_sysTime;
       split($20, d_arrMinUser, "m");                d_minUser=d_arrMinUser[1];
       split(d_arrMinUser[2], d_arrSecUser, "s");    d_secUser=d_arrSecUser[1];
-      d_userTime=(d_minUser*60+d_secUser)/60;
+      d_userTime=d_minUser*60+d_secUser;
       split($21, d_arrMinSys, "m");                 d_minSys=d_arrMinSys[1];
       split(d_arrMinSys[2], d_arrSecSys, "s");      d_secSys=d_arrSecSys[1];
-      d_sysTime=(d_minSys*60+d_secSys)/60;
+      d_sysTime=d_minSys*60+d_secSys;
       d_cpuTime=d_userTime+d_sysTime;
       ded_cpuTime=de_cpuTime+d_cpuTime;
-      printf "\t%.2f", ded_cpuTime;
+      printf "\t%.3f", ded_cpuTime;
 
       max_ded_mem=($18 > $22 ? $18 : $22);
-      ded_mem=max_ded_mem/1024;
-      printf "\t%.2f", ded_mem;
+      ded_mem=max_ded_mem;
+      printf "\t%.f", ded_mem;
 
       printf "\t%d\n", $23;
       }' >> $INWF.tmp
@@ -1400,20 +1400,31 @@ then
       removeFromRow=`echo $((FASTA_DATASET_SIZE*FASTA_METHODS_SIZE+1+1))`
       sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_FA.tmp;
 
+      cat ${INWF}_FA.tmp | awk 'NR>1' \
+        | awk -v dsSize=$FASTA_DATASET_SIZE 'BEGIN{}{
+      s+=$2; cenS+=$5; cenTR+=$6; cenTC+=$7; dedTR+=$9; dedTC+=$10;
+      if(NR%dsSize==0) {
+          printf "%.f\t%s\t%s\t%.f\t%.3f\t%.3f\t%s\t%.3f\t%.3f\t%s\t%d\n",
+                 s, $3, $4, cenS, cenTR, cenTC,
+                 $8,
+                 dedTR, dedTC,
+                 $11,
+                 $12;
+          s=0; cenS=0; cenTR=0; cenTC=0; dedTR=0; dedTC=0;
+          }
+      }' > ${INWF}_FA.tmp2
+#      | awk '{size+=$2; cen_size+=$5} NR%4==0 {printf "%.f\t%s\t%s\t%.f\n", size, $3, $4, cen_size; size=0; cen_size=0;}' > ${INWF}_FA.tmp2
 
 
-
-#      cat $IN | awk 'NR>1' | awk '{s+=$5} NR%4==0 {print s; s=0}' >> ${INWF}_FA.$INF
-
+#cut -f2- filename
 
 
-
-      ### FASTQ
-      removeUpToRow=`echo $((removeFromRow-1))`
-      sed "2,$removeUpToRow d" $INWF.tmp > ${INWF}_FQ.tmp;
-
-
-#      rm $INWF.tmp
+#      ### FASTQ
+#      removeUpToRow=`echo $((removeFromRow-1))`
+#      sed "2,$removeUpToRow d" $INWF.tmp > ${INWF}_FQ.tmp;
+#
+#
+##      rm $INWF.tmp
   }
 
   # convert memory numbers scale to MB and times to fractional minutes in
