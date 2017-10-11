@@ -1398,25 +1398,30 @@ then
       FASTA_METHODS_SIZE=`echo $FASTA_METHODS | wc -w`    # except Cryfa
       # 1 row for headers and 1 row after all
       removeFromRow=`echo $((FASTA_DATASET_SIZE*FASTA_METHODS_SIZE+1+1))`
-      sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_FA.tmp;
+      sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_detail_FA.$INF;
 
-      cat ${INWF}_FA.tmp | awk 'NR>1' \
-        | awk -v dsSize=$FASTA_DATASET_SIZE 'BEGIN{}{
-      s+=$2; cenS+=$5; cenTR+=$6; cenTC+=$7; dedTR+=$9; dedTC+=$10;
-      if(NR%dsSize==0) {
-          printf "%.f\t%s\t%s\t%.f\t%.3f\t%.3f\t%s\t%.3f\t%.3f\t%s\t%d\n",
-                 s, $3, $4, cenS, cenTR, cenTC,
-                 $8,
-                 dedTR, dedTC,
-                 $11,
-                 $12;
-          s=0; cenS=0; cenTR=0; cenTC=0; dedTR=0; dedTC=0;
-          }
-      }' > ${INWF}_FA.tmp2
-#      | awk '{size+=$2; cen_size+=$5} NR%4==0 {printf "%.f\t%s\t%s\t%.f\n", size, $3, $4, cen_size; size=0; cen_size=0;}' > ${INWF}_FA.tmp2
+      sed "2,$ d" ${INWF}_detail_FA.$INF | cut -f2- > ${INWF}_ave_FA.$INF;
+      cat ${INWF}_detail_FA.$INF | awk 'NR>1' \
+       | awk -v dsSize=$FASTA_DATASET_SIZE 'BEGIN{}{
+       s+=$2;        cenS+=$5;      cenTR+=$6;    cenTC+=$7;    cenM+=$8;
+       dedTR+=$9;    dedTC+=$10;    dedM+=$11;    eq+=$12;
+       if (NR % dsSize==0) {
+        printf "%.3f\t%s\t%s\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.2f\n",
+               s/dsSize, $3, $4, cenS/dsSize, cenTR/dsSize, cenTC/dsSize,
+               cenM/dsSize, dedTR, dedTC, dedM/dsSize, eq/dsSize;
+        s=0; cenS=0; cenTR=0; cenTC=0; cenM=0; dedTR=0; dedTC=0; dedM=0; eq=0;
+       }
+       }' >> ${INWF}_ave_FA.$INF
 
-
-#cut -f2- filename
+      cen_fa="UnCEn_Ratio\tCEn_Speed(MB/s)\tCEn_Time_cpu(m)\tCEn_Mem(MB)"
+      ded_fa="DeD_Speed(MB/s)\tDeD_Time_cpu(m)\tDeD_Mem(MB)"
+      printf "Size(MB)\tC_Method\tEn_Method\t$cen_fa\t$ded_fa\tEq\n" \
+             > ${INWF}_FA.$INF
+      cat ${INWF}_ave_FA.$INF | awk 'NR>1' | awk 'BEGIN{}{
+       printf "%.f\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
+       $1/(1024*1024), $2, $3, $1/($1-$4), $1/(1024*1024*$5), $6/60, $7/1024,
+       $4/(1024*1024*$8), $9/60, $10/1024, $11;
+       }' >> ${INWF}_FA.$INF
 
 
 #      ### FASTQ
@@ -1424,7 +1429,7 @@ then
 #      sed "2,$removeUpToRow d" $INWF.tmp > ${INWF}_FQ.tmp;
 #
 #
-##      rm $INWF.tmp
+##      rm $INWF.tmp #todo. ejbari
   }
 
   # convert memory numbers scale to MB and times to fractional minutes in
