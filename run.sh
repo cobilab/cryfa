@@ -1415,21 +1415,43 @@ then
 
       cen_fa="UnCEn_Ratio\tCEn_Speed(MB/s)\tCEn_Time_cpu(m)\tCEn_Mem(MB)"
       ded_fa="DeD_Speed(MB/s)\tDeD_Time_cpu(m)\tDeD_Mem(MB)"
-      printf "Size(MB)\tC_Method\tEn_Method\t$cen_fa\t$ded_fa\tEq\n" \
-             > ${INWF}_FA.$INF
+      printf "Size(MB)\tCEn_Method\t$cen_fa\t$ded_fa\tEq\n" > ${INWF}_FA.$INF
       cat ${INWF}_ave_FA.$INF | awk 'NR>1' | awk 'BEGIN{}{
-       printf "%.f\t%s\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
+       printf "%.f\t%s+%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
        $1/(1024*1024), $2, $3, $1/($1-$4), $1/(1024*1024*$5), $6/60, $7/1024,
        $4/(1024*1024*$8), $9/60, $10/1024, $11;
-       }' | tr ',' . >> ${INWF}_FA.$INF
+       }'  >> ${INWF}_FA.$INF
 
+      ### FASTQ
+      FASTQ_DATASET_SIZE=`echo $FASTQ_DATASET | wc -w`
+      FASTQ_METHODS_SIZE=`echo $FASTQ_METHODS | wc -w`    # except Cryfa
+      # 1 row for headers and 1 row after all
+      removeUpToRow=`echo $((removeFromRow-1))`
+      sed "2,$removeUpToRow d" $INWF.tmp > ${INWF}_detail_FQ.$INF;
 
-#      ### FASTQ
-#      removeUpToRow=`echo $((removeFromRow-1))`
-#      sed "2,$removeUpToRow d" $INWF.tmp > ${INWF}_FQ.tmp;
-#
-#
-##      rm $INWF.tmp #todo. ejbari
+      sed "2,$ d" ${INWF}_detail_FQ.$INF | cut -f2- > ${INWF}_ave_FQ.$INF;
+      cat ${INWF}_detail_FQ.$INF | awk 'NR>1' \
+       | awk -v dsSize=$FASTQ_DATASET_SIZE 'BEGIN{}{
+       s+=$2;        cenS+=$5;      cenTR+=$6;    cenTC+=$7;    cenM+=$8;
+       dedTR+=$9;    dedTC+=$10;    dedM+=$11;    eq+=$12;
+       if (NR % dsSize==0) {
+        printf "%.3f\t%s\t%s\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.2f\n",
+               s/dsSize, $3, $4, cenS/dsSize, cenTR/dsSize, cenTC/dsSize,
+               cenM/dsSize, dedTR, dedTC, dedM/dsSize, eq/dsSize;
+        s=0; cenS=0; cenTR=0; cenTC=0; cenM=0; dedTR=0; dedTC=0; dedM=0; eq=0;
+       }
+       }' >> ${INWF}_ave_FQ.$INF
+
+      cen_fq="UnCEn_Ratio\tCEn_Speed(MB/s)\tCEn_Time_cpu(m)\tCEn_Mem(MB)"
+      ded_fq="DeD_Speed(MB/s)\tDeD_Time_cpu(m)\tDeD_Mem(MB)"
+      printf "Size(MB)\tCEn_Method\t$cen_fq\t$ded_fq\tEq\n" > ${INWF}_FQ.$INF
+      cat ${INWF}_ave_FQ.$INF | awk 'NR>1' | awk 'BEGIN{}{
+       printf "%.f\t%s+%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
+       $1/(1024*1024), $2, $3, $1/($1-$4), $1/(1024*1024*$5), $6/60, $7/1024,
+       $4/(1024*1024*$8), $9/60, $10/1024, $11;
+       }'  >> ${INWF}_FQ.$INF
+
+#      rm $INWF.tmp #todo. ejbari
   }
 
   # convert memory numbers scale to MB and times to fractional minutes in
