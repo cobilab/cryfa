@@ -74,7 +74,7 @@ RUN_METHODS=1
       PRINT_RESULTS_ENC=0
 
   # compress/decompress plus encrypt/decrypt
-  RUN_METHODS_COMP_ENC=0
+  RUN_METHODS_COMP_ENC=1
       # FASTA
       RUN_GZIP_FA_AESCRYPT=0       # gzip + AES crypt
       RUN_BZIP2_FA_AESCRYPT=0      # bzip2 + AES crypt
@@ -90,10 +90,10 @@ RUN_METHODS=1
       RUN_DSRC_AESCRYPT=0          # DSRC + AES crypt
       RUN_FQC_AESCRYPT=0           # FQC + AES crypt
       # results
-      PRINT_RESULTS_COMP_ENC=0
+      PRINT_RESULTS_COMP_ENC=1
 
   # cryfa exclusive
-  CRYFA_EXCLUSIVE=1
+  CRYFA_EXCLUSIVE=0
       MAX_N_THR=8                  # max number of threads
       CRYFA_XCL_DATASET="dataset/FA/V/viruses.fasta"
 #      CRYFA_XCL_DATASET="dataset/FA/HS/HS.fasta"
@@ -1242,7 +1242,7 @@ then
       d="D_Time_real(s)\tD_Time_cpu(s)\tD_Mem(KB)"
       printf "Dataset\tSize(B)\tMethod\t$c\t$d\tEq\n" > $INWF.tmp
 
-      cat $IN | awk 'NR>1' | awk 'BEGIN {}{
+      cat $IN | awk 'NR>1' | tr ',' . | awk 'BEGIN {}{
       printf "%s\t%.f\t%s\t%.f", $1, $2, $3, $4;
 
       split($5, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
@@ -1342,7 +1342,7 @@ then
       de="De_Time_real(s)\tDe_Time_cpu(s)\tDe_Mem(KB)"
       printf "Dataset\tSize(B)\tMethod\t$en\t$de\tEq\n" > $INWF.tmp
 
-      cat $IN | awk 'NR>1' | awk 'BEGIN {}{
+      cat $IN | awk 'NR>1' | tr ',' . | awk 'BEGIN {}{
       printf "%s\t%.f\t%s\t%.f", $1, $2, $3, $4;
 
       split($5, en_arrMinReal, "m");                en_minReal=en_arrMinReal[1];
@@ -1444,7 +1444,7 @@ then
       printf "Dataset\tSize(B)\tC_Method\tEn_Method\t$cen\t$ded\tEq\n" \
              > $INWF.tmp
 
-      cat $IN | awk 'NR>1' | awk 'BEGIN {}{
+      cat $IN | awk 'NR>1' | tr ',' . | awk 'BEGIN {}{
       printf "%s\t%.f\t%s\t%s\t%.f", $1, $2, $3, $4, $10;
 
       split($6, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
@@ -1515,55 +1515,58 @@ then
       removeFromRow=`echo $((FASTA_DATASET_SIZE*FASTA_METHODS_SIZE+1+1))`
       sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_detail_FA.$INF;
 
-      sed "2,$ d" ${INWF}_detail_FA.$INF | cut -f2- > ${INWF}_ave_FA.$INF;
-      cat ${INWF}_detail_FA.$INF | awk 'NR>1' \
-       | awk -v dsSize=$FASTA_DATASET_SIZE 'BEGIN{}{
-       s+=$2;        cenS+=$5;      cenTR+=$6;    cenTC+=$7;    cenM+=$8;
-       dedTR+=$9;    dedTC+=$10;    dedM+=$11;    eq+=$12;
-       if (NR % dsSize==0) {
-        printf "%.3f\t%s\t%s\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.2f\n",
-               s/dsSize, $3, $4, cenS/dsSize, cenTR/dsSize, cenTC/dsSize,
-               cenM/dsSize, dedTR/dsSize, dedTC/dsSize, dedM/dsSize, eq/dsSize;
-        s=0; cenS=0; cenTR=0; cenTC=0; cenM=0; dedTR=0; dedTC=0; dedM=0; eq=0;
-       }
-       }' >> ${INWF}_ave_FA.$INF
-
       cen_fa="UnCEn_Ratio\tCEn_Speed(MB/s)\tCEn_Time_cpu(m)\tCEn_Mem(MB)"
       ded_fa="DeD_Speed(MB/s)\tDeD_Time_cpu(m)\tDeD_Mem(MB)"
-      printf "Size(MB)\tCEn_Method\t$cen_fa\t$ded_fa\tEq\n" > ${INWF}_FA.$INF
-      cat ${INWF}_ave_FA.$INF | awk 'NR>1' | awk 'BEGIN{}{
-       printf "%.f\t%s+%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
-       $1/(1024*1024), $2, $3, $1/($1-$4), $1/(1024*1024*$5), $6/60, $7/1024,
-       $4/(1024*1024*$8), $9/60, $10/1024, $11;
+      printf "Dataset\tSize(MB)\tCEn_Method\t$cen_fa\t$ded_fa\tEq\n" \
+          > ${INWF}_FA.$INF
+      cat ${INWF}_detail_FA.$INF | awk 'NR>1' | awk 'BEGIN{}{
+       printf "%s\t%.f\t%s+%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
+       $1, $2/(1024*1024), $3, $4, $2/($2-$5), $2/(1024*1024*$6), $7/60, $8/1024,
+       $5/(1024*1024*$9), $10/60, $11/1024, $12;
        }'  >> ${INWF}_FA.$INF
 
-      ### FASTQ
-      # 1 row for headers and 1 row after all
-      removeUpToRow=`echo $((removeFromRow-1))`
-      sed "2,$removeUpToRow d" $INWF.tmp > ${INWF}_detail_FQ.$INF;
-
-      sed "2,$ d" ${INWF}_detail_FQ.$INF | cut -f2- > ${INWF}_ave_FQ.$INF;
-      cat ${INWF}_detail_FQ.$INF | awk 'NR>1' \
-       | awk -v dsSize=$FASTQ_DATASET_SIZE 'BEGIN{}{
-       s+=$2;        cenS+=$5;      cenTR+=$6;    cenTC+=$7;    cenM+=$8;
-       dedTR+=$9;    dedTC+=$10;    dedM+=$11;    eq+=$12;
+      cen_tot="UnCEn_Ratio\tCEn_Speed(MB/s)\tCEn_Time_cpu(m)"
+      ded_tot="DeD_Speed(MB/s)\tDeD_Time_cpu(m)"
+      printf "Size(MB)\tCEn_Method\t$cen_tot\t$ded_tot\tEq\n" \
+          > ${INWF}_tot_FA.$INF;
+      cat ${INWF}_detail_FA.$INF | awk 'NR>1' \
+       | awk -v dsSize=$FASTA_DATASET_SIZE 'BEGIN{}{
+       s+=$2; cenS+=$5; cenTR+=$6; cenTC+=$7; dedTR+=$9; dedTC+=$10; eq+=$12;
        if (NR % dsSize==0) {
-        printf "%.3f\t%s\t%s\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.2f\n",
-               s/dsSize, $3, $4, cenS/dsSize, cenTR/dsSize, cenTC/dsSize,
-               cenM/dsSize, dedTR/dsSize, dedTC/dsSize, dedM/dsSize, eq/dsSize;
-        s=0; cenS=0; cenTR=0; cenTC=0; cenM=0; dedTR=0; dedTC=0; dedM=0; eq=0;
+        printf "%.f\t%s+%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
+               s/(1024*1024), $3, $4, s/(s-cenS), s/(1024*1024*cenTR),
+               cenTC/60, cenS/(1024*1024*dedTR), dedTC/60, eq;
+        s=0;  cenS=0;  cenTR=0;  cenTC=0;  dedTR=0;  dedTC=0;  eq=0;
        }
-       }' >> ${INWF}_ave_FQ.$INF
+       }' >> ${INWF}_tot_FA.$INF
 
-      cen_fq="UnCEn_Ratio\tCEn_Speed(MB/s)\tCEn_Time_cpu(m)\tCEn_Mem(MB)"
-      ded_fq="DeD_Speed(MB/s)\tDeD_Time_cpu(m)\tDeD_Mem(MB)"
-      printf "Size(MB)\tCEn_Method\t$cen_fq\t$ded_fq\tEq\n" > ${INWF}_FQ.$INF
-      cat ${INWF}_ave_FQ.$INF | awk 'NR>1' | awk 'BEGIN{}{
-       printf "%.f\t%s+%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
-       $1/(1024*1024), $2, $3, $1/($1-$4), $1/(1024*1024*$5), $6/60, $7/1024,
-       $4/(1024*1024*$8), $9/60, $10/1024, $11;
-       }'  >> ${INWF}_FQ.$INF
-
+#      ### FASTQ
+#      # 1 row for headers and 1 row after all
+#      removeUpToRow=`echo $((removeFromRow-1))`
+#      sed "2,$removeUpToRow d" $INWF.tmp > ${INWF}_detail_FQ.$INF;
+#
+#      sed "2,$ d" ${INWF}_detail_FQ.$INF | cut -f2- > ${INWF}_ave_FQ.$INF;
+#      cat ${INWF}_detail_FQ.$INF | awk 'NR>1' \
+#       | awk -v dsSize=$FASTQ_DATASET_SIZE 'BEGIN{}{
+#       s+=$2;        cenS+=$5;      cenTR+=$6;    cenTC+=$7;    cenM+=$8;
+#       dedTR+=$9;    dedTC+=$10;    dedM+=$11;    eq+=$12;
+#       if (NR % dsSize==0) {
+#        printf "%.3f\t%s\t%s\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.3f\t%.2f\n",
+#               s/dsSize, $3, $4, cenS/dsSize, cenTR/dsSize, cenTC/dsSize,
+#               cenM/dsSize, dedTR/dsSize, dedTC/dsSize, dedM/dsSize, eq/dsSize;
+#        s=0; cenS=0; cenTR=0; cenTC=0; cenM=0; dedTR=0; dedTC=0; dedM=0; eq=0;
+#       }
+#       }' >> ${INWF}_ave_FQ.$INF
+#
+#      cen_fq="UnCEn_Ratio\tCEn_Speed(MB/s)\tCEn_Time_cpu(m)\tCEn_Mem(MB)"
+#      ded_fq="DeD_Speed(MB/s)\tDeD_Time_cpu(m)\tDeD_Mem(MB)"
+#      printf "Size(MB)\tCEn_Method\t$cen_fq\t$ded_fq\tEq\n" > ${INWF}_FQ.$INF
+#      cat ${INWF}_ave_FQ.$INF | awk 'NR>1' | awk 'BEGIN{}{
+#       printf "%.f\t%s+%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
+#       $1/(1024*1024), $2, $3, $1/($1-$4), $1/(1024*1024*$5), $6/60, $7/1024,
+#       $4/(1024*1024*$8), $9/60, $10/1024, $11;
+#       }'  >> ${INWF}_FQ.$INF
+#
       rm $INWF.tmp
   }
 
@@ -1574,11 +1577,12 @@ then
       IN=$1              # input file name
       INWF="${IN%.*}"    # input file name without filetype
 
-      c="C_Size(B)\tC_Time_real(s)\tC_Time_cpu(s)\tC_Mem(KB)"
-      d="D_Time_real(s)\tD_Time_cpu(s)\tD_Mem(KB)"
-      printf "Dataset\tSize(B)\tThr\t$c\t$d\tEq\n" > $INWF.tmp
+      c_detail="C_Size(B)\tC_Time_real(s)\tC_Time_cpu(s)\tC_Mem(KB)"
+      d_detail="D_Time_real(s)\tD_Time_cpu(s)\tD_Mem(KB)"
+      printf "Dataset\tSize(B)\tThread\t$c_detail\t$d_detail\tEq\n" \
+          > ${INWF}_detail.$INF
 
-      cat $IN | awk 'NR>1' | awk 'BEGIN {}{
+      cat $IN | awk 'NR>1' | tr ',' . | awk 'BEGIN {}{
       printf "%s\t%.f\t%s\t%.f", $1, $2, $3, $4;
 
       split($5, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
@@ -1608,9 +1612,16 @@ then
       d_sysTime=d_minSys*60+d_secSys;
       d_cpuTime=d_userTime+d_sysTime;
       printf "\t%.3f\t%.f\t%d\n", d_cpuTime, $12, $13;
-      }' >> $INWF.tmp
+      }' >> ${INWF}_detail.$INF
 
-
+      c="UnC_Ratio\tC_Speed(MB/s)\tC_Time_cpu(m)\tC_Mem(MB)"
+      d="D_Speed(MB/s)\tD_Time_cpu(m)\tD_Mem(MB)"
+      printf "Size(MB)\tThread\t$c\t$d\tEq\n" > $INWF.$INF
+      cat ${INWF}_detail.$INF | awk 'NR>1' | awk 'BEGIN{}{
+       printf "%.f\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
+       $2/(1024*1024), $3, $2/($2-$4), $2/(1024*1024*$5), $6/60, $7/1024,
+       $4/(1024*1024*$8), $9/60, $10/1024, $11;
+       }'  >> $INWF.$INF
   }
 
   #------------------- dataset availablity -------------------#
@@ -1803,45 +1814,45 @@ then
           FAdsPath=$dataset/$FA
           FQdsPath=$dataset/$FQ
 
-          ### print results
-          c="C_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)\t"
-          c+="C_Mem(KB)"
-          en="En_Size(B)\tEn_Time_real(s)\tEn_Time_user(s)\tEn_Time_sys(s)\t"
-          en+="En_Mem(KB)"
-          de="De_Time_real(s)\tDe_Time_user(s)\tDe_Time_sys(s)\tDe_Mem(KB)"
-          d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
-          methods="C_Method\tEn_Method"
-          printf "Dataset\tSize(B)\t$methods\t$c\t$en\t$de\t$d\tEq\n" > $OUT;
-
-          for i in $ENC_METHODS; do
-             # FASTA -- human - viruses - synthetic
-             for j in $FASTA_METHODS; do
-                 compEncDecDecompRes $j $i $FAdsPath/$HUMAN/HS.$fasta >> $OUT;
-                 compEncDecDecompRes $j $i \
-                                     $FAdsPath/$VIRUSES/viruses.$fasta >> $OUT;
-                 for k in 1 2; do
-                     compEncDecDecompRes $j $i \
-                                     $FAdsPath/$Synth/SynFA-${k}.$fasta >> $OUT;
-                 done
-             done
-
-             # FASTQ -- human - Denisova - synthetic
-             for j in $FASTQ_METHODS; do
-                 for k in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
-                          SRR707196_1; do
-                     compEncDecDecompRes $j $i \
-                                  $FQdsPath/$HUMAN/HS-${k}.$fastq >> $OUT;
-                 done
-                 for k in B1087 B1088 B1110 B1128 SL3003; do
-                     compEncDecDecompRes $j $i \
-                                  $FQdsPath/$DENISOVA/DS-${k}_SR.$fastq >> $OUT;
-                 done
-                 for k in 1 2; do
-                     compEncDecDecompRes $j $i \
-                                  $FQdsPath/$Synth/SynFQ-${k}.$fastq >> $OUT;
-                 done
-             done
-          done
+#          ### print results
+#          c="C_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)\t"
+#          c+="C_Mem(KB)"
+#          en="En_Size(B)\tEn_Time_real(s)\tEn_Time_user(s)\tEn_Time_sys(s)\t"
+#          en+="En_Mem(KB)"
+#          de="De_Time_real(s)\tDe_Time_user(s)\tDe_Time_sys(s)\tDe_Mem(KB)"
+#          d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
+#          methods="C_Method\tEn_Method"
+#          printf "Dataset\tSize(B)\t$methods\t$c\t$en\t$de\t$d\tEq\n" > $OUT;
+#
+#          for i in $ENC_METHODS; do
+#             # FASTA -- human - viruses - synthetic
+#             for j in $FASTA_METHODS; do
+#                 compEncDecDecompRes $j $i $FAdsPath/$HUMAN/HS.$fasta >> $OUT;
+#                 compEncDecDecompRes $j $i \
+#                                     $FAdsPath/$VIRUSES/viruses.$fasta >> $OUT;
+#                 for k in 1 2; do
+#                     compEncDecDecompRes $j $i \
+#                                     $FAdsPath/$Synth/SynFA-${k}.$fasta >> $OUT;
+#                 done
+#             done
+#
+#             # FASTQ -- human - Denisova - synthetic
+#             for j in $FASTQ_METHODS; do
+#                 for k in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
+#                          SRR707196_1; do
+#                     compEncDecDecompRes $j $i \
+#                                  $FQdsPath/$HUMAN/HS-${k}.$fastq >> $OUT;
+#                 done
+#                 for k in B1087 B1088 B1110 B1128 SL3003; do
+#                     compEncDecDecompRes $j $i \
+#                                  $FQdsPath/$DENISOVA/DS-${k}_SR.$fastq >> $OUT;
+#                 done
+#                 for k in 1 2; do
+#                     compEncDecDecompRes $j $i \
+#                                  $FQdsPath/$Synth/SynFQ-${k}.$fastq >> $OUT;
+#                 done
+#             done
+#          done
 
           ### convert the result file into a human readable file
           compEncResHumanReadable $OUT;
@@ -1860,8 +1871,9 @@ then
       ft="${in##*.}"                      # input filetype
       fsize=`stat --printf="%s" $CRYFA_XCL_DATASET`    # file size (bytes)
       result_FLD="../$result"
-      CRYFA_THR_RUN=`seq -s' ' 1 $MAX_N_THR`;
+#      CRYFA_THR_RUN=`seq -s' ' 1 $MAX_N_THR`;
 #      CRYFA_THR_RUN=$MAX_N_THR;
+      CRYFA_THR_RUN=`seq -s' ' 6 $MAX_N_THR`;
 
       ### run for different number of threads
       if [[ $RUN_CRYFA_XCL -eq 1 ]];
@@ -1915,58 +1927,58 @@ then
           OUT="CRYFA_THR.$RES"       # output file name
           cd $cryfa_xcl
 
-          c="C_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)\t"
-          c+="C_Mem(KB)"
-          d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
-          printf "Dataset\tSize(B)\tThread\t$c\t$d\tEq\n" > $OUT;
+#          c="C_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)\t"
+#          c+="C_Mem(KB)"
+#          d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
+#          printf "Dataset\tSize(B)\tThread\t$c\t$d\tEq\n" > $OUT;
+#
+#          for nThr in $CRYFA_THR_RUN; do
+#              ### print compress/decompress results
+#              CS="";       CT_r="";     CT_u="";     CT_s="";     CM="";
+#              DT_r="";     DT_u="";     DT_s="";     DM="";       V="";
+#
+#              ### compressed file size
+#              cs_file="$result_FLD/CRYFA_THR_${nThr}_CS__${inDataWF}_$ft"
+#              if [[ -e $cs_file ]];
+#                  then CS=`cat $cs_file | awk '{ print $5; }'`;
+#              fi
+#
+#              ### compression time -- real - user - system
+#              ct_file="$result_FLD/CRYFA_THR_${nThr}_CT__${inDataWF}_$ft"
+#              if [[ -e $ct_file ]]; then
+#                  CT_r=`cat $ct_file |tail -n 3 |head -n 1 | awk '{ print $2;}'`
+#                  CT_u=`cat $ct_file |tail -n 2 |head -n 1 | awk '{ print $2;}'`
+#                  CT_s=`cat $ct_file |tail -n 1 |awk '{ print $2;}'`
+#              fi
+#
+#              ### compression memory
+#              cm_file="$result_FLD/CRYFA_THR_${nThr}_CM__${inDataWF}_$ft"
+#              if [[ -e $cm_file ]]; then CM=`cat $cm_file`; fi
+#
+#              ### decompression time -- real - user - system
+#              dt_file="$result_FLD/CRYFA_THR_${nThr}_DT__${inDataWF}_$ft"
+#              if [[ -e $dt_file ]]; then
+#                  DT_r=`cat $dt_file |tail -n 3 |head -n 1 | awk '{ print $2;}'`
+#                  DT_u=`cat $dt_file |tail -n 2 |head -n 1 | awk '{ print $2;}'`
+#                  DT_s=`cat $dt_file |tail -n 1 |awk '{ print $2;}'`
+#              fi
+#
+#              ### decompression memory
+#              dm_file="$result_FLD/CRYFA_THR_${nThr}_DM__${inDataWF}_$ft"
+#              if [[ -e $dm_file ]]; then DM=`cat $dm_file`; fi
+#
+#              ### if decompressed file is the same as the original file
+#              v_file="$result_FLD/CRYFA_THR_${nThr}_V__${inDataWF}_$ft"
+#              if [[ -e $v_file ]]; then V=`cat $v_file | wc -l`; fi
+#
+#              c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"   # compression results
+#              d="$DT_r\t$DT_u\t$DT_s\t$DM"        # decompression results
+#
+#              printf "$inDataWF\t$fsize\t$nThr\t$c\t$d\t$V\n" >> $OUT;
+#          done
 
-          for nThr in $CRYFA_THR_RUN; do
-              ### print compress/decompress results
-              CS="";       CT_r="";     CT_u="";     CT_s="";     CM="";
-              DT_r="";     DT_u="";     DT_s="";     DM="";       V="";
-
-              ### compressed file size
-              cs_file="$result_FLD/CRYFA_THR_${nThr}_CS__${inDataWF}_$ft"
-              if [[ -e $cs_file ]];
-                  then CS=`cat $cs_file | awk '{ print $5; }'`;
-              fi
-
-              ### compression time -- real - user - system
-              ct_file="$result_FLD/CRYFA_THR_${nThr}_CT__${inDataWF}_$ft"
-              if [[ -e $ct_file ]]; then
-                  CT_r=`cat $ct_file |tail -n 3 |head -n 1 | awk '{ print $2;}'`
-                  CT_u=`cat $ct_file |tail -n 2 |head -n 1 | awk '{ print $2;}'`
-                  CT_s=`cat $ct_file |tail -n 1 |awk '{ print $2;}'`
-              fi
-
-              ### compression memory
-              cm_file="$result_FLD/CRYFA_THR_${nThr}_CM__${inDataWF}_$ft"
-              if [[ -e $cm_file ]]; then CM=`cat $cm_file`; fi
-
-              ### decompression time -- real - user - system
-              dt_file="$result_FLD/CRYFA_THR_${nThr}_DT__${inDataWF}_$ft"
-              if [[ -e $dt_file ]]; then
-                  DT_r=`cat $dt_file |tail -n 3 |head -n 1 | awk '{ print $2;}'`
-                  DT_u=`cat $dt_file |tail -n 2 |head -n 1 | awk '{ print $2;}'`
-                  DT_s=`cat $dt_file |tail -n 1 |awk '{ print $2;}'`
-              fi
-
-              ### decompression memory
-              dm_file="$result_FLD/CRYFA_THR_${nThr}_DM__${inDataWF}_$ft"
-              if [[ -e $dm_file ]]; then DM=`cat $dm_file`; fi
-
-              ### if decompressed file is the same as the original file
-              v_file="$result_FLD/CRYFA_THR_${nThr}_V__${inDataWF}_$ft"
-              if [[ -e $v_file ]]; then V=`cat $v_file | wc -l`; fi
-
-              c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"   # compression results
-              d="$DT_r\t$DT_u\t$DT_s\t$DM"        # decompression results
-
-              printf "$inDataWF\t$fsize\t$nThr\t$c\t$d\t$V\n" >> $OUT;
-          done
-
-#          ### convert the result file into a human readable file
-#          cryfaXclResHumanReadable $OUT;
+          ### convert the result file into a human readable file
+          cryfaXclResHumanReadable $OUT;
 
           cd ..
       fi
