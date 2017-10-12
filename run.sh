@@ -1511,20 +1511,28 @@ then
       }' >> $INWF.tmp
 
       ### FASTA
-      # 1 row for headers and 1 row after all
+      # details -- 1 row for headers and 1 row after all
       removeFromRow=`echo $((FASTA_DATASET_SIZE*FASTA_METHODS_SIZE+1+1))`
       sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_detail_FA.$INF;
 
+      # for each dataset
       cen_fa="UnCEn_Ratio\tCEn_Speed(MB/s)\tCEn_Time_cpu(m)\tCEn_Mem(MB)"
       ded_fa="DeD_Speed(MB/s)\tDeD_Time_cpu(m)\tDeD_Mem(MB)"
       printf "Dataset\tSize(MB)\tCEn_Method\t$cen_fa\t$ded_fa\tEq\n" \
-          > ${INWF}_FA.$INF
+          > ${INWF}_FA.tmp
       cat ${INWF}_detail_FA.$INF | awk 'NR>1' | awk 'BEGIN{}{
        printf "%s\t%.f\t%s+%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
        $1, $2/(1024*1024), $3, $4, $2/($2-$5), $2/(1024*1024*$6), $7/60, $8/1024,
        $5/(1024*1024*$9), $10/60, $11/1024, $12;
-       }'  >> ${INWF}_FA.$INF
+       }'  >> ${INWF}_FA.tmp
 
+       for i in $FASTA_DATASET; do
+           sed "2,$ d" ${INWF}_FA.tmp > ${INWF}_${i}_FA.$INF;
+           cat ${INWF}_FA.tmp | awk 'NR>1' \
+            | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_FA.$INF;
+       done
+       rm ${INWF}_FA.tmp
+      # total
       cen_tot="UnCEn_Ratio\tCEn_Speed(MB/s)\tCEn_Time_cpu(m)"
       ded_tot="DeD_Speed(MB/s)\tDeD_Time_cpu(m)"
       printf "Size(MB)\tCEn_Method\t$cen_tot\t$ded_tot\tEq\n" \
