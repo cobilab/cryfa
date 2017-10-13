@@ -186,14 +186,14 @@ then
           wget $WGET_OP $HUMAN_FA_URL/$HUMAN_CHROMOSOME$i.fa.gz;
           gunzip < $HUMAN_CHROMOSOME$i.fa.gz | grep -Ev "^$" \
                  > $dataset/$FA/$HUMAN/$HUMAN-$i.$fasta
-          rm $HUMAN_CHROMOSOME$i.fa.gz
+          rm -f $HUMAN_CHROMOSOME$i.fa.gz
       done
       for dual in "alts AL" "unplaced UP" "unlocalized UL"; do
           set $dual
           wget $WGET_OP $HUMAN_FA_URL/$HUMAN_CHR_PREFIX$1.fa.gz;
           gunzip < $HUMAN_CHR_PREFIX$1.fa.gz | grep -Ev "^$" \
                  > $dataset/$FA/$HUMAN/$HUMAN-$2.$fasta
-          rm $HUMAN_CHR_PREFIX$1.fa.gz;
+          rm -f $HUMAN_CHR_PREFIX$1.fa.gz;
       done
 
       ### join all files
@@ -203,7 +203,7 @@ then
           HS-16.$fasta HS-17.$fasta HS-18.$fasta HS-19.$fasta HS-20.$fasta \
           HS-21.$fasta HS-22.$fasta HS-X.$fasta HS-Y.$fasta HS-AL.$fasta   \
           HS-UL.$fasta HS-UP.$fasta HS-MT.$fasta > HS.$fasta.tmp
-      rm *.$fasta
+      rm -f *.$fasta
       mv HS.$fasta.tmp > HS.$fasta
   fi
 
@@ -220,7 +220,7 @@ then
 
       # remove blank lines in downloaded file & move it to dataset folder
       cat viruses.fa | grep -Ev "^$" > $dataset/$FA/$VIRUSES/viruses.$fasta
-      rm viruses.fa
+      rm -f viruses.fa
   fi
 
   ### synthetic -- 4 GB
@@ -271,7 +271,7 @@ then
           set $dual
           wget $WGET_OP $HUMAN_FQ_URL/$1/$2.fastq.gz;
           gunzip < $2.fastq.gz > $dataset/$FQ/$HUMAN/$HUMAN-$2.$fastq;
-          rm $2.fastq.gz;
+          rm -f $2.fastq.gz;
       done
   fi
 
@@ -288,7 +288,7 @@ then
           wget $WGET_OP $DENISOVA_FQ_URL/${i}_SR.txt.gz;
           gunzip < ${i}_SR.txt.gz \
                  > $dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq
-          rm ${i}_SR.txt.gz;
+          rm -f ${i}_SR.txt.gz;
       done
   fi
 
@@ -345,7 +345,7 @@ then
 #      wget $url/cmake-3.9.2-Linux-x86_64.tar.gz
 #      tar -xzf cmake-3.9.2-Linux-x86_64.tar.gz
 ##      cp cmake-3.9.2-Linux-x86_64/bin/cmake .
-#      rm cmake-3.9.2-Linux-x86_64.tar.gz
+#      rm -f cmake-3.9.2-Linux-x86_64.tar.gz
   fi
 
   ### LIBBOOST
@@ -1297,7 +1297,7 @@ then
            cat ${INWF}_FA.tmp | awk 'NR>1' \
             | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_FA.$INF;
        done
-       rm ${INWF}_FA.tmp
+       rm -f ${INWF}_FA.tmp
 
       # total
       c_tot="UnC_Ratio\tC_Speed(MB/s)\tC_Time_cpu(m)"
@@ -1334,7 +1334,7 @@ then
            cat ${INWF}_FQ.tmp | awk 'NR>1' \
             | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_FQ.$INF;
        done
-       rm ${INWF}_FQ.tmp
+       rm -f ${INWF}_FQ.tmp
 
       # total
       printf "Size(MB)\tMethod\t$c_tot\t$d_tot\tEq\n" > ${INWF}_tot_FQ.$INF;
@@ -1349,7 +1349,7 @@ then
        }
        }' >> ${INWF}_tot_FQ.$INF
 
-      rm $INWF.tmp
+      rm -f $INWF.tmp
   }
 
   # convert memory numbers scale to MB and times to fractional minutes in
@@ -1424,7 +1424,7 @@ then
            cat $result/COMP_${i}_FA.$INF | awk 'NR>1' \
             | awk 'BEGIN{}{if ($3=="Cryfa") print;}' >> ${INWF}_${i}_FA.$INF;
        done
-       rm ${INWF}_FA.tmp
+       rm -f ${INWF}_FA.tmp
 
       # total
       en_tot="UnEn_Ratio\tEn_Speed(MB/s)\tEn_Time_cpu(m)"
@@ -1469,7 +1469,7 @@ then
            cat $result/COMP_${i}_FQ.$INF | awk 'NR>1' \
             | awk 'BEGIN{}{if ($3=="Cryfa") print;}' >> ${INWF}_${i}_FQ.$INF;
        done
-       rm ${INWF}_FQ.tmp
+       rm -f ${INWF}_FQ.tmp
 
       # total
       printf "Size(MB)\tMethod\t$en_tot\t$de_tot\tEq\n" > ${INWF}_tot_FQ.$INF;
@@ -1488,7 +1488,7 @@ then
       cat $result/COMP_tot_FQ.$INF | awk 'NR>1' \
        | awk 'BEGIN{}{if ($2=="Cryfa") print;}' >> ${INWF}_tot_FQ.$INF
 
-      rm $INWF.tmp
+      rm -f $INWF.tmp
   }
 
   # convert memory numbers scale to MB and times to fractional minutes in
@@ -1595,7 +1595,7 @@ then
            cat $result/COMP_${i}_FA.$INF | awk 'NR>1' \
             | awk 'BEGIN{}{if ($3=="Cryfa") print;}' >> ${INWF}_${i}_FA.$INF;
        done
-       rm ${INWF}_FA.tmp
+       rm -f ${INWF}_FA.tmp
 
       # total
       cen_tot="UnCEn_Ratio\tCEn_Speed(MB/s)\tCEn_Time_cpu(m)"
@@ -1640,7 +1640,7 @@ then
            cat $result/COMP_${i}_FQ.$INF | awk 'NR>1' \
             | awk 'BEGIN{}{if ($3=="Cryfa") print;}' >> ${INWF}_${i}_FQ.$INF;
        done
-       rm ${INWF}_FQ.tmp
+       rm -f ${INWF}_FQ.tmp
 
       # total
       printf "Size(MB)\tCEn_Method\t$cen_tot\t$ded_tot\tEq\n" \
@@ -1660,7 +1660,7 @@ then
       cat $result/COMP_tot_FQ.$INF | awk 'NR>1' \
        | awk 'BEGIN{}{if ($2=="Cryfa") print;}' >> ${INWF}_tot_FQ.$INF
 
-      rm $INWF.tmp
+      rm -f $INWF.tmp
   }
 
   # convert memory numbers scale to MB and times to fractional minutes in
