@@ -74,7 +74,7 @@ RUN_METHODS=1
       PRINT_RESULTS_ENC=1
 
   # compress/decompress plus encrypt/decrypt
-  RUN_METHODS_COMP_ENC=1
+  RUN_METHODS_COMP_ENC=0
       # FASTA
       RUN_GZIP_FA_AESCRYPT=0       # gzip + AES crypt
       RUN_BZIP2_FA_AESCRYPT=0      # bzip2 + AES crypt
@@ -1906,45 +1906,45 @@ then
           FAdsPath=$dataset/$FA
           FQdsPath=$dataset/$FQ
 
-#          ### print results
-#          c="C_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)\t"
-#          c+="C_Mem(KB)"
-#          en="En_Size(B)\tEn_Time_real(s)\tEn_Time_user(s)\tEn_Time_sys(s)\t"
-#          en+="En_Mem(KB)"
-#          de="De_Time_real(s)\tDe_Time_user(s)\tDe_Time_sys(s)\tDe_Mem(KB)"
-#          d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
-#          methods="C_Method\tEn_Method"
-#          printf "Dataset\tSize(B)\t$methods\t$c\t$en\t$de\t$d\tEq\n" > $OUT;
-#
-#          for i in $ENC_METHODS; do
-#             # FASTA -- human - viruses - synthetic
-#             for j in $FASTA_METHODS; do
-#                 compEncDecDecompRes $j $i $FAdsPath/$HUMAN/HS.$fasta >> $OUT;
-#                 compEncDecDecompRes $j $i \
-#                                     $FAdsPath/$VIRUSES/viruses.$fasta >> $OUT;
-#                 for k in 1 2; do
-#                     compEncDecDecompRes $j $i \
-#                                     $FAdsPath/$Synth/SynFA-${k}.$fasta >> $OUT;
-#                 done
-#             done
-#
-#             # FASTQ -- human - Denisova - synthetic
-#             for j in $FASTQ_METHODS; do
-#                 for k in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
-#                          SRR707196_1; do
-#                     compEncDecDecompRes $j $i \
-#                                  $FQdsPath/$HUMAN/HS-${k}.$fastq >> $OUT;
-#                 done
-#                 for k in B1087 B1088 B1110 B1128 SL3003; do
-#                     compEncDecDecompRes $j $i \
-#                                  $FQdsPath/$DENISOVA/DS-${k}_SR.$fastq >> $OUT;
-#                 done
-#                 for k in 1 2; do
-#                     compEncDecDecompRes $j $i \
-#                                  $FQdsPath/$Synth/SynFQ-${k}.$fastq >> $OUT;
-#                 done
-#             done
-#          done
+          ### print results
+          c="C_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)\t"
+          c+="C_Mem(KB)"
+          en="En_Size(B)\tEn_Time_real(s)\tEn_Time_user(s)\tEn_Time_sys(s)\t"
+          en+="En_Mem(KB)"
+          de="De_Time_real(s)\tDe_Time_user(s)\tDe_Time_sys(s)\tDe_Mem(KB)"
+          d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
+          methods="C_Method\tEn_Method"
+          printf "Dataset\tSize(B)\t$methods\t$c\t$en\t$de\t$d\tEq\n" > $OUT;
+
+          for i in $ENC_METHODS; do
+             # FASTA -- human - viruses - synthetic
+             for j in $FASTA_METHODS; do
+                 compEncDecDecompRes $j $i $FAdsPath/$HUMAN/HS.$fasta >> $OUT;
+                 compEncDecDecompRes $j $i \
+                                     $FAdsPath/$VIRUSES/viruses.$fasta >> $OUT;
+                 for k in 1 2; do
+                     compEncDecDecompRes $j $i \
+                                     $FAdsPath/$Synth/SynFA-${k}.$fasta >> $OUT;
+                 done
+             done
+
+             # FASTQ -- human - Denisova - synthetic
+             for j in $FASTQ_METHODS; do
+                 for k in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
+                          SRR707196_1; do
+                     compEncDecDecompRes $j $i \
+                                  $FQdsPath/$HUMAN/HS-${k}.$fastq >> $OUT;
+                 done
+                 for k in B1087 B1088 B1110 B1128 SL3003; do
+                     compEncDecDecompRes $j $i \
+                                  $FQdsPath/$DENISOVA/DS-${k}_SR.$fastq >> $OUT;
+                 done
+                 for k in 1 2; do
+                     compEncDecDecompRes $j $i \
+                                  $FQdsPath/$Synth/SynFQ-${k}.$fastq >> $OUT;
+                 done
+             done
+          done
 
           ### convert the result file into a human readable file
           compEncResHumanReadable $OUT;
