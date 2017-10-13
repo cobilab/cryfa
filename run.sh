@@ -74,7 +74,7 @@ RUN_METHODS=1
       PRINT_RESULTS_ENC=1
 
   # compress/decompress plus encrypt/decrypt
-  RUN_METHODS_COMP_ENC=0
+  RUN_METHODS_COMP_ENC=1
       # FASTA
       RUN_GZIP_FA_AESCRYPT=0       # gzip + AES crypt
       RUN_BZIP2_FA_AESCRYPT=0      # bzip2 + AES crypt
@@ -1287,7 +1287,7 @@ then
       printf "Dataset\tSize(MB)\tC_Method\t$c_each\t$d_each\tEq\n" \
           > ${INWF}_FA.tmp
       cat ${INWF}_detail_FA.$INF | awk 'NR>1' | awk 'BEGIN{}{
-      printf "%s\t%.f\t%s\t%.1f\t%.1f\t%.2f\t%.f\t%.1f\t%.2f\t%.f\t%.1f\n",
+       printf "%s\t%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.f\t%.2f\t%.f\t%.1f\n",
        $1, $2/(1024*1024), $3, $2/($2-$4), $2/(1024*1024*$5), $6/60,
        $7/1024, $4/(1024*1024*$8), $9/60, $10/1024, $11;
        }'  >> ${INWF}_FA.tmp
@@ -1308,7 +1308,7 @@ then
        | awk -v dsSize=$FASTA_DATASET_SIZE 'BEGIN{}{
        s+=$2;  cS+=$4;  cTR+=$5;  cTC+=$6;  dTR+=$8;  dTC+=$9;  eq+=$11;
        if (NR % dsSize==0) {
-        printf "%.f\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
+        printf "%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.2f\t%.1f\n",
                s/(1024*1024), $3, s/(s-cS), s/(1024*1024*cTR),
                cTC/60, cS/(1024*1024*dTR), dTC/60, eq;
         s=0;   cS=0;   cTR=0;   cTC=0;   dTR=0;   dTC=0;   eq=0;
@@ -1324,7 +1324,7 @@ then
       printf "Dataset\tSize(MB)\tMethod\t$c_each\t$d_each\tEq\n" \
           > ${INWF}_FQ.tmp
       cat ${INWF}_detail_FQ.$INF | awk 'NR>1' | awk 'BEGIN{}{
-      printf "%s\t%.f\t%s\t%.1f\t%.1f\t%.2f\t%.f\t%.1f\t%.2f\t%.f\t%.1f\n",
+       printf "%s\t%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.f\t%.2f\t%.f\t%.1f\n",
        $1, $2/(1024*1024), $3, $2/($2-$4), $2/(1024*1024*$5), $6/60,
        $7/1024, $4/(1024*1024*$8), $9/60, $10/1024, $11;
        }'  >> ${INWF}_FQ.tmp
@@ -1342,7 +1342,7 @@ then
        | awk -v dsSize=$FASTQ_DATASET_SIZE 'BEGIN{}{
        s+=$2;  cS+=$4;  cTR+=$5;  cTC+=$6;  dTR+=$8;  dTC+=$9;  eq+=$11;
        if (NR % dsSize==0) {
-        printf "%.f\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
+        printf "%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.2f\t%.1f\n",
                s/(1024*1024), $3, s/(s-cS), s/(1024*1024*cTR),
                cTC/60, cS/(1024*1024*dTR), dTC/60, eq;
         s=0;   cS=0;   cTR=0;   cTC=0;   dTR=0;   dTC=0;   eq=0;
@@ -1410,7 +1410,7 @@ then
       printf "Dataset\tSize(MB)\tEn_Method\t$en_each\t$de_each\tEq\n" \
           > ${INWF}_FA.tmp
       cat ${INWF}_detail_FA.$INF | awk 'NR>1' | awk 'BEGIN{}{
-      printf "%s\t%.f\t%s\t%.1f\t%.1f\t%.2f\t%.f\t%.1f\t%.2f\t%.f\t%.1f\n",
+       printf "%s\t%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.f\t%.2f\t%.f\t%.1f\n",
        $1, $2/(1024*1024), $3, $2/($2-$4), $2/(1024*1024*$5), $6/60,
        $7/1024, $4/(1024*1024*$8), $9/60, $10/1024, $11;
        }'  >> ${INWF}_FA.tmp
@@ -1435,7 +1435,7 @@ then
        | awk -v dsSize=$FASTA_DATASET_SIZE 'BEGIN{}{
        s+=$2;  cS+=$4;  cTR+=$5;  cTC+=$6;  dTR+=$8;  dTC+=$9;  eq+=$11;
        if (NR % dsSize==0) {
-        printf "%.f\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
+        printf "%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.2f\t%.1f\n",
                s/(1024*1024), $3, s/(s-cS), s/(1024*1024*cTR),
                cTC/60, cS/(1024*1024*dTR), dTC/60, eq;
         s=0;   cS=0;   cTR=0;   cTC=0;   dTR=0;   dTC=0;   eq=0;
@@ -1455,7 +1455,7 @@ then
       printf "Dataset\tSize(MB)\tMethod\t$en_each\t$de_each\tEq\n" \
           > ${INWF}_FQ.tmp
       cat ${INWF}_detail_FQ.$INF | awk 'NR>1' | awk 'BEGIN{}{
-      printf "%s\t%.f\t%s\t%.1f\t%.1f\t%.2f\t%.f\t%.1f\t%.2f\t%.f\t%.1f\n",
+       printf "%s\t%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.f\t%.2f\t%.f\t%.1f\n",
        $1, $2/(1024*1024), $3, $2/($2-$4), $2/(1024*1024*$5), $6/60,
        $7/1024, $4/(1024*1024*$8), $9/60, $10/1024, $11;
        }'  >> ${INWF}_FQ.tmp
@@ -1477,7 +1477,7 @@ then
        | awk -v dsSize=$FASTQ_DATASET_SIZE 'BEGIN{}{
        s+=$2;  cS+=$4;  cTR+=$5;  cTC+=$6;  dTR+=$8;  dTC+=$9;  eq+=$11;
        if (NR % dsSize==0) {
-        printf "%.f\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
+        printf "%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.2f\t%.1f\n",
                s/(1024*1024), $3, s/(s-cS), s/(1024*1024*cTR),
                cTC/60, cS/(1024*1024*dTR), dTC/60, eq;
         s=0;   cS=0;   cTR=0;   cTC=0;   dTR=0;   dTC=0;   eq=0;
@@ -1581,7 +1581,7 @@ then
       printf "Dataset\tSize(MB)\tCEn_Method\t$cen_each\t$ded_each\tEq\n" \
           > ${INWF}_FA.tmp
       cat ${INWF}_detail_FA.$INF | awk 'NR>1' | awk 'BEGIN{}{
-      printf "%s\t%.f\t%s+%s\t%.1f\t%.1f\t%.2f\t%.f\t%.1f\t%.2f\t%.f\t%.1f\n",
+      printf "%s\t%.f\t%s+%s\t%.1f\t%.f\t%.2f\t%.f\t%.f\t%.2f\t%.f\t%.1f\n",
        $1, $2/(1024*1024), $3, $4, $2/($2-$5), $2/(1024*1024*$6), $7/60,
        $8/1024, $5/(1024*1024*$9), $10/60, $11/1024, $12;
        }'  >> ${INWF}_FA.tmp
@@ -1606,7 +1606,7 @@ then
        | awk -v dsSize=$FASTA_DATASET_SIZE 'BEGIN{}{
        s+=$2; cenS+=$5; cenTR+=$6; cenTC+=$7; dedTR+=$9; dedTC+=$10; eq+=$12;
        if (NR % dsSize==0) {
-        printf "%.f\t%s+%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
+        printf "%.f\t%s+%s\t%.1f\t%.f\t%.2f\t%.f\t%.2f\t%.1f\n",
                s/(1024*1024), $3, $4, s/(s-cenS), s/(1024*1024*cenTR),
                cenTC/60, cenS/(1024*1024*dedTR), dedTC/60, eq;
         s=0;  cenS=0;  cenTR=0;  cenTC=0;  dedTR=0;  dedTC=0;  eq=0;
@@ -1626,7 +1626,7 @@ then
       printf "Dataset\tSize(MB)\tCEn_Method\t$cen_each\t$ded_each\tEq\n" \
           > ${INWF}_FQ.tmp
       cat ${INWF}_detail_FQ.$INF | awk 'NR>1' | awk 'BEGIN{}{
-      printf "%s\t%.f\t%s+%s\t%.1f\t%.1f\t%.2f\t%.f\t%.1f\t%.2f\t%.f\t%.1f\n",
+       printf "%s\t%.f\t%s+%s\t%.1f\t%.f\t%.2f\t%.f\t%.f\t%.2f\t%.f\t%.1f\n",
        $1, $2/(1024*1024), $3, $4, $2/($2-$5), $2/(1024*1024*$6), $7/60,
        $8/1024, $5/(1024*1024*$9), $10/60, $11/1024, $12;
        }'  >> ${INWF}_FQ.tmp
@@ -1649,7 +1649,7 @@ then
        | awk -v dsSize=$FASTQ_DATASET_SIZE 'BEGIN{}{
        s+=$2; cenS+=$5; cenTR+=$6; cenTC+=$7; dedTR+=$9; dedTC+=$10; eq+=$12;
        if (NR % dsSize==0) {
-        printf "%.f\t%s+%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
+        printf "%.f\t%s+%s\t%.1f\t%.f\t%.2f\t%.f\t%.2f\t%.1f\n",
                s/(1024*1024), $3, $4, s/(s-cenS), s/(1024*1024*cenTR),
                cenTC/60, cenS/(1024*1024*dedTR), dedTC/60, eq;
         s=0;  cenS=0;  cenTR=0;  cenTC=0;  dedTR=0;  dedTC=0;  eq=0;
@@ -1710,7 +1710,7 @@ then
       d_each="D_Speed(MB/s)\tD_Time_cpu(m)\tD_Mem(MB)"
       printf "Size(MB)\tThread\t$c_each\t$d_each\tEq\n" > $INWF.$INF
       cat ${INWF}_detail.$INF | awk 'NR>1' | awk 'BEGIN{}{
-       printf "%.f\t%s\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\t%.2f\n",
+       printf "%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.f\t%.2f\t%.f\t%.1f\n",
        $2/(1024*1024), $3, $2/($2-$4), $2/(1024*1024*$5), $6/60, $7/1024,
        $4/(1024*1024*$8), $9/60, $10/1024, $11;
        }'  >> $INWF.$INF
@@ -1906,45 +1906,45 @@ then
           FAdsPath=$dataset/$FA
           FQdsPath=$dataset/$FQ
 
-          ### print results
-          c="C_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)\t"
-          c+="C_Mem(KB)"
-          en="En_Size(B)\tEn_Time_real(s)\tEn_Time_user(s)\tEn_Time_sys(s)\t"
-          en+="En_Mem(KB)"
-          de="De_Time_real(s)\tDe_Time_user(s)\tDe_Time_sys(s)\tDe_Mem(KB)"
-          d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
-          methods="C_Method\tEn_Method"
-          printf "Dataset\tSize(B)\t$methods\t$c\t$en\t$de\t$d\tEq\n" > $OUT;
-
-          for i in $ENC_METHODS; do
-             # FASTA -- human - viruses - synthetic
-             for j in $FASTA_METHODS; do
-                 compEncDecDecompRes $j $i $FAdsPath/$HUMAN/HS.$fasta >> $OUT;
-                 compEncDecDecompRes $j $i \
-                                     $FAdsPath/$VIRUSES/viruses.$fasta >> $OUT;
-                 for k in 1 2; do
-                     compEncDecDecompRes $j $i \
-                                     $FAdsPath/$Synth/SynFA-${k}.$fasta >> $OUT;
-                 done
-             done
-
-             # FASTQ -- human - Denisova - synthetic
-             for j in $FASTQ_METHODS; do
-                 for k in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
-                          SRR707196_1; do
-                     compEncDecDecompRes $j $i \
-                                  $FQdsPath/$HUMAN/HS-${k}.$fastq >> $OUT;
-                 done
-                 for k in B1087 B1088 B1110 B1128 SL3003; do
-                     compEncDecDecompRes $j $i \
-                                  $FQdsPath/$DENISOVA/DS-${k}_SR.$fastq >> $OUT;
-                 done
-                 for k in 1 2; do
-                     compEncDecDecompRes $j $i \
-                                  $FQdsPath/$Synth/SynFQ-${k}.$fastq >> $OUT;
-                 done
-             done
-          done
+#          ### print results
+#          c="C_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)\t"
+#          c+="C_Mem(KB)"
+#          en="En_Size(B)\tEn_Time_real(s)\tEn_Time_user(s)\tEn_Time_sys(s)\t"
+#          en+="En_Mem(KB)"
+#          de="De_Time_real(s)\tDe_Time_user(s)\tDe_Time_sys(s)\tDe_Mem(KB)"
+#          d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
+#          methods="C_Method\tEn_Method"
+#          printf "Dataset\tSize(B)\t$methods\t$c\t$en\t$de\t$d\tEq\n" > $OUT;
+#
+#          for i in $ENC_METHODS; do
+#             # FASTA -- human - viruses - synthetic
+#             for j in $FASTA_METHODS; do
+#                 compEncDecDecompRes $j $i $FAdsPath/$HUMAN/HS.$fasta >> $OUT;
+#                 compEncDecDecompRes $j $i \
+#                                     $FAdsPath/$VIRUSES/viruses.$fasta >> $OUT;
+#                 for k in 1 2; do
+#                     compEncDecDecompRes $j $i \
+#                                     $FAdsPath/$Synth/SynFA-${k}.$fasta >> $OUT;
+#                 done
+#             done
+#
+#             # FASTQ -- human - Denisova - synthetic
+#             for j in $FASTQ_METHODS; do
+#                 for k in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
+#                          SRR707196_1; do
+#                     compEncDecDecompRes $j $i \
+#                                  $FQdsPath/$HUMAN/HS-${k}.$fastq >> $OUT;
+#                 done
+#                 for k in B1087 B1088 B1110 B1128 SL3003; do
+#                     compEncDecDecompRes $j $i \
+#                                  $FQdsPath/$DENISOVA/DS-${k}_SR.$fastq >> $OUT;
+#                 done
+#                 for k in 1 2; do
+#                     compEncDecDecompRes $j $i \
+#                                  $FQdsPath/$Synth/SynFQ-${k}.$fastq >> $OUT;
+#                 done
+#             done
+#          done
 
           ### convert the result file into a human readable file
           compEncResHumanReadable $OUT;
