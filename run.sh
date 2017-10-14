@@ -1794,8 +1794,8 @@ then
               done
           done
 
-#          ### convert the result file into a human readable file
-#          compResHumanReadable $OUT;
+          ### convert the result file into a human readable file
+          compResHumanReadable $OUT;
       fi
   fi
 
