@@ -47,48 +47,48 @@ INSTALL_METHODS=0
 ### run methods
 RUN_METHODS=1
   # compress/decompress
-  RUN_METHODS_COMP=1
+  RUN_METHODS_COMP=0
       # FASTA
-      RUN_GZIP_FA=0                # gzip
-      RUN_BZIP2_FA=0               # bzip2
+      RUN_GZIP_FA=1                # gzip
+      RUN_BZIP2_FA=1               # bzip2
 ###      RUN_LZMA_FA=0                # lzma
       RUN_MFCOMPRESS=1             # MFCompress
-      RUN_DELIMINATE=0             # DELIMINATE
-      RUN_CRYFA_FA=0               # cryfa
+      RUN_DELIMINATE=1             # DELIMINATE
+      RUN_CRYFA_FA=1               # cryfa
       # FASTQ
-      RUN_GZIP_FQ=0                # gzip
-      RUN_BZIP2_FQ=0               # bzip2
+      RUN_GZIP_FQ=1                # gzip
+      RUN_BZIP2_FQ=1               # bzip2
 ###      RUN_LZMA_FQ=0                # lzma
-      RUN_FQZCOMP=0                # fqzcomp
-      RUN_QUIP=0                   # quip
-      RUN_DSRC=0                   # DSRC
-      RUN_FQC=0                    # FQC
-      RUN_CRYFA_FQ=0               # cryfa
+      RUN_FQZCOMP=1                # fqzcomp
+      RUN_QUIP=1                   # quip
+      RUN_DSRC=1                   # DSRC
+      RUN_FQC=1                    # FQC
+      RUN_CRYFA_FQ=1               # cryfa
       # results
       PRINT_RESULTS_COMP=1
 
   # encrypt/decrypt
   RUN_METHODS_ENC=0
-      RUN_AESCRYPT=0               # AES crypt
+      RUN_AESCRYPT=1               # AES crypt
       # results
       PRINT_RESULTS_ENC=1
 
   # compress/decompress plus encrypt/decrypt
   RUN_METHODS_COMP_ENC=0
       # FASTA
-      RUN_GZIP_FA_AESCRYPT=0       # gzip + AES crypt
-      RUN_BZIP2_FA_AESCRYPT=0      # bzip2 + AES crypt
+      RUN_GZIP_FA_AESCRYPT=1       # gzip + AES crypt
+      RUN_BZIP2_FA_AESCRYPT=1      # bzip2 + AES crypt
 ###      RUN_LZMA_FA_AESCRYPT=0       # lzma + AES crypt
-      RUN_MFCOMPRESS_AESCRYPT=0    # MFCompress + AES crypt
-      RUN_DELIMINATE_AESCRYPT=0    # DELIMINATE + AES crypt
+      RUN_MFCOMPRESS_AESCRYPT=1    # MFCompress + AES crypt
+      RUN_DELIMINATE_AESCRYPT=1    # DELIMINATE + AES crypt
       # FASTQ
-      RUN_GZIP_FQ_AESCRYPT=0       # gzip + AES crypt
-      RUN_BZIP2_FQ_AESCRYPT=0      # bzip2 + AES crypt
+      RUN_GZIP_FQ_AESCRYPT=1       # gzip + AES crypt
+      RUN_BZIP2_FQ_AESCRYPT=1      # bzip2 + AES crypt
 ###      RUN_LZMA_FQ_AESCRYPT=0       # lzma + AES crypt
-      RUN_FQZCOMP_AESCRYPT=0       # fqzcomp + AES crypt
-      RUN_QUIP_AESCRYPT=0          # quip + AES crypt
-      RUN_DSRC_AESCRYPT=0          # DSRC + AES crypt
-      RUN_FQC_AESCRYPT=0           # FQC + AES crypt
+      RUN_FQZCOMP_AESCRYPT=1       # fqzcomp + AES crypt
+      RUN_QUIP_AESCRYPT=1          # quip + AES crypt
+      RUN_DSRC_AESCRYPT=1          # DSRC + AES crypt
+      RUN_FQC_AESCRYPT=1           # FQC + AES crypt
       # results
       PRINT_RESULTS_COMP_ENC=1
 
@@ -153,7 +153,8 @@ INF="dat"         # information (data) file type
 RES="res"         # result file type
 fasta="fasta"     # FASTA file extension
 fastq="fastq"     # FASTQ file extension
-FASTA_METHODS="GZIP BZIP2 MFCOMPRESS DELIMINATE"    # LZMA
+#FASTA_METHODS="GZIP BZIP2 MFCOMPRESS DELIMINATE"    # LZMA
+FASTA_METHODS="GZIP BZIP2 MFCOMPRESS DELIM"         # LZMA
 FASTQ_METHODS="GZIP BZIP2 FQZCOMP QUIP DSRC FQC"    # LZMA
 ENC_METHODS="AESCRYPT"
 FASTA_DATASET="HS viruses SynFA-1 SynFA-2"
@@ -548,29 +549,13 @@ then
   }
 
   # memory1
-#  function progMemoryNonParallelStart
-#  {
-#      echo "0" > mem_ps;
-#      while true; do
-#          ps aux | grep $1 | awk '{print $6;}' | sort -V | tail -n 1 >> mem_ps;
-#          sleep 0.001;    # 1 milisecond
-#      done
-#  }
-#  function progMemoryStart
-#  {
-#      echo "0" > mem_ps;
-#      while true; do
-#          ps aux | grep $1 | awk '{print $6;}' | sort -V | tail -n 1 >> mem_ps;
-#          sleep 0.001;    # 1 milisecond
-#      done
-#  }
   function progMemoryStart
   {
       echo "0" > mem_ps;
       while true; do
-          ps aux | grep $1 | awk '{print $6;}' | sort -V >> mem_ps;
-#          ps aux | grep $1 | awk '{print $6;}' | sort -V | tail -n +2 \
-#                 | awk 'BEGIN {tot=0;}{tot+=$1} END {print tot}' >> mem_ps;
+          ps aux | grep $1 | awk '{print $6}' | sort -V | tail -n 1 >> mem_ps;
+#          ps aux | grep $1 | awk '{print $6}' | sort -V | tail -n +2 \
+#           | awk 'BEGIN {tot=0} {tot+=$1} END {print tot}' >> mem_ps;
           sleep 0.001;    # 1 milisecond
       done
   }
@@ -580,14 +565,14 @@ then
       cat mem_ps | sort -V | tail -n 1 > $2;
   }
 
-  # memory2
-  function progMemory2
-  {
-      valgrind --tool=massif --pages-as-heap=yes \
-               --massif-out-file=massif.out ./$1
-      cat massif.out | grep mem_heap_B | sed -e 's/mem_heap_B=\(.*\)/\1/' | \
-      sort -g | tail -n 1
-  }
+#  # memory2
+#  function progMemory2
+#  {
+#      valgrind --tool=massif --pages-as-heap=yes \
+#               --massif-out-file=massif.out ./$1
+#      cat massif.out | grep mem_heap_B | sed -e 's/mem_heap_B=\(.*\)/\1/' | \
+#      sort -g | tail -n 1
+#  }
 
   # time
   function progTime
@@ -629,48 +614,49 @@ then
         "gzip")
             cFT="gz"                    # compressed filetype
             cCmd="gzip"                 # compression command
+            cProg="gzip"                # compress program's name
             dProg="gunzip"              # decompress program's name
             dCmd="gunzip";;             # decompress command
 
         "bzip2")
-            cFT="bz2";             cCmd="bzip2";
+            cFT="bz2";             cCmd="bzip2";             cProg="bzip2";
             dProg="bzip2";         dCmd="bunzip2";;
 
         "lzma")
-            cFT="lzma";            cCmd="lzma";
+            cFT="lzma";            cCmd="lzma";              cProg="lzma";
             dProg="lzma";          dCmd="lzma -d";;
 
         "fqzcomp")
-            cFT="fqz";             cCmd="./fqz_comp";
+            cFT="fqz";             cCmd="./fqz_comp";        cProg="fqz_comp";
             dProg="fqz_comp";      dCmd="./fqz_comp -d -X";; # "./fqz_comp -d"
 
         "quip")
-            cFT="qp";              cCmd="./quip -c";
+            cFT="qp";              cCmd="./quip -c";         cProg="quip";
             dProg="quip";          dCmd="./quip -d -c";;
 
         "dsrc")
-            cFT="dsrc";            cCmd="./dsrc c -m2";
+            cFT="dsrc";            cCmd="./dsrc c -m2";      cProg="dsrc";
             dProg="dsrc";          dCmd="./dsrc d";;
 
         "delim")
-            cFT="dlim";            cCmd="./delim a";
+            cFT="dlim";            cCmd="./delim a";         cProg="delim";
             dProg="delim";         dCmd="./delim e";;
 
         "fqc")
-            cFT="fqc";             cCmd="./fqc -c";
+            cFT="fqc";             cCmd="./fqc -c";          cProg="fqc";
             dProg="fqc";           dCmd="./fqc -d";;
 
         "mfcompress")
-            cFT="mfc";             cCmd="./MFCompressC";
+            cFT="mfc";             cCmd="./MFCompressC";     cProg="MFCompress";
             dProg="MFCompress";    dCmd="./MFCompressD";;
 
         "cryfa")
-            cFT="cryfa";           cCmd="./cryfa -k pass.txt -t 8";
+            cFT="cryfa";     cCmd="./cryfa -k pass.txt -t 8";     cProg="cryfa";
             dProg="cryfa";         dCmd="./cryfa -k pass.txt -t 8 -d";;
       esac
 
       ### compress
-      progMemoryStart $1 &
+      progMemoryStart $cProg &
       MEMPID=$!
 
       rm -f $in.$cFT
@@ -741,12 +727,13 @@ then
         "aescrypt")
             enFT="aescrypt"                        # encrypted filetype
             enCmd="./aescrypt -e -k pass.txt"      # encryption command
+            enProg="aescrypt"                      # encrypt program's name
             deProg="aescrypt"                      # decrypt program's name
             deCmd="./aescrypt -d -k pass.txt";;    # decryption command
       esac
 
       ### encrypt
-      progMemoryStart $1 &
+      progMemoryStart $enProg &
       MEMPID=$!
 
       rm -f $in.$enFT
@@ -788,39 +775,40 @@ then
         "gzip")
             cFT="gz"                      # compressed filetype
             cCmd="gzip"                   # compression command
+            cProg="gzip"                  # compress program's name
             dProg="gunzip"                # decompress program's name
             dCmd="gunzip";;               # decompress command
 
         "bzip2")
-            cFT="bz2";             cCmd="bzip2";
+            cFT="bz2";             cCmd="bzip2";             cProg="bzip2";
             dProg="bzip2";         dCmd="bunzip2";;
 
         "lzma")
-            cFT="lzma";            cCmd="lzma";
+            cFT="lzma";            cCmd="lzma";              cProg="lzma";
             dProg="lzma";          dCmd="lzma -d";;
 
         "fqzcomp")
-            cFT="fqz";             cCmd="./fqz_comp";
+            cFT="fqz";             cCmd="./fqz_comp";        cProg="fqz_comp";
             dProg="fqz_comp";      dCmd="./fqz_comp -d -X";; # "./fqz_comp -d"
 
         "quip")
-            cFT="qp";              cCmd="./quip -c";
+            cFT="qp";              cCmd="./quip -c";         cProg="quip";
             dProg="quip";          dCmd="./quip -d -c";;
 
         "dsrc")
-            cFT="dsrc";            cCmd="./dsrc c -m2";
+            cFT="dsrc";            cCmd="./dsrc c -m2";      cProg="dsrc";
             dProg="dsrc";          dCmd="./dsrc d";;
 
         "delim")
-            cFT="dlim";            cCmd="./delim a";
+            cFT="dlim";            cCmd="./delim a";         cProg="delim";
             dProg="delim";         dCmd="./delim e";;
 
         "fqc")
-            cFT="fqc";             cCmd="./fqc -c";
+            cFT="fqc";             cCmd="./fqc -c";          cProg="fqc";
             dProg="fqc";           dCmd="./fqc -d";;
 
         "mfcompress")
-            cFT="mfc";             cCmd="./MFCompressC";
+            cFT="mfc";             cCmd="./MFCompressC";     cProg="MFCompress";
             dProg="MFCompress";    dCmd="./MFCompressD";;
       esac
 
@@ -836,7 +824,7 @@ then
       ### compress
       cd $progs/$1
 
-      progMemoryStart $1 &
+      progMemoryStart $cProg &
       MEMPID=$!
 
       rm -f $in $in.$cFT
@@ -950,12 +938,11 @@ then
 
       case $2 in
         "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
-#            compDecomp $method $dsPath/$FA/$HUMAN/HS.$fasta
+            compDecomp $method $dsPath/$FA/$HUMAN/HS.$fasta
             compDecomp $method $dsPath/$FA/$VIRUSES/viruses.$fasta
-#            for i in 1 2; do
-#                compDecomp $method $dsPath/$FA/$Synth/SynFA-$i.$fasta
-#            done
-;;
+            for i in 1 2; do
+                compDecomp $method $dsPath/$FA/$Synth/SynFA-$i.$fasta
+            done;;
 
         "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
             for i in ERR013103_1 ERR015767_2 ERR031905_2 \
@@ -1266,11 +1253,11 @@ then
       d_realTime=d_minReal*60+d_secReal;
       printf "\t%.3f", d_realTime;
 
-      split($10, d_arrMinUser, "m");               d_minUser=d_arrMinUser[1];
-      split(d_arrMinUser[2], d_arrSecUser, "s");  d_secUser=d_arrSecUser[1];
+      split($10, d_arrMinUser, "m");                d_minUser=d_arrMinUser[1];
+      split(d_arrMinUser[2], d_arrSecUser, "s");    d_secUser=d_arrSecUser[1];
       d_userTime=d_minUser*60+d_secUser;
-      split($11, d_arrMinSys, "m");                d_minSys=d_arrMinSys[1];
-      split(d_arrMinSys[2], d_arrSecSys, "s");    d_secSys=d_arrSecSys[1];
+      split($11, d_arrMinSys, "m");                 d_minSys=d_arrMinSys[1];
+      split(d_arrMinSys[2], d_arrSecSys, "s");      d_secSys=d_arrSecSys[1];
       d_sysTime=d_minSys*60+d_secSys;
       d_cpuTime=d_userTime+d_sysTime;
       printf "\t%.3f", d_cpuTime;
@@ -1368,24 +1355,24 @@ then
       cat $IN | awk 'NR>1' | tr ',' . | awk 'BEGIN {}{
       printf "%s\t%.f\t%s\t%.f", $1, $2, $3, $4;
 
-      split($5, en_arrMinReal, "m");                 en_minReal=en_arrMinReal[1];
-      split(en_arrMinReal[2], en_arrSecReal, "s");    en_secReal=en_arrSecReal[1];
+      split($5, en_arrMinReal, "m");                en_minReal=en_arrMinReal[1];
+      split(en_arrMinReal[2], en_arrSecReal, "s");  en_secReal=en_arrSecReal[1];
       en_realTime=en_minReal*60+en_secReal;
       printf "\t%.3f", en_realTime;
 
-      split($6, en_arrMinUser, "m");                 en_minUser=en_arrMinUser[1];
-      split(en_arrMinUser[2], en_arrSecUser, "s");    en_secUser=en_arrSecUser[1];
+      split($6, en_arrMinUser, "m");                en_minUser=en_arrMinUser[1];
+      split(en_arrMinUser[2], en_arrSecUser, "s");  en_secUser=en_arrSecUser[1];
       en_userTime=en_minUser*60+en_secUser;
-      split($7, en_arrMinSys, "m");                  en_minSys=en_arrMinSys[1];
-      split(en_arrMinSys[2], en_arrSecSys, "s");      en_secSys=en_arrSecSys[1];
+      split($7, en_arrMinSys, "m");                 en_minSys=en_arrMinSys[1];
+      split(en_arrMinSys[2], en_arrSecSys, "s");    en_secSys=en_arrSecSys[1];
       en_sysTime=en_minSys*60+en_secSys;
       en_cpuTime=en_userTime+en_sysTime;
       printf "\t%.3f", en_cpuTime;
 
       printf "\t%.f", $8;
 
-      split($9, de_arrMinReal, "m");                 de_minReal=de_arrMinReal[1];
-      split(de_arrMinReal[2], de_arrSecReal, "s");    de_secReal=de_arrSecReal[1];
+      split($9, de_arrMinReal, "m");                de_minReal=de_arrMinReal[1];
+      split(de_arrMinReal[2], de_arrSecReal, "s");  de_secReal=de_arrSecReal[1];
       de_realTime=de_minReal*60+de_secReal;
       printf "\t%.3f", de_realTime;
 
@@ -1807,8 +1794,8 @@ then
               done
           done
 
-          ### convert the result file into a human readable file
-          compResHumanReadable $OUT;
+#          ### convert the result file into a human readable file
+#          compResHumanReadable $OUT;
       fi
   fi
 
