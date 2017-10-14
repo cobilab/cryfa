@@ -47,12 +47,12 @@ INSTALL_METHODS=0
 ### run methods
 RUN_METHODS=1
   # compress/decompress
-  RUN_METHODS_COMP=0
+  RUN_METHODS_COMP=1
       # FASTA
       RUN_GZIP_FA=0                # gzip
       RUN_BZIP2_FA=0               # bzip2
 ###      RUN_LZMA_FA=0                # lzma
-      RUN_MFCOMPRESS=0             # MFCompress
+      RUN_MFCOMPRESS=1             # MFCompress
       RUN_DELIMINATE=0             # DELIMINATE
       RUN_CRYFA_FA=0               # cryfa
       # FASTQ
@@ -556,23 +556,24 @@ then
 #          sleep 0.001;    # 1 milisecond
 #      done
 #  }
-  function progMemoryStart
-  {
-      echo "0" > mem_ps;
-      while true; do
-          ps aux | grep $1 | awk '{print $6;}' | sort -V | tail -n 1 >> mem_ps;
-          sleep 0.001;    # 1 milisecond
-      done
-  }
 #  function progMemoryStart
 #  {
 #      echo "0" > mem_ps;
 #      while true; do
-#          ps aux | grep $1 | awk '{print $6;}' | sort -V | tail -n +2 \
-#                 | awk 'BEGIN {tot=0;}{tot+=$1} END {print tot}' >> mem_ps;
+#          ps aux | grep $1 | awk '{print $6;}' | sort -V | tail -n 1 >> mem_ps;
 #          sleep 0.001;    # 1 milisecond
 #      done
 #  }
+  function progMemoryStart
+  {
+      echo "0" > mem_ps;
+      while true; do
+          ps aux | grep $1 | awk '{print $6;}' | sort -V >> mem_ps;
+#          ps aux | grep $1 | awk '{print $6;}' | sort -V | tail -n +2 \
+#                 | awk 'BEGIN {tot=0;}{tot+=$1} END {print tot}' >> mem_ps;
+          sleep 0.001;    # 1 milisecond
+      done
+  }
   function progMemoryStop
   {
       kill $1 >/dev/null 2>&1
@@ -949,11 +950,12 @@ then
 
       case $2 in
         "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
-            compDecomp $method $dsPath/$FA/$HUMAN/HS.$fasta
+#            compDecomp $method $dsPath/$FA/$HUMAN/HS.$fasta
             compDecomp $method $dsPath/$FA/$VIRUSES/viruses.$fasta
-            for i in 1 2; do
-                compDecomp $method $dsPath/$FA/$Synth/SynFA-$i.$fasta
-            done;;
+#            for i in 1 2; do
+#                compDecomp $method $dsPath/$FA/$Synth/SynFA-$i.$fasta
+#            done
+;;
 
         "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
             for i in ERR013103_1 ERR015767_2 ERR031905_2 \
@@ -1777,8 +1779,8 @@ then
           FQdsPath=$dataset/$FQ
 
           ### print results
-          c="C_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)\t"
-          c+="C_Mem(KB)"
+          c="C_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)"
+          c+="\tC_Mem(KB)"
           d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
           printf "Dataset\tSize(B)\tMethod\t$c\t$d\tEq\n" > $OUT;
 
