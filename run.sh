@@ -1078,6 +1078,11 @@ then
       v_file="$result/${1}_V__${dName}_$ft"
       if [[ -e $v_file ]]; then V=`cat $v_file | wc -l`; fi
 
+      ### remove files with information extracted
+      for i in CS CT CM DT DM V; do
+          rm -f $result/${1}_${i}__${dName}_$ft;
+      done
+
       c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"   # compression results
       d="$DT_r\t$DT_u\t$DT_s\t$DM"        # decompression results
 
@@ -1124,6 +1129,11 @@ then
       ### decryption memory
       dem_file="$result/${1}_DeM__${dName}_$ft"
       if [[ -e $dem_file ]]; then DeM=`cat $dem_file`; fi
+
+      ### remove files with information extracted
+      for i in EnS EnT EnM DeT DeM; do
+          rm -f $result/${1}_${i}__${dName}_$ft;
+      done
 
       en="$EnS\t$EnT_r\t$EnT_u\t$EnT_s\t$EnM"    # encryption results
       de="$DeT_r\t$DeT_u\t$DeT_s\t$DeM"          # decryption results
@@ -1209,6 +1219,11 @@ then
       ### if decompressed file is the same as the original file
       v_file="$result/${1}_${2}_V__${dName}_$ft"
       if [[ -e $v_file ]]; then V=`cat $v_file | wc -l`; fi
+
+      ### remove files with information extracted
+      for i in CS CT CM EnS EnT EnM DeT DeM DT DM V; do
+          rm -f $result/${1}_${2}_${i}__${dName}_$ft;
+      done
 
       c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"        # compression results
       en="$EnS\t$EnT_r\t$EnT_u\t$EnT_s\t$EnM"  # encryption results
