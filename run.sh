@@ -47,23 +47,23 @@ INSTALL_METHODS=0
 ### run methods
 RUN_METHODS=1
   # compress/decompress
-  RUN_METHODS_COMP=0
+  RUN_METHODS_COMP=1
       # FASTA
-      RUN_GZIP_FA=1                # gzip
-      RUN_BZIP2_FA=1               # bzip2
+      RUN_GZIP_FA=0                # gzip
+      RUN_BZIP2_FA=0               # bzip2
 ###      RUN_LZMA_FA=0                # lzma
-      RUN_MFCOMPRESS=1             # MFCompress
-      RUN_DELIMINATE=1             # DELIMINATE
+      RUN_MFCOMPRESS=0             # MFCompress
+      RUN_DELIMINATE=0             # DELIMINATE
       RUN_CRYFA_FA=1               # cryfa
       # FASTQ
-      RUN_GZIP_FQ=1                # gzip
-      RUN_BZIP2_FQ=1               # bzip2
+      RUN_GZIP_FQ=0                # gzip
+      RUN_BZIP2_FQ=0               # bzip2
 ###      RUN_LZMA_FQ=0                # lzma
-      RUN_FQZCOMP=1                # fqzcomp
-      RUN_QUIP=1                   # quip
-      RUN_DSRC=1                   # DSRC
-      RUN_FQC=1                    # FQC
-      RUN_CRYFA_FQ=1               # cryfa
+      RUN_FQZCOMP=0                # fqzcomp
+      RUN_QUIP=0                   # quip
+      RUN_DSRC=0                   # DSRC
+      RUN_FQC=0                    # FQC
+      RUN_CRYFA_FQ=0               # cryfa
       # results
       PRINT_RESULTS_COMP=1
 
@@ -99,7 +99,7 @@ RUN_METHODS=1
 #      CRYFA_XCL_DATASET="dataset/FA/HS/HS.fasta"
 #      CRYFA_XCL_DATASET="dataset/FQ/HS/HS-ERR013103_1.fastq"
 #      CRYFA_XCL_DATASET="dataset/FQ/DS/DS-B1088_SR.fastq"
-      RUN_CRYFA_XCL=0
+      RUN_CRYFA_XCL=1
       PRINT_RESULTS_CRYFA_XCL=1
 
 
@@ -938,11 +938,12 @@ then
 
       case $2 in
         "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
-            compDecomp $method $dsPath/$FA/$HUMAN/HS.$fasta
+#            compDecomp $method $dsPath/$FA/$HUMAN/HS.$fasta
             compDecomp $method $dsPath/$FA/$VIRUSES/viruses.$fasta
-            for i in 1 2; do
-                compDecomp $method $dsPath/$FA/$Synth/SynFA-$i.$fasta
-            done;;
+#            for i in 1 2; do
+#                compDecomp $method $dsPath/$FA/$Synth/SynFA-$i.$fasta
+#            done
+;;
 
         "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
             for i in ERR013103_1 ERR015767_2 ERR031905_2 \
@@ -1048,7 +1049,10 @@ then
 
       ### compressed file size
       cs_file="$result/${1}_CS__${dName}_$ft"
-      if [[ -e $cs_file ]]; then CS=`cat $cs_file | awk '{ print $5; }'`; fi
+      if [[ -e $cs_file ]]; then
+          CS=`cat $cs_file | awk '{ print $5; }'`;
+          rm -f $cs_file;
+      fi
 
       ### compression time -- real - user - system
       ct_file="$result/${1}_CT__${dName}_$ft"
@@ -1056,11 +1060,15 @@ then
           CT_r=`cat $ct_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
           CT_u=`cat $ct_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
           CT_s=`cat $ct_file | tail -n 1 | awk '{ print $2;}'`;
+          rm -f $ct_file;
       fi
 
       ### compression memory
       cm_file="$result/${1}_CM__${dName}_$ft"
-      if [[ -e $cm_file ]]; then CM=`cat $cm_file`; fi
+      if [[ -e $cm_file ]]; then
+          CM=`cat $cm_file`;
+          rm -f $cm_file;
+      fi
 
       ### decompression time -- real - user - system
       dt_file="$result/${1}_DT__${dName}_$ft"
@@ -1068,20 +1076,22 @@ then
           DT_r=`cat $dt_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
           DT_u=`cat $dt_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
           DT_s=`cat $dt_file | tail -n 1 | awk '{ print $2;}'`;
+          rm -f $dt_file;
       fi
 
       ### decompression memory
       dm_file="$result/${1}_DM__${dName}_$ft"
-      if [[ -e $dm_file ]]; then DM=`cat $dm_file`; fi
+      if [[ -e $dm_file ]]; then
+          DM=`cat $dm_file`;
+          rm -f $dm_file;
+      fi
 
       ### if decompressed file is the same as the original file
       v_file="$result/${1}_V__${dName}_$ft"
-      if [[ -e $v_file ]]; then V=`cat $v_file | wc -l`; fi
-
-      ### remove files with information extracted
-      for i in CS CT CM DT DM V; do
-          rm -f $result/${1}_${i}__${dName}_$ft;
-      done
+      if [[ -e $v_file ]]; then
+          V=`cat $v_file | wc -l`;
+          rm -f $v_file;
+      fi
 
       c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"   # compression results
       d="$DT_r\t$DT_u\t$DT_s\t$DM"        # decompression results
@@ -1104,7 +1114,10 @@ then
 
       ### encrypted file size
       ens_file="$result/${1}_EnS__${dName}_$ft"
-      if [[ -e $ens_file ]]; then EnS=`cat $ens_file | awk '{ print $5; }'`; fi
+      if [[ -e $ens_file ]]; then
+          EnS=`cat $ens_file | awk '{ print $5; }'`;
+          rm -f $ens_file;
+      fi
 
       ### encryption time -- real - user - system
       ent_file="$result/${1}_EnT__${dName}_$ft"
@@ -1112,11 +1125,15 @@ then
           EnT_r=`cat $ent_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
           EnT_u=`cat $ent_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
           EnT_s=`cat $ent_file | tail -n 1 | awk '{ print $2;}'`;
+          rm -f $ent_file;
       fi
 
       ### encryption memory
       enm_file="$result/${1}_EnM__${dName}_$ft"
-      if [[ -e $enm_file ]]; then EnM=`cat $enm_file`; fi
+      if [[ -e $enm_file ]]; then
+          EnM=`cat $enm_file`;
+          rm -f $enm_file;
+      fi
 
       ### decryption time -- real - user - system
       det_file="$result/${1}_DeT__${dName}_$ft"
@@ -1124,16 +1141,15 @@ then
           DeT_r=`cat $det_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
           DeT_u=`cat $det_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
           DeT_s=`cat $det_file | tail -n 1 | awk '{ print $2;}'`;
+          rm -f $det_file;
       fi
 
       ### decryption memory
       dem_file="$result/${1}_DeM__${dName}_$ft"
-      if [[ -e $dem_file ]]; then DeM=`cat $dem_file`; fi
-
-      ### remove files with information extracted
-      for i in EnS EnT EnM DeT DeM; do
-          rm -f $result/${1}_${i}__${dName}_$ft;
-      done
+      if [[ -e $dem_file ]]; then
+          DeM=`cat $dem_file`;
+          rm -f $dem_file;
+      fi
 
       en="$EnS\t$EnT_r\t$EnT_u\t$EnT_s\t$EnM"    # encryption results
       de="$DeT_r\t$DeT_u\t$DeT_s\t$DeM"          # decryption results
@@ -1162,7 +1178,10 @@ then
 
       ### compressed file size
       cs_file="$result/${1}_${2}_CS__${dName}_$ft"
-      if [[ -e $cs_file ]]; then CS=`cat $cs_file | awk '{ print $5; }'`; fi
+      if [[ -e $cs_file ]]; then
+          CS=`cat $cs_file | awk '{ print $5; }'`;
+          rm -f $cs_file;
+      fi
 
       ### compression time -- real - user - system
       ct_file="$result/${1}_${2}_CT__${dName}_$ft"
@@ -1170,15 +1189,22 @@ then
           CT_r=`cat $ct_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
           CT_u=`cat $ct_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
           CT_s=`cat $ct_file | tail -n 1 | awk '{ print $2;}'`;
+          rm -f $ct_file;
       fi
 
       ### compression memory
       cm_file="$result/${1}_${2}_CM__${dName}_$ft"
-      if [[ -e $cm_file ]]; then CM=`cat $cm_file`; fi
+      if [[ -e $cm_file ]]; then
+          CM=`cat $cm_file`;
+          rm -f $cm_file;
+      fi
 
       ### encrypted file size
       ens_file="$result/${1}_${2}_EnS__${dName}_$ft"
-      if [[ -e $ens_file ]]; then EnS=`cat $ens_file | awk '{ print $5; }'`; fi
+      if [[ -e $ens_file ]]; then
+          EnS=`cat $ens_file | awk '{ print $5; }'`;
+          rm -f $ens_file;
+      fi
 
       ### encryption time -- real - user - system
       ent_file="$result/${1}_${2}_EnT__${dName}_$ft"
@@ -1186,11 +1212,15 @@ then
           EnT_r=`cat $ent_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
           EnT_u=`cat $ent_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
           EnT_s=`cat $ent_file | tail -n 1 | awk '{ print $2;}'`;
+          rm -f $ent_file;
       fi
 
       ### encryption memory
       enm_file="$result/${1}_${2}_EnM__${dName}_$ft"
-      if [[ -e $enm_file ]]; then EnM=`cat $enm_file`; fi
+      if [[ -e $enm_file ]]; then
+          EnM=`cat $enm_file`;
+          rm -f $enm_file;
+      fi
 
       ### decryption time -- real - user - system
       det_file="$result/${1}_${2}_DeT__${dName}_$ft"
@@ -1198,11 +1228,15 @@ then
           DeT_r=`cat $det_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
           DeT_u=`cat $det_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
           DeT_s=`cat $det_file | tail -n 1 | awk '{ print $2;}'`;
+          rm -f $det_file;
       fi
 
       ### decryption memory
       dem_file="$result/${1}_${2}_DeM__${dName}_$ft"
-      if [[ -e $dem_file ]]; then DeM=`cat $dem_file`; fi
+      if [[ -e $dem_file ]]; then
+          DeM=`cat $dem_file`;
+          rm -f $dem_file;
+      fi
 
       ### decompression time -- real - user - system
       dt_file="$result/${1}_${2}_DT__${dName}_$ft"
@@ -1210,20 +1244,22 @@ then
           DT_r=`cat $dt_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
           DT_u=`cat $dt_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
           DT_s=`cat $dt_file | tail -n 1 | awk '{ print $2;}'`;
+          rm -f $dt_file;
       fi
 
       ### decompression memory
       dm_file="$result/${1}_${2}_DM__${dName}_$ft"
-      if [[ -e $dm_file ]]; then DM=`cat $dm_file`; fi
+      if [[ -e $dm_file ]]; then
+          DM=`cat $dm_file`;
+          rm -f $dm_file;
+      fi
 
       ### if decompressed file is the same as the original file
       v_file="$result/${1}_${2}_V__${dName}_$ft"
-      if [[ -e $v_file ]]; then V=`cat $v_file | wc -l`; fi
-
-      ### remove files with information extracted
-      for i in CS CT CM EnS EnT EnM DeT DeM DT DM V; do
-          rm -f $result/${1}_${2}_${i}__${dName}_$ft;
-      done
+      if [[ -e $v_file ]]; then
+          V=`cat $v_file | wc -l`;
+          rm -f $v_file;
+      fi
 
       c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"        # compression results
       en="$EnS\t$EnT_r\t$EnT_u\t$EnT_s\t$EnM"  # encryption results
@@ -1772,7 +1808,7 @@ then
 
           compDecompOnDataset cryfa fq;
       fi
-
+      
       #---------------- results ----------------#
       if [[ $PRINT_RESULTS_COMP -eq 1 ]];
       then
