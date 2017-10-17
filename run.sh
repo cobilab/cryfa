@@ -49,11 +49,11 @@ RUN_METHODS=1
   # compress/decompress
   RUN_METHODS_COMP=1
       # FASTA
-      RUN_GZIP_FA=0                # gzip
-      RUN_BZIP2_FA=0               # bzip2
+      RUN_GZIP_FA=1                # gzip
+      RUN_BZIP2_FA=1               # bzip2
 ###      RUN_LZMA_FA=0                # lzma
-      RUN_MFCOMPRESS=0             # MFCompress
-      RUN_DELIMINATE=0             # DELIMINATE
+      RUN_MFCOMPRESS=1             # MFCompress
+      RUN_DELIMINATE=1             # DELIMINATE
       RUN_CRYFA_FA=1               # cryfa
       # FASTQ
       RUN_GZIP_FQ=0                # gzip
@@ -145,6 +145,7 @@ Synth="Synth"
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #   definitions
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+CRYFA_DEFAULT_N_THR=2
 CHR="chr"
 HUMAN_CHR_PREFIX="hs_ref_GRCh38.p7_"
 HUMAN_CHROMOSOME="$HUMAN_CHR_PREFIX$CHR"
@@ -553,9 +554,13 @@ then
   {
       echo "0" > mem_ps;
       while true; do
-          ps aux | grep $1 | awk '{print $6}' | sort -V | tail -n 1 >> mem_ps;
+          ps -T aux | grep $1 | grep -v "grep --color=auto"   >> mem_ps;
+          echo '--------' >> mem_ps;
+#          ps aux | grep $1 | awk '{print $6}' | sort -V | tail -n 1 >> mem_ps
+#          ps aux | grep $1 | awk '{print $6}' | sort -V | tail -n 1 >> mem_ps;
 #          ps aux | grep $1 | awk '{print $6}' | sort -V | tail -n +2 \
 #           | awk 'BEGIN {tot=0} {tot+=$1} END {print tot}' >> mem_ps;
+#          sleep 0.001;    # 1 milisecond
           sleep 0.001;    # 1 milisecond
       done
   }
@@ -651,8 +656,9 @@ then
             dProg="MFCompress";    dCmd="./MFCompressD";;
 
         "cryfa")
-            cFT="cryfa";     cCmd="./cryfa -k pass.txt -t 8";     cProg="cryfa";
-            dProg="cryfa";         dCmd="./cryfa -k pass.txt -t 8 -d";;
+            cFT="cryfa";     cCmd="./cryfa -k pass.txt -t $CRYFA_DEFAULT_N_THR";
+            cProg="cryfa";   dProg="cryfa";
+            dCmd="./cryfa -k pass.txt -t $CRYFA_DEFAULT_N_THR -d";;
       esac
 
       ### compress
@@ -661,7 +667,7 @@ then
 
       rm -f $in.$cFT
       case $1 in                                                    # time
-        "gzip"|"lzma"|"bzip2")
+        "gzip"|"bzip2"|"lzma")
             (time $cCmd < $2 > $in.$cFT)&> $result_FLD/${upIn}_CT__${inwf}_$ft;;
 
         "cryfa"|"quip"|"fqzcomp")
@@ -685,32 +691,32 @@ then
       ls -la $in.$cFT > $result_FLD/${upIn}_CS__${inwf}_$ft         # size
       progMemoryStop $MEMPID $result_FLD/${upIn}_CM__${inwf}_$ft    # memory
 
-      ### decompress
-      progMemoryStart $dProg &
-      MEMPID=$!
-
-      case $1 in                                                    # time
-        "gzip"|"lzma"|"bzip2")
-            (time $dCmd < $in.$cFT> $in)&> $result_FLD/${upIn}_DT__${inwf}_$ft;;
-
-        "cryfa"|"fqzcomp"|"quip")
-            (time $dCmd $in.$cFT > $in) &> $result_FLD/${upIn}_DT__${inwf}_$ft;;
-
-        "dsrc"|"delim")
-            (time $dCmd $in.$cFT $in) &> $result_FLD/${upIn}_DT__${inwf}_$ft;;
-
-        "fqc")
-            (time $dCmd -i $in.$cFT -o $in) \
-                &> $result_FLD/${upIn}_DT__${inwf}_$ft;;
-
-        "mfcompress")
-            (time $dCmd -o $in $in.$cFT)&> $result_FLD/${upIn}_DT__${inwf}_$ft;;
-      esac
-
-      progMemoryStop $MEMPID $result_FLD/${upIn}_DM__${inwf}_$ft    # memory
-
-      ### verify if input and decompressed files are the same
-      cmp $2 $in &> $result_FLD/${upIn}_V__${inwf}_$ft;
+#      ### decompress
+#      progMemoryStart $dProg &
+#      MEMPID=$!
+#
+#      case $1 in                                                    # time
+#        "gzip"|"bzip2"|"lzma")
+#            (time $dCmd < $in.$cFT> $in)&> $result_FLD/${upIn}_DT__${inwf}_$ft;;
+#
+#        "cryfa"|"fqzcomp"|"quip")
+#            (time $dCmd $in.$cFT > $in) &> $result_FLD/${upIn}_DT__${inwf}_$ft;;
+#
+#        "dsrc"|"delim")
+#            (time $dCmd $in.$cFT $in) &> $result_FLD/${upIn}_DT__${inwf}_$ft;;
+#
+#        "fqc")
+#            (time $dCmd -i $in.$cFT -o $in) \
+#                &> $result_FLD/${upIn}_DT__${inwf}_$ft;;
+#
+#        "mfcompress")
+#            (time $dCmd -o $in $in.$cFT)&> $result_FLD/${upIn}_DT__${inwf}_$ft;;
+#      esac
+#
+#      progMemoryStop $MEMPID $result_FLD/${upIn}_DM__${inwf}_$ft    # memory
+#
+#      ### verify if input and decompressed files are the same
+#      cmp $2 $in &> $result_FLD/${upIn}_V__${inwf}_$ft;
   }
 
   # encrypt/decrypt. $1: program's name, $2: input data
@@ -829,7 +835,7 @@ then
 
       rm -f $in $in.$cFT
       case $1 in                                                          # time
-        "gzip"|"lzma"|"bzip2")
+        "gzip"|"bzip2"|"lzma")
             (time $cCmd < $2 > $in.$cFT) \
                 &> $result_FLD/${upInComp}_${upInEnc}_CT__${inwf}_$ft;;
 
@@ -898,7 +904,7 @@ then
       MEMPID=$!
 
       case $1 in                                                          # time
-        "gzip"|"lzma"|"bzip2")
+        "gzip"|"bzip2"|"lzma")
             (time $dCmd < $encPath/$in.$cFT> $in) \
                 &> $result_FLD/${upInComp}_${upInEnc}_DT__${inwf}_$ft;;
 
@@ -946,16 +952,19 @@ then
 ;;
 
         "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
-            for i in ERR013103_1 ERR015767_2 ERR031905_2 \
-                     SRR442469_1 SRR707196_1; do
-                compDecomp $method $dsPath/$FQ/$HUMAN/HS-$i.$fastq
-            done
-            for i in B1087 B1088 B1110 B1128 SL3003; do
-                compDecomp $method $dsPath/$FQ/$DENISOVA/DS-${i}_SR.$fastq
-            done
-            for i in 1 2; do
-                compDecomp $method $dsPath/$FQ/$Synth/SynFQ-$i.$fastq
-            done;;
+#            for i in ERR013103_1 ERR015767_2 ERR031905_2 \
+#                     SRR442469_1 SRR707196_1; do
+#                compDecomp $method $dsPath/$FQ/$HUMAN/HS-$i.$fastq
+#            done
+#            for i in B1087 B1088 B1110 B1128 SL3003; do
+#                compDecomp $method $dsPath/$FQ/$DENISOVA/DS-${i}_SR.$fastq
+#            done
+#            for i in 1 2; do
+#                compDecomp $method $dsPath/$FQ/$Synth/SynFQ-$i.$fastq
+#            done
+
+compDecomp $method $dsPath/$FQ/$Synth/SynFQ-2.$fastq
+;;
       esac
 
       cd ../..
@@ -1845,8 +1854,8 @@ then
               done
           done
 
-          ### convert the result file into a human readable file
-          compResHumanReadable $OUT;
+#          ### convert the result file into a human readable file
+#          compResHumanReadable $OUT;
       fi
   fi
 
@@ -1986,8 +1995,8 @@ then
              done
           done
 
-          ### convert the result file into a human readable file
-          compEncResHumanReadable $OUT;
+#          ### convert the result file into a human readable file
+#          compEncResHumanReadable $OUT;
       fi
   fi
 
