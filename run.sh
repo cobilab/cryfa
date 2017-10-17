@@ -50,10 +50,10 @@ RUN_METHODS=1
   RUN_METHODS_COMP=1
       # FASTA
       RUN_GZIP_FA=1                # gzip
-      RUN_BZIP2_FA=1               # bzip2
+      RUN_BZIP2_FA=0               # bzip2
 ###      RUN_LZMA_FA=0                # lzma
-      RUN_MFCOMPRESS=1             # MFCompress
-      RUN_DELIMINATE=1             # DELIMINATE
+      RUN_MFCOMPRESS=0             # MFCompress
+      RUN_DELIMINATE=0             # DELIMINATE
       RUN_CRYFA_FA=1               # cryfa
       # FASTQ
       RUN_GZIP_FQ=0                # gzip
@@ -145,7 +145,7 @@ Synth="Synth"
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #   definitions
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-CRYFA_DEFAULT_N_THR=2
+CRYFA_DEFAULT_N_THR=1
 CHR="chr"
 HUMAN_CHR_PREFIX="hs_ref_GRCh38.p7_"
 HUMAN_CHROMOSOME="$HUMAN_CHR_PREFIX$CHR"
@@ -691,32 +691,32 @@ then
       ls -la $in.$cFT > $result_FLD/${upIn}_CS__${inwf}_$ft         # size
       progMemoryStop $MEMPID $result_FLD/${upIn}_CM__${inwf}_$ft    # memory
 
-#      ### decompress
-#      progMemoryStart $dProg &
-#      MEMPID=$!
-#
-#      case $1 in                                                    # time
-#        "gzip"|"bzip2"|"lzma")
-#            (time $dCmd < $in.$cFT> $in)&> $result_FLD/${upIn}_DT__${inwf}_$ft;;
-#
-#        "cryfa"|"fqzcomp"|"quip")
-#            (time $dCmd $in.$cFT > $in) &> $result_FLD/${upIn}_DT__${inwf}_$ft;;
-#
-#        "dsrc"|"delim")
-#            (time $dCmd $in.$cFT $in) &> $result_FLD/${upIn}_DT__${inwf}_$ft;;
-#
-#        "fqc")
-#            (time $dCmd -i $in.$cFT -o $in) \
-#                &> $result_FLD/${upIn}_DT__${inwf}_$ft;;
-#
-#        "mfcompress")
-#            (time $dCmd -o $in $in.$cFT)&> $result_FLD/${upIn}_DT__${inwf}_$ft;;
-#      esac
-#
-#      progMemoryStop $MEMPID $result_FLD/${upIn}_DM__${inwf}_$ft    # memory
-#
-#      ### verify if input and decompressed files are the same
-#      cmp $2 $in &> $result_FLD/${upIn}_V__${inwf}_$ft;
+      ### decompress
+      progMemoryStart $dProg &
+      MEMPID=$!
+
+      case $1 in                                                    # time
+        "gzip"|"bzip2"|"lzma")
+            (time $dCmd < $in.$cFT> $in)&> $result_FLD/${upIn}_DT__${inwf}_$ft;;
+
+        "cryfa"|"fqzcomp"|"quip")
+            (time $dCmd $in.$cFT > $in) &> $result_FLD/${upIn}_DT__${inwf}_$ft;;
+
+        "dsrc"|"delim")
+            (time $dCmd $in.$cFT $in) &> $result_FLD/${upIn}_DT__${inwf}_$ft;;
+
+        "fqc")
+            (time $dCmd -i $in.$cFT -o $in) \
+                &> $result_FLD/${upIn}_DT__${inwf}_$ft;;
+
+        "mfcompress")
+            (time $dCmd -o $in $in.$cFT)&> $result_FLD/${upIn}_DT__${inwf}_$ft;;
+      esac
+
+      progMemoryStop $MEMPID $result_FLD/${upIn}_DM__${inwf}_$ft    # memory
+
+      ### verify if input and decompressed files are the same
+      cmp $2 $in &> $result_FLD/${upIn}_V__${inwf}_$ft;
   }
 
   # encrypt/decrypt. $1: program's name, $2: input data
@@ -944,8 +944,8 @@ then
 
       case $2 in
         "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
-#            compDecomp $method $dsPath/$FA/$HUMAN/HS.$fasta
-            compDecomp $method $dsPath/$FA/$VIRUSES/viruses.$fasta
+            compDecomp $method $dsPath/$FA/$HUMAN/HS.$fasta
+#            compDecomp $method $dsPath/$FA/$VIRUSES/viruses.$fasta
 #            for i in 1 2; do
 #                compDecomp $method $dsPath/$FA/$Synth/SynFA-$i.$fasta
 #            done
