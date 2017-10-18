@@ -47,14 +47,14 @@ INSTALL_METHODS=0
 ### run methods
 RUN_METHODS=1
   # compress/decompress
-  RUN_METHODS_COMP=1
+  RUN_METHODS_COMP=0
       # FASTA
-      RUN_GZIP_FA=1                # gzip
+      RUN_GZIP_FA=0                # gzip
       RUN_BZIP2_FA=0               # bzip2
 ###      RUN_LZMA_FA=0                # lzma
       RUN_MFCOMPRESS=0             # MFCompress
       RUN_DELIMINATE=0             # DELIMINATE
-      RUN_CRYFA_FA=1               # cryfa
+      RUN_CRYFA_FA=0               # cryfa
       # FASTQ
       RUN_GZIP_FQ=0                # gzip
       RUN_BZIP2_FQ=0               # bzip2
@@ -65,32 +65,32 @@ RUN_METHODS=1
       RUN_FQC=0                    # FQC
       RUN_CRYFA_FQ=0               # cryfa
       # results
-      PRINT_RESULTS_COMP=1
+      PRINT_RESULTS_COMP=0
 
   # encrypt/decrypt
   RUN_METHODS_ENC=0
-      RUN_AESCRYPT=1               # AES crypt
+      RUN_AESCRYPT=0               # AES crypt
       # results
-      PRINT_RESULTS_ENC=1
+      PRINT_RESULTS_ENC=0
 
   # compress/decompress plus encrypt/decrypt
   RUN_METHODS_COMP_ENC=0
       # FASTA
-      RUN_GZIP_FA_AESCRYPT=1       # gzip + AES crypt
-      RUN_BZIP2_FA_AESCRYPT=1      # bzip2 + AES crypt
+      RUN_GZIP_FA_AESCRYPT=0       # gzip + AES crypt
+      RUN_BZIP2_FA_AESCRYPT=0      # bzip2 + AES crypt
 ###      RUN_LZMA_FA_AESCRYPT=0       # lzma + AES crypt
-      RUN_MFCOMPRESS_AESCRYPT=1    # MFCompress + AES crypt
-      RUN_DELIMINATE_AESCRYPT=1    # DELIMINATE + AES crypt
+      RUN_MFCOMPRESS_AESCRYPT=0    # MFCompress + AES crypt
+      RUN_DELIMINATE_AESCRYPT=0    # DELIMINATE + AES crypt
       # FASTQ
-      RUN_GZIP_FQ_AESCRYPT=1       # gzip + AES crypt
-      RUN_BZIP2_FQ_AESCRYPT=1      # bzip2 + AES crypt
+      RUN_GZIP_FQ_AESCRYPT=0       # gzip + AES crypt
+      RUN_BZIP2_FQ_AESCRYPT=0      # bzip2 + AES crypt
 ###      RUN_LZMA_FQ_AESCRYPT=0       # lzma + AES crypt
-      RUN_FQZCOMP_AESCRYPT=1       # fqzcomp + AES crypt
-      RUN_QUIP_AESCRYPT=1          # quip + AES crypt
-      RUN_DSRC_AESCRYPT=1          # DSRC + AES crypt
-      RUN_FQC_AESCRYPT=1           # FQC + AES crypt
+      RUN_FQZCOMP_AESCRYPT=0       # fqzcomp + AES crypt
+      RUN_QUIP_AESCRYPT=0          # quip + AES crypt
+      RUN_DSRC_AESCRYPT=0          # DSRC + AES crypt
+      RUN_FQC_AESCRYPT=0           # FQC + AES crypt
       # results
-      PRINT_RESULTS_COMP_ENC=1
+      PRINT_RESULTS_COMP_ENC=0
 
   # cryfa exclusive
   CRYFA_EXCLUSIVE=0
@@ -145,16 +145,16 @@ Synth="Synth"
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #   definitions
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-CRYFA_DEFAULT_N_THR=1
+CRYFA_DEFAULT_N_THR=8
 CHR="chr"
 HUMAN_CHR_PREFIX="hs_ref_GRCh38.p7_"
 HUMAN_CHROMOSOME="$HUMAN_CHR_PREFIX$CHR"
+HS_SEQ_RUN=`seq -s' ' 1 22`; HS_SEQ_RUN+=" X Y MT AL UL UP"
 WGET_OP=" --trust-server-names "
 INF="dat"         # information (data) file type
 RES="res"         # result file type
 fasta="fasta"     # FASTA file extension
 fastq="fastq"     # FASTQ file extension
-#FASTA_METHODS="GZIP BZIP2 MFCOMPRESS DELIMINATE"    # LZMA
 FASTA_METHODS="GZIP BZIP2 MFCOMPRESS DELIM"         # LZMA
 FASTQ_METHODS="GZIP BZIP2 FQZCOMP QUIP DSRC FQC"    # LZMA
 ENC_METHODS="AESCRYPT"
@@ -199,14 +199,8 @@ then
       done
 
       ### join all files
-      cat HS-1.$fasta HS-2.$fasta HS-3.$fasta HS-4.$fasta HS-5.$fasta      \
-          HS-6.$fasta HS-7.$fasta HS-8.$fasta HS-9.$fasta HS-10.$fasta     \
-          HS-11.$fasta HS-12.$fasta HS-13.$fasta HS-14.$fasta HS-15.$fasta \
-          HS-16.$fasta HS-17.$fasta HS-18.$fasta HS-19.$fasta HS-20.$fasta \
-          HS-21.$fasta HS-22.$fasta HS-X.$fasta HS-Y.$fasta HS-AL.$fasta   \
-          HS-UL.$fasta HS-UP.$fasta HS-MT.$fasta > HS.$fasta.tmp
+      for i in $HS_SEQ_RUN; do cat $i >> HS.$fasta; done
       rm -f *.$fasta
-      mv HS.$fasta.tmp > HS.$fasta
   fi
 
   ### viruses -- 350 MB
@@ -554,13 +548,12 @@ then
   {
       echo "0" > mem_ps;
       while true; do
-          ps -T aux | grep $1 | grep -v "grep --color=auto"   >> mem_ps;
-          echo '--------' >> mem_ps;
-#          ps aux | grep $1 | awk '{print $6}' | sort -V | tail -n 1 >> mem_ps
-#          ps aux | grep $1 | awk '{print $6}' | sort -V | tail -n 1 >> mem_ps;
+          ps -T aux | grep $1 | grep -v "grep --color=auto" | awk '{print $7}' \
+           | sort -V | tail -n 1 >> mem_ps;
+
 #          ps aux | grep $1 | awk '{print $6}' | sort -V | tail -n +2 \
 #           | awk 'BEGIN {tot=0} {tot+=$1} END {print tot}' >> mem_ps;
-#          sleep 0.001;    # 1 milisecond
+
           sleep 0.001;    # 1 milisecond
       done
   }
@@ -945,26 +938,22 @@ then
       case $2 in
         "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
             compDecomp $method $dsPath/$FA/$HUMAN/HS.$fasta
-#            compDecomp $method $dsPath/$FA/$VIRUSES/viruses.$fasta
-#            for i in 1 2; do
-#                compDecomp $method $dsPath/$FA/$Synth/SynFA-$i.$fasta
-#            done
-;;
+            compDecomp $method $dsPath/$FA/$VIRUSES/viruses.$fasta
+            for i in 1 2; do
+                compDecomp $method $dsPath/$FA/$Synth/SynFA-$i.$fasta
+            done;;
 
         "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
-#            for i in ERR013103_1 ERR015767_2 ERR031905_2 \
-#                     SRR442469_1 SRR707196_1; do
-#                compDecomp $method $dsPath/$FQ/$HUMAN/HS-$i.$fastq
-#            done
-#            for i in B1087 B1088 B1110 B1128 SL3003; do
-#                compDecomp $method $dsPath/$FQ/$DENISOVA/DS-${i}_SR.$fastq
-#            done
-#            for i in 1 2; do
-#                compDecomp $method $dsPath/$FQ/$Synth/SynFQ-$i.$fastq
-#            done
-
-compDecomp $method $dsPath/$FQ/$Synth/SynFQ-2.$fastq
-;;
+            for i in ERR013103_1 ERR015767_2 ERR031905_2 \
+                     SRR442469_1 SRR707196_1; do
+                compDecomp $method $dsPath/$FQ/$HUMAN/HS-$i.$fastq
+            done
+            for i in B1087 B1088 B1110 B1128 SL3003; do
+                compDecomp $method $dsPath/$FQ/$DENISOVA/DS-${i}_SR.$fastq
+            done
+            for i in 1 2; do
+                compDecomp $method $dsPath/$FQ/$Synth/SynFQ-$i.$fastq
+            done;;
       esac
 
       cd ../..
@@ -1787,7 +1776,7 @@ compDecomp $method $dsPath/$FQ/$Synth/SynFQ-2.$fastq
       ### FASTA
       if [[ $RUN_GZIP_FA    -eq 1 ]]; then compDecompOnDataset gzip       fa; fi
       if [[ $RUN_BZIP2_FA   -eq 1 ]]; then compDecompOnDataset bzip2      fa; fi
-      if [[ $RUN_LZMA_FA    -eq 1 ]]; then compDecompOnDataset lzma       fa; fi
+###   if [[ $RUN_LZMA_FA    -eq 1 ]]; then compDecompOnDataset lzma       fa; fi
       if [[ $RUN_MFCOMPRESS -eq 1 ]]; then compDecompOnDataset mfcompress fa; fi
       if [[ $RUN_DELIMINATE -eq 1 ]]; then compDecompOnDataset delim      fa; fi
       if [[ $RUN_CRYFA_FA   -eq 1 ]];
@@ -1803,7 +1792,7 @@ compDecomp $method $dsPath/$FQ/$Synth/SynFQ-2.$fastq
       ### FASTQ
       if [[ $RUN_GZIP_FQ    -eq 1 ]]; then compDecompOnDataset gzip       fq; fi
       if [[ $RUN_BZIP2_FQ   -eq 1 ]]; then compDecompOnDataset bzip2      fq; fi
-      if [[ $RUN_LZMA_FQ    -eq 1 ]]; then compDecompOnDataset lzma       fq; fi
+###   if [[ $RUN_LZMA_FQ    -eq 1 ]]; then compDecompOnDataset lzma       fq; fi
       if [[ $RUN_FQZCOMP    -eq 1 ]]; then compDecompOnDataset fqzcomp    fq; fi
       if [[ $RUN_QUIP       -eq 1 ]]; then compDecompOnDataset quip       fq; fi
       if [[ $RUN_DSRC       -eq 1 ]]; then compDecompOnDataset dsrc       fq; fi
@@ -1854,8 +1843,8 @@ compDecomp $method $dsPath/$FQ/$Synth/SynFQ-2.$fastq
               done
           done
 
-#          ### convert the result file into a human readable file
-#          compResHumanReadable $OUT;
+          ### convert the result file into a human readable file
+          compResHumanReadable $OUT;
       fi
   fi
 
@@ -1915,9 +1904,9 @@ compDecomp $method $dsPath/$FQ/$Synth/SynFQ-2.$fastq
       if [[ $RUN_BZIP2_FA_AESCRYPT -eq 1 ]]; then
         compEncDecDecompOnDataset bzip2 fa aescrypt;
       fi
-      if [[ $RUN_LZMA_FA_AESCRYPT -eq 1 ]]; then
-        compEncDecDecompOnDataset lzma fa aescrypt;
-      fi
+###      if [[ $RUN_LZMA_FA_AESCRYPT -eq 1 ]]; then
+###        compEncDecDecompOnDataset lzma fa aescrypt;
+###      fi
       if [[ $RUN_MFCOMPRESS_AESCRYPT -eq 1 ]]; then
         compEncDecDecompOnDataset mfcompress fa aescrypt;
       fi
@@ -1932,9 +1921,9 @@ compDecomp $method $dsPath/$FQ/$Synth/SynFQ-2.$fastq
       if [[ $RUN_BZIP2_FQ_AESCRYPT -eq 1 ]]; then
         compEncDecDecompOnDataset bzip2 fq aescrypt;
       fi
-      if [[ $RUN_LZMA_FQ_AESCRYPT -eq 1 ]]; then
-        compEncDecDecompOnDataset lzma fq aescrypt;
-      fi
+###      if [[ $RUN_LZMA_FQ_AESCRYPT -eq 1 ]]; then
+###        compEncDecDecompOnDataset lzma fq aescrypt;
+###      fi
       if [[ $RUN_FQZCOMP_AESCRYPT -eq 1 ]]; then
         compEncDecDecompOnDataset fqzcomp fq aescrypt;
       fi
@@ -1995,8 +1984,8 @@ compDecomp $method $dsPath/$FQ/$Synth/SynFQ-2.$fastq
              done
           done
 
-#          ### convert the result file into a human readable file
-#          compEncResHumanReadable $OUT;
+          ### convert the result file into a human readable file
+          compEncResHumanReadable $OUT;
       fi
   fi
 
