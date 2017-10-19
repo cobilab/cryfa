@@ -1,30 +1,28 @@
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    Definitions
-    - - - - - - - - - - - - - - - - - - -
-    Morteza Hosseini    seyedmorteza@ua.pt
-    Diogo Pratas        pratas@ua.pt
-    Armando J. Pinho    ap@ua.pt
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+/**
+ * @file      def.h
+ * @brief     Definitions
+ * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
+ * @author    Diogo Pratas      (pratas@ua.pt)
+ * @author    Armando J. Pinho  (ap@ua.pt)
+ * @copyright The GNU General Public License v3.0
+ */
 
 #ifndef CRYFA_DEF_H
 #define CRYFA_DEF_H
 
 #include <iostream>
-#include <unordered_map>    // hash table
-#include <random>           // std::mt19937
+#include <unordered_map>    /**<  hash table    */
+#include <random>           /**<  std::mt19937  */
 using std::cout;
 using std::string;
 using std::unordered_map;
 
-/*******************************************************************************
-    version and release
-*******************************************************************************/
+
+// version and release
 #define VERSION_CRYFA 1
 #define RELEASE_CRYFA 10.17
 
-/*******************************************************************************
-    typedefs
-*******************************************************************************/
+// typedefs
 typedef unsigned char                     byte;
 typedef unsigned short                    u16;
 typedef unsigned int                      u32;
@@ -32,43 +30,40 @@ typedef unsigned long long                u64;
 typedef long long                         i64;
 typedef std::mt19937                      rng_type;
 typedef std::unordered_map<string, u64>   htbl_t;
-typedef std::char_traits<char>::pos_type  pos_t;    // tellg(), tellp()
+typedef std::char_traits<char>::pos_type  pos_t;        /**< tellg(), tellp() */
 
-/*******************************************************************************
-    metaprograms
-*******************************************************************************/
-// power (B^E) -- base (B) and exponent (E) MUST be known at compile time
-// usage: "cerr << POWER<3,2>::val;" which yields 9
+// metaprograms
+/**
+ * power (B^E) -- usage: "cerr << POWER<3,2>::val;" which yields 9
+ * @tparam  B  base
+ * @tparam  E  exponent
+ * @warning base (B) and exponent (E) MUST be known at compile time.
+ */
 template<u32 B, u32 E>
 struct POWER
 { static const u64 val = B * POWER<B, E-1>::val; };
 
+/** @cond MIRACLE */
 template<u32 B>
 struct POWER<B, 0>
 { static const u64 val = 1; };
-//..............................................................................
+/** @endcond */
 
-/*******************************************************************************
-    macros
-*******************************************************************************/
-//#define LOOP(i,S)            for(byte (i)=0; i!=(S); ++i)
-#define LOOP(i,S)            for(const char& (i) : (S))
-#define LOOP2(i,j,S)         LOOP(i,S) LOOP(j,S)
-#define LOOP3(i,j,k,S)       LOOP(i,S) LOOP(j,S) LOOP(k,S)
-#define LOOP4(i,j,k,l,S)     LOOP(i,S) LOOP(j,S) LOOP(k,S) LOOP(l,S)
-#define LOOP5(i,j,k,l,m,S)   LOOP(i,S) LOOP(j,S) LOOP(k,S) LOOP(l,S) LOOP(m,S)
-#define LOOP6(i,j,k,l,m,n,S) LOOP(i,S) LOOP(j,S) LOOP(k,S) LOOP(l,S) LOOP(m,S) \
-                             LOOP(n,S)
-#define LOOP7(i,j,k,l,m,n,\
-                      o,S)   LOOP(i,S) LOOP(j,S) LOOP(k,S) LOOP(l,S) LOOP(m,S) \
-                             LOOP(n,S) LOOP(o,S)
-#define LOOP8(i,j,k,l,m,n,\
-                    o,p,S)   LOOP(i,S) LOOP(j,S) LOOP(k,S) LOOP(l,S) LOOP(m,S) \
-                             LOOP(n,S) LOOP(o,S) LOOP(p,S)
+// macros
+//#define LOOP(i,S)               for(byte (i)=0; i!=(S); ++i)
+#define LOOP(i,S)                 for(const char& (i) : (S))
+#define LOOP2(i,j,S)              LOOP(i,S) LOOP(j,S)
+#define LOOP3(i,j,k,S)            LOOP(i,S) LOOP(j,S) LOOP(k,S)
+#define LOOP4(i,j,k,l,S)          LOOP(i,S) LOOP(j,S) LOOP2(k,l,S)
+#define LOOP5(i,j,k,l,m,S)        LOOP(i,S) LOOP(j,S) LOOP3(k,l,m,S)
+#define LOOP6(i,j,k,l,m,n,S)      LOOP(i,S) LOOP(j,S) LOOP4(k,l,m,n,S)
+#define LOOP7(i,j,k,l,m,n,o,S)    LOOP(i,S) LOOP(j,S) LOOP5(k,l,m,n,o,S)
+#define LOOP8(i,j,k,l,m,n,o,p,S)  LOOP(i,S) LOOP(j,S) LOOP6(k,l,m,n,o,p,S)
 
-/*******************************************************************************
-    constants
-*******************************************************************************/
+
+/**
+ * Constants
+ * */
 #define THR_ID_HDR      "THRD="      // thread ID header
 #define PK_FILENAME     "CRYFA_PK"   // packed file name
 #define PCKD_FILENAME   "CRYFA_PCKD" // packed file name -- joined
@@ -91,6 +86,7 @@ struct POWER<B, 0>
 #define KEYLEN_C3       3            // 3 to 1 byte
 #define KEYLEN_C4       2            // 2 to 1 byte
 #define KEYLEN_C5       3            // 3 to 2 byte
+
 
 /*******************************************************************************
     lookup tables
@@ -206,16 +202,16 @@ inline void Help ()    // usage guide
 inline void About ()   // About cryfa
 {
     cout                                                                << '\n'
-        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"   << '\n'
+        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << '\n'
         << "   cryfa v" << VERSION_CRYFA << "." << RELEASE_CRYFA
         << ":: FASTA/FASTQ compaction plus encryption"                  << '\n'
-        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"   << '\n'
-        << "           Morteza Hosseini    seyedmorteza@ua.pt"           << '\n'
-        << "           Diogo Pratas        pratas@ua.pt"                 << '\n'
-        << "           Armando J. Pinho    ap@ua.pt"                     << '\n'
-        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"   << '\n'
-        << "      Copyright (C) 2017, IEETA, University of Aveiro"       << '\n'
-        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"   << '\n'
+        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << '\n'
+        << "           Morteza Hosseini    seyedmorteza@ua.pt"          << '\n'
+        << "           Diogo Pratas        pratas@ua.pt"                << '\n'
+        << "           Armando J. Pinho    ap@ua.pt"                    << '\n'
+        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << '\n'
+        << "      Copyright (C) 2017, IEETA, University of Aveiro"      << '\n'
+        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << '\n'
                                                                         << '\n'
         << "This is a Free software, under GPLv3. You may redistribute" << '\n'
         << "copies of it under the terms of the GNU - General Public"   << '\n'
