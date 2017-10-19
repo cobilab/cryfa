@@ -199,8 +199,10 @@ then
       done
 
       ### join all files
-      for i in $HS_SEQ_RUN; do cat $i >> HS.$fasta; done
-      rm -f *.$fasta
+      for i in $HS_SEQ_RUN; do
+          cat $HUMAN-$i.$fasta >> HS.$fasta;
+          rm -f $HUMAN-$i.$fasta
+      done
   fi
 
   ### viruses -- 350 MB
