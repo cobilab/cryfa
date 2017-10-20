@@ -11,18 +11,19 @@
 #define CRYFA_DEF_H
 
 #include <iostream>
-#include <unordered_map>    /**<  hash table    */
-#include <random>           /**<  std::mt19937  */
+#include <unordered_map>    /**< @brief Hash table */
+#include <random>           /**< @brief std::mt19937 */
 using std::cout;
 using std::string;
 using std::unordered_map;
 
 
-// version and release
+// Version and release
 #define VERSION_CRYFA 1
 #define RELEASE_CRYFA 10.17
 
-// typedefs
+
+// Typedefs
 typedef unsigned char                     byte;
 typedef unsigned short                    u16;
 typedef unsigned int                      u32;
@@ -30,26 +31,26 @@ typedef unsigned long long                u64;
 typedef long long                         i64;
 typedef std::mt19937                      rng_type;
 typedef std::unordered_map<string, u64>   htbl_t;
-typedef std::char_traits<char>::pos_type  pos_t;        /**< tellg(), tellp() */
+typedef std::char_traits<char>::pos_type  pos_t; /**< @brief tellg(), tellp() */
 
-// metaprograms
+
+// Metaprograms
 /**
- * power (B^E) -- usage: "cerr << POWER<3,2>::val;" which yields 9
- * @tparam  B  base
- * @tparam  E  exponent
- * @warning base (B) and exponent (E) MUST be known at compile time.
+ * Power (B^E) -- Usage: "cerr << POWER<3,2>::val;" which yields 9
+ * @tparam  B  Base
+ * @tparam  E  Exponent
+ * @warning Base (B) and exponent (E) MUST be known at compile time.
  */
 template<u32 B, u32 E>
-struct POWER
-{ static const u64 val = B * POWER<B, E-1>::val; };
+struct POWER { static const u64 val = B * POWER<B, E-1>::val; };
 
-/** @cond MIRACLE */
+/** @cond SHOW_HIDDEN */
 template<u32 B>
-struct POWER<B, 0>
-{ static const u64 val = 1; };
+struct POWER<B, 0> { static const u64 val = 1; };
 /** @endcond */
 
-// macros
+
+// Macros
 //#define LOOP(i,S)               for(byte (i)=0; i!=(S); ++i)
 #define LOOP(i,S)                 for(const char& (i) : (S))
 #define LOOP2(i,j,S)              LOOP(i,S) LOOP(j,S)
@@ -61,37 +62,36 @@ struct POWER<B, 0>
 #define LOOP8(i,j,k,l,m,n,o,p,S)  LOOP(i,S) LOOP(j,S) LOOP6(k,l,m,n,o,p,S)
 
 
+// Constants
+#define THR_ID_HDR     "THRD="      /**< @brief Thread ID header */
+#define PK_FILENAME    "CRYFA_PK"   /**< @brief Packed file name */
+#define PCKD_FILENAME  "CRYFA_PCKD" /**< @brief Packed file name -- joined */
+#define DEC_FILENAME   "CRYFA_DEC"  /**< @brief Decrypted file name */
+#define UPK_FILENAME   "CRYFA_UPK"  /**< @brief Unpacked file name */
+#define DEFAULT_N_THR  1            /**< @brief Default number of threads */
+#define BLOCK_SIZE     8*1024       /**< @brief To read from input file */
+#define LARGE_NUMBER   std::numeric_limits<std::streamsize>::max()
+#define C1             2            /**< @brief       Cat 1  =  2 */
+#define C2             3            /**< @brief       Cat 2  =  3 */
+#define MIN_C3         4            /**< @brief  4 <= Cat 3 <=  6 */
+#define MID_C3         5
+#define MAX_C3         6
+#define MIN_C4         7            /**< @brief  7 <= Cat 4 <= 15 */
+#define MAX_C4         15
+#define MIN_C5         16           /**< @brief 16 <= Cat 5 <= 39 */
+#define MAX_C5         39
+#define KEYLEN_C1      7     /**< @brief 7 to 1 byte. For building hash table */
+#define KEYLEN_C2      5            /**< @brief 5 to 1 byte */
+#define KEYLEN_C3      3            /**< @brief 3 to 1 byte */
+#define KEYLEN_C4      2            /**< @brief 2 to 1 byte */
+#define KEYLEN_C5      3            /**< @brief 3 to 2 byte */
+
+
 /**
- * Constants
- * */
-#define THR_ID_HDR      "THRD="      // thread ID header
-#define PK_FILENAME     "CRYFA_PK"   // packed file name
-#define PCKD_FILENAME   "CRYFA_PCKD" // packed file name -- joined
-#define DEC_FILENAME    "CRYFA_DEC"  // decrypted file name
-#define UPK_FILENAME    "CRYFA_UPK"  // unpacked file name
-#define DEFAULT_N_THR   1            // default number of threads
-#define BLOCK_SIZE      8*1024       // to read from input file
-#define LARGE_NUMBER    std::numeric_limits<std::streamsize>::max()
-#define C1              2            //       cat 1  =  2
-#define C2              3            //       cat 2  =  3
-#define MIN_C3          4            //  4 <= cat 3 <=  6
-#define MID_C3          5
-#define MAX_C3          6
-#define MIN_C4          7            //  7 <= cat 4 <= 15
-#define MAX_C4          15
-#define MIN_C5          16           // 16 <= cat 5 <= 39
-#define MAX_C5          39
-#define KEYLEN_C1       7            // 7 to 1 byte.  for building hash table
-#define KEYLEN_C2       5            // 5 to 1 byte
-#define KEYLEN_C3       3            // 3 to 1 byte
-#define KEYLEN_C4       2            // 2 to 1 byte
-#define KEYLEN_C5       3            // 3 to 2 byte
-
-
-/*******************************************************************************
-    lookup tables
-*******************************************************************************/
-const string DNA_UNPACK[] =     // 216 elements
+ * @brief Lookup table for unpacking -- 216 elements
+ * @hideinitializer
+ */
+const string DNA_UNPACK[] =
 {
     "AAA", "AAC", "AAG", "AAT", "AAN", "AAX", "ACA", "ACC", "ACG", "ACT", "ACN",
     "ACX", "AGA", "AGC", "AGG", "AGT", "AGN", "AGX", "ATA", "ATC", "ATG", "ATT",
@@ -114,7 +114,11 @@ const string DNA_UNPACK[] =     // 216 elements
     "XTA", "XTC", "XTG", "XTT", "XTN", "XTX", "XNA", "XNC", "XNG", "XNT", "XNN",
     "XNX", "XXA", "XXC", "XXG", "XXT", "XXN", "XXX"
 };
-//..............................................................................
+
+/**
+ * @brief Hash table for packing
+ * @hideinitializer
+ */
 const htbl_t DNA_MAP =
 {
     {"AAA",   0}, {"AAC",   1}, {"AAG",   2}, {"AAT",   3}, {"AAN",   4},
@@ -164,10 +168,10 @@ const htbl_t DNA_MAP =
 };
 
 
-/*******************************************************************************
-    messages
-*******************************************************************************/
-inline void Help ()    // usage guide
+/**
+ * @brief Usage guide
+ */
+inline void Help ()
 {
     cout                                                                << '\n'
         << "Synopsis:"                                                  << '\n'
@@ -198,8 +202,11 @@ inline void Help ()    // usage guide
     
     exit(1);
 }
-//..............................................................................
-inline void About ()   // About cryfa
+
+/**
+ * @brief About cryfa
+ */
+inline void About ()
 {
     cout                                                                << '\n'
         << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << '\n'

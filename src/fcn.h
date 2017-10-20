@@ -1,10 +1,11 @@
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    Functions
-    - - - - - - - - - - - - - - - - - - -
-    Morteza Hosseini    seyedmorteza@ua.pt
-    Diogo Pratas        pratas@ua.pt
-    Armando J. Pinho    ap@ua.pt
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+/**
+ * @file      fcn.h
+ * @brief     Functions
+ * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
+ * @author    Diogo Pratas      (pratas@ua.pt)
+ * @author    Armando J. Pinho  (ap@ua.pt)
+ * @copyright The GNU General Public License v3.0
+ */
 
 #ifndef CRYFA_FCN_H
 #define CRYFA_FCN_H
@@ -13,9 +14,12 @@
 using std::ifstream;
 using std::cerr;
 
-/*******************************************************************************
-    find file type: FASTA (A), FASTQ (Q), none (n)
-*******************************************************************************/
+
+/**
+ * @brief  Find file type: FASTA (A), FASTQ (Q), none (n)
+ * @param  inFileName  Input file name
+ * @return A char, A, Q or n
+ */
 inline char fileType (const string& inFileName)
 {
     char     c;
