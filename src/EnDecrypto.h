@@ -1,10 +1,11 @@
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    Encryption / Decryption
-    - - - - - - - - - - - - - - - - - - -
-    Morteza Hosseini    seyedmorteza@ua.pt
-    Diogo Pratas        pratas@ua.pt
-    Armando J. Pinho    ap@ua.pt
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+/**
+ * @file      EnDecrypto.h
+ * @brief     Encryption / Decryption
+ * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
+ * @author    Diogo Pratas      (pratas@ua.pt)
+ * @author    Armando J. Pinho  (ap@ua.pt)
+ * @copyright The GNU General Public License v3.0
+ */
 
 #ifndef CRYFA_ENDECRYPTO_H
 #define CRYFA_ENDECRYPTO_H

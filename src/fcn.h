@@ -14,11 +14,10 @@
 using std::ifstream;
 using std::cerr;
 
-
 /**
  * @brief  Find file type: FASTA (A), FASTQ (Q), none (n)
  * @param  inFileName  Input file name
- * @return A char, A, Q or n
+ * @return A, Q or n
  */
 inline char fileType (const string& inFileName)
 {
@@ -45,9 +44,11 @@ inline char fileType (const string& inFileName)
     return 'n';
 }
 
-/*******************************************************************************
-    check password taken from a file
-*******************************************************************************/
+/**
+ * @brief  Check password taken from a file
+ * @param  keyFileName  Name of the file containing the password
+ * @param  k_flag       If '-k' is written in the command to run cryfa
+ */
 inline void checkPass (const string& keyFileName, const bool k_flag)
 {
     if (!k_flag) { cerr<< "Error: no password file has been set.\n";  exit(1); }

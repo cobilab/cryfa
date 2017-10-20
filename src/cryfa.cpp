@@ -11,7 +11,14 @@
           <<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
           
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
-
+/**
+ * @file      cryfa.cpp
+ * @brief     Main
+ * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
+ * @author    Diogo Pratas      (pratas@ua.pt)
+ * @author    Armando J. Pinho  (ap@ua.pt)
+ * @copyright The GNU General Public License v3.0
+ */
 
 #include <iostream>
 #include <getopt.h>
@@ -26,13 +33,13 @@ using std::cerr;
 //using std::chrono::high_resolution_clock;
 using std::setprecision;
 
-////////////////////////////////////////////////////////////////////////////////
-///////////////////                 M A I N                 ////////////////////
-////////////////////////////////////////////////////////////////////////////////
+/**
+ * @brief Main function
+ */
 int main (int argc, char* argv[])
 {
-//    // start timer
-//    high_resolution_clock::time_point startTime = high_resolution_clock::now();
+//   // start timer
+//   high_resolution_clock::time_point startTime = high_resolution_clock::now();
 
     EnDecrypto cryptObj;
     cryptObj.inFileName = argv[argc-1];  // input file name

@@ -1,10 +1,11 @@
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    Packing
-    - - - - - - - - - - - - - - - - - - -
-    Morteza Hosseini    seyedmorteza@ua.pt
-    Diogo Pratas        pratas@ua.pt
-    Armando J. Pinho    ap@ua.pt
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+/**
+ * @file      pack.h
+ * @brief     Packing
+ * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
+ * @author    Diogo Pratas      (pratas@ua.pt)
+ * @author    Armando J. Pinho  (ap@ua.pt)
+ * @copyright The GNU General Public License v3.0
+ */
 
 #ifndef CRYFA_PACK_H
 #define CRYFA_PACK_H
@@ -17,12 +18,18 @@ using std::cout;
 using std::cerr;
 using std::make_pair;
 
-string Hdrs_g;    // max: 39 values -- global
-string QSs_g;     // max: 39 values -- global
+/** @brief Headers' chars. Up to 39 values -- a global variable */
+string Hdrs_g;
+/** @brief Quality scores' chars. Up to 39 values -- a global variable */
+string QSs_g;
 
-/*******************************************************************************
-    build hash table -- output: map (1st input)
-*******************************************************************************/
+
+/**
+ * @brief      Build a hash table
+ * @param[out] map     Hash table
+ * @param[in]  strIn   The string including the keys
+ * @param[in]  keyLen  Length of the keys
+ */
 inline void buildHashTable (htbl_t &map, const string &strIn, short keyLen)
 {
     u64 elementNo = 0;
@@ -111,9 +118,12 @@ inline void buildHashTable (htbl_t &map, const string &strIn, short keyLen)
 //    cerr << "elementNo = " << elementNo << '\n';
 }
 
-/*******************************************************************************
-    build table for unpacking -- output: unpack (1st input)
-*******************************************************************************/
+/**
+ * @brief      Build a table for unpacking
+ * @param[out] unpack  Table (vector of strings)
+ * @param[in]  strIn   The string including the keys
+ * @param[in]  keyLen  Length of the keys
+ */
 inline void buildUnpack(vector<string> &unpack, const string &strIn, u16 keyLen)
 {
     u64 elementNo = 0;
@@ -198,31 +208,38 @@ inline void buildUnpack(vector<string> &unpack, const string &strIn, u16 keyLen)
 //        cerr << unpack[i] << '\n';
 }
 
-/*******************************************************************************
-    index of each DNA bases pack
-*******************************************************************************/
-inline byte dnaPack (const string &dna)     // maybe byte <-> u16 replacement
+/**
+ * @brief  Index of each DNA bases pack
+ * @param  key  Key
+ * @return Value (based on the idea of key-value in a hash table)
+ */
+inline byte dnaPack (const string &key)     // maybe byte <-> u16 replacement
 {
-    htbl_t::const_iterator got = DNA_MAP.find(dna);
+    htbl_t::const_iterator got = DNA_MAP.find(key);
     if (got == DNA_MAP.end())
-    { cerr << "Error: key '" << dna << "'not found!\n";    return 0; }
+    { cerr << "Error: key '" << key << "'not found!\n";    return 0; }
     else  return got->second;
 }
 
-/*******************************************************************************
-    index of each pack, when # > 39
-*******************************************************************************/
-inline u16 largePack (const string &strIn, const htbl_t &map)
+/**
+ * @brief  Index of each pack, when # > 39
+ * @param  key  Key
+ * @param  map  Hash table
+ * @return Value (based on the idea of key-value in a hash table)
+ */
+inline u16 largePack (const string &key, const htbl_t &map)
 {
-    htbl_t::const_iterator got = map.find(strIn);
+    htbl_t::const_iterator got = map.find(key);
     if (got == map.end())
-    { cerr << "Error: key '" << strIn << "' not found!\n";    return 0; }
+    { cerr << "Error: key '" << key << "' not found!\n";    return 0; }
     else  return got->second;
 }
 
-/*******************************************************************************
-    encapsulate each 3 DNA bases in 1 byte. output: packedSeq -- reduction: ~2/3
-*******************************************************************************/
+/**
+ * @brief      Encapsulate each 3 DNA bases in 1 byte. Reduction: ~2/3
+ * @param[out] packedSeq  Packed sequence
+ * @param[in]  seq        Sequence
+ */
 inline void packSeq_3to1 (string &packedSeq, const string &seq)
 {
     bool firstNotIn, secondNotIn, thirdNotIn;
@@ -267,9 +284,13 @@ inline void packSeq_3to1 (string &packedSeq, const string &seq)
     }
 }
 
-/*******************************************************************************
-    encapsulate 3 header symbols in 2 bytes -- reduction ~1/3.           40 <= #
-*******************************************************************************/
+/**
+ * @brief      Encapsulate 3 header symbols in 2 bytes, when # >= 40.
+ *             Reduction ~1/3
+ * @param[out] packed  Packed header
+ * @param[in]  strIn   Header
+ * @param[in]  map     Hash table
+ */
 inline void packLargeHdr_3to2 (string &packed, const string &strIn,
                                const htbl_t &map)
 {
@@ -316,9 +337,13 @@ inline void packLargeHdr_3to2 (string &packed, const string &strIn,
     }
 }
 
-/*******************************************************************************
-    encapsulate 3 quality score symbols in 2 bytes -- reduction ~1/3.    40 <= #
-*******************************************************************************/
+/**
+ * @brief      Encapsulate 3 quality score symbols in 2 bytes, when # >= 40.
+ *             Reduction ~1/3
+ * @param[out] packed  Packed qulity scores
+ * @param[in]  strIn   Quality scores
+ * @param[in]  map     Hash table
+ */
 inline void packLargeQs_3to2 (string &packed, const string &strIn,
                               const htbl_t &map)
 {
@@ -365,9 +390,13 @@ inline void packLargeQs_3to2 (string &packed, const string &strIn,
     }
 }
 
-/*******************************************************************************
-    encapsulate 3 symbols in 2 bytes -- reduction ~1/3.            16 <= # <= 39
-*******************************************************************************/
+/**
+ * @brief      Encapsulate 3 symbols in 2 bytes, when 16 <= # <= 39.
+ *             Reduction ~1/3
+ * @param[out] packed  Packed string
+ * @param[in]  strIn   Input string
+ * @param[in]  map     Hash table
+ */
 inline void pack_3to2 (string &packed, const string &strIn, const htbl_t &map)
 {
     string tuple;    tuple.reserve(3);
@@ -398,9 +427,13 @@ inline void pack_3to2 (string &packed, const string &strIn, const htbl_t &map)
     }
 }
 
-/*******************************************************************************
-    encapsulate 2 symbols in 1 bytes -- reduction ~1/2.             7 <= # <= 15
-*******************************************************************************/
+/**
+ * @brief      Encapsulate 2 symbols in 1 byte, when 7 <= # <= 15.
+ *             Reduction ~1/2
+ * @param[out] packed  Packed string
+ * @param[in]  strIn   Input string
+ * @param[in]  map     Hash table
+ */
 inline void pack_2to1 (string &packed, const string &strIn, const htbl_t &map)
 {
     string tuple;    tuple.reserve(2);
@@ -417,9 +450,13 @@ inline void pack_2to1 (string &packed, const string &strIn, const htbl_t &map)
     if (strIn.length() & 1) { packed += 255;    packed += *i; }
 }
 
-/*******************************************************************************
-    encapsulate 3 symbols in 1 bytes -- reduction ~2/3.              # = 4, 5, 6
-*******************************************************************************/
+/**
+ * @brief         Encapsulate 3 symbols in 1 byte, when # = 4, 5, 6.
+ *                Reduction ~2/3
+ * @param packed  Packed string
+ * @param strIn   Input string
+ * @param map     Hash table
+ */
 inline void pack_3to1 (string &packed, const string &strIn, const htbl_t &map)
 {
     string tuple;    tuple.reserve(3);
@@ -448,9 +485,12 @@ inline void pack_3to1 (string &packed, const string &strIn, const htbl_t &map)
     }
 }
 
-/*******************************************************************************
-    encapsulate 5 symbols in 1 bytes -- reduction ~4/5.                    # = 3
-*******************************************************************************/
+/**
+ * @brief      Encapsulate 5 symbols in 1 byte, when # = 3. Reduction ~4/5
+ * @param[out] packed  Packed string
+ * @param[in]  strIn   Input string
+ * @param[in]  map     Hash table
+ */
 inline void pack_5to1 (string &packed, const string &strIn, const htbl_t &map)
 {
     string tuple;    tuple.reserve(5);
@@ -492,9 +532,12 @@ inline void pack_5to1 (string &packed, const string &strIn, const htbl_t &map)
     }
 }
 
-/*******************************************************************************
-    encapsulate 7 symbols in 1 bytes -- reduction ~6/7.                    # = 2
-*******************************************************************************/
+/**
+ * @brief      Encapsulate 7 symbols in 1 byte, when # = 2. Reduction ~6/7
+ * @param[out] packed  Packed string
+ * @param[in]  strIn   Input string
+ * @param[in]  map     Hash table
+ */
 inline void pack_7to1 (string &packed, const string &strIn, const htbl_t &map)
 {
     string tuple;    tuple.reserve(7);
@@ -553,9 +596,12 @@ inline void pack_7to1 (string &packed, const string &strIn, const htbl_t &map)
     }
 }
 
-/*******************************************************************************
-    show 1 symbol in 1 byte.                                               # = 1
-*******************************************************************************/
+/**
+ * @brief      Encapsulate 1 symbol in 1 byte, when # = 1.
+ * @param[out] packed  Packed string
+ * @param[in]  strIn   Input string
+ * @param[in]  map     Hash table
+ */
 inline void pack_1to1 (string &packed, const string &strIn, const htbl_t &map)
 {
     string single;    single.reserve(1);
@@ -568,22 +614,26 @@ inline void pack_1to1 (string &packed, const string &strIn, const htbl_t &map)
     }
 }
 
-/*******************************************************************************
-    penalty symbol -- returns either input char or (char)10='\n'
-*******************************************************************************/
+/**
+ * @brief  Penalty symbol
+ * @param  c  Input char
+ * @return Input char or (char)10='\\n'
+ */
 inline //constexpr
 char penaltySym (char c)
 {
     const char lookupTable[2] = {(char) 10, c};
     return lookupTable[c!=(char) 254 && c!=(char) 252];
     
-    /** more readable; perhaps slower, because of conditional branch */
+//    //more readable; perhaps slower, because of conditional branch
 //    return (c != (char) 254 && c != (char) 252) ? c : (char) 10;
 }
 
-/*******************************************************************************
-    unpack 1 byte to 3 DNA bases -- FASTQ
-*******************************************************************************/
+/**
+ * @brief      Unpack 1 byte to 3 DNA bases -- FASTA
+ * @param[out] out  DNA bases
+ * @param[in]  i    Input string iterator
+ */
 inline void unpackSeqFA_3to1 (string &out, string::iterator &i)
 {
     string tpl;    tpl.reserve(3);     // tuplet
@@ -626,9 +676,11 @@ inline void unpackSeqFA_3to1 (string &out, string::iterator &i)
     }
 }
 
-/*******************************************************************************
-    unpack 1 byte to 3 DNA bases -- FASTQ
-*******************************************************************************/
+/**
+ * @brief      Unpack 1 byte to 3 DNA bases -- FASTQ
+ * @param[out] out  Unpacked DNA bases
+ * @param[in]  i    Input string iterator
+ */
 inline void unpackSeqFQ_3to1 (string &out, string::iterator &i)
 {
     string tpl;    tpl.reserve(3);
@@ -666,9 +718,13 @@ inline void unpackSeqFQ_3to1 (string &out, string::iterator &i)
     }
 }
 
-/*******************************************************************************
-    unpack by reading 2 byte by 2 byte, when # > 39
-*******************************************************************************/
+/**
+ * @brief      Unpack by reading 2 byte by 2 byte, when # > 39
+ * @param[out] out     Unpacked string
+ * @param[in]  i       Input string iterator
+ * @param[in]  XChar   Extra character for unpacking
+ * @param[in]  unpack  Table for unpacking
+ */
 inline void unpackLarge_read2B (string &out, string::iterator &i,
                                 const char XChar, const vector<string> &unpack)
 {
@@ -714,9 +770,12 @@ inline void unpackLarge_read2B (string &out, string::iterator &i,
     }
 }
 
-/*******************************************************************************
-    unpack by reading 2 byte by 2 byte
-*******************************************************************************/
+/**
+ * @brief      Unpack by reading 2 byte by 2 byte
+ * @param[out] out     Unpacked string
+ * @param[in]  i       Input string iterator
+ * @param[in]  unpack  Table for unpacking
+ */
 inline void unpack_read2B (string &out, string::iterator &i,
                            const vector<string> &unpack)
 {
@@ -737,9 +796,12 @@ inline void unpack_read2B (string &out, string::iterator &i,
     }
 }
 
-/*******************************************************************************
-    unpack by reading 1 byte by 1 byte
-*******************************************************************************/
+/**
+ * @brief      Unpack by reading 1 byte by 1 byte
+ * @param[out] out     Unpacked string
+ * @param[in]  i       Input string iterator
+ * @param[in]  unpack  Table for unpacking
+ */
 inline void unpack_read1B (string &out, string::iterator &i,
                            const vector<string> &unpack)
 {
