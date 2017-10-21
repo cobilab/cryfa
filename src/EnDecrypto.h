@@ -14,66 +14,91 @@
 using std::string;
 using std::vector;
 
-/*******************************************************************************
-    packing structure
-*******************************************************************************/
+
+/**
+ * @brief Packing
+ */
 struct pack_s
 {
+    /**
+     * @fn    void (*packHdrFPtr) (string&, const string&, const htbl_t&)
+     * @brief Points to a header packing function
+     * @fn    void (*packQSFPtr)  (string&, const string&, const htbl_t&)
+     * @brief Points to a quality score packing function
+     */
     void (*packHdrFPtr) (string&, const string&, const htbl_t&);
     void (*packQSFPtr)  (string&, const string&, const htbl_t&);
 };
 
-/*******************************************************************************
-    unpacking structure
-*******************************************************************************/
+/**
+ * @brief Unpakcing
+ */
 struct unpack_s
 {
-    char  XChar_hdr;                 // extra char if headers length > 39
-    char  XChar_qs;                  // extra char if quality scores length > 39
-    pos_t begPos;                    // begin position for each thread
-    u64   chunkSize;                 // chunk size
-    vector<string> hdrUnpack;        // table for unpacking headers
-    vector<string> qsUnpack;         // table for unpacking quality scores
+    /**
+     * @fn void(*unpackHdrFPtr)(string&,string::iterator&,const vector<string>&)
+     * @brief Points to a header unpacking function
+     * @fn void(*unpackQSFPtr) (string&,string::iterator&,const vector<string>&)
+     * @brief Points to a quality score unpacking function
+     */
+    char  XChar_hdr;          /**< @brief Extra char if header's length > 39 */
+    char  XChar_qs;           /**< @brief Extra char if q scores length > 39 */
+    pos_t begPos;             /**< @brief Begining position for each thread */
+    u64   chunkSize;          /**< @brief Chunk size */
+    vector<string> hdrUnpack; /**< @brief Lookup table for unpacking headers */
+    vector<string> qsUnpack;  /**< @brief Lookup table for unpacking q scores */
     void (*unpackHdrFPtr) (string&, string::iterator&, const vector<string>&);
     void (*unpackQSFPtr)  (string&, string::iterator&, const vector<string>&);
 };
 
-/*******************************************************************************
-    class for encryption / decryption
-*******************************************************************************/
+/**
+ * @brief Encryption / Decryption
+ */
 class EnDecrypto
 {
+    /**
+     * @var   bool verbose
+     * @brief Verbose mode     @hideinitializer
+     * @var   bool disable_shuffle
+     * @brief Disable shuffle  @hideinitializer
+     */
 public:
-    bool   verbose = false;                              // for verbose mode
-    bool   disable_shuffle = false;                      // disable shuffle
-    byte   n_threads;                                    // number of threads
-    string inFileName;                                   // input file name
-    string keyFileName;                                  // password file name
+    bool   verbose = false;
+    bool   disable_shuffle = false;
+    byte   n_threads;                         /**< @brief Number of threads */
+    string inFileName;                        /**< @brief Input file name */
+    string keyFileName;                       /**< @brief Password file name */
     
-    EnDecrypto          () = default;                    // default constructor
-    void   decrypt      ();                              // decrypt
-    void   compressFA   ();                              // compress FASTA
-    void   decompressFA ();                              // decompress FASTA
-    void   compressFQ   ();                              // compress FASTQ
-    void   decompressFQ ();                              // decompress FASTQ
+    EnDecrypto          () = default;         /**< @brief Default constructor */
+    void   decrypt      ();                   /**< @brief Decrypt */
+    void   compressFA   ();                   /**< @brief Compress FASTA */
+    void   decompressFA ();                   /**< @brief Decompress FASTA */
+    void   compressFQ   ();                   /**< @brief Compress FASTQ */
+    void   decompressFQ ();                   /**< @brief Decompress FASTQ */
     
+    /**
+     * @var   bool shufflingInProgress
+     * @brief Shuffle in progress  @hideinitializer
+     * @var   bool justPlus
+     * @brief If line 3 is just +  @hideinitializer
+     */
 private:
-    bool   shufflingInProgress = true;                   // shuffle in progress
-    bool   justPlus = true;                              // if line 3 is just +
-    bool   shuffled = true;
-    u64    seed_shared;                                  // shared seed
-    string Hdrs;                                         // max: 39 values
-    string QSs;                                          // max: 39 values
-    string HdrsX;                                        // extended Hdrs
-    string QSsX;                                         // extended QSs
-    htbl_t HdrMap;                                       // Hdrs hash table
-    htbl_t QsMap;                                        // QSs hash table
-    u32    BlockLine;                                    // max block lines
+    bool   shufflingInProgress = true;
+    bool   justPlus = true;
+    bool   shuffled = true;                       /**< @hideinitializer */
+    u64    seed_shared;                           /**< @brief Shared seed */
+    string Hdrs;                                  /**< @brief Max: 39 values */
+    string QSs;                                   /**< @brief Max: 39 values */
+    string HdrsX;                                 /**< @brief Extended Hdrs */
+    string QSsX;                                  /**< @brief Extended QSs */
+    htbl_t HdrMap;                                /**< @brief Hdrs hash table */
+    htbl_t QsMap;                                 /**< @brief QSs hash table */
+    u32    BlockLine;                             /**< @brief Max block lines */
     
-    inline void encrypt       ();                        // encrypt
-    inline void buildIV       (byte*, const string&);    // build IV
-    inline void buildKey      (byte*, const string&);    // build key
-    inline void printIV       (byte*)            const;  // print IV
+    inline void encrypt       ();                       /**< @brief Encrypt */
+    inline void buildIV       (byte*, const string&);   /**< @brief Build IV */
+    inline void buildKey      (byte*, const string&);   /**< @brief Build key */
+    inline void printIV       (byte*)            const; /**< @brief Print IV */
     inline void printKey      (byte*)            const;  // print key
     inline string extractPass ()                 const;  // extract password
     inline bool hasFQjustPlus ()                 const;  // check '+' line

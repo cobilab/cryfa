@@ -1,10 +1,11 @@
-/*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    Encryption / Decryption
-    - - - - - - - - - - - - - - - - - - -
-    Morteza Hosseini    seyedmorteza@ua.pt
-    Diogo Pratas        pratas@ua.pt
-    Armando J. Pinho    ap@ua.pt
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
+/**
+ * @file      EnDecrypto.cpp
+ * @brief     Encryption / Decryption
+ * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
+ * @author    Diogo Pratas      (pratas@ua.pt)
+ * @author    Armando J. Pinho  (ap@ua.pt)
+ * @copyright The GNU General Public License v3.0
+ */
 
 #include <fstream>
 #include <functional>
@@ -37,11 +38,12 @@ using CryptoPP::StreamTransformationFilter;
 using CryptoPP::FileSource;
 using CryptoPP::FileSink;
 
-std::mutex mutx;
+std::mutex mutx;    /**< @brief mutex */
 
-/*******************************************************************************
-    compress FASTA
-*******************************************************************************/
+
+/**
+ * @brief Compress FASTA
+ */
 void EnDecrypto::compressFA ()
 {
     // start timer for compression
@@ -168,9 +170,9 @@ void EnDecrypto::compressFA ()
     encrypt();
 }
 
-/*******************************************************************************
-    pack fasta -- '>' at the beginning of headers is not packed
-*******************************************************************************/
+/**
+ * @brief Pack FASTA -- '>' at the beginning of headers is not packed
+ */
 inline void EnDecrypto::packFA (const pack_s& pkStruct, byte threadID)
 {
     using packHdrFPtr   = void (*) (string&, const string&, const htbl_t&);
@@ -263,9 +265,9 @@ inline void EnDecrypto::packFA (const pack_s& pkStruct, byte threadID)
     in.close();
 }
 
-/*******************************************************************************
-    compress FASTQ
-*******************************************************************************/
+/**
+ * @brief Compress FASTQ
+ */
 void EnDecrypto::compressFQ ()
 {
     // start timer for compression
@@ -456,9 +458,9 @@ void EnDecrypto::compressFQ ()
     */
 }
 
-/*******************************************************************************
-    pack FASTQ -- '@' at the beginning of headers is not packed
-*******************************************************************************/
+/**
+ * Pack FASTQ -- '@' at the beginning of headers is not packed
+ */
 inline void EnDecrypto::packFQ (const pack_s& pkStruct, byte threadID)
 {
     // function pointers
@@ -525,12 +527,12 @@ inline void EnDecrypto::packFQ (const pack_s& pkStruct, byte threadID)
     in.close();
 }
 
-/*******************************************************************************
-    encrypt.
-    AES encryption uses a secret key of a variable length (128, 196 or 256 bit).
-    This key is secretly exchanged between two parties before communication
-    begins. DEFAULT_KEYLENGTH = 16 bytes.
-*******************************************************************************/
+/**
+ * @brief Encrypt
+ * AES encryption uses a secret key of a variable length (128, 196 or 256 bit).
+ * This key is secretly exchanged between two parties before communication
+ * begins. DEFAULT_KEYLENGTH = 16 bytes.
+ */
 inline void EnDecrypto::encrypt ()
 {
     cerr << "Encrypting...\n";
