@@ -124,12 +124,17 @@ inline void buildHashTable (htbl_t &map, const string &strIn, short keyLen)
  * @param[in]  strIn   The string including the keys
  * @param[in]  keyLen  Length of the keys
  */
-inline void buildUnpack(vector<string> &unpack, const string &strIn, u16 keyLen)
+//inline void buildUnpack(vector<string> &unpack, const string &strIn, u16 keyLen)
+inline void buildUnpack(string *unpack, const string &strIn, u16 keyLen)
 {
     u64 elementNo = 0;
     string element;    element.reserve(keyLen);
-    unpack.clear();
-    unpack.reserve((u64) std::pow(strIn.size(), keyLen));
+//    unpack.clear();
+//    unpack.reserve((u64) std::pow(strIn.size(), keyLen));
+    
+//    unpack = new string[(u64) std::pow(strIn.size(), keyLen)];
+    u64 idx = 0;
+    
     
     switch (keyLen)
     {
@@ -137,68 +142,71 @@ inline void buildUnpack(vector<string> &unpack, const string &strIn, u16 keyLen)
             LOOP3(i, j, k, strIn)
             {
                 element=i;    element+=j;    element+=k;
-                unpack.push_back(element);
+//                unpack.push_back(element);
+                
+                
+                unpack[idx++] = element;
             }
             break;
 
-        case 2:
-            LOOP2(i, j, strIn)
-            {
-                element=i;    element+=j;
-                unpack.push_back(element);
-            }
-            break;
-
-        case 1:
-            LOOP(i, strIn)
-            {
-                element=i;
-                unpack.push_back(element);
-            }
-            break;
-
-        case 5:
-            LOOP5(i, j, k, l, m, strIn)
-            {
-                element=i;  element+=j;  element+=k;  element+=l;  element+=m;
-                unpack.push_back(element);
-            }
-            break;
-
-        case 7:
-            LOOP7(i, j, k, l, m, n, o, strIn)
-            {
-                element =i;  element+=j;  element+=k;  element+=l;  element+=m;
-                element+=n;  element+=o;
-                unpack.push_back(element);
-            }
-            break;
-
-        case 4:
-            LOOP4(i, j, k, l, strIn)
-            {
-                element=i;    element+=j;    element+=k;    element+=l;
-                unpack.push_back(element);
-            }
-            break;
-
-        case 6:
-            LOOP6(i, j, k, l, m, n, strIn)
-            {
-                element =i;  element+=j;  element+=k;  element+=l;  element+=m;
-                element+=n;
-                unpack.push_back(element);
-            }
-            break;
-
-        case 8:
-            LOOP8(i, j, k, l, m, n, o, p, strIn)
-            {
-                element =i;  element+=j;  element+=k;  element+=l;  element+=m;
-                element+=n;  element+=o;  element+=p;
-                unpack.push_back(element);
-            }
-            break;
+//        case 2:
+//            LOOP2(i, j, strIn)
+//            {
+//                element=i;    element+=j;
+//                unpack.push_back(element);
+//            }
+//            break;
+//
+//        case 1:
+//            LOOP(i, strIn)
+//            {
+//                element=i;
+//                unpack.push_back(element);
+//            }
+//            break;
+//
+//        case 5:
+//            LOOP5(i, j, k, l, m, strIn)
+//            {
+//                element=i;  element+=j;  element+=k;  element+=l;  element+=m;
+//                unpack.push_back(element);
+//            }
+//            break;
+//
+//        case 7:
+//            LOOP7(i, j, k, l, m, n, o, strIn)
+//            {
+//                element =i;  element+=j;  element+=k;  element+=l;  element+=m;
+//                element+=n;  element+=o;
+//                unpack.push_back(element);
+//            }
+//            break;
+//
+//        case 4:
+//            LOOP4(i, j, k, l, strIn)
+//            {
+//                element=i;    element+=j;    element+=k;    element+=l;
+//                unpack.push_back(element);
+//            }
+//            break;
+//
+//        case 6:
+//            LOOP6(i, j, k, l, m, n, strIn)
+//            {
+//                element =i;  element+=j;  element+=k;  element+=l;  element+=m;
+//                element+=n;
+//                unpack.push_back(element);
+//            }
+//            break;
+//
+//        case 8:
+//            LOOP8(i, j, k, l, m, n, o, p, strIn)
+//            {
+//                element =i;  element+=j;  element+=k;  element+=l;  element+=m;
+//                element+=n;  element+=o;  element+=p;
+//                unpack.push_back(element);
+//            }
+//            break;
             
         default: break;
     }
@@ -725,8 +733,10 @@ inline void unpackSeqFQ_3to1 (string &out, string::iterator &i)
  * @param[in]  XChar   Extra character for unpacking
  * @param[in]  unpack  Table for unpacking
  */
+//inline void unpackLarge_read2B (string &out, string::iterator &i,
+//                                const char XChar, const vector<string> &unpack)
 inline void unpackLarge_read2B (string &out, string::iterator &i,
-                                const char XChar, const vector<string> &unpack)
+                                const char XChar, string *unpack)
 {
     byte leftB, rightB;
     u16 doubleB;                      // Double byte

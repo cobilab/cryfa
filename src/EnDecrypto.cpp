@@ -719,59 +719,59 @@ void EnDecrypto::decompressFA ()
     
     // Header
     if      (headersLen > MAX_C5)           keyLen_hdr = KEYLEN_C5;
-    else if (headersLen > MAX_C4)                                       // Cat 5
-    {   unpackHdr = &unpack_read2B;         keyLen_hdr = KEYLEN_C5; }
-    else
-    {   unpackHdr = &unpack_read1B;
-        
-        if      (headersLen > MAX_C3)       keyLen_hdr = KEYLEN_C4;     // Cat 4
-        else if (headersLen==MAX_C3 || headersLen==MID_C3 || headersLen==MIN_C3)
-                                            keyLen_hdr = KEYLEN_C3;     // Cat 3
-        else if (headersLen == C2)          keyLen_hdr = KEYLEN_C2;     // Cat 2
-        else if (headersLen == C1)          keyLen_hdr = KEYLEN_C1;     // Cat 1
-        else                                keyLen_hdr = 1;             // = 1
-    }
-    
-    if (headersLen <= MAX_C5)
-    {
-        // Tables for unpacking
-        buildUnpack(upkStruct.hdrUnpack, headers, keyLen_hdr);
-        
-        // Distribute file among threads, for reading and unpacking
-        for (t = 0; t != n_threads; ++t)
-        {
-            in.get(c);
-            if (c == (char) 253)
-            {
-                chunkSizeStr.clear();   // Chunk size
-                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
-                offset = stoull(chunkSizeStr);
-    
-                upkStruct.begPos        = in.tellg();
-                upkStruct.chunkSize     = offset;
-                upkStruct.unpackHdrFPtr = unpackHdr;
-                
-                arrThread[t]= thread(&EnDecrypto::unpackHS, this, upkStruct, t);
-                
-                // Jump to the beginning of the next chunk
-                in.seekg((std::streamoff) offset, std::ios_base::cur);
-            }
-            // End of file
-            if (in.peek() == 252)    break;
-        }
-        // Join threads
-        for (t = 0; t != n_threads; ++t)
-            if (arrThread[t].joinable())    arrThread[t].join();
-    
-        if (verbose)    cerr << "Unshuffling done!\n";
-    }
-    else
+//    else if (headersLen > MAX_C4)                                       // Cat 5
+//    {   unpackHdr = &unpack_read2B;         keyLen_hdr = KEYLEN_C5; }
+//    else
+//    {   unpackHdr = &unpack_read1B;
+//
+//        if      (headersLen > MAX_C3)       keyLen_hdr = KEYLEN_C4;     // Cat 4
+//        else if (headersLen==MAX_C3 || headersLen==MID_C3 || headersLen==MIN_C3)
+//                                            keyLen_hdr = KEYLEN_C3;     // Cat 3
+//        else if (headersLen == C2)          keyLen_hdr = KEYLEN_C2;     // Cat 2
+//        else if (headersLen == C1)          keyLen_hdr = KEYLEN_C1;     // Cat 1
+//        else                                keyLen_hdr = 1;             // = 1
+//    }
+//
+//    if (headersLen <= MAX_C5)
+//    {
+//        // Tables for unpacking
+//        buildUnpack(upkStruct.hdrUnpack, headers, keyLen_hdr);
+//
+//        // Distribute file among threads, for reading and unpacking
+//        for (t = 0; t != n_threads; ++t)
+//        {
+//            in.get(c);
+//            if (c == (char) 253)
+//            {
+//                chunkSizeStr.clear();   // Chunk size
+//                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
+//                offset = stoull(chunkSizeStr);
+//
+//                upkStruct.begPos        = in.tellg();
+//                upkStruct.chunkSize     = offset;
+//                upkStruct.unpackHdrFPtr = unpackHdr;
+//
+//                arrThread[t]= thread(&EnDecrypto::unpackHS, this, upkStruct, t);
+//
+//                // Jump to the beginning of the next chunk
+//                in.seekg((std::streamoff) offset, std::ios_base::cur);
+//            }
+//            // End of file
+//            if (in.peek() == 252)    break;
+//        }
+//        // Join threads
+//        for (t = 0; t != n_threads; ++t)
+//            if (arrThread[t].joinable())    arrThread[t].join();
+//
+//        if (verbose)    cerr << "Unshuffling done!\n";
+//    }
+//    else
     {
         const string decHeaders = headers.substr(headersLen - MAX_C5);
         // ASCII char after the last char in headers string
         string decHeadersX = decHeaders;
         decHeadersX += (upkStruct.XChar_hdr = (char) (decHeaders.back() + 1));
-
+        
         // Tables for unpacking
         buildUnpack(upkStruct.hdrUnpack, decHeadersX, keyLen_hdr);
 
@@ -852,81 +852,81 @@ void EnDecrypto::decompressFA ()
     }
 }
 
-/**
- * @brief Unpack FASTA: small header
- * @param upkStruct  Unpack structure
- * @param threadID   Thread ID
- */
-inline void EnDecrypto::unpackHS (const unpack_s &upkStruct, byte threadID)
-{
-    using unpackHdrFPtr =
-                   void (*) (string&, string::iterator&, const vector<string>&);
-    unpackHdrFPtr    unpackHdr = upkStruct.unpackHdrFPtr;    // Function pointer
-    pos_t            begPos    = upkStruct.begPos;
-    u64              chunkSize = upkStruct.chunkSize;
-    ifstream         in(DEC_FILENAME);
-    string           decText, chunkSizeStr;
-    string::iterator i;
-    char             c;
-    pos_t            endPos;
-    ofstream upkfile(UPK_FILENAME+to_string(threadID), std::ios_base::app);
-    string upkhdrOut, upkSeqOut;
-    
-    while (in.peek() != EOF)
-    {
-        in.seekg(begPos);      // Read the file from this position
-        // Take a chunk of decrypted file
-        decText.clear();
-        for (u64 u = chunkSize; u--;) { in.get(c);    decText += c; }
-        i = decText.begin();
-        endPos = in.tellg();   // Set the end position
-        
-        // Unshuffle
-        if (shuffled)
-        {
-            mutx.lock();//------------------------------------------------------
-            if (verbose && shufflingInProgress)    cerr << "Unshuffling...\n";
-    
-            shufflingInProgress = false;
-            mutx.unlock();//----------------------------------------------------
-            
-            unshufflePkd(i, chunkSize);
-        }
-    
-        upkfile << THR_ID_HDR + to_string(threadID) << '\n';
-        do {
-            if (*i == (char) 253)                                         // Hdr
-            {
-                unpackHdr(upkhdrOut, ++i, upkStruct.hdrUnpack);
-                upkfile << '>' << upkhdrOut << '\n';
-            }
-            else                                                          // Seq
-            {
-                unpackSeqFA_3to1(upkSeqOut, i);
-                upkfile << upkSeqOut << '\n';
-            }
-        } while (++i != decText.end());        // If trouble: change "!=" to "<"
-        
-        // Update the chunk size and positions (beg & end)
-        for (byte t = n_threads; t--;)
-        {
-            in.seekg(endPos);
-            in.get(c);
-            if (c == (char) 253)
-            {
-                chunkSizeStr.clear();
-                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
-                
-                chunkSize = stoull(chunkSizeStr);
-                begPos    = in.tellg();
-                endPos    = begPos + (pos_t) chunkSize;
-            }
-        }
-    }
-    
-    upkfile.close();
-    in.close();
-}
+///**
+// * @brief Unpack FASTA: small header
+// * @param upkStruct  Unpack structure
+// * @param threadID   Thread ID
+// */
+//inline void EnDecrypto::unpackHS (const unpack_s &upkStruct, byte threadID)
+//{
+//    using unpackHdrFPtr =
+//                   void (*) (string&, string::iterator&, const vector<string>&);
+//    unpackHdrFPtr    unpackHdr = upkStruct.unpackHdrFPtr;    // Function pointer
+//    pos_t            begPos    = upkStruct.begPos;
+//    u64              chunkSize = upkStruct.chunkSize;
+//    ifstream         in(DEC_FILENAME);
+//    string           decText, chunkSizeStr;
+//    string::iterator i;
+//    char             c;
+//    pos_t            endPos;
+//    ofstream upkfile(UPK_FILENAME+to_string(threadID), std::ios_base::app);
+//    string upkhdrOut, upkSeqOut;
+//
+//    while (in.peek() != EOF)
+//    {
+//        in.seekg(begPos);      // Read the file from this position
+//        // Take a chunk of decrypted file
+//        decText.clear();
+//        for (u64 u = chunkSize; u--;) { in.get(c);    decText += c; }
+//        i = decText.begin();
+//        endPos = in.tellg();   // Set the end position
+//
+//        // Unshuffle
+//        if (shuffled)
+//        {
+//            mutx.lock();//------------------------------------------------------
+//            if (verbose && shufflingInProgress)    cerr << "Unshuffling...\n";
+//
+//            shufflingInProgress = false;
+//            mutx.unlock();//----------------------------------------------------
+//
+//            unshufflePkd(i, chunkSize);
+//        }
+//
+//        upkfile << THR_ID_HDR + to_string(threadID) << '\n';
+//        do {
+//            if (*i == (char) 253)                                         // Hdr
+//            {
+//                unpackHdr(upkhdrOut, ++i, upkStruct.hdrUnpack);
+//                upkfile << '>' << upkhdrOut << '\n';
+//            }
+//            else                                                          // Seq
+//            {
+//                unpackSeqFA_3to1(upkSeqOut, i);
+//                upkfile << upkSeqOut << '\n';
+//            }
+//        } while (++i != decText.end());        // If trouble: change "!=" to "<"
+//
+//        // Update the chunk size and positions (beg & end)
+//        for (byte t = n_threads; t--;)
+//        {
+//            in.seekg(endPos);
+//            in.get(c);
+//            if (c == (char) 253)
+//            {
+//                chunkSizeStr.clear();
+//                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
+//
+//                chunkSize = stoull(chunkSizeStr);
+//                begPos    = in.tellg();
+//                endPos    = begPos + (pos_t) chunkSize;
+//            }
+//        }
+//    }
+//
+//    upkfile.close();
+//    in.close();
+//}
 
 /**
  * @brief Unpack FASTA: large header
@@ -1007,598 +1007,598 @@ inline void EnDecrypto::unpackHL (const unpack_s &upkStruct, byte threadID)
  */
 void EnDecrypto::decompressFQ ()
 {
-    // Start timer for decompression
-    high_resolution_clock::time_point startTime = high_resolution_clock::now();
-    
-    char     c;                     // Chars in file
-    string   headers, qscores;
-    unpack_s upkStruct;             // Collection of inputs to pass to unpack...
-    string   chunkSizeStr;          // Chunk size (string) -- For unshuffling
-    thread   arrThread[n_threads];  // Array of threads
-    byte     t;                     // For threads
-    u64      offset;                // To traverse decompressed file
-    
-    ifstream in(DEC_FILENAME);
-    in.get(c);    shuffled = (c==(char) 128); // Check if file had been shuffled
-    while (in.get(c) && c != (char) 254)                 headers += c;
-    while (in.get(c) && c != '\n' && c != (char) 253)    qscores += c;
-    if (c == '\n')    justPlus = false;                 // If 3rd line is just +
-
-    const size_t headersLen = headers.length();
-    const size_t qscoresLen = qscores.length();
-    u16 keyLen_hdr = 0,  keyLen_qs = 0;
-    
-    // Show number of different chars in headers and qs -- ignore '@'=64
-    if (verbose)
-        cerr << headersLen << " different characters are in headers.\n"
-             << qscoresLen << " different characters are in quality scores.\n";
-
-    using unpackHdrPtr =
-                   void (*) (string&, string::iterator&, const vector<string>&);
-    unpackHdrPtr unpackHdr;                                  // Function pointer
-    using unpackQSPtr =
-                   void (*) (string&, string::iterator&, const vector<string>&);
-    unpackQSPtr unpackQS;                                    // Function pointer
-
-    // Header
-    if      (headersLen > MAX_C5)           keyLen_hdr = KEYLEN_C5;
-    else if (headersLen > MAX_C4)                                       // Cat 5
-    {   unpackHdr = &unpack_read2B;         keyLen_hdr = KEYLEN_C5; }
-    else
-    {   unpackHdr = &unpack_read1B;
-
-        if      (headersLen > MAX_C3)       keyLen_hdr = KEYLEN_C4;     // Cat 4
-        else if (headersLen==MAX_C3 || headersLen==MID_C3 || headersLen==MIN_C3)
-                                            keyLen_hdr = KEYLEN_C3;     // Cat 3
-        else if (headersLen == C2)          keyLen_hdr = KEYLEN_C2;     // Cat 2
-        else if (headersLen == C1)          keyLen_hdr = KEYLEN_C1;     // Cat 1
-        else                                keyLen_hdr = 1;             // = 1
-    }
-
-    // Quality score
-    if          (qscoresLen > MAX_C5)       keyLen_qs = KEYLEN_C5;
-    else if     (qscoresLen > MAX_C4)                                   // Cat 5
-    {   unpackQS = &unpack_read2B;          keyLen_qs = KEYLEN_C5; }
-    else
-    {   unpackQS = &unpack_read1B;
-
-        if      (qscoresLen > MAX_C3)       keyLen_qs = KEYLEN_C4;      // Cat 4
-        else if (qscoresLen==MAX_C3 || qscoresLen==MID_C3 || qscoresLen==MIN_C3)
-                                            keyLen_qs = KEYLEN_C3;      // Cat 3
-        else if (qscoresLen == C2)          keyLen_qs = KEYLEN_C2;      // Cat 2
-        else if (qscoresLen == C1)          keyLen_qs = KEYLEN_C1;      // Cat 1
-        else                                keyLen_qs = 1;              // = 1
-    }
-
-    string plusMore;
-    if (headersLen <= MAX_C5 && qscoresLen <= MAX_C5)
-    {
-        // Tables for unpacking
-        buildUnpack(upkStruct.hdrUnpack, headers, keyLen_hdr);
-        buildUnpack(upkStruct.qsUnpack,  qscores, keyLen_qs);
-
-        // Distribute file among threads, for reading and unpacking
-        for (t = 0; t != n_threads; ++t)
-        {
-            in.get(c);
-            if (c == (char) 253)
-            {
-                chunkSizeStr.clear();   // Chunk size
-                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
-                offset = stoull(chunkSizeStr);
-
-                upkStruct.begPos        = in.tellg();
-                upkStruct.chunkSize     = offset;
-                upkStruct.unpackHdrFPtr = unpackHdr;
-                upkStruct.unpackQSFPtr  = unpackQS;
-
-                arrThread[t] =
-                        thread(&EnDecrypto::unpackHSQS, this, upkStruct, t);
-
-                // Jump to the beginning of the next chunk
-                in.seekg((std::streamoff) offset, std::ios_base::cur);
-            }
-            // End of file
-            if (in.peek() == 252)    break;
-        }
-        // Join threads
-        for (t = 0; t != n_threads; ++t)
-            if (arrThread[t].joinable())    arrThread[t].join();
-    
-        if (verbose)    cerr << "Unshuffling done!\n";
-    }
-    else if (headersLen <= MAX_C5 && qscoresLen > MAX_C5)
-    {
-        const string decQscores = qscores.substr(qscoresLen - MAX_C5);
-        // ASCII char after the last char in decQscores string
-        string decQscoresX  = decQscores;
-        decQscoresX += (upkStruct.XChar_qs = (char) (decQscores.back() + 1));
-
-        // Tables for unpacking
-        buildUnpack(upkStruct.hdrUnpack, headers,     keyLen_hdr);
-        buildUnpack(upkStruct.qsUnpack,  decQscoresX, keyLen_qs);
-
-        // Distribute file among threads, for reading and unpacking
-        for (t = 0; t != n_threads; ++t)
-        {
-            in.get(c);
-            if (c == (char) 253)
-            {
-                chunkSizeStr.clear();   // Chunk size
-                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
-                offset = stoull(chunkSizeStr);
-
-                upkStruct.begPos        = in.tellg();
-                upkStruct.chunkSize     = offset;
-                upkStruct.unpackHdrFPtr = unpackHdr;
-
-                arrThread[t] =
-                        thread(&EnDecrypto::unpackHSQL, this, upkStruct, t);
-
-                // Jump to the beginning of the next chunk
-                in.seekg((std::streamoff) offset, std::ios_base::cur);
-            }
-            // End of file
-            if (in.peek() == 252)    break;
-        }
-        // Join threads
-        for (t = 0; t != n_threads; ++t)
-            if (arrThread[t].joinable())    arrThread[t].join();
-    
-        if (verbose)    cerr << "Unshuffling done!\n";
-    }
-    else if (headersLen > MAX_C5 && qscoresLen > MAX_C5)
-    {
-        const string decHeaders = headers.substr(headersLen - MAX_C5);
-        const string decQscores = qscores.substr(qscoresLen-MAX_C5);
-        // ASCII char after the last char in headers & quality_scores string
-        string decHeadersX = decHeaders;
-        decHeadersX += (upkStruct.XChar_hdr = (char) (decHeaders.back() + 1));
-        string decQscoresX = decQscores;
-        decQscoresX += (upkStruct.XChar_qs  = (char) (decQscores.back() + 1));
-
-        // Tables for unpacking
-        buildUnpack(upkStruct.hdrUnpack, decHeadersX, keyLen_hdr);
-        buildUnpack(upkStruct.qsUnpack,  decQscoresX, keyLen_qs);
-
-        // Distribute file among threads, for reading and unpacking
-        for (t = 0; t != n_threads; ++t)
-        {
-            in.get(c);
-            if (c == (char) 253)
-            {
-                chunkSizeStr.clear();   // Chunk size
-                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
-                offset = stoull(chunkSizeStr);
-
-                upkStruct.begPos    = in.tellg();
-                upkStruct.chunkSize = offset;
-
-                arrThread[t] =
-                        thread(&EnDecrypto::unpackHLQL, this, upkStruct, t);
-
-                // Jump to the beginning of the next chunk
-                in.seekg((std::streamoff) offset, std::ios_base::cur);
-            }
-            // End of file
-            if (in.peek() == 252)    break;
-        }
-        // Join threads
-        for (t = 0; t != n_threads; ++t)
-            if (arrThread[t].joinable())    arrThread[t].join();
-    
-        if (verbose)    cerr << "Unshuffling done!\n";
-    }
-    else if (headersLen > MAX_C5 && qscoresLen <= MAX_C5)
-    {
-        const string decHeaders = headers.substr(headersLen - MAX_C5);
-        // ASCII char after the last char in headers string
-        string decHeadersX = decHeaders;
-        decHeadersX += (upkStruct.XChar_hdr = (char) (decHeaders.back() + 1));
-        
-        // Tables for unpacking
-        buildUnpack(upkStruct.hdrUnpack, decHeadersX, keyLen_hdr);
-        buildUnpack(upkStruct.qsUnpack,  qscores,     keyLen_qs);
-
-        // Distribute file among threads, for reading and unpacking
-        for (t = 0; t != n_threads; ++t)
-        {
-            in.get(c);
-            if (c == (char) 253)
-            {
-                chunkSizeStr.clear();   // Chunk size
-                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
-                offset = stoull(chunkSizeStr);
-
-                upkStruct.begPos       = in.tellg();
-                upkStruct.chunkSize    = offset;
-                upkStruct.unpackQSFPtr = unpackQS;
-
-                arrThread[t] =
-                        thread(&EnDecrypto::unpackHLQS, this, upkStruct, t);
-
-                // Jump to the beginning of the next chunk
-                in.seekg((std::streamoff) offset, std::ios_base::cur);
-            }
-            // End of file
-            if (in.peek() == 252)    break;
-        }
-        // Join threads
-        for (t = 0; t != n_threads; ++t)
-            if (arrThread[t].joinable())    arrThread[t].join();
-    
-        if (verbose)    cerr << "Unshuffling done!\n";
-    }
-
-    // Close/delete decrypted file
-    in.close();
-    const string decFileName = DEC_FILENAME;
-    std::remove(decFileName.c_str());
-
-    // Join unpacked files
-    ifstream upkdFile[n_threads];
-    string line;
-    for (t = n_threads; t--;)   upkdFile[t].open(UPK_FILENAME+to_string(t));
-
-    bool prevLineNotThrID;            // If previous line was "THRD=" or not
-    while (!upkdFile[0].eof())
-    {
-        for (t = 0; t != n_threads; ++t)
-        {
-            prevLineNotThrID = false;
-
-            while (getline(upkdFile[t], line).good() &&
-                   line != THR_ID_HDR+to_string(t))
-            {
-                if (prevLineNotThrID)
-                    cout << '\n';
-                cout << line;
-
-                prevLineNotThrID = true;
-            }
-
-            if (prevLineNotThrID)    cout << '\n';
-        }
-    }
-
-    // Stop timer for decompression
-    high_resolution_clock::time_point finishTime = high_resolution_clock::now();
-    // Decompression duration in seconds
-    std::chrono::duration<double> elapsed = finishTime - startTime;
-    
-    cerr << (verbose ? "Decompression done," : "Done,") << " in "
-         << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
-    
-    // Close/delete input/output files
-    string upkdFileName;
-    for (t = n_threads; t--;)
-    {
-        upkdFile[t].close();
-        upkdFileName=UPK_FILENAME;    upkdFileName+=to_string(t);
-        std::remove(upkdFileName.c_str());
-    }
+//    // Start timer for decompression
+//    high_resolution_clock::time_point startTime = high_resolution_clock::now();
+//
+//    char     c;                     // Chars in file
+//    string   headers, qscores;
+//    unpack_s upkStruct;             // Collection of inputs to pass to unpack...
+//    string   chunkSizeStr;          // Chunk size (string) -- For unshuffling
+//    thread   arrThread[n_threads];  // Array of threads
+//    byte     t;                     // For threads
+//    u64      offset;                // To traverse decompressed file
+//
+//    ifstream in(DEC_FILENAME);
+//    in.get(c);    shuffled = (c==(char) 128); // Check if file had been shuffled
+//    while (in.get(c) && c != (char) 254)                 headers += c;
+//    while (in.get(c) && c != '\n' && c != (char) 253)    qscores += c;
+//    if (c == '\n')    justPlus = false;                 // If 3rd line is just +
+//
+//    const size_t headersLen = headers.length();
+//    const size_t qscoresLen = qscores.length();
+//    u16 keyLen_hdr = 0,  keyLen_qs = 0;
+//
+//    // Show number of different chars in headers and qs -- ignore '@'=64
+//    if (verbose)
+//        cerr << headersLen << " different characters are in headers.\n"
+//             << qscoresLen << " different characters are in quality scores.\n";
+//
+//    using unpackHdrPtr =
+//                   void (*) (string&, string::iterator&, const vector<string>&);
+//    unpackHdrPtr unpackHdr;                                  // Function pointer
+//    using unpackQSPtr =
+//                   void (*) (string&, string::iterator&, const vector<string>&);
+//    unpackQSPtr unpackQS;                                    // Function pointer
+//
+//    // Header
+//    if      (headersLen > MAX_C5)           keyLen_hdr = KEYLEN_C5;
+//    else if (headersLen > MAX_C4)                                       // Cat 5
+//    {   unpackHdr = &unpack_read2B;         keyLen_hdr = KEYLEN_C5; }
+//    else
+//    {   unpackHdr = &unpack_read1B;
+//
+//        if      (headersLen > MAX_C3)       keyLen_hdr = KEYLEN_C4;     // Cat 4
+//        else if (headersLen==MAX_C3 || headersLen==MID_C3 || headersLen==MIN_C3)
+//                                            keyLen_hdr = KEYLEN_C3;     // Cat 3
+//        else if (headersLen == C2)          keyLen_hdr = KEYLEN_C2;     // Cat 2
+//        else if (headersLen == C1)          keyLen_hdr = KEYLEN_C1;     // Cat 1
+//        else                                keyLen_hdr = 1;             // = 1
+//    }
+//
+//    // Quality score
+//    if          (qscoresLen > MAX_C5)       keyLen_qs = KEYLEN_C5;
+//    else if     (qscoresLen > MAX_C4)                                   // Cat 5
+//    {   unpackQS = &unpack_read2B;          keyLen_qs = KEYLEN_C5; }
+//    else
+//    {   unpackQS = &unpack_read1B;
+//
+//        if      (qscoresLen > MAX_C3)       keyLen_qs = KEYLEN_C4;      // Cat 4
+//        else if (qscoresLen==MAX_C3 || qscoresLen==MID_C3 || qscoresLen==MIN_C3)
+//                                            keyLen_qs = KEYLEN_C3;      // Cat 3
+//        else if (qscoresLen == C2)          keyLen_qs = KEYLEN_C2;      // Cat 2
+//        else if (qscoresLen == C1)          keyLen_qs = KEYLEN_C1;      // Cat 1
+//        else                                keyLen_qs = 1;              // = 1
+//    }
+//
+//    string plusMore;
+//    if (headersLen <= MAX_C5 && qscoresLen <= MAX_C5)
+//    {
+//        // Tables for unpacking
+//        buildUnpack(upkStruct.hdrUnpack, headers, keyLen_hdr);
+//        buildUnpack(upkStruct.qsUnpack,  qscores, keyLen_qs);
+//
+//        // Distribute file among threads, for reading and unpacking
+//        for (t = 0; t != n_threads; ++t)
+//        {
+//            in.get(c);
+//            if (c == (char) 253)
+//            {
+//                chunkSizeStr.clear();   // Chunk size
+//                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
+//                offset = stoull(chunkSizeStr);
+//
+//                upkStruct.begPos        = in.tellg();
+//                upkStruct.chunkSize     = offset;
+//                upkStruct.unpackHdrFPtr = unpackHdr;
+//                upkStruct.unpackQSFPtr  = unpackQS;
+//
+//                arrThread[t] =
+//                        thread(&EnDecrypto::unpackHSQS, this, upkStruct, t);
+//
+//                // Jump to the beginning of the next chunk
+//                in.seekg((std::streamoff) offset, std::ios_base::cur);
+//            }
+//            // End of file
+//            if (in.peek() == 252)    break;
+//        }
+//        // Join threads
+//        for (t = 0; t != n_threads; ++t)
+//            if (arrThread[t].joinable())    arrThread[t].join();
+//
+//        if (verbose)    cerr << "Unshuffling done!\n";
+//    }
+//    else if (headersLen <= MAX_C5 && qscoresLen > MAX_C5)
+//    {
+//        const string decQscores = qscores.substr(qscoresLen - MAX_C5);
+//        // ASCII char after the last char in decQscores string
+//        string decQscoresX  = decQscores;
+//        decQscoresX += (upkStruct.XChar_qs = (char) (decQscores.back() + 1));
+//
+//        // Tables for unpacking
+//        buildUnpack(upkStruct.hdrUnpack, headers,     keyLen_hdr);
+//        buildUnpack(upkStruct.qsUnpack,  decQscoresX, keyLen_qs);
+//
+//        // Distribute file among threads, for reading and unpacking
+//        for (t = 0; t != n_threads; ++t)
+//        {
+//            in.get(c);
+//            if (c == (char) 253)
+//            {
+//                chunkSizeStr.clear();   // Chunk size
+//                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
+//                offset = stoull(chunkSizeStr);
+//
+//                upkStruct.begPos        = in.tellg();
+//                upkStruct.chunkSize     = offset;
+//                upkStruct.unpackHdrFPtr = unpackHdr;
+//
+//                arrThread[t] =
+//                        thread(&EnDecrypto::unpackHSQL, this, upkStruct, t);
+//
+//                // Jump to the beginning of the next chunk
+//                in.seekg((std::streamoff) offset, std::ios_base::cur);
+//            }
+//            // End of file
+//            if (in.peek() == 252)    break;
+//        }
+//        // Join threads
+//        for (t = 0; t != n_threads; ++t)
+//            if (arrThread[t].joinable())    arrThread[t].join();
+//
+//        if (verbose)    cerr << "Unshuffling done!\n";
+//    }
+//    else if (headersLen > MAX_C5 && qscoresLen > MAX_C5)
+//    {
+//        const string decHeaders = headers.substr(headersLen - MAX_C5);
+//        const string decQscores = qscores.substr(qscoresLen-MAX_C5);
+//        // ASCII char after the last char in headers & quality_scores string
+//        string decHeadersX = decHeaders;
+//        decHeadersX += (upkStruct.XChar_hdr = (char) (decHeaders.back() + 1));
+//        string decQscoresX = decQscores;
+//        decQscoresX += (upkStruct.XChar_qs  = (char) (decQscores.back() + 1));
+//
+//        // Tables for unpacking
+//        buildUnpack(upkStruct.hdrUnpack, decHeadersX, keyLen_hdr);
+//        buildUnpack(upkStruct.qsUnpack,  decQscoresX, keyLen_qs);
+//
+//        // Distribute file among threads, for reading and unpacking
+//        for (t = 0; t != n_threads; ++t)
+//        {
+//            in.get(c);
+//            if (c == (char) 253)
+//            {
+//                chunkSizeStr.clear();   // Chunk size
+//                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
+//                offset = stoull(chunkSizeStr);
+//
+//                upkStruct.begPos    = in.tellg();
+//                upkStruct.chunkSize = offset;
+//
+//                arrThread[t] =
+//                        thread(&EnDecrypto::unpackHLQL, this, upkStruct, t);
+//
+//                // Jump to the beginning of the next chunk
+//                in.seekg((std::streamoff) offset, std::ios_base::cur);
+//            }
+//            // End of file
+//            if (in.peek() == 252)    break;
+//        }
+//        // Join threads
+//        for (t = 0; t != n_threads; ++t)
+//            if (arrThread[t].joinable())    arrThread[t].join();
+//
+//        if (verbose)    cerr << "Unshuffling done!\n";
+//    }
+//    else if (headersLen > MAX_C5 && qscoresLen <= MAX_C5)
+//    {
+//        const string decHeaders = headers.substr(headersLen - MAX_C5);
+//        // ASCII char after the last char in headers string
+//        string decHeadersX = decHeaders;
+//        decHeadersX += (upkStruct.XChar_hdr = (char) (decHeaders.back() + 1));
+//
+//        // Tables for unpacking
+//        buildUnpack(upkStruct.hdrUnpack, decHeadersX, keyLen_hdr);
+//        buildUnpack(upkStruct.qsUnpack,  qscores,     keyLen_qs);
+//
+//        // Distribute file among threads, for reading and unpacking
+//        for (t = 0; t != n_threads; ++t)
+//        {
+//            in.get(c);
+//            if (c == (char) 253)
+//            {
+//                chunkSizeStr.clear();   // Chunk size
+//                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
+//                offset = stoull(chunkSizeStr);
+//
+//                upkStruct.begPos       = in.tellg();
+//                upkStruct.chunkSize    = offset;
+//                upkStruct.unpackQSFPtr = unpackQS;
+//
+//                arrThread[t] =
+//                        thread(&EnDecrypto::unpackHLQS, this, upkStruct, t);
+//
+//                // Jump to the beginning of the next chunk
+//                in.seekg((std::streamoff) offset, std::ios_base::cur);
+//            }
+//            // End of file
+//            if (in.peek() == 252)    break;
+//        }
+//        // Join threads
+//        for (t = 0; t != n_threads; ++t)
+//            if (arrThread[t].joinable())    arrThread[t].join();
+//
+//        if (verbose)    cerr << "Unshuffling done!\n";
+//    }
+//
+//    // Close/delete decrypted file
+//    in.close();
+//    const string decFileName = DEC_FILENAME;
+//    std::remove(decFileName.c_str());
+//
+//    // Join unpacked files
+//    ifstream upkdFile[n_threads];
+//    string line;
+//    for (t = n_threads; t--;)   upkdFile[t].open(UPK_FILENAME+to_string(t));
+//
+//    bool prevLineNotThrID;            // If previous line was "THRD=" or not
+//    while (!upkdFile[0].eof())
+//    {
+//        for (t = 0; t != n_threads; ++t)
+//        {
+//            prevLineNotThrID = false;
+//
+//            while (getline(upkdFile[t], line).good() &&
+//                   line != THR_ID_HDR+to_string(t))
+//            {
+//                if (prevLineNotThrID)
+//                    cout << '\n';
+//                cout << line;
+//
+//                prevLineNotThrID = true;
+//            }
+//
+//            if (prevLineNotThrID)    cout << '\n';
+//        }
+//    }
+//
+//    // Stop timer for decompression
+//    high_resolution_clock::time_point finishTime = high_resolution_clock::now();
+//    // Decompression duration in seconds
+//    std::chrono::duration<double> elapsed = finishTime - startTime;
+//
+//    cerr << (verbose ? "Decompression done," : "Done,") << " in "
+//         << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
+//
+//    // Close/delete input/output files
+//    string upkdFileName;
+//    for (t = n_threads; t--;)
+//    {
+//        upkdFile[t].close();
+//        upkdFileName=UPK_FILENAME;    upkdFileName+=to_string(t);
+//        std::remove(upkdFileName.c_str());
+//    }
 }
 
-/**
- * @brief Unpack FQ: small header, small quality score
- *        -- '@' at the beginning of headers not packed
- * @param upkStruct  Unpack structure
- * @param threadID   Thread ID
- */
-inline void EnDecrypto::unpackHSQS (const unpack_s &upkStruct, byte threadID)
-{
-    // Function pointers
-    using unpackHdrFPtr =
-                   void (*) (string&, string::iterator&, const vector<string>&);
-    unpackHdrFPtr    unpackHdr = upkStruct.unpackHdrFPtr;
-    using unpackQSFPtr  =
-                   void (*) (string&, string::iterator&, const vector<string>&);
-    unpackQSFPtr     unpackQS  = upkStruct.unpackQSFPtr;
-    pos_t            begPos    = upkStruct.begPos;
-    u64              chunkSize = upkStruct.chunkSize;
-    ifstream         in(DEC_FILENAME);
-    string           decText, plusMore, chunkSizeStr;
-    string::iterator i;
-    char             c;
-    pos_t            endPos;
-    ofstream upkfile(UPK_FILENAME+to_string(threadID), std::ios_base::app);
-    string upkHdrOut, upkSeqOut, upkQsOut;
-    
-    while (in.peek() != EOF)
-    {
-        in.seekg(begPos);      // Read the file from this position
-        // Take a chunk of decrypted file
-        decText.clear();
-        for (u64 u = chunkSize; u--;) { in.get(c);    decText += c; }
-        i = decText.begin();
-        endPos = in.tellg();   // Set the end position
-        
-        // Unshuffle
-        if (shuffled)
-        {
-            mutx.lock();//------------------------------------------------------
-            if (verbose && shufflingInProgress)    cerr << "Unshuffling...\n";
-    
-            shufflingInProgress = false;
-            mutx.unlock();//----------------------------------------------------
-    
-            unshufflePkd(i, chunkSize);
-        }
-        
-        upkfile << THR_ID_HDR + to_string(threadID) << '\n';
-        do {
-            upkfile << '@';
-            
-            unpackHdr(upkHdrOut, i, upkStruct.hdrUnpack);
-            upkfile << (plusMore = upkHdrOut) << '\n';              ++i;  // Hdr
-            
-            unpackSeqFQ_3to1(upkSeqOut, i);
-            upkfile << upkSeqOut << '\n';                                 // Seq
-            
-            upkfile << (justPlus ? "+" : "+" + plusMore) << '\n';   ++i;  // +
-    
-            unpackQS(upkQsOut, i, upkStruct.qsUnpack);
-            upkfile << upkQsOut << '\n';                                  // Qs
-        } while (++i != decText.end());        // If trouble: change "!=" to "<"
-        
-        // Update the chunk size and positions (beg & end)
-        for (byte t = n_threads; t--;)
-        {
-            in.seekg(endPos);
-            in.get(c);
-            if (c == (char) 253)
-            {
-                chunkSizeStr.clear();
-                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
-                
-                chunkSize = stoull(chunkSizeStr);
-                begPos    = in.tellg();
-                endPos    = begPos + (pos_t) chunkSize;
-            }
-        }
-    }
-    
-    upkfile.close();
-    in.close();
-}
-
-/**
- * @brief Unpack FQ: small header, large quality score
- *        -- '@' at the beginning of headers not packed
- * @param upkStruct  Unpack structure
- * @param threadID   Thread ID
- */
-inline void EnDecrypto::unpackHSQL (const unpack_s &upkStruct, byte threadID)
-{
-    using unpackHdrFPtr =
-                   void (*) (string&, string::iterator&, const vector<string>&);
-    unpackHdrFPtr    unpackHdr = upkStruct.unpackHdrFPtr;    // Function pointer
-    pos_t            begPos    = upkStruct.begPos;
-    u64              chunkSize = upkStruct.chunkSize;
-    ifstream         in(DEC_FILENAME);
-    string           decText, plusMore, chunkSizeStr;
-    string::iterator i;
-    char             c;
-    pos_t            endPos;
-    ofstream upkfile(UPK_FILENAME + to_string(threadID), std::ios_base::app);
-    string upkHdrOut, upkSeqOut, upkQsOut;
-    
-    while (in.peek() != EOF)
-    {
-        in.seekg(begPos);       // Read file from this position
-        // Take a chunk of decrypted file
-        decText.clear();
-        for (u64 u = chunkSize; u--;) { in.get(c);    decText += c; }
-        i = decText.begin();
-        endPos = in.tellg();    // Set the end position
-        
-        // Unshuffle
-        if (shuffled)
-        {
-            mutx.lock();//------------------------------------------------------
-            if (verbose && shufflingInProgress)    cerr << "Unshuffling...\n";
-    
-            shufflingInProgress = false;
-            mutx.unlock();//----------------------------------------------------
-    
-            unshufflePkd(i, chunkSize);
-        }
-        
-        upkfile << THR_ID_HDR + to_string(threadID) << '\n';
-        do {
-            upkfile << '@';
-    
-            unpackHdr(upkHdrOut, i, upkStruct.hdrUnpack);
-            upkfile << (plusMore = upkHdrOut) << '\n';               ++i; // Hdr
-    
-            unpackSeqFQ_3to1(upkSeqOut, i);
-            upkfile << upkSeqOut << '\n';                                 // Seq
-            
-            upkfile << (justPlus ? "+" : "+" + plusMore) << '\n';    ++i; // +
-    
-            unpackLarge_read2B(upkQsOut, i,
-                               upkStruct.XChar_qs, upkStruct.qsUnpack);
-            upkfile << upkQsOut << '\n';                                  // Qs
-        } while (++i != decText.end());        // If trouble: change "!=" to "<"
-        
-        // Update the chunk size and positions (beg & end)
-        for (byte t = n_threads; t--;)
-        {
-            in.seekg(endPos);
-            in.get(c);
-            if (c == (char) 253)
-            {
-                chunkSizeStr.clear();
-                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
-            
-                chunkSize = stoull(chunkSizeStr);
-                begPos    = in.tellg();
-                endPos    = begPos + (pos_t) chunkSize;
-            }
-        }
-    }
-    
-    upkfile.close();
-    in.close();
-}
-
-/**
- * @brief Unpack FQ: large header, small quality score
- *        -- '@' at the beginning of headers not packed
- * @param upkStruct  Unpack structure
- * @param threadID   Thread ID
- */
-inline void EnDecrypto::unpackHLQS (const unpack_s &upkStruct, byte threadID)
-{
-    using unpackQSFPtr =
-                   void (*) (string&, string::iterator&, const vector<string>&);
-    unpackQSFPtr     unpackQS = upkStruct.unpackQSFPtr;      // Function pointer
-    pos_t            begPos    = upkStruct.begPos;
-    u64              chunkSize = upkStruct.chunkSize;
-    ifstream         in(DEC_FILENAME);
-    string           decText, plusMore, chunkSizeStr;
-    string::iterator i;
-    char             c;
-    pos_t            endPos;
-    ofstream upkfile(UPK_FILENAME + to_string(threadID), std::ios_base::app);
-    string upkHdrOut, upkSeqOut, upkQsOut;
-    
-    while (in.peek() != EOF)
-    {
-        in.seekg(begPos);       // Read file from this position
-        // Take a chunk of decrypted file
-        decText.clear();
-        for (u64 u = chunkSize; u--;) { in.get(c);    decText += c; }
-        i = decText.begin();
-        endPos = in.tellg();    // Set the end position
-        
-        // Unshuffle
-        if (shuffled)
-        {
-            mutx.lock();//------------------------------------------------------
-            if (verbose && shufflingInProgress)    cerr << "Unshuffling...\n";
-        
-            shufflingInProgress = false;
-            mutx.unlock();//----------------------------------------------------
-        
-            unshufflePkd(i, chunkSize);
-        }
-        
-        upkfile << THR_ID_HDR + to_string(threadID) << '\n';
-        do {
-            upkfile << '@';
-    
-            unpackLarge_read2B(upkHdrOut, i,
-                               upkStruct.XChar_hdr, upkStruct.hdrUnpack);
-            upkfile << (plusMore = upkHdrOut) << '\n';              ++i;  // Hdr
-    
-            unpackSeqFQ_3to1(upkSeqOut, i);
-            upkfile << upkSeqOut << '\n';                                 // Seq
-            
-            upkfile << (justPlus ? "+" : "+" + plusMore) << '\n';   ++i;  // +
-    
-            unpackQS(upkQsOut, i, upkStruct.qsUnpack);
-            upkfile << upkQsOut << '\n';                                  // Qs
-        } while (++i != decText.end());        // If trouble: change "!=" to "<"
-        
-        // Update the chunk size and positions (beg & end)
-        for (byte t = n_threads; t--;)
-        {
-            in.seekg(endPos);
-            in.get(c);
-            if (c == (char) 253)
-            {
-                chunkSizeStr.clear();
-                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
-            
-                chunkSize = stoull(chunkSizeStr);
-                begPos    = in.tellg();
-                endPos    = begPos + (pos_t) chunkSize;
-            }
-        }
-    }
-    
-    upkfile.close();
-    in.close();
-}
-
-/**
- * @brief Unpack FQ: large header, large quality score
- *        -- '@' at the beginning of headers not packed
- * @param upkStruct  Unpack structure
- * @param threadID   Thread ID
- */
-inline void EnDecrypto::unpackHLQL (const unpack_s &upkStruct, byte threadID)
-{
-    pos_t            begPos    = upkStruct.begPos;
-    u64              chunkSize = upkStruct.chunkSize;
-    ifstream         in(DEC_FILENAME);
-    string           decText, plusMore, chunkSizeStr;
-    string::iterator i;
-    char             c;
-    pos_t            endPos;
-    ofstream upkfile(UPK_FILENAME + to_string(threadID), std::ios_base::app);
-    string upkHdrOut, upkSeqOut, upkQsOut;
-    
-    while (in.peek() != EOF)
-    {
-        in.seekg(begPos);       // Read file from this position
-        // Take a chunk of decrypted file
-        decText.clear();
-        for (u64 u = chunkSize; u--;) { in.get(c);    decText += c; }
-        i = decText.begin();
-        endPos = in.tellg();    // Set the end position
-        
-        // Unshuffle
-        if (shuffled)
-        {
-            mutx.lock();//------------------------------------------------------
-            if (verbose && shufflingInProgress)    cerr << "Unshuffling...\n";
-        
-            shufflingInProgress = false;
-            mutx.unlock();//----------------------------------------------------
-        
-            unshufflePkd(i, chunkSize);
-        }
-        
-        upkfile << THR_ID_HDR + to_string(threadID) << '\n';
-        do {
-            upkfile << '@';
-    
-            unpackLarge_read2B(upkHdrOut, i,
-                               upkStruct.XChar_hdr, upkStruct.hdrUnpack);
-            upkfile << (plusMore = upkHdrOut) << '\n';              ++i;  // Hdr
-    
-            unpackSeqFQ_3to1(upkSeqOut, i);
-            upkfile << upkSeqOut << '\n';                                 // Seq
-            
-            upkfile << (justPlus ? "+" : "+" + plusMore) << '\n';   ++i;  // +
-    
-            unpackLarge_read2B(upkQsOut, i,
-                               upkStruct.XChar_qs, upkStruct.qsUnpack);
-            upkfile << upkQsOut << '\n';                                  // Qs
-        } while (++i != decText.end());        // If trouble: change "!=" to "<"
-        
-        // Update the chunk size and positions (beg & end)
-        for (byte t = n_threads; t--;)
-        {
-            in.seekg(endPos);
-            in.get(c);
-            if (c == (char) 253)
-            {
-                chunkSizeStr.clear();
-                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
-            
-                chunkSize = stoull(chunkSizeStr);
-                begPos    = in.tellg();
-                endPos    = begPos + (pos_t) chunkSize;
-            }
-        }
-    }
-    
-    upkfile.close();
-    in.close();
-}
+///**
+// * @brief Unpack FQ: small header, small quality score
+// *        -- '@' at the beginning of headers not packed
+// * @param upkStruct  Unpack structure
+// * @param threadID   Thread ID
+// */
+//inline void EnDecrypto::unpackHSQS (const unpack_s &upkStruct, byte threadID)
+//{
+//    // Function pointers
+//    using unpackHdrFPtr =
+//                   void (*) (string&, string::iterator&, const vector<string>&);
+//    unpackHdrFPtr    unpackHdr = upkStruct.unpackHdrFPtr;
+//    using unpackQSFPtr  =
+//                   void (*) (string&, string::iterator&, const vector<string>&);
+//    unpackQSFPtr     unpackQS  = upkStruct.unpackQSFPtr;
+//    pos_t            begPos    = upkStruct.begPos;
+//    u64              chunkSize = upkStruct.chunkSize;
+//    ifstream         in(DEC_FILENAME);
+//    string           decText, plusMore, chunkSizeStr;
+//    string::iterator i;
+//    char             c;
+//    pos_t            endPos;
+//    ofstream upkfile(UPK_FILENAME+to_string(threadID), std::ios_base::app);
+//    string upkHdrOut, upkSeqOut, upkQsOut;
+//
+//    while (in.peek() != EOF)
+//    {
+//        in.seekg(begPos);      // Read the file from this position
+//        // Take a chunk of decrypted file
+//        decText.clear();
+//        for (u64 u = chunkSize; u--;) { in.get(c);    decText += c; }
+//        i = decText.begin();
+//        endPos = in.tellg();   // Set the end position
+//
+//        // Unshuffle
+//        if (shuffled)
+//        {
+//            mutx.lock();//------------------------------------------------------
+//            if (verbose && shufflingInProgress)    cerr << "Unshuffling...\n";
+//
+//            shufflingInProgress = false;
+//            mutx.unlock();//----------------------------------------------------
+//
+//            unshufflePkd(i, chunkSize);
+//        }
+//
+//        upkfile << THR_ID_HDR + to_string(threadID) << '\n';
+//        do {
+//            upkfile << '@';
+//
+//            unpackHdr(upkHdrOut, i, upkStruct.hdrUnpack);
+//            upkfile << (plusMore = upkHdrOut) << '\n';              ++i;  // Hdr
+//
+//            unpackSeqFQ_3to1(upkSeqOut, i);
+//            upkfile << upkSeqOut << '\n';                                 // Seq
+//
+//            upkfile << (justPlus ? "+" : "+" + plusMore) << '\n';   ++i;  // +
+//
+//            unpackQS(upkQsOut, i, upkStruct.qsUnpack);
+//            upkfile << upkQsOut << '\n';                                  // Qs
+//        } while (++i != decText.end());        // If trouble: change "!=" to "<"
+//
+//        // Update the chunk size and positions (beg & end)
+//        for (byte t = n_threads; t--;)
+//        {
+//            in.seekg(endPos);
+//            in.get(c);
+//            if (c == (char) 253)
+//            {
+//                chunkSizeStr.clear();
+//                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
+//
+//                chunkSize = stoull(chunkSizeStr);
+//                begPos    = in.tellg();
+//                endPos    = begPos + (pos_t) chunkSize;
+//            }
+//        }
+//    }
+//
+//    upkfile.close();
+//    in.close();
+//}
+//
+///**
+// * @brief Unpack FQ: small header, large quality score
+// *        -- '@' at the beginning of headers not packed
+// * @param upkStruct  Unpack structure
+// * @param threadID   Thread ID
+// */
+//inline void EnDecrypto::unpackHSQL (const unpack_s &upkStruct, byte threadID)
+//{
+//    using unpackHdrFPtr =
+//                   void (*) (string&, string::iterator&, const vector<string>&);
+//    unpackHdrFPtr    unpackHdr = upkStruct.unpackHdrFPtr;    // Function pointer
+//    pos_t            begPos    = upkStruct.begPos;
+//    u64              chunkSize = upkStruct.chunkSize;
+//    ifstream         in(DEC_FILENAME);
+//    string           decText, plusMore, chunkSizeStr;
+//    string::iterator i;
+//    char             c;
+//    pos_t            endPos;
+//    ofstream upkfile(UPK_FILENAME + to_string(threadID), std::ios_base::app);
+//    string upkHdrOut, upkSeqOut, upkQsOut;
+//
+//    while (in.peek() != EOF)
+//    {
+//        in.seekg(begPos);       // Read file from this position
+//        // Take a chunk of decrypted file
+//        decText.clear();
+//        for (u64 u = chunkSize; u--;) { in.get(c);    decText += c; }
+//        i = decText.begin();
+//        endPos = in.tellg();    // Set the end position
+//
+//        // Unshuffle
+//        if (shuffled)
+//        {
+//            mutx.lock();//------------------------------------------------------
+//            if (verbose && shufflingInProgress)    cerr << "Unshuffling...\n";
+//
+//            shufflingInProgress = false;
+//            mutx.unlock();//----------------------------------------------------
+//
+//            unshufflePkd(i, chunkSize);
+//        }
+//
+//        upkfile << THR_ID_HDR + to_string(threadID) << '\n';
+//        do {
+//            upkfile << '@';
+//
+//            unpackHdr(upkHdrOut, i, upkStruct.hdrUnpack);
+//            upkfile << (plusMore = upkHdrOut) << '\n';               ++i; // Hdr
+//
+//            unpackSeqFQ_3to1(upkSeqOut, i);
+//            upkfile << upkSeqOut << '\n';                                 // Seq
+//
+//            upkfile << (justPlus ? "+" : "+" + plusMore) << '\n';    ++i; // +
+//
+//            unpackLarge_read2B(upkQsOut, i,
+//                               upkStruct.XChar_qs, upkStruct.qsUnpack);
+//            upkfile << upkQsOut << '\n';                                  // Qs
+//        } while (++i != decText.end());        // If trouble: change "!=" to "<"
+//
+//        // Update the chunk size and positions (beg & end)
+//        for (byte t = n_threads; t--;)
+//        {
+//            in.seekg(endPos);
+//            in.get(c);
+//            if (c == (char) 253)
+//            {
+//                chunkSizeStr.clear();
+//                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
+//
+//                chunkSize = stoull(chunkSizeStr);
+//                begPos    = in.tellg();
+//                endPos    = begPos + (pos_t) chunkSize;
+//            }
+//        }
+//    }
+//
+//    upkfile.close();
+//    in.close();
+//}
+//
+///**
+// * @brief Unpack FQ: large header, small quality score
+// *        -- '@' at the beginning of headers not packed
+// * @param upkStruct  Unpack structure
+// * @param threadID   Thread ID
+// */
+//inline void EnDecrypto::unpackHLQS (const unpack_s &upkStruct, byte threadID)
+//{
+//    using unpackQSFPtr =
+//                   void (*) (string&, string::iterator&, const vector<string>&);
+//    unpackQSFPtr     unpackQS = upkStruct.unpackQSFPtr;      // Function pointer
+//    pos_t            begPos    = upkStruct.begPos;
+//    u64              chunkSize = upkStruct.chunkSize;
+//    ifstream         in(DEC_FILENAME);
+//    string           decText, plusMore, chunkSizeStr;
+//    string::iterator i;
+//    char             c;
+//    pos_t            endPos;
+//    ofstream upkfile(UPK_FILENAME + to_string(threadID), std::ios_base::app);
+//    string upkHdrOut, upkSeqOut, upkQsOut;
+//
+//    while (in.peek() != EOF)
+//    {
+//        in.seekg(begPos);       // Read file from this position
+//        // Take a chunk of decrypted file
+//        decText.clear();
+//        for (u64 u = chunkSize; u--;) { in.get(c);    decText += c; }
+//        i = decText.begin();
+//        endPos = in.tellg();    // Set the end position
+//
+//        // Unshuffle
+//        if (shuffled)
+//        {
+//            mutx.lock();//------------------------------------------------------
+//            if (verbose && shufflingInProgress)    cerr << "Unshuffling...\n";
+//
+//            shufflingInProgress = false;
+//            mutx.unlock();//----------------------------------------------------
+//
+//            unshufflePkd(i, chunkSize);
+//        }
+//
+//        upkfile << THR_ID_HDR + to_string(threadID) << '\n';
+//        do {
+//            upkfile << '@';
+//
+//            unpackLarge_read2B(upkHdrOut, i,
+//                               upkStruct.XChar_hdr, upkStruct.hdrUnpack);
+//            upkfile << (plusMore = upkHdrOut) << '\n';              ++i;  // Hdr
+//
+//            unpackSeqFQ_3to1(upkSeqOut, i);
+//            upkfile << upkSeqOut << '\n';                                 // Seq
+//
+//            upkfile << (justPlus ? "+" : "+" + plusMore) << '\n';   ++i;  // +
+//
+//            unpackQS(upkQsOut, i, upkStruct.qsUnpack);
+//            upkfile << upkQsOut << '\n';                                  // Qs
+//        } while (++i != decText.end());        // If trouble: change "!=" to "<"
+//
+//        // Update the chunk size and positions (beg & end)
+//        for (byte t = n_threads; t--;)
+//        {
+//            in.seekg(endPos);
+//            in.get(c);
+//            if (c == (char) 253)
+//            {
+//                chunkSizeStr.clear();
+//                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
+//
+//                chunkSize = stoull(chunkSizeStr);
+//                begPos    = in.tellg();
+//                endPos    = begPos + (pos_t) chunkSize;
+//            }
+//        }
+//    }
+//
+//    upkfile.close();
+//    in.close();
+//}
+//
+///**
+// * @brief Unpack FQ: large header, large quality score
+// *        -- '@' at the beginning of headers not packed
+// * @param upkStruct  Unpack structure
+// * @param threadID   Thread ID
+// */
+//inline void EnDecrypto::unpackHLQL (const unpack_s &upkStruct, byte threadID)
+//{
+//    pos_t            begPos    = upkStruct.begPos;
+//    u64              chunkSize = upkStruct.chunkSize;
+//    ifstream         in(DEC_FILENAME);
+//    string           decText, plusMore, chunkSizeStr;
+//    string::iterator i;
+//    char             c;
+//    pos_t            endPos;
+//    ofstream upkfile(UPK_FILENAME + to_string(threadID), std::ios_base::app);
+//    string upkHdrOut, upkSeqOut, upkQsOut;
+//
+//    while (in.peek() != EOF)
+//    {
+//        in.seekg(begPos);       // Read file from this position
+//        // Take a chunk of decrypted file
+//        decText.clear();
+//        for (u64 u = chunkSize; u--;) { in.get(c);    decText += c; }
+//        i = decText.begin();
+//        endPos = in.tellg();    // Set the end position
+//
+//        // Unshuffle
+//        if (shuffled)
+//        {
+//            mutx.lock();//------------------------------------------------------
+//            if (verbose && shufflingInProgress)    cerr << "Unshuffling...\n";
+//
+//            shufflingInProgress = false;
+//            mutx.unlock();//----------------------------------------------------
+//
+//            unshufflePkd(i, chunkSize);
+//        }
+//
+//        upkfile << THR_ID_HDR + to_string(threadID) << '\n';
+//        do {
+//            upkfile << '@';
+//
+//            unpackLarge_read2B(upkHdrOut, i,
+//                               upkStruct.XChar_hdr, upkStruct.hdrUnpack);
+//            upkfile << (plusMore = upkHdrOut) << '\n';              ++i;  // Hdr
+//
+//            unpackSeqFQ_3to1(upkSeqOut, i);
+//            upkfile << upkSeqOut << '\n';                                 // Seq
+//
+//            upkfile << (justPlus ? "+" : "+" + plusMore) << '\n';   ++i;  // +
+//
+//            unpackLarge_read2B(upkQsOut, i,
+//                               upkStruct.XChar_qs, upkStruct.qsUnpack);
+//            upkfile << upkQsOut << '\n';                                  // Qs
+//        } while (++i != decText.end());        // If trouble: change "!=" to "<"
+//
+//        // Update the chunk size and positions (beg & end)
+//        for (byte t = n_threads; t--;)
+//        {
+//            in.seekg(endPos);
+//            in.get(c);
+//            if (c == (char) 253)
+//            {
+//                chunkSizeStr.clear();
+//                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
+//
+//                chunkSize = stoull(chunkSizeStr);
+//                begPos    = in.tellg();
+//                endPos    = begPos + (pos_t) chunkSize;
+//            }
+//        }
+//    }
+//
+//    upkfile.close();
+//    in.close();
+//}
 
 /**
  * @brief  Check if the third line of FASTQ file contains only +
