@@ -74,13 +74,13 @@ RUN_METHODS=1
       PRINT_RESULTS_ENC=0
 
   # compress/decompress plus encrypt/decrypt
-  RUN_METHODS_COMP_ENC=0
+  RUN_METHODS_COMP_ENC=1
       # FASTA
-      RUN_GZIP_FA_AESCRYPT=0       # gzip + AES crypt
-      RUN_BZIP2_FA_AESCRYPT=0      # bzip2 + AES crypt
+      RUN_GZIP_FA_AESCRYPT=1       # gzip + AES crypt
+      RUN_BZIP2_FA_AESCRYPT=1      # bzip2 + AES crypt
 ###      RUN_LZMA_FA_AESCRYPT=0       # lzma + AES crypt
-      RUN_MFCOMPRESS_AESCRYPT=0    # MFCompress + AES crypt
-      RUN_DELIMINATE_AESCRYPT=0    # DELIMINATE + AES crypt
+      RUN_MFCOMPRESS_AESCRYPT=1    # MFCompress + AES crypt
+      RUN_DELIMINATE_AESCRYPT=1    # DELIMINATE + AES crypt
       # FASTQ
       RUN_GZIP_FQ_AESCRYPT=0       # gzip + AES crypt
       RUN_BZIP2_FQ_AESCRYPT=0      # bzip2 + AES crypt
@@ -90,7 +90,7 @@ RUN_METHODS=1
       RUN_DSRC_AESCRYPT=0          # DSRC + AES crypt
       RUN_FQC_AESCRYPT=0           # FQC + AES crypt
       # results
-      PRINT_RESULTS_COMP_ENC=0
+      PRINT_RESULTS_COMP_ENC=1
 
   # cryfa exclusive
   CRYFA_EXCLUSIVE=0
@@ -1017,19 +1017,20 @@ then
             done;;
 
         "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
-            for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
-                     SRR707196_1; do
-                compEncDecDecompress \
-                    $methodComp $dsPath/$FQ/$HUMAN/$HUMAN-$i.$fastq $methodEnc
-            done
-            for i in B1087 B1088 B1110 B1128 SL3003; do
-                compEncDecDecompress $methodComp \
-                    $dsPath/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq $methodEnc
-            done
-            for i in 1 2; do
-                compEncDecDecompress \
-                    $methodComp $dsPath/$FQ/$Synth/SynFQ-$i.$fastq $methodEnc
-            done;;
+#            for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
+#                     SRR707196_1; do
+#                compEncDecDecompress \
+#                    $methodComp $dsPath/$FQ/$HUMAN/$HUMAN-$i.$fastq $methodEnc
+#            done
+#            for i in B1087 B1088 B1110 B1128 SL3003; do
+#                compEncDecDecompress $methodComp \
+#                    $dsPath/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq $methodEnc
+#            done
+#            for i in 1 2; do
+#                compEncDecDecompress \
+#                    $methodComp $dsPath/$FQ/$Synth/SynFQ-$i.$fastq $methodEnc
+#            done;;
+            $methodComp $dsPath/$FQ/$Synth/SynFQ-2.$fastq $methodEnc;;
       esac
   }
 
