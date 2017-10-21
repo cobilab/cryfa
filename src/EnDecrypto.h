@@ -56,69 +56,69 @@ struct unpack_s
  */
 class EnDecrypto
 {
+public:
     /**
      * @var   bool verbose
      * @brief Verbose mode     @hideinitializer
      * @var   bool disable_shuffle
      * @brief Disable shuffle  @hideinitializer
      */
-public:
     bool   verbose = false;
     bool   disable_shuffle = false;
     byte   n_threads;                         /**< @brief Number of threads */
     string inFileName;                        /**< @brief Input file name */
     string keyFileName;                       /**< @brief Password file name */
     
-    EnDecrypto          () = default;         /**< @brief Default constructor */
-    void   decrypt      ();                   /**< @brief Decrypt */
-    void   compressFA   ();                   /**< @brief Compress FASTA */
-    void   decompressFA ();                   /**< @brief Decompress FASTA */
-    void   compressFQ   ();                   /**< @brief Compress FASTQ */
-    void   decompressFQ ();                   /**< @brief Decompress FASTQ */
+    EnDecrypto          () = default;         // Default constructor
+    void   decrypt      ();                   // Decrypt
+    void   compressFA   ();                   // Compress FASTA
+    void   decompressFA ();                   // Decompress FASTA
+    void   compressFQ   ();                   // Compress FASTQ
+    void   decompressFQ ();                   // Decompress FASTQ
     
+private:
     /**
      * @var   bool shufflingInProgress
      * @brief Shuffle in progress  @hideinitializer
      * @var   bool justPlus
      * @brief If line 3 is just +  @hideinitializer
      */
-private:
     bool   shufflingInProgress = true;
     bool   justPlus = true;
-    bool   shuffled = true;                       /**< @hideinitializer */
-    u64    seed_shared;                           /**< @brief Shared seed */
-    string Hdrs;                                  /**< @brief Max: 39 values */
-    string QSs;                                   /**< @brief Max: 39 values */
-    string HdrsX;                                 /**< @brief Extended Hdrs */
-    string QSsX;                                  /**< @brief Extended QSs */
-    htbl_t HdrMap;                                /**< @brief Hdrs hash table */
-    htbl_t QsMap;                                 /**< @brief QSs hash table */
-    u32    BlockLine;                             /**< @brief Max block lines */
+    bool   shuffled = true;                   /**< @hideinitializer */
+    u64    seed_shared;                       /**< @brief Shared seed */
+    string Hdrs;                              /**< @brief Max: 39 values */
+    string QSs;                               /**< @brief Max: 39 values */
+    string HdrsX;                             /**< @brief Extended Hdrs */
+    string QSsX;                              /**< @brief Extended QSs */
+    htbl_t HdrMap;                            /**< @brief Hdrs hash table */
+    htbl_t QsMap;                             /**< @brief QSs hash table */
+    u32    BlockLine;                         /**< @brief Max block lines */
     
-    inline void encrypt       ();                       /**< @brief Encrypt */
-    inline void buildIV       (byte*, const string&);   /**< @brief Build IV */
-    inline void buildKey      (byte*, const string&);   /**< @brief Build key */
-    inline void printIV       (byte*)            const; /**< @brief Print IV */
-    inline void printKey      (byte*)            const;  // print key
-    inline string extractPass ()                 const;  // extract password
-    inline bool hasFQjustPlus ()                 const;  // check '+' line
-    inline void gatherHdrBs   (string &);                // gather hdr Base - FA
-    inline void gatherHdrQs   (string&, string&);        // gather hdrs & qss
-    inline void my_srand      (u32);                     // random no. seed
-    inline int  my_rand       ();                        // random no generate
-    inline std::minstd_rand0 &randomEngine ();           // random no. engine
-//    inline u64  un_shuffleSeedGen (const u32);         // (un)shuffle seed gen
-    inline void un_shuffleSeedGen ();                    // (un)shuffle seed gen
-    inline void shufflePkd    (string&);                 // shuffle packed
-    inline void unshufflePkd  (string::iterator&, u64);  // unshuffle packed
-    inline void packFA        (const pack_s&,   byte);   // pack FA
-    inline void unpackHS      (const unpack_s&, byte);   // unpack H:Small -- FA
-    inline void unpackHL      (const unpack_s&, byte);   // unpack H:Large -- FA
-    inline void packFQ        (const pack_s&,   byte);   // pack FQ
-    inline void unpackHSQS    (const unpack_s&, byte);   // unpack H:Small, Q:S
-    inline void unpackHSQL    (const unpack_s&, byte);   // unpack H:S, Q:Large
-    inline void unpackHLQS    (const unpack_s&, byte);   // unpack H:Large, Q:S
-    inline void unpackHLQL    (const unpack_s&, byte);   // unpack H:Large, Q:L
+    inline void encrypt       ();                        // Encrypt
+    inline void buildIV       (byte*, const string&);    // Build IV
+    inline void buildKey      (byte*, const string&);    // Build key
+    inline void printIV       (byte*)            const;  // Print IV
+    inline void printKey      (byte*)            const;  // Print key
+    inline string extractPass ()                 const;  // Extract password
+    inline bool hasFQjustPlus ()                 const;  // Check '+' line
+    inline void gatherHdrBs   (string &);                // Gather hdr Base - FA
+    inline void gatherHdrQs   (string&, string&);        // Gather hdrs & qss
+    inline void my_srand      (u32);                     // Random no. seed
+    inline int  my_rand       ();                        // Random no generate
+    inline std::minstd_rand0 &randomEngine ();           // Random no. engine
+//    inline u64  un_shuffleSeedGen (const u32);         // (Un)shuffle seed gen
+    inline void un_shuffleSeedGen ();                    // (Un)shuffle seed gen
+    inline void shufflePkd    (string&);                 // Shuffle packed
+    inline void unshufflePkd  (string::iterator&, u64);  // Unshuffle packed
+    inline void packFA        (const pack_s&,   byte);   // Pack FA
+    inline void unpackHS      (const unpack_s&, byte);   // Unpack H:Small -- FA
+    inline void unpackHL      (const unpack_s&, byte);   // Unpack H:Large -- FA
+    inline void packFQ        (const pack_s&,   byte);   // Pack FQ
+    inline void unpackHSQS    (const unpack_s&, byte);   // Unpack H:Small, Q:S
+    inline void unpackHSQL    (const unpack_s&, byte);   // Unpack H:S, Q:Large
+    inline void unpackHLQS    (const unpack_s&, byte);   // Unpack H:Large, Q:S
+    inline void unpackHLQL    (const unpack_s&, byte);   // Unpack H:Large, Q:L
 };
 
 #endif //CRYFA_ENDECRYPTO_H

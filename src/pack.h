@@ -18,9 +18,9 @@ using std::cout;
 using std::cerr;
 using std::make_pair;
 
-/** @brief Headers' chars. Up to 39 values -- a global variable */
+/** @brief Headers' chars. Up to 39 values -- A global variable */
 string Hdrs_g;
-/** @brief Quality scores' chars. Up to 39 values -- a global variable */
+/** @brief Quality scores' chars. Up to 39 values -- A global variable */
 string QSs_g;
 
 
@@ -112,7 +112,7 @@ inline void buildHashTable (htbl_t &map, const string &strIn, short keyLen)
     }
     
     
-    // test
+    // Test
 //    for (htbl_t::iterator i = map.begin(); i != map.end(); ++i)
 //        cerr << i->first << "\t" << i->second << '\n';
 //    cerr << "elementNo = " << elementNo << '\n';
@@ -203,7 +203,7 @@ inline void buildUnpack(vector<string> &unpack, const string &strIn, u16 keyLen)
         default: break;
     }
     
-    // test
+    // Test
 //    for (int i = 0; i != arrSize; ++i)
 //        cerr << unpack[i] << '\n';
 }
@@ -213,7 +213,7 @@ inline void buildUnpack(vector<string> &unpack, const string &strIn, u16 keyLen)
  * @param  key  Key
  * @return Value (based on the idea of key-value in a hash table)
  */
-inline byte dnaPack (const string &key)     // maybe byte <-> u16 replacement
+inline byte dnaPack (const string &key)     // Maybe byte <-> u16 replacement
 {
     htbl_t::const_iterator got = DNA_MAP.find(key);
     if (got == DNA_MAP.end())
@@ -268,7 +268,7 @@ inline void packSeq_3to1 (string &packedSeq, const string &seq)
         if (thirdNotIn)  packedSeq += s2;
     }
     
-    // if seq len isn't multiple of 3, add (char) 255 before each sym
+    // If seq len isn't multiple of 3, add (char) 255 before each sym
     switch (seq.length() % 3)
     {
         case 1:
@@ -313,15 +313,15 @@ inline void packLargeHdr_3to2 (string &packed, const string &strIn,
         tuple += (thirdNotIn  = (hdrs.find(s2)==string::npos)) ? XChar : s2;
     
         shortTuple = largePack(tuple, map);
-        packed += (unsigned char) (shortTuple >> 8);      // left byte
-        packed += (unsigned char) (shortTuple & 0xFF);    // right byte
+        packed += (unsigned char) (shortTuple >> 8);      // Left byte
+        packed += (unsigned char) (shortTuple & 0xFF);    // Right byte
         
         if (firstNotIn)   packed += s0;
         if (secondNotIn)  packed += s1;
         if (thirdNotIn)   packed += s2;
     }
     
-    // if len isn't multiple of 3, add (char) 255 before each sym
+    // If len isn't multiple of 3, add (char) 255 before each sym
     switch (strIn.length() % 3)
     {
         case 1:
@@ -366,15 +366,15 @@ inline void packLargeQs_3to2 (string &packed, const string &strIn,
         tuple += (thirdNotIn  = (qss.find(s2)==string::npos)) ? XChar : s2;
         
         shortTuple = largePack(tuple, map);
-        packed += (unsigned char) (shortTuple >> 8);      // left byte
-        packed += (unsigned char) (shortTuple & 0xFF);    // right byte
+        packed += (unsigned char) (shortTuple >> 8);      // Left byte
+        packed += (unsigned char) (shortTuple & 0xFF);    // Right byte
         
         if (firstNotIn)   packed += s0;
         if (secondNotIn)  packed += s1;
         if (thirdNotIn)   packed += s2;
     }
     
-    // if len isn't multiple of 3, add (char) 255 before each sym
+    // If len isn't multiple of 3, add (char) 255 before each sym
     switch (strIn.length() % 3)
     {
         case 1:
@@ -407,11 +407,11 @@ inline void pack_3to2 (string &packed, const string &strIn, const htbl_t &map)
     {
         tuple.clear();    tuple=*i;    tuple+=*(i+1);    tuple+=*(i+2);
         shortTuple = map.find(tuple)->second;
-        packed += (byte) (shortTuple >> 8);      // left byte
-        packed += (byte) (shortTuple & 0xFF);    // right byte
+        packed += (byte) (shortTuple >> 8);      // Left byte
+        packed += (byte) (shortTuple & 0xFF);    // Right byte
     }
     
-    // if len isn't multiple of 3, add (char) 255 before each sym
+    // If len isn't multiple of 3, add (char) 255 before each sym
     switch (strIn.length() % 3)
     {
         case 1:
@@ -446,7 +446,7 @@ inline void pack_2to1 (string &packed, const string &strIn, const htbl_t &map)
         packed += (char) map.find(tuple)->second;
     }
     
-    // if len isn't multiple of 2 (it's odd), add (char) 255 before each sym
+    // If len isn't multiple of 2 (it's odd), add (char) 255 before each sym
     if (strIn.length() & 1) { packed += 255;    packed += *i; }
 }
 
@@ -469,7 +469,7 @@ inline void pack_3to1 (string &packed, const string &strIn, const htbl_t &map)
         packed += (char) map.find(tuple)->second;
     }
 
-    // if len isn't multiple of 3, add (char) 255 before each sym
+    // If len isn't multiple of 3, add (char) 255 before each sym
     switch (strIn.length() % 3)
     {
         case 1:
@@ -503,7 +503,7 @@ inline void pack_5to1 (string &packed, const string &strIn, const htbl_t &map)
         packed += (char) map.find(tuple)->second;
     }
 
-    // if len isn't multiple of 5, add (char) 255 before each sym
+    // If len isn't multiple of 5, add (char) 255 before each sym
     switch (strIn.length() % 5)
     {
         case 1:
@@ -550,7 +550,7 @@ inline void pack_7to1 (string &packed, const string &strIn, const htbl_t &map)
         packed += (char) map.find(tuple)->second;
     }
 
-    // if len isn't multiple of 7, add (char) 255 before each sym
+    // If len isn't multiple of 7, add (char) 255 before each sym
     switch (strIn.length() % 7)
     {
         case 1:
@@ -625,7 +625,7 @@ char penaltySym (char c)
     const char lookupTable[2] = {(char) 10, c};
     return lookupTable[c!=(char) 254 && c!=(char) 252];
     
-//    //more readable; perhaps slower, because of conditional branch
+//    // More readable; Perhaps slower, because of conditional branch
 //    return (c != (char) 254 && c != (char) 252) ? c : (char) 10;
 }
 
@@ -636,7 +636,7 @@ char penaltySym (char c)
  */
 inline void unpackSeqFA_3to1 (string &out, string::iterator &i)
 {
-    string tpl;    tpl.reserve(3);     // tuplet
+    string tpl;    tpl.reserve(3);     // Tuplet
     out.clear();
     byte s;
 
@@ -651,7 +651,7 @@ inline void unpackSeqFA_3to1 (string &out, string::iterator &i)
 
             if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]!='X')                // ...
             { out+=tpl;                                                        }
-            // using just one 'out' makes trouble
+            // Using just one 'out' makes trouble
             else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]!='X')           // X..
             { out+=penaltySym(*(++i));    out+=tpl[1];    out+=tpl[2];         }
 
@@ -688,7 +688,7 @@ inline void unpackSeqFQ_3to1 (string &out, string::iterator &i)
     
     for (; *i != (char) 254; ++i)
     {
-        //seq len not multiple of 3
+        // Seq len not multiple of 3
         if (*i == (char) 255) { out += penaltySym(*(++i));    continue; }
 
         tpl = DNA_UNPACK[(byte) *i];
@@ -729,18 +729,18 @@ inline void unpackLarge_read2B (string &out, string::iterator &i,
                                 const char XChar, const vector<string> &unpack)
 {
     byte leftB, rightB;
-    u16 doubleB;    // double byte
-    string tpl;    tpl.reserve(3);     // tuplet
+    u16 doubleB;                      // Double byte
+    string tpl;    tpl.reserve(3);    // Tuplet
     out.clear();
 
     while (*i != (char) 254)
     {
-        // hdr len not multiple of keyLen
+        // Hdr len not multiple of keyLen
         if (*i == (char) 255) { out += penaltySym(*(i+1));   i+=2;   continue; }
         
         leftB   = *i;
         rightB  = *(i+1);
-        doubleB = leftB<<8 | rightB;    // join two bytes
+        doubleB = leftB<<8 | rightB;    // Join two bytes
         
         tpl = unpack[doubleB];
 
@@ -780,17 +780,17 @@ inline void unpack_read2B (string &out, string::iterator &i,
                            const vector<string> &unpack)
 {
     byte leftB, rightB;
-    u16 doubleB;     // double byte
+    u16 doubleB;     // Double byte
     out.clear();
     
     for (; *i != (char) 254; i += 2)
     {
-        // hdr len not multiple of keyLen
+        // Hdr len not multiple of keyLen
         if (*i == (char) 255) { out += penaltySym(*(i+1));    continue; }
 
         leftB   = *i;
         rightB  = *(i+1);
-        doubleB = leftB<<8 | rightB;    // join two bytes
+        doubleB = leftB<<8 | rightB;    // Join two bytes
         
         out += unpack[doubleB];
     }
@@ -809,7 +809,7 @@ inline void unpack_read1B (string &out, string::iterator &i,
     
     for (; *i != (char) 254; ++i)
     {
-        // hdr len not multiple of keyLen
+        // Hdr len not multiple of keyLen
         if (*i == (char) 255) { out += penaltySym(*(++i));    continue; }
         out += unpack[(byte) *i];
     }

@@ -38,27 +38,27 @@ using std::setprecision;
  */
 int main (int argc, char* argv[])
 {
-//   // start timer
+//   // Start timer
 //   high_resolution_clock::time_point startTime = high_resolution_clock::now();
 
     EnDecrypto cryptObj;
-    cryptObj.inFileName = argv[argc-1];  // input file name
-    cryptObj.n_threads = DEFAULT_N_THR;  // initialize number of threads
+    cryptObj.inFileName = argv[argc-1];  // Input file name
+    cryptObj.n_threads = DEFAULT_N_THR;  // Initialize number of threads
     
     static int h_flag, a_flag, v_flag, d_flag, s_flag;
     bool k_flag = false;
-    int  c;                              // deal with getopt_long()
-    int  option_index;                   // option index stored by getopt_long()
-    opterr = 0;  // force getopt_long() to remain silent when it finds a problem
+    int  c;                              // Deal with getopt_long()
+    int  option_index;                   // Option index stored by getopt_long()
+    opterr = 0;  // Force getopt_long() to remain silent when it finds a problem
 
     static struct option long_options[] =
     {
-        {"help",            no_argument, &h_flag, (int) 'h'},   // help
-        {"about",           no_argument, &a_flag, (int) 'a'},   // about
-        {"verbose",         no_argument, &v_flag, (int) 'v'},   // verbose
-        {"disable_shuffle", no_argument, &s_flag, (int) 's'},   // d (un)shuffle
-        {"decrypt",         no_argument, &d_flag, (int) 'd'},   // decrypt mode
-        {"key",       required_argument,       0,       'k'},   // key file
+        {"help",            no_argument, &h_flag, (int) 'h'},   // Help
+        {"about",           no_argument, &a_flag, (int) 'a'},   // About
+        {"verbose",         no_argument, &v_flag, (int) 'v'},   // Verbose
+        {"disable_shuffle", no_argument, &s_flag, (int) 's'},   // D (un)shuffle
+        {"decrypt",         no_argument, &d_flag, (int) 'd'},   // Decrypt mode
+        {"key",       required_argument,       0,       'k'},   // Key file
         {"thread",    required_argument,       0,       't'},   // #threads >= 1
         {0,                           0,       0,         0}
     };
@@ -72,7 +72,7 @@ int main (int argc, char* argv[])
         switch (c)
         {
             case 0:
-                // if this option set a flag, do nothing else now.
+                // If this option set a flag, do nothing else now.
                 if (long_options[option_index].flag != 0)                 break;
                 cout << "option '" << long_options[option_index].name << "'\n";
                 if (optarg)    cout << " with arg " << optarg << '\n';
@@ -95,7 +95,7 @@ int main (int argc, char* argv[])
         }
     }
     
-    // check password file
+    // Check password file
     if (!h_flag && !a_flag)    checkPass(cryptObj.keyFileName, k_flag);
     
     if (v_flag)
@@ -103,7 +103,7 @@ int main (int argc, char* argv[])
 
     if (d_flag)
     {
-        cryptObj.decrypt();                                         // decrypt
+        cryptObj.decrypt();                                         // Decrypt
 
         ifstream in(DEC_FILENAME);
         cerr << "Decompressing...\n";
@@ -111,10 +111,10 @@ int main (int argc, char* argv[])
                                   : cryptObj.decompressFQ();        // FASTQ
         in.close();
 
-//        // stop timer
+//        // Stop timer
 //        high_resolution_clock::time_point finishTime =
 //                high_resolution_clock::now();
-//        // duration in seconds
+//        // Duration in seconds
 //        std::chrono::duration<double> elapsed = finishTime - startTime;
 //        cerr << "took " << std::fixed << setprecision(4) << elapsed.count()
 //             << " seconds.\n";
@@ -124,9 +124,9 @@ int main (int argc, char* argv[])
     
     if (!h_flag && !a_flag)
     {
-        char file_type = fileType(cryptObj.inFileName); //file type: FASTA/FASTQ
+        char file_type = fileType(cryptObj.inFileName); //File type: FASTA/FASTQ
 
-        // if input is neither FASTA nor FASTQ file
+        // If input is neither FASTA nor FASTQ file
         if (file_type == 'n')
         {
             cerr << "Error: \"" << cryptObj.inFileName << '"'
@@ -137,10 +137,10 @@ int main (int argc, char* argv[])
         cerr << "Compacting...\n";
         (file_type == 'A') ? cryptObj.compressFA() : cryptObj.compressFQ();
     
-//        // stop timer
+//        // Stop timer
 //        high_resolution_clock::time_point finishTime =
 //                high_resolution_clock::now();
-//        // duration in seconds
+//        // Duration in seconds
 //        std::chrono::duration<double> elapsed = finishTime - startTime;
 //        cerr << "took " << std::fixed << setprecision(4) << elapsed.count()
 //             << " seconds.\n";

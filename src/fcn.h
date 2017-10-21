@@ -30,16 +30,16 @@ inline char fileType (const string& inFileName)
     // FASTQ
     if (in.peek() == '@')
     {
-        in.ignore(LARGE_NUMBER, '\n');                 // ignore the first line
-        in.ignore(LARGE_NUMBER, '\n');                 // ignore the second line
+        in.ignore(LARGE_NUMBER, '\n');                 // Ignore the first line
+        in.ignore(LARGE_NUMBER, '\n');                 // Ignore the second line
         if (in.peek() == '+') { in.close();    return 'Q'; }
     }
     
     // FASTA
-    while (in.peek()==' ' || in.peek()=='\n')    in.get(c);       // skip spaces
+    while (in.peek()==' ' || in.peek()=='\n')    in.get(c);       // Skip spaces
     if (in.peek() == '>') { in.close();    return 'A'; }
     
-    // neither FASTA nor FASTQ
+    // Neither FASTA nor FASTQ
     in.close();
     return 'n';
 }
@@ -70,7 +70,7 @@ inline void checkPass (const string& keyFileName, const bool k_flag)
         }
         else
         {
-            // extract the password
+            // Extract the password
             char c;
             string pass;
             pass.clear();
