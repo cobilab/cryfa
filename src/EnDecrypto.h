@@ -46,13 +46,7 @@ struct unpack_s
     pos_t begPos;             /**< @brief Begining position for each thread */
     u64   chunkSize;          /**< @brief Chunk size */
     vector<string> hdrUnpack; /**< @brief Lookup table for unpacking headers */
-//    string *hdrUnpack; /**< @brief Lookup table for unpacking headers */
-
-
     vector<string> qsUnpack;  /**< @brief Lookup table for unpacking q scores */
-
-    
-//    void (*unpackHdrFPtr) (string&, string::iterator&, string*);
     void (*unpackHdrFPtr) (string&, string::iterator&, const vector<string>&);
     void (*unpackQSFPtr)  (string&, string::iterator&, const vector<string>&);
 };

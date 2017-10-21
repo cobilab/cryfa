@@ -109,12 +109,6 @@ int main (int argc, char* argv[])
         cerr << "Decompressing...\n";
         (in.peek() == (char) 127) ? cryptObj.decompressFA()         // FASTA
                                   : cryptObj.decompressFQ();        // FASTQ
-//        string *s=new string[2];
-//        s[0]="a";
-//        s[1]="b";
-//        cerr<<s[1];
-        
-        
         in.close();
 
 //        // Stop timer
