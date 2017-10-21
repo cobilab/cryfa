@@ -124,17 +124,16 @@ inline void buildHashTable (htbl_t &map, const string &strIn, short keyLen)
  * @param[in]  strIn   The string including the keys
  * @param[in]  keyLen  Length of the keys
  */
-//inline void buildUnpack(vector<string> &unpack, const string &strIn, u16 keyLen)
-inline void buildUnpack(string *unpack, const string &strIn, u16 keyLen)
+inline void buildUnpack(vector<string> &unpack, const string &strIn, u16 keyLen)
+//inline void buildUnpack(string *unpack, const string &strIn, u16 keyLen)
 {
     u64 elementNo = 0;
     string element;    element.reserve(keyLen);
-//    unpack.clear();
-//    unpack.reserve((u64) std::pow(strIn.size(), keyLen));
+    unpack.clear();
+    unpack.reserve((u64) std::pow(strIn.size(), keyLen));
     
-//    unpack = new string[(u64) std::pow(strIn.size(), keyLen)];
-    u64 idx = 0;
     
+//    u64 idx = 0;
     
     switch (keyLen)
     {
@@ -142,10 +141,9 @@ inline void buildUnpack(string *unpack, const string &strIn, u16 keyLen)
             LOOP3(i, j, k, strIn)
             {
                 element=i;    element+=j;    element+=k;
-//                unpack.push_back(element);
+                unpack.push_back(element);
                 
-                
-                unpack[idx++] = element;
+//                unpack[idx++] = element;
             }
             break;
 
@@ -211,8 +209,9 @@ inline void buildUnpack(string *unpack, const string &strIn, u16 keyLen)
         default: break;
     }
     
-    // Test
-//    for (int i = 0; i != arrSize; ++i)
+//    // Test
+//    u64 arrSize = (u64) std::pow(strIn.size(), keyLen);
+//    for (u64 i = 0; i != arrSize; ++i)
 //        cerr << unpack[i] << '\n';
 }
 
@@ -733,10 +732,10 @@ inline void unpackSeqFQ_3to1 (string &out, string::iterator &i)
  * @param[in]  XChar   Extra character for unpacking
  * @param[in]  unpack  Table for unpacking
  */
-//inline void unpackLarge_read2B (string &out, string::iterator &i,
-//                                const char XChar, const vector<string> &unpack)
 inline void unpackLarge_read2B (string &out, string::iterator &i,
-                                const char XChar, string *unpack)
+                                const char XChar, const vector<string> &unpack)
+//inline void unpackLarge_read2B (string &out, string::iterator &i,
+//                                const char XChar, string *unpack)
 {
     byte leftB, rightB;
     u16 doubleB;                      // Double byte
@@ -788,6 +787,8 @@ inline void unpackLarge_read2B (string &out, string::iterator &i,
  */
 inline void unpack_read2B (string &out, string::iterator &i,
                            const vector<string> &unpack)
+//inline void unpack_read2B (string &out, string::iterator &i,
+//                           string *unpack)
 {
     byte leftB, rightB;
     u16 doubleB;     // Double byte
