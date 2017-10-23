@@ -76,21 +76,21 @@ RUN_METHODS=1
   # compress/decompress plus encrypt/decrypt
   RUN_METHODS_COMP_ENC=1
       # FASTA
-      RUN_GZIP_FA_AESCRYPT=1       # gzip + AES crypt
-      RUN_BZIP2_FA_AESCRYPT=1      # bzip2 + AES crypt
+      RUN_GZIP_FA_AESCRYPT=0       # gzip + AES crypt
+      RUN_BZIP2_FA_AESCRYPT=0      # bzip2 + AES crypt
 ###      RUN_LZMA_FA_AESCRYPT=0       # lzma + AES crypt
-      RUN_MFCOMPRESS_AESCRYPT=1    # MFCompress + AES crypt
-      RUN_DELIMINATE_AESCRYPT=1    # DELIMINATE + AES crypt
+      RUN_MFCOMPRESS_AESCRYPT=0    # MFCompress + AES crypt
+      RUN_DELIMINATE_AESCRYPT=0    # DELIMINATE + AES crypt
       # FASTQ
-      RUN_GZIP_FQ_AESCRYPT=0       # gzip + AES crypt
-      RUN_BZIP2_FQ_AESCRYPT=0      # bzip2 + AES crypt
+      RUN_GZIP_FQ_AESCRYPT=1       # gzip + AES crypt
+      RUN_BZIP2_FQ_AESCRYPT=1      # bzip2 + AES crypt
 ###      RUN_LZMA_FQ_AESCRYPT=0       # lzma + AES crypt
-      RUN_FQZCOMP_AESCRYPT=0       # fqzcomp + AES crypt
+      RUN_FQZCOMP_AESCRYPT=1       # fqzcomp + AES crypt
       RUN_QUIP_AESCRYPT=0          # quip + AES crypt
       RUN_DSRC_AESCRYPT=0          # DSRC + AES crypt
       RUN_FQC_AESCRYPT=0           # FQC + AES crypt
       # results
-      PRINT_RESULTS_COMP_ENC=1
+      PRINT_RESULTS_COMP_ENC=0
 
   # cryfa exclusive
   CRYFA_EXCLUSIVE=0
@@ -1017,20 +1017,19 @@ then
             done;;
 
         "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
-#            for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
-#                     SRR707196_1; do
-#                compEncDecDecompress \
-#                    $methodComp $dsPath/$FQ/$HUMAN/$HUMAN-$i.$fastq $methodEnc
-#            done
-#            for i in B1087 B1088 B1110 B1128 SL3003; do
-#                compEncDecDecompress $methodComp \
-#                    $dsPath/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq $methodEnc
-#            done
-#            for i in 1 2; do
-#                compEncDecDecompress \
-#                    $methodComp $dsPath/$FQ/$Synth/SynFQ-$i.$fastq $methodEnc
-#            done;;
-            $methodComp $dsPath/$FQ/$Synth/SynFQ-2.$fastq $methodEnc;;
+            for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
+                     SRR707196_1; do
+                compEncDecDecompress \
+                    $methodComp $dsPath/$FQ/$HUMAN/$HUMAN-$i.$fastq $methodEnc
+            done
+            for i in B1087 B1088 B1110 B1128 SL3003; do
+                compEncDecDecompress $methodComp \
+                    $dsPath/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq $methodEnc
+            done
+            for i in 1 2; do
+                compEncDecDecompress \
+                    $methodComp $dsPath/$FQ/$Synth/SynFQ-$i.$fastq $methodEnc
+            done;;
       esac
   }
 
@@ -1052,7 +1051,7 @@ then
       cs_file="$result/${1}_CS__${dName}_$ft"
       if [[ -e $cs_file ]]; then
           CS=`cat $cs_file | awk '{ print $5; }'`;
-          rm -f $cs_file;
+#          rm -f $cs_file;
       fi
 
       ### compression time -- real - user - system
@@ -1061,14 +1060,14 @@ then
           CT_r=`cat $ct_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
           CT_u=`cat $ct_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
           CT_s=`cat $ct_file | tail -n 1 | awk '{ print $2;}'`;
-          rm -f $ct_file;
+#          rm -f $ct_file;
       fi
 
       ### compression memory
       cm_file="$result/${1}_CM__${dName}_$ft"
       if [[ -e $cm_file ]]; then
           CM=`cat $cm_file`;
-          rm -f $cm_file;
+#          rm -f $cm_file;
       fi
 
       ### decompression time -- real - user - system
@@ -1077,21 +1076,21 @@ then
           DT_r=`cat $dt_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
           DT_u=`cat $dt_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
           DT_s=`cat $dt_file | tail -n 1 | awk '{ print $2;}'`;
-          rm -f $dt_file;
+#          rm -f $dt_file;
       fi
 
       ### decompression memory
       dm_file="$result/${1}_DM__${dName}_$ft"
       if [[ -e $dm_file ]]; then
           DM=`cat $dm_file`;
-          rm -f $dm_file;
+#          rm -f $dm_file;
       fi
 
       ### if decompressed file is the same as the original file
       v_file="$result/${1}_V__${dName}_$ft"
       if [[ -e $v_file ]]; then
           V=`cat $v_file | wc -l`;
-          rm -f $v_file;
+#          rm -f $v_file;
       fi
 
       c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"   # compression results
@@ -1117,7 +1116,7 @@ then
       ens_file="$result/${1}_EnS__${dName}_$ft"
       if [[ -e $ens_file ]]; then
           EnS=`cat $ens_file | awk '{ print $5; }'`;
-          rm -f $ens_file;
+#          rm -f $ens_file;
       fi
 
       ### encryption time -- real - user - system
@@ -1126,14 +1125,14 @@ then
           EnT_r=`cat $ent_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
           EnT_u=`cat $ent_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
           EnT_s=`cat $ent_file | tail -n 1 | awk '{ print $2;}'`;
-          rm -f $ent_file;
+#          rm -f $ent_file;
       fi
 
       ### encryption memory
       enm_file="$result/${1}_EnM__${dName}_$ft"
       if [[ -e $enm_file ]]; then
           EnM=`cat $enm_file`;
-          rm -f $enm_file;
+#          rm -f $enm_file;
       fi
 
       ### decryption time -- real - user - system
@@ -1142,14 +1141,14 @@ then
           DeT_r=`cat $det_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
           DeT_u=`cat $det_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
           DeT_s=`cat $det_file | tail -n 1 | awk '{ print $2;}'`;
-          rm -f $det_file;
+#          rm -f $det_file;
       fi
 
       ### decryption memory
       dem_file="$result/${1}_DeM__${dName}_$ft"
       if [[ -e $dem_file ]]; then
           DeM=`cat $dem_file`;
-          rm -f $dem_file;
+#          rm -f $dem_file;
       fi
 
       en="$EnS\t$EnT_r\t$EnT_u\t$EnT_s\t$EnM"    # encryption results
@@ -1181,7 +1180,7 @@ then
       cs_file="$result/${1}_${2}_CS__${dName}_$ft"
       if [[ -e $cs_file ]]; then
           CS=`cat $cs_file | awk '{ print $5; }'`;
-          rm -f $cs_file;
+#          rm -f $cs_file;
       fi
 
       ### compression time -- real - user - system
@@ -1190,21 +1189,21 @@ then
           CT_r=`cat $ct_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
           CT_u=`cat $ct_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
           CT_s=`cat $ct_file | tail -n 1 | awk '{ print $2;}'`;
-          rm -f $ct_file;
+#          rm -f $ct_file;
       fi
 
       ### compression memory
       cm_file="$result/${1}_${2}_CM__${dName}_$ft"
       if [[ -e $cm_file ]]; then
           CM=`cat $cm_file`;
-          rm -f $cm_file;
+#          rm -f $cm_file;
       fi
 
       ### encrypted file size
       ens_file="$result/${1}_${2}_EnS__${dName}_$ft"
       if [[ -e $ens_file ]]; then
           EnS=`cat $ens_file | awk '{ print $5; }'`;
-          rm -f $ens_file;
+#          rm -f $ens_file;
       fi
 
       ### encryption time -- real - user - system
@@ -1213,14 +1212,14 @@ then
           EnT_r=`cat $ent_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
           EnT_u=`cat $ent_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
           EnT_s=`cat $ent_file | tail -n 1 | awk '{ print $2;}'`;
-          rm -f $ent_file;
+#          rm -f $ent_file;
       fi
 
       ### encryption memory
       enm_file="$result/${1}_${2}_EnM__${dName}_$ft"
       if [[ -e $enm_file ]]; then
           EnM=`cat $enm_file`;
-          rm -f $enm_file;
+#          rm -f $enm_file;
       fi
 
       ### decryption time -- real - user - system
@@ -1229,14 +1228,14 @@ then
           DeT_r=`cat $det_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
           DeT_u=`cat $det_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
           DeT_s=`cat $det_file | tail -n 1 | awk '{ print $2;}'`;
-          rm -f $det_file;
+#          rm -f $det_file;
       fi
 
       ### decryption memory
       dem_file="$result/${1}_${2}_DeM__${dName}_$ft"
       if [[ -e $dem_file ]]; then
           DeM=`cat $dem_file`;
-          rm -f $dem_file;
+#          rm -f $dem_file;
       fi
 
       ### decompression time -- real - user - system
@@ -1245,21 +1244,21 @@ then
           DT_r=`cat $dt_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
           DT_u=`cat $dt_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
           DT_s=`cat $dt_file | tail -n 1 | awk '{ print $2;}'`;
-          rm -f $dt_file;
+#          rm -f $dt_file;
       fi
 
       ### decompression memory
       dm_file="$result/${1}_${2}_DM__${dName}_$ft"
       if [[ -e $dm_file ]]; then
           DM=`cat $dm_file`;
-          rm -f $dm_file;
+#          rm -f $dm_file;
       fi
 
       ### if decompressed file is the same as the original file
       v_file="$result/${1}_${2}_V__${dName}_$ft"
       if [[ -e $v_file ]]; then
           V=`cat $v_file | wc -l`;
-          rm -f $v_file;
+#          rm -f $v_file;
       fi
 
       c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"        # compression results
