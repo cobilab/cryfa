@@ -617,16 +617,21 @@ inline void pack_1to1 (string &packed, const string &strIn, const htbl_t &map)
 }
 
 /**
+ * @var    char lookupTable[2]
+ * @brief  Either line feed or the input char  @hideinitializer
+ *
+ * @fn     char penaltySym (char c)
  * @brief  Penalty symbol
  * @param  c  Input char
  * @return Input char or (char)10='\\n'
  */
+char lookupTable[2] = {0, (char) 10};
 inline //constexpr
 char penaltySym (char c)
 {
-    const char lookupTable[2] = {(char) 10, c};
-    return lookupTable[c!=(char) 254 && c!=(char) 252];
-    
+    lookupTable[0] = c;
+    return lookupTable[c==(char) 254 || c==(char) 252];
+
 //    // More readable; Perhaps slower, because of conditional branch
 //    return (c != (char) 254 && c != (char) 252) ? c : (char) 10;
 }
