@@ -1634,6 +1634,8 @@ then
            # extract from cryfa
            cat $result/COMP_${i}_FA.$INF | awk 'NR>1' \
             | awk 'BEGIN{}{if ($3=="Cryfa") print;}' >> ${INWF}_${i}_FA.$INF;
+
+           #todo. extract from AEScrypt
        done
        rm -f ${INWF}_FA.tmp
 
@@ -1657,6 +1659,8 @@ then
       cat $result/COMP_tot_FA.$INF | awk 'NR>1' \
        | awk 'BEGIN{}{if ($2=="Cryfa") print;}' >> ${INWF}_tot_FA.$INF
 
+      #todo. extract from AEScrypt
+
       ### FASTQ
       # details -- 1 row for headers and 1 row after all
       removeUpToRow=`echo $((removeFromRow-1))`
@@ -1679,6 +1683,8 @@ then
            # extract from cryfa
            cat $result/COMP_${i}_FQ.$INF | awk 'NR>1' \
             | awk 'BEGIN{}{if ($3=="Cryfa") print;}' >> ${INWF}_${i}_FQ.$INF;
+
+           #todo. extract from AEScrypt
        done
        rm -f ${INWF}_FQ.tmp
 
@@ -1699,6 +1705,8 @@ then
       # extract from cryfa
       cat $result/COMP_tot_FQ.$INF | awk 'NR>1' \
        | awk 'BEGIN{}{if ($2=="Cryfa") print;}' >> ${INWF}_tot_FQ.$INF
+
+      #todo. extract from AEScrypt
 
       rm -f $INWF.tmp
   }
