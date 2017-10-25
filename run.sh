@@ -47,7 +47,7 @@ INSTALL_METHODS=0
 ### run methods
 RUN_METHODS=1
   # compress/decompress
-  RUN_METHODS_COMP=0
+  RUN_METHODS_COMP=1
       # FASTA
       RUN_GZIP_FA=0                # gzip
       RUN_BZIP2_FA=0               # bzip2
@@ -69,12 +69,12 @@ RUN_METHODS=1
 
   # encrypt/decrypt
   RUN_METHODS_ENC=0
-      RUN_AESCRYPT=1               # AES crypt
+      RUN_AESCRYPT=0               # AES crypt
       # results
       PRINT_RESULTS_ENC=0
 
   # compress/decompress plus encrypt/decrypt
-  RUN_METHODS_COMP_ENC=1
+  RUN_METHODS_COMP_ENC=0
       # FASTA
       RUN_GZIP_FA_AESCRYPT=0       # gzip + AES crypt
       RUN_BZIP2_FA_AESCRYPT=0      # bzip2 + AES crypt
@@ -86,9 +86,9 @@ RUN_METHODS=1
       RUN_BZIP2_FQ_AESCRYPT=0      # bzip2 + AES crypt
 ###      RUN_LZMA_FQ_AESCRYPT=0       # lzma + AES crypt
       RUN_FQZCOMP_AESCRYPT=0       # fqzcomp + AES crypt
-      RUN_QUIP_AESCRYPT=1          # quip + AES crypt
-      RUN_DSRC_AESCRYPT=1          # DSRC + AES crypt
-      RUN_FQC_AESCRYPT=1           # FQC + AES crypt
+      RUN_QUIP_AESCRYPT=0          # quip + AES crypt
+      RUN_DSRC_AESCRYPT=0          # DSRC + AES crypt
+      RUN_FQC_AESCRYPT=0           # FQC + AES crypt
       # results
       PRINT_RESULTS_COMP_ENC=0
 
