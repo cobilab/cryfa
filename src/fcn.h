@@ -36,7 +36,8 @@ inline char fileType (const string& inFileName)
     }
     
     // FASTA
-    while (in.peek()==' ' || in.peek()=='\n')    in.get(c);       // Skip spaces
+    // Skip spaces/blank lines
+    while (in.peek()==' ' || in.peek()=='\n')    in.get(c);
     if (in.peek() == '>') { in.close();    return 'A'; }
     
     // Neither FASTA nor FASTQ

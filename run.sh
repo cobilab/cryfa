@@ -71,10 +71,10 @@ RUN_METHODS=1
   RUN_METHODS_ENC=0
       RUN_AESCRYPT=0               # AES crypt
       # results
-      PRINT_RESULTS_ENC=1
+      PRINT_RESULTS_ENC=0
 
   # compress/decompress plus encrypt/decrypt
-  RUN_METHODS_COMP_ENC=1
+  RUN_METHODS_COMP_ENC=0
       # FASTA
       RUN_GZIP_FA_AESCRYPT=0       # gzip + AES crypt
       RUN_BZIP2_FA_AESCRYPT=0      # bzip2 + AES crypt
@@ -90,7 +90,7 @@ RUN_METHODS=1
       RUN_DSRC_AESCRYPT=0          # DSRC + AES crypt
       RUN_FQC_AESCRYPT=0           # FQC + AES crypt
       # results
-      PRINT_RESULTS_COMP_ENC=1
+      PRINT_RESULTS_COMP_ENC=0
 
   # cryfa exclusive
   CRYFA_EXCLUSIVE=0
