@@ -47,14 +47,14 @@ INSTALL_METHODS=0
 ### run methods
 RUN_METHODS=1
   # compress/decompress
-  RUN_METHODS_COMP=1
+  RUN_METHODS_COMP=0
       # FASTA
       RUN_GZIP_FA=0                # gzip
       RUN_BZIP2_FA=0               # bzip2
 ###      RUN_LZMA_FA=0                # lzma
       RUN_MFCOMPRESS=0             # MFCompress
       RUN_DELIMINATE=0             # DELIMINATE
-      RUN_CRYFA_FA=1               # cryfa
+      RUN_CRYFA_FA=0               # cryfa
       # FASTQ
       RUN_GZIP_FQ=0                # gzip
       RUN_BZIP2_FQ=0               # bzip2
@@ -63,7 +63,7 @@ RUN_METHODS=1
       RUN_QUIP=0                   # quip
       RUN_DSRC=0                   # DSRC
       RUN_FQC=0                    # FQC
-      RUN_CRYFA_FQ=1               # cryfa
+      RUN_CRYFA_FQ=0               # cryfa
       # results
       PRINT_RESULTS_COMP=0
 
@@ -71,10 +71,10 @@ RUN_METHODS=1
   RUN_METHODS_ENC=0
       RUN_AESCRYPT=0               # AES crypt
       # results
-      PRINT_RESULTS_ENC=0
+      PRINT_RESULTS_ENC=1
 
   # compress/decompress plus encrypt/decrypt
-  RUN_METHODS_COMP_ENC=0
+  RUN_METHODS_COMP_ENC=1
       # FASTA
       RUN_GZIP_FA_AESCRYPT=0       # gzip + AES crypt
       RUN_BZIP2_FA_AESCRYPT=0      # bzip2 + AES crypt
@@ -90,7 +90,7 @@ RUN_METHODS=1
       RUN_DSRC_AESCRYPT=0          # DSRC + AES crypt
       RUN_FQC_AESCRYPT=0           # FQC + AES crypt
       # results
-      PRINT_RESULTS_COMP_ENC=0
+      PRINT_RESULTS_COMP_ENC=1
 
   # cryfa exclusive
   CRYFA_EXCLUSIVE=0
@@ -1634,8 +1634,6 @@ then
            # extract from cryfa
            cat $result/COMP_${i}_FA.$INF | awk 'NR>1' \
             | awk 'BEGIN{}{if ($3=="Cryfa") print;}' >> ${INWF}_${i}_FA.$INF;
-
-           #todo. extract from AEScrypt
        done
        rm -f ${INWF}_FA.tmp
 
@@ -1659,8 +1657,6 @@ then
       cat $result/COMP_tot_FA.$INF | awk 'NR>1' \
        | awk 'BEGIN{}{if ($2=="Cryfa") print;}' >> ${INWF}_tot_FA.$INF
 
-      #todo. extract from AEScrypt
-
       ### FASTQ
       # details -- 1 row for headers and 1 row after all
       removeUpToRow=`echo $((removeFromRow-1))`
@@ -1683,8 +1679,6 @@ then
            # extract from cryfa
            cat $result/COMP_${i}_FQ.$INF | awk 'NR>1' \
             | awk 'BEGIN{}{if ($3=="Cryfa") print;}' >> ${INWF}_${i}_FQ.$INF;
-
-           #todo. extract from AEScrypt
        done
        rm -f ${INWF}_FQ.tmp
 
@@ -1705,8 +1699,6 @@ then
       # extract from cryfa
       cat $result/COMP_tot_FQ.$INF | awk 'NR>1' \
        | awk 'BEGIN{}{if ($2=="Cryfa") print;}' >> ${INWF}_tot_FQ.$INF
-
-      #todo. extract from AEScrypt
 
       rm -f $INWF.tmp
   }
