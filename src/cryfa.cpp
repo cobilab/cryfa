@@ -124,19 +124,17 @@ int main (int argc, char* argv[])
     
     if (!h_flag && !a_flag)
     {
-        char file_type = fileType(cryptObj.inFileName); //File type: FASTA/FASTQ
-
-        // If input is neither FASTA nor FASTQ file
-        if (file_type == 'n')
+        switch (fileType(cryptObj.inFileName))
         {
-            cerr << "Error: \"" << cryptObj.inFileName << '"'
-                 << " is neither a FASTA nor a FASTQ file.\n";
-            return 0;
+            case 'A': cerr << "Compacting...\n";  cryptObj.compressFA();  break;
+            case 'Q': cerr << "Compacting...\n";  cryptObj.compressFQ();  break;
+            case 'S': cerr << "Compacting...\n";  cerr<<"SAM";            break;
+            case 'n':
+            default:  cerr << "Error: \"" << cryptObj.inFileName << "\" is not"
+                           << " a valid FASTA or FASTQ file.\n";
+                      return 0;                                           break;
         }
-
-        cerr << "Compacting...\n";
-        (file_type == 'A') ? cryptObj.compressFA() : cryptObj.compressFQ();
-    
+        
 //        // Stop timer
 //        high_resolution_clock::time_point finishTime =
 //                high_resolution_clock::now();

@@ -184,7 +184,7 @@ inline void EnDecrypto::packFA (const pack_s& pkStruct, byte threadID)
     ofstream    pkfile(PK_FILENAME+to_string(threadID), std::ios_base::app);
     
     // Lines ignored at the beginning
-    for (u64 l = (u64) threadID*BlockLine; l--;)  in.ignore(LARGE_NUMBER, '\n');
+    for (u64 l = (u64) threadID*BlockLine; l--;)    IGNORE_THIS_LINE(in);
     
     while (in.peek() != EOF)
     {
@@ -257,10 +257,9 @@ inline void EnDecrypto::packFA (const pack_s& pkStruct, byte threadID)
         // Write header containing threadID for each
         pkfile << THR_ID_HDR << to_string(threadID) << '\n';
         pkfile << context << '\n';
-
+        
         // Ignore to go to the next related chunk
-        for (u64 l = (u64) (n_threads-1)*BlockLine; l--;)
-            in.ignore(LARGE_NUMBER, '\n');
+        for (u64 l = (u64) (n_threads-1)*BlockLine; l--;)  IGNORE_THIS_LINE(in);
     }
 
     pkfile.close();
@@ -479,7 +478,7 @@ inline void EnDecrypto::packFQ (const pack_s& pkStruct, byte threadID)
     ofstream pkfile(PK_FILENAME+to_string(threadID), std::ios_base::app);
 
     // Lines ignored at the beginning
-    for (u64 l = (u64) threadID*BlockLine; l--;)  in.ignore(LARGE_NUMBER, '\n');
+    for (u64 l = (u64) threadID*BlockLine; l--;)    IGNORE_THIS_LINE(in);
 
     while (in.peek() != EOF)
     {
@@ -492,8 +491,8 @@ inline void EnDecrypto::packFQ (const pack_s& pkStruct, byte threadID)
 
             if (getline(in, line).good())          // Sequence
             { packSeq_3to1(context, line);                context+=(char) 254; }
-
-            in.ignore(LARGE_NUMBER, '\n');         // +. ignore
+    
+            IGNORE_THIS_LINE(in);                  // +. ignore
 
             if (getline(in, line).good())          // Quality score
             { packQS(context, line, QsMap);               context+=(char) 254; }
@@ -523,8 +522,7 @@ inline void EnDecrypto::packFQ (const pack_s& pkStruct, byte threadID)
         pkfile << context << '\n';
 
         // Ignore to go to the next related chunk
-        for (u64 l = (u64) (n_threads-1)*BlockLine; l--;)
-            in.ignore(LARGE_NUMBER, '\n');
+        for (u64 l = (u64) (n_threads-1)*BlockLine; l--;)  IGNORE_THIS_LINE(in);
     }
 
     pkfile.close();
@@ -1609,8 +1607,8 @@ inline bool EnDecrypto::hasFQjustPlus () const
     ifstream in(inFileName);
     string   line;
     
-    in.ignore(LARGE_NUMBER, '\n');          // Ignore header
-    in.ignore(LARGE_NUMBER, '\n');          // Ignore seq
+    IGNORE_THIS_LINE(in);    // Ignore header
+    IGNORE_THIS_LINE(in);    // Ignore seq
     bool justPlus = !(getline(in, line).good() && line.length() > 1);
     
     in.close();
@@ -1678,9 +1676,9 @@ inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores)
             for (const char &c : line)    hChars[c] = true;
             if (line.size() > maxHLen)    maxHLen = (u32) line.size();
         }
-        
-        in.ignore(LARGE_NUMBER, '\n');                        // Ignore sequence
-        in.ignore(LARGE_NUMBER, '\n');                        // Ignore +
+    
+        IGNORE_THIS_LINE(in);    // Ignore sequence
+        IGNORE_THIS_LINE(in);    // Ignore +
         
         if (getline(in, line).good())
         {
@@ -1711,8 +1709,8 @@ inline void EnDecrypto::gatherHdrQs (string& headers, string& qscores)
         if (getline(in, line).good())
             for (const char &c : line)
                 (c & 0xC0) ? (hH |= 1ULL<<(c-64)) : (hL |= 1U<<(c-32));
-        in.ignore(LARGE_NUMBER, '\n');                        // ignore sequence
-        in.ignore(LARGE_NUMBER, '\n');                        // ignore +
+        IGNORE_THIS_LINE(in);    // ignore sequence
+        IGNORE_THIS_LINE(in);    // ignore +
         if (getline(in, line).good())
             for (const char &c : line)
                 (c & 0xC0) ? (qH |= 1ULL<<(c-64)) : (qL |= 1U<<(c-32));

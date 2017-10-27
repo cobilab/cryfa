@@ -60,6 +60,8 @@ struct POWER<B, 0> { static const u64 val = 1; };
 #define LOOP6(i,j,k,l,m,n,S)      LOOP(i,S) LOOP(j,S) LOOP4(k,l,m,n,S)
 #define LOOP7(i,j,k,l,m,n,o,S)    LOOP(i,S) LOOP(j,S) LOOP5(k,l,m,n,o,S)
 #define LOOP8(i,j,k,l,m,n,o,p,S)  LOOP(i,S) LOOP(j,S) LOOP6(k,l,m,n,o,p,S)
+#define IGNORE_THIS_LINE(in) \
+        (in).ignore(std::numeric_limits<std::streamsize>::max(),'\n');
 
 
 // Constants
@@ -70,7 +72,6 @@ struct POWER<B, 0> { static const u64 val = 1; };
 #define UPK_FILENAME   "CRYFA_UPK"  /**< @brief Unpacked file name */
 #define DEFAULT_N_THR  1            /**< @brief Default number of threads */
 #define BLOCK_SIZE     8*1024       /**< @brief To read from input file */
-#define LARGE_NUMBER   std::numeric_limits<std::streamsize>::max()
 #define C1             2            /**< @brief       Cat 1  =  2 */
 #define C2             3            /**< @brief       Cat 2  =  3 */
 #define MIN_C3         4            /**< @brief  4 <= Cat 3 <=  6 */
