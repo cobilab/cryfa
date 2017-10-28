@@ -12,11 +12,13 @@
 
 #include <iostream>
 #include "def.h"
+#include "EnDecrypto.h"
 using std::string;
 using std::vector;
 using std::cout;
 using std::cerr;
 using std::make_pair;
+
 
 /** @brief Headers' chars. Up to 39 values -- A global variable */
 string Hdrs_g;

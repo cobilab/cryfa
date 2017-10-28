@@ -16,39 +16,53 @@ using std::vector;
 
 
 /**
- * @brief Packing
+ * @brief Packing FASTA
  */
-struct pack_s
+struct packfa_s
 {
-    /**
-     * @fn    void (*packHdrFPtr) (string&, const string&, const htbl_t&)
-     * @brief Points to a header packing function
-     * @fn    void (*packQSFPtr)  (string&, const string&, const htbl_t&)
-     * @brief Points to a quality score packing function
-     */
+    /** @brief Points to a header packing function */
     void (*packHdrFPtr) (string&, const string&, const htbl_t&);
-    void (*packQSFPtr)  (string&, const string&, const htbl_t&);
 };
 
 /**
- * @brief Unpakcing
+ * @brief Packing FASTQ
  */
-struct unpack_s
+struct packfq_s
 {
-    /**
-     * @fn void(*unpackHdrFPtr)(string&,string::iterator&,const vector<string>&)
-     * @brief Points to a header unpacking function
-     * @fn void(*unpackQSFPtr) (string&,string::iterator&,const vector<string>&)
-     * @brief Points to a quality score unpacking function
-     */
+    /**  @brief Points to a header packing function */
+    void (*packHdrFPtr) (string&, const string&, const htbl_t&);
+    void (*packQSFPtr)  (string&, const string&, const htbl_t&);
+    /**< @brief Points to a quality score packing function */
+};
+
+/**
+ * @brief Unpakcing FASTA
+ */
+struct unpackfa_s
+{
+    char  XChar_hdr;           /**< @brief Extra char if header's length > 39 */
+    pos_t begPos;              /**< @brief Begining position for each thread */
+    u64   chunkSize;           /**< @brief Chunk size */
+    vector<string> hdrUnpack;  /**< @brief Lookup table for unpacking headers */
+    void (*unpackHdrFPtr) (string&, string::iterator&, const vector<string>&);
+    /**< @brief Points to a header unpacking function */
+};
+
+/**
+ * @brief Unpakcing FASTQ
+ */
+struct unpackfq_s
+{
     char  XChar_hdr;          /**< @brief Extra char if header's length > 39 */
     char  XChar_qs;           /**< @brief Extra char if q scores length > 39 */
     pos_t begPos;             /**< @brief Begining position for each thread */
     u64   chunkSize;          /**< @brief Chunk size */
     vector<string> hdrUnpack; /**< @brief Lookup table for unpacking headers */
     vector<string> qsUnpack;  /**< @brief Lookup table for unpacking q scores */
+    /**  @brief Points to a header unpacking function */
     void (*unpackHdrFPtr) (string&, string::iterator&, const vector<string>&);
     void (*unpackQSFPtr)  (string&, string::iterator&, const vector<string>&);
+    /**< @brief Points to a quality score unpacking function */
 };
 
 /**
@@ -76,6 +90,33 @@ public:
     void   compressFQ   ();                   // Compress FASTQ
     void   decompressFQ ();                   // Decompress FASTQ
     
+    
+    
+    //todo added
+    inline void buildHashTable (htbl_t&, const string&, short);
+    inline void buildUnpack(vector<string>&, const string&, u16);
+    inline byte dnaPack (const string&);
+    inline u16 largePack (const string&, const htbl_t&);
+    inline void packSeq_3to1 (string&, const string&);
+    inline void packLargeHdr_3to2 (string&, const string&, const htbl_t&);
+    inline void packLargeQs_3to2 (string&, const string&, const htbl_t&);
+    inline void pack_3to2 (string&, const string&, const htbl_t&);
+    inline void pack_2to1 (string&, const string&, const htbl_t&);
+    inline void pack_3to1 (string&, const string&, const htbl_t&);
+    inline void pack_5to1 (string&, const string&, const htbl_t&);
+    inline void pack_7to1 (string&, const string&, const htbl_t&);
+    inline void pack_1to1 (string&, const string&, const htbl_t&);
+    inline char penaltySym (char);
+    inline void unpackSeqFA_3to1 (string&, string::iterator&);
+    inline void unpackSeqFQ_3to1 (string&, string::iterator&);
+    inline void unpackLarge_read2B (string&, string::iterator&, char, const vector<string>&);
+    inline void unpack_read2B (string&, string::iterator&, const vector<string>&);
+    inline void unpack_read1B (string&, string::iterator&, const vector<string>&);
+
+
+
+
+
 private:
     /**
      * @var   bool shufflingInProgress
@@ -111,14 +152,14 @@ private:
     inline void un_shuffleSeedGen ();                    // (Un)shuffle seed gen
     inline void shufflePkd    (string&);                 // Shuffle packed
     inline void unshufflePkd  (string::iterator&, u64);  // Unshuffle packed
-    inline void packFA        (const pack_s&,   byte);   // Pack FA
-    inline void unpackHS      (const unpack_s&, byte);   // Unpack H:Small -- FA
-    inline void unpackHL      (const unpack_s&, byte);   // Unpack H:Large -- FA
-    inline void packFQ        (const pack_s&,   byte);   // Pack FQ
-    inline void unpackHSQS    (const unpack_s&, byte);   // Unpack H:Small, Q:S
-    inline void unpackHSQL    (const unpack_s&, byte);   // Unpack H:S, Q:Large
-    inline void unpackHLQS    (const unpack_s&, byte);   // Unpack H:Large, Q:S
-    inline void unpackHLQL    (const unpack_s&, byte);   // Unpack H:Large, Q:L
+    inline void packFA        (const packfa_s&,   byte); // Pack FA
+    inline void unpackHS      (const unpackfa_s&, byte); // Unpack H:Small -- FA
+    inline void unpackHL      (const unpackfa_s&, byte); // Unpack H:Large -- FA
+    inline void packFQ        (const packfq_s&,   byte); // Pack FQ
+    inline void unpackHSQS    (const unpackfq_s&, byte); // Unpack H:Small, Q:S
+    inline void unpackHSQL    (const unpackfq_s&, byte); // Unpack H:S, Q:Large
+    inline void unpackHLQS    (const unpackfq_s&, byte); // Unpack H:Large, Q:S
+    inline void unpackHLQL    (const unpackfq_s&, byte); // Unpack H:Large, Q:L
 };
 
 #endif //CRYFA_ENDECRYPTO_H

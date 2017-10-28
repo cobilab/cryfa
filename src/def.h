@@ -223,9 +223,9 @@ inline void About ()
         << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"  << '\n'
                                                                         << '\n'
         << "This is a Free software, under GPLv3. You may redistribute" << '\n'
-        << "copies of it under the terms of the GNU - General Public"   << '\n'
-        << "License v3 <http://www.gnu.org/licenses/gpl.html>. There"   << '\n'
-        << "is NOT ANY WARRANTY, to the extent permitted by law."       << '\n'
+        << " copies of it under the terms of the GNU - General Public"  << '\n'
+        << " License v3 <http://www.gnu.org/licenses/gpl.html>. There"  << '\n'
+        << "   is NOT ANY WARRANTY, to the extent permitted by law."    << '\n'
                                                                         << '\n';
     
     exit(1);

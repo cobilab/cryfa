@@ -38,11 +38,11 @@ inline char fileType (const string& inFileName)
 
     if (nTabs > 9)             { in.close();    return 'S'; }       // SAM
     else if (in.peek() == '+') { in.close();    return 'Q'; }       // FASTQ
-    
+
     // FASTA/Not valid
     in.clear();   in.seekg(0, std::ios::beg); // Return to beginning of the file
     while (in.peek()!='>' && in.peek()!=EOF)    IGNORE_THIS_LINE(in);
-    
+
     if (in.peek() == '>')      { in.close();    return 'A'; }       // FASTA
     else                       { in.close();    return 'n'; }       // Not valid
     
