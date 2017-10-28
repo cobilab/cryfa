@@ -83,12 +83,12 @@ int main (int argc, char* argv[])
                 cryptObj.keyFileName = string(optarg);
                 break;
                 
-            case 'h': h_flag = 1;    Help();                              break;
-            case 'a': a_flag = 1;    About();                             break;
-            case 'v': v_flag = 1;    cryptObj.verbose = true;             break;
-            case 's': s_flag = 1;    cryptObj.disable_shuffle = true;     break;
-            case 'd': d_flag = 1;                                         break;
-            case 't': cryptObj.n_threads = (byte) stoi(string(optarg));   break;
+            case 'h':  h_flag=1;    Help();                               break;
+            case 'a':  a_flag=1;    About();                              break;
+            case 'v':  v_flag=1;    cryptObj.verbose = true;              break;
+            case 's':  s_flag=1;    cryptObj.disable_shuffle = true;      break;
+            case 'd':  d_flag=1;                                          break;
+            case 't':  cryptObj.n_threads = (byte) stoi(string(optarg));  break;
 
             default:
                 cerr << "Option '" << (char) optopt << "' is invalid.\n"; break;

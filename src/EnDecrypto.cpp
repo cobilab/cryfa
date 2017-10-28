@@ -55,12 +55,10 @@ void EnDecrypto::compressFA ()
     pack_s pkStruct;        // Collection of inputs to pass to pack...
     
     if (verbose)    cerr << "Calculating number of different characters...\n";
-    
     // Gather different chars in all headers and max length in all bases
     gatherHdrBs(headers);
     
     const size_t headersLen = headers.length();
-    
     // Show number of different chars in headers -- ignore '>'=62
     if (verbose)    cerr << "In headers, they are " << headersLen << ".\n";
     
@@ -69,7 +67,7 @@ void EnDecrypto::compressFA ()
     packHdrPointer packHdr;
     
     // Header
-    if (headersLen > MAX_C5)          // If len > 39 filter the last 39 ones
+    if (headersLen > MAX_C5)             // If len > 39, filter the last 39 ones
     {
         Hdrs = headers.substr(headersLen - MAX_C5);
         Hdrs_g = Hdrs;

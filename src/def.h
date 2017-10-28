@@ -16,6 +16,7 @@
 using std::cout;
 using std::string;
 using std::unordered_map;
+using std::vector;
 
 
 // Version and release
@@ -71,7 +72,7 @@ struct POWER<B, 0> { static const u64 val = 1; };
 #define DEC_FILENAME   "CRYFA_DEC"  /**< @brief Decrypted file name */
 #define UPK_FILENAME   "CRYFA_UPK"  /**< @brief Unpacked file name */
 #define DEFAULT_N_THR  1            /**< @brief Default number of threads */
-#define BLOCK_SIZE     8*1024       /**< @brief To read from input file */
+#define BLOCK_SIZE     (8*1024)     /**< @brief To read from input file */
 #define C1             2            /**< @brief       Cat 1  =  2 */
 #define C2             3            /**< @brief       Cat 2  =  3 */
 #define MIN_C3         4            /**< @brief  4 <= Cat 3 <=  6 */
@@ -92,7 +93,7 @@ struct POWER<B, 0> { static const u64 val = 1; };
  * @brief Lookup table for unpacking -- 216 elements
  * @hideinitializer
  */
-const string DNA_UNPACK[] =
+const vector<string> DNA_UNPACK =
 {
     "AAA", "AAC", "AAG", "AAT", "AAN", "AAX", "ACA", "ACC", "ACG", "ACT", "ACN",
     "ACX", "AGA", "AGC", "AGG", "AGT", "AGN", "AGX", "ATA", "ATC", "ATG", "ATT",
@@ -210,16 +211,16 @@ inline void Help ()
 inline void About ()
 {
     cout                                                                << '\n'
-        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << '\n'
-        << "   cryfa v" << VERSION_CRYFA << "." << RELEASE_CRYFA
-        << ":: FASTA/FASTQ compaction plus encryption"                  << '\n'
-        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << '\n'
-        << "           Morteza Hosseini    seyedmorteza@ua.pt"          << '\n'
-        << "           Diogo Pratas        pratas@ua.pt"                << '\n'
-        << "           Armando J. Pinho    ap@ua.pt"                    << '\n'
-        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << '\n'
-        << "      Copyright (C) 2017, IEETA, University of Aveiro"      << '\n'
-        << "  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << '\n'
+        << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"  << '\n'
+        << " cryfa v" << VERSION_CRYFA << "." << RELEASE_CRYFA
+        << ":: FASTA/FASTQ compaction and encryption"                   << '\n'
+        << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"  << '\n'
+        << "          Morteza Hosseini    seyedmorteza@ua.pt"           << '\n'
+        << "          Diogo Pratas        pratas@ua.pt"                 << '\n'
+        << "          Armando J. Pinho    ap@ua.pt"                     << '\n'
+        << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"  << '\n'
+        << "     Copyright (C) 2017, IEETA, University of Aveiro"       << '\n'
+        << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"  << '\n'
                                                                         << '\n'
         << "This is a Free software, under GPLv3. You may redistribute" << '\n'
         << "copies of it under the terms of the GNU - General Public"   << '\n'
