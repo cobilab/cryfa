@@ -27,24 +27,24 @@ inline char fileType (const string& inFileName)
     if (!in.good())
     { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
     
-    // Skip leading blank lines (0xA='\n') or spaces (0x20=' ')
-    while (in.peek()==0xA || in.peek()==0x20)    in.get(c);
+    // Skip leading blank lines or spaces
+    while (in.peek()=='\n' || in.peek()==' ')    in.get(c);
     
     
-    
+    //todo sam
     // SAM/FASTQ
-    while (in.peek() == 0x40)    IGNORE_THIS_LINE(in);        // 0x40='@'
-    byte nTabs = 0;    while (in.get(c) && c!='\n')  if (c=='\t') ++nTabs;
+    while (in.peek() == '@')     IGNORE_THIS_LINE(in);
+    byte nTabs=0;    while (in.get(c) && c!='\n')  if (c=='\t') ++nTabs;
 
-    if (nTabs >= 0xA)           { in.close();   return 'S'; } // SAM:   0xA =10
-    else if (in.peek() == 0x2B) { in.close();   return 'Q'; } // FASTQ: 0x2B='+'
+    if (nTabs > 9)             { in.close();    return 'S'; }       // SAM
+    else if (in.peek() == '+') { in.close();    return 'Q'; }       // FASTQ
     
     // FASTA/Not valid
     in.clear();   in.seekg(0, std::ios::beg); // Return to beginning of the file
-
-    while (in.peek()!=0x3E && in.peek()!=EOF)   IGNORE_THIS_LINE(in); //0x3E='>'
-    if (in.get(c) && c==0x3E)   { in.close();   return 'A'; } // FASTA
-    else                        { in.close();   return 'n'; } // Not valid
+    while (in.peek()!='>' && in.peek()!=EOF)    IGNORE_THIS_LINE(in);
+    
+    if (in.peek() == '>')      { in.close();    return 'A'; }       // FASTA
+    else                       { in.close();    return 'n'; }       // Not valid
     
     
     

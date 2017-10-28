@@ -61,7 +61,7 @@ struct POWER<B, 0> { static const u64 val = 1; };
 #define LOOP7(i,j,k,l,m,n,o,S)    LOOP(i,S) LOOP(j,S) LOOP5(k,l,m,n,o,S)
 #define LOOP8(i,j,k,l,m,n,o,p,S)  LOOP(i,S) LOOP(j,S) LOOP6(k,l,m,n,o,p,S)
 #define IGNORE_THIS_LINE(in) \
-        (in).ignore(std::numeric_limits<std::streamsize>::max(),'\n');
+        (in).ignore(std::numeric_limits<std::streamsize>::max(),'\n')
 
 
 // Constants

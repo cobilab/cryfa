@@ -123,7 +123,7 @@ int main (int argc, char* argv[])
     }
     
     if (!h_flag && !a_flag)
-    {
+    {//todo sam
         switch (fileType(cryptObj.inFileName))
         {
             case 'A': cerr << "Compacting...\n";  cryptObj.compressFA();  break;
