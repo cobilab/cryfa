@@ -126,13 +126,13 @@ int main (int argc, char* argv[])
     {//todo sam
         switch (fileType(cryptObj.inFileName))
         {
-            case 'A': cerr << "Compacting...\n";  cryptObj.compressFA();  break;
-            case 'Q': cerr << "Compacting...\n";  cryptObj.compressFQ();  break;
-            case 'S': cerr << "Compacting...\n";  cerr<<"SAM";            break;
+            case 'A':  cerr<<"Compacting...\n";  cryptObj.compressFA();   break;
+            case 'Q':  cerr<<"Compacting...\n";  cryptObj.compressFQ();   break;
+            case 'S':  cerr<<"Compacting...\n";  cerr<<"SAM";             break;
             case 'n':
-            default:  cerr << "Error: \"" << cryptObj.inFileName << "\" is not"
-                           << " a valid FASTA or FASTQ file.\n";
-                      return 0;                                           break;
+            default :  cerr<<"Error: \"" << cryptObj.inFileName << "\" is not a"
+                           <<" valid FASTA or FASTQ file.\n";
+                       return 0;                                          break;
         }
         
 //        // Stop timer
