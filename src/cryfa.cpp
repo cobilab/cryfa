@@ -111,13 +111,13 @@ int main (int argc, char* argv[])
                                   : cryptObj.decompressFQ();        // FASTQ
         in.close();
 
-//        // Stop timer
-//        high_resolution_clock::time_point finishTime =
-//                high_resolution_clock::now();
-//        // Duration in seconds
-//        std::chrono::duration<double> elapsed = finishTime - startTime;
-//        cerr << "took " << std::fixed << setprecision(4) << elapsed.count()
-//             << " seconds.\n";
+////        // Stop timer
+////        high_resolution_clock::time_point finishTime =
+////                high_resolution_clock::now();
+////        // Duration in seconds
+////        std::chrono::duration<double> elapsed = finishTime - startTime;
+////        cerr << "took " << std::fixed << setprecision(4) << elapsed.count()
+////             << " seconds.\n";
 
         return 0;
     }
