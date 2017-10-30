@@ -21,17 +21,101 @@
  */
 
 #include <iostream>
+#include <fstream>
 #include <getopt.h>
 //#include <chrono>       // time
 #include <iomanip>      // setw, setprecision
 #include "def.h"
 #include "EnDecrypto.h"
-#include "fcn.h"
+#include "FASTA.h"
+//#include "FASTQ.h"
+
 using std::string;
 using std::cout;
 using std::cerr;
+using std::ifstream;
 //using std::chrono::high_resolution_clock;
 using std::setprecision;
+
+
+/**
+ * @brief  Find file type: FASTA (A), FASTQ (Q), none (n)
+ * @param  inFileName  Input file name
+ * @return A, Q or n
+ */
+inline char fileType (const string& inFileName)
+{
+    char     c;
+    ifstream in(inFileName);
+    
+    if (!in.good())
+    { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
+    
+    // Skip leading blank lines or spaces
+    while (in.peek()=='\n' || in.peek()==' ')    in.get(c);
+    
+    
+    
+    //todo sam
+    // SAM/FASTQ
+    while (in.peek() == '@')     IGNORE_THIS_LINE(in);
+    byte nTabs=0;    while (in.get(c) && c!='\n')  if (c=='\t') ++nTabs;
+
+    if (nTabs > 9)             { in.close();    return 'S'; }       // SAM
+    else if (in.peek() == '+') { in.close();    return 'Q'; }       // FASTQ
+
+    // FASTA/Not valid
+    in.clear();   in.seekg(0, std::ios::beg); // Return to beginning of the file
+    while (in.peek()!='>' && in.peek()!=EOF)    IGNORE_THIS_LINE(in);
+
+    if (in.peek() == '>')      { in.close();    return 'A'; }       // FASTA
+    else                       { in.close();    return 'n'; }       // Not valid
+}
+
+/**
+ * @brief  Check password taken from a file
+ * @param  keyFileName  Name of the file containing the password
+ * @param  k_flag       If '-k' is written in the command to run cryfa
+ */
+inline void checkPass (const string& keyFileName, const bool k_flag)
+{
+    if (!k_flag) { cerr<< "Error: no password file has been set.\n";  exit(1); }
+    else
+    {
+        ifstream in(keyFileName);
+        
+        if (in.peek() == EOF)
+        {
+            cerr << "Error: password file is empty.\n";
+            in.close();
+            exit(1);
+        }
+        else if (!in.good())
+        {
+            cerr << "Error opening \"" << keyFileName << "\".\n";
+            in.close();
+            exit(1);
+        }
+        else
+        {
+            // Extract the password
+            char c;
+            string pass;
+            pass.clear();
+            while (in.get(c))    pass += c;
+    
+            if (pass.size() < 8)
+            {
+                cerr << "Error: password size is " << pass.size()
+                     << ". It must be at least 8.\n";
+                in.close();
+                exit(1);
+            }
+    
+            in.close();
+        }
+    }
+}
 
 /**
  * @brief Main function
@@ -44,6 +128,8 @@ int main (int argc, char* argv[])
     EnDecrypto cryptObj;
     cryptObj.inFileName = argv[argc-1];  // Input file name
     cryptObj.n_threads = DEFAULT_N_THR;  // Initialize number of threads
+    FASTA fastaObj;
+//    FASTQ fastqObj;
     
     static int h_flag, a_flag, v_flag, d_flag, s_flag;
     bool k_flag = false;
@@ -103,13 +189,13 @@ int main (int argc, char* argv[])
 
     if (d_flag)
     {
-        cryptObj.decrypt();                                         // Decrypt
-
-        ifstream in(DEC_FILENAME);
-        cerr << "Decompressing...\n";
-        (in.peek() == (char) 127) ? cryptObj.decompressFA()         // FASTA
-                                  : cryptObj.decompressFQ();        // FASTQ
-        in.close();
+//        cryptObj.decrypt();                                         // Decrypt
+//
+//        ifstream in(DEC_FILENAME);
+//        cerr << "Decompressing...\n";
+//        (in.peek() == (char) 127) ? fastaObj.decompressFA()         // FASTA
+//                                  : fastqObj.decompressFQ();        // FASTQ
+//        in.close();
 
 ////        // Stop timer
 ////        high_resolution_clock::time_point finishTime =
@@ -126,15 +212,15 @@ int main (int argc, char* argv[])
     {//todo sam
         switch (fileType(cryptObj.inFileName))
         {
-            case 'A':  cerr<<"Compacting...\n";  cryptObj.compressFA();   break;
-            case 'Q':  cerr<<"Compacting...\n";  cryptObj.compressFQ();   break;
-            case 'S':  cerr<<"Compacting...\n";  cerr<<"SAM";             break;
-            case 'n':
-            default :  cerr<<"Error: \"" << cryptObj.inFileName << "\" is not a"
-                           <<" valid FASTA or FASTQ file.\n";
-                       return 0;                                          break;
+            case 'A':  cerr<<"Compacting...\n";  fastaObj.compressFA();   break;
+//            case 'Q':  cerr<<"Compacting...\n";  fastqObj.compressFQ();   break;
+//            case 'S':  cerr<<"Compacting...\n";  cerr<<"SAM";             break;
+//            case 'n':
+//            default :  cerr<<"Error: \"" << cryptObj.inFileName << "\" is not a"
+//                           <<" valid FASTA or FASTQ file.\n";
+//                       return 0;                                          break;
         }
-        
+
 //        // Stop timer
 //        high_resolution_clock::time_point finishTime =
 //                high_resolution_clock::now();
