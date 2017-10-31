@@ -97,8 +97,8 @@ void EnDecrypto::encrypt ()
     string cipherText;
     AES::Encryption aesEncryption(key, (size_t) AES::DEFAULT_KEYLENGTH);
     CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
-    StreamTransformationFilter stfEncryptor(cbcEncryption,
-                                            new CryptoPP::StringSink(cipherText));
+    StreamTransformationFilter
+        stfEncryptor(cbcEncryption, new CryptoPP::StringSink(cipherText));
     stfEncryptor.Put(reinterpret_cast<const byte*>
                      (context.c_str()), context.length() + 1);
     stfEncryptor.MessageEnd();
@@ -319,9 +319,9 @@ void EnDecrypto::buildHashTable (htbl_t &map, const string &strIn, short keyLen)
  * @param[in]  strIn   The string including the keys
  * @param[in]  keyLen  Length of the keys
  */
-void EnDecrypto::buildUnpack(vector<string> &unpack, const string &strIn, u16 keyLen)
+void EnDecrypto::buildUnpack (vector<string> &unpack, const string &strIn,
+                              u16 keyLen)
 {
-    u64 elementNo = 0;
     string element;    element.reserve(keyLen);
     unpack.clear();
     unpack.reserve((u64) std::pow(strIn.size(), keyLen));
@@ -410,12 +410,12 @@ void EnDecrypto::buildUnpack(vector<string> &unpack, const string &strIn, u16 ke
  * @param  key  Key
  * @return Value (based on the idea of key-value in a hash table)
  */
-byte EnDecrypto::dnaPack (const string &key)     // Maybe byte <-> u16 replacement
+byte EnDecrypto::dnaPack (const string &key)   // Maybe byte <-> u16 replacement
 {
     htbl_t::const_iterator got = DNA_MAP.find(key);
     if (got == DNA_MAP.end())
     { cerr << "Error: key '" << key << "'not found!\n";    return 0; }
-    else  return got->second;
+    else  return (byte) got->second;
 }
 
 /**
@@ -429,7 +429,7 @@ u16 EnDecrypto::largePack (const string &key, const htbl_t &map)
     htbl_t::const_iterator got = map.find(key);
     if (got == map.end())
     { cerr << "Error: key '" << key << "' not found!\n";    return 0; }
-    else  return got->second;
+    else  return (u16) got->second;
 }
 
 /**
@@ -469,12 +469,12 @@ void EnDecrypto::packSeq_3to1 (string &packedSeq, const string &seq)
     switch (seq.length() % 3)
     {
         case 1:
-            packedSeq += 255;   packedSeq += *i;
+            packedSeq+=(char) 255;    packedSeq+=*i;
             break;
 
         case 2:
-            packedSeq += 255;   packedSeq += *i;
-            packedSeq += 255;   packedSeq += *(i+1);
+            packedSeq+=(char) 255;    packedSeq+=*i;
+            packedSeq+=(char) 255;    packedSeq+=*(i+1);
             break;
 
         default: break;
@@ -489,13 +489,12 @@ void EnDecrypto::packSeq_3to1 (string &packedSeq, const string &seq)
  * @param[in]  map     Hash table
  */
 void EnDecrypto::packLargeHdr_3to2 (string &packed, const string &strIn,
-                                           const htbl_t &map)
+                                    const htbl_t &map)
 {
     string tuple;    tuple.reserve(3);
     bool firstNotIn, secondNotIn, thirdNotIn;
     char s0, s1, s2;
     u16 shortTuple;
-//    string hdrs = Hdrs_g;
     string hdrs = Hdrs;
     // ASCII char after the last char in HEADERS string
     const char XChar = (char) (hdrs.back() + 1);
@@ -523,12 +522,12 @@ void EnDecrypto::packLargeHdr_3to2 (string &packed, const string &strIn,
     switch (strIn.length() % 3)
     {
         case 1:
-            packed += 255;   packed += *i;
+            packed+=(char) 255;    packed+=*i;
             break;
         
         case 2:
-            packed += 255;   packed += *i;
-            packed += 255;   packed += *(i+1);
+            packed+=(char) 255;    packed+=*i;
+            packed+=(char) 255;    packed+=*(i+1);
             break;
         
         default: break;
@@ -543,13 +542,12 @@ void EnDecrypto::packLargeHdr_3to2 (string &packed, const string &strIn,
  * @param[in]  map     Hash table
  */
 void EnDecrypto::packLargeQs_3to2 (string &packed, const string &strIn,
-                              const htbl_t &map)
+                                   const htbl_t &map)
 {
     string tuple;    tuple.reserve(3);
     bool firstNotIn, secondNotIn, thirdNotIn;
     char s0, s1, s2;
     u16 shortTuple;
-//    string qss = QSs_g;
     string qss = QSs;
     // ASCII char after the last char in QUALITY_SCORES string
     const char XChar = (char) (qss.back() + 1);
@@ -577,12 +575,12 @@ void EnDecrypto::packLargeQs_3to2 (string &packed, const string &strIn,
     switch (strIn.length() % 3)
     {
         case 1:
-            packed += 255;   packed += *i;
+            packed+=(char) 255;    packed+=*i;
             break;
         
         case 2:
-            packed += 255;   packed += *i;
-            packed += 255;   packed += *(i+1);
+            packed+=(char) 255;    packed+=*i;
+            packed+=(char) 255;    packed+=*(i+1);
             break;
         
         default: break;
@@ -596,7 +594,8 @@ void EnDecrypto::packLargeQs_3to2 (string &packed, const string &strIn,
  * @param[in]  strIn   Input string
  * @param[in]  map     Hash table
  */
-void EnDecrypto::pack_3to2 (string &packed, const string &strIn, const htbl_t &map)
+void EnDecrypto::pack_3to2 (string &packed, const string &strIn,
+                            const htbl_t &map)
 {
     string tuple;    tuple.reserve(3);
     u16 shortTuple;
@@ -605,7 +604,7 @@ void EnDecrypto::pack_3to2 (string &packed, const string &strIn, const htbl_t &m
     for (; i < iEnd; i += 3)
     {
         tuple.clear();    tuple=*i;    tuple+=*(i+1);    tuple+=*(i+2);
-        shortTuple = map.find(tuple)->second;
+        shortTuple = (u16) map.find(tuple)->second;
         packed += (byte) (shortTuple >> 8);      // Left byte
         packed += (byte) (shortTuple & 0xFF);    // Right byte
     }
@@ -614,12 +613,12 @@ void EnDecrypto::pack_3to2 (string &packed, const string &strIn, const htbl_t &m
     switch (strIn.length() % 3)
     {
         case 1:
-            packed += 255;   packed += *i;
+            packed+=(char) 255;    packed+=*i;
             break;
 
         case 2:
-            packed += 255;   packed += *i;
-            packed += 255;   packed += *(i+1);
+            packed+=(char) 255;    packed+=*i;
+            packed+=(char) 255;    packed+=*(i+1);
             break;
 
         default: break;
@@ -633,7 +632,8 @@ void EnDecrypto::pack_3to2 (string &packed, const string &strIn, const htbl_t &m
  * @param[in]  strIn   Input string
  * @param[in]  map     Hash table
  */
-void EnDecrypto::pack_2to1 (string &packed, const string &strIn, const htbl_t &map)
+void EnDecrypto::pack_2to1 (string &packed, const string &strIn,
+                            const htbl_t &map)
 {
     string tuple;    tuple.reserve(2);
     
@@ -646,7 +646,7 @@ void EnDecrypto::pack_2to1 (string &packed, const string &strIn, const htbl_t &m
     }
     
     // If len isn't multiple of 2 (it's odd), add (char) 255 before each sym
-    if (strIn.length() & 1) { packed += 255;    packed += *i; }
+    if (strIn.length() & 1) { packed+=(char) 255;    packed+=*i; }
 }
 
 /**
@@ -656,7 +656,8 @@ void EnDecrypto::pack_2to1 (string &packed, const string &strIn, const htbl_t &m
  * @param strIn   Input string
  * @param map     Hash table
  */
-void EnDecrypto::pack_3to1 (string &packed, const string &strIn, const htbl_t &map)
+void EnDecrypto::pack_3to1 (string &packed, const string &strIn,
+                            const htbl_t &map)
 {
     string tuple;    tuple.reserve(3);
     
@@ -672,12 +673,12 @@ void EnDecrypto::pack_3to1 (string &packed, const string &strIn, const htbl_t &m
     switch (strIn.length() % 3)
     {
         case 1:
-            packed += 255;   packed += *i;
+            packed+=(char) 255;    packed+=*i;
             break;
 
         case 2:
-            packed += 255;   packed += *i;
-            packed += 255;   packed += *(i+1);
+            packed+=(char) 255;    packed+=*i;
+            packed+=(char) 255;    packed+=*(i+1);
             break;
 
         default: break;
@@ -690,7 +691,8 @@ void EnDecrypto::pack_3to1 (string &packed, const string &strIn, const htbl_t &m
  * @param[in]  strIn   Input string
  * @param[in]  map     Hash table
  */
-void EnDecrypto::pack_5to1 (string &packed, const string &strIn, const htbl_t &map)
+void EnDecrypto::pack_5to1 (string &packed, const string &strIn,
+                            const htbl_t &map)
 {
     string tuple;    tuple.reserve(5);
     string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-4;
@@ -701,30 +703,30 @@ void EnDecrypto::pack_5to1 (string &packed, const string &strIn, const htbl_t &m
         tuple+=*(i+2);    tuple+=*(i+3);    tuple+=*(i+4);
         packed += (char) map.find(tuple)->second;
     }
-
+    
     // If len isn't multiple of 5, add (char) 255 before each sym
     switch (strIn.length() % 5)
     {
         case 1:
-            packed += 255;   packed += *i;
+            packed+=(char) 255;    packed+=*i;
             break;
             
         case 2:
-            packed += 255;   packed += *i;
-            packed += 255;   packed += *(i+1);
+            packed+=(char) 255;    packed+=*i;
+            packed+=(char) 255;    packed+=*(i+1);
             break;
             
         case 3:
-            packed += 255;   packed += *i;
-            packed += 255;   packed += *(i+1);
-            packed += 255;   packed += *(i+2);
+            packed+=(char) 255;    packed+=*i;
+            packed+=(char) 255;    packed+=*(i+1);
+            packed+=(char) 255;    packed+=*(i+2);
             break;
 
         case 4:
-            packed += 255;   packed += *i;
-            packed += 255;   packed += *(i+1);
-            packed += 255;   packed += *(i+2);
-            packed += 255;   packed += *(i+3);
+            packed+=(char) 255;    packed+=*i;
+            packed+=(char) 255;    packed+=*(i+1);
+            packed+=(char) 255;    packed+=*(i+2);
+            packed+=(char) 255;    packed+=*(i+3);
             break;
 
         default: break;
@@ -737,7 +739,8 @@ void EnDecrypto::pack_5to1 (string &packed, const string &strIn, const htbl_t &m
  * @param[in]  strIn   Input string
  * @param[in]  map     Hash table
  */
-void EnDecrypto::pack_7to1 (string &packed, const string &strIn, const htbl_t &map)
+void EnDecrypto::pack_7to1 (string &packed, const string &strIn,
+                            const htbl_t &map)
 {
     string tuple;    tuple.reserve(7);
     string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-6;
@@ -753,42 +756,42 @@ void EnDecrypto::pack_7to1 (string &packed, const string &strIn, const htbl_t &m
     switch (strIn.length() % 7)
     {
         case 1:
-            packed += 255;   packed += *i;
+            packed+=(char) 255;    packed+=*i;
             break;
 
         case 2:
-            packed += 255;   packed += *i;
-            packed += 255;   packed += *(i+1);
+            packed+=(char) 255;    packed+=*i;
+            packed+=(char) 255;    packed+=*(i+1);
             break;
 
         case 3:
-            packed += 255;   packed += *i;
-            packed += 255;   packed += *(i+1);
-            packed += 255;   packed += *(i+2);
+            packed+=(char) 255;    packed+=*i;
+            packed+=(char) 255;    packed+=*(i+1);
+            packed+=(char) 255;    packed+=*(i+2);
             break;
 
         case 4:
-            packed += 255;   packed += *i;
-            packed += 255;   packed += *(i+1);
-            packed += 255;   packed += *(i+2);
-            packed += 255;   packed += *(i+3);
+            packed+=(char) 255;    packed+=*i;
+            packed+=(char) 255;    packed+=*(i+1);
+            packed+=(char) 255;    packed+=*(i+2);
+            packed+=(char) 255;    packed+=*(i+3);
             break;
 
         case 5:
-            packed += 255;   packed += *i;
-            packed += 255;   packed += *(i+1);
-            packed += 255;   packed += *(i+2);
-            packed += 255;   packed += *(i+3);
-            packed += 255;   packed += *(i+4);
+            packed+=(char) 255;    packed+=*i;
+            packed+=(char) 255;    packed+=*(i+1);
+            packed+=(char) 255;    packed+=*(i+2);
+            packed+=(char) 255;    packed+=*(i+3);
+            packed+=(char) 255;    packed+=*(i+4);
             break;
 
         case 6:
-            packed += 255;   packed += *i;
-            packed += 255;   packed += *(i+1);
-            packed += 255;   packed += *(i+2);
-            packed += 255;   packed += *(i+3);
-            packed += 255;   packed += *(i+4);
-            packed += 255;   packed += *(i+5);
+            packed+=(char) 255;    packed+=*i;
+            packed+=(char) 255;    packed+=*(i+1);
+            packed+=(char) 255;    packed+=*(i+2);
+            packed+=(char) 255;    packed+=*(i+3);
+            packed+=(char) 255;    packed+=*(i+4);
+            packed+=(char) 255;    packed+=*(i+5);
             break;
 
         default: break;
@@ -801,7 +804,8 @@ void EnDecrypto::pack_7to1 (string &packed, const string &strIn, const htbl_t &m
  * @param[in]  strIn   Input string
  * @param[in]  map     Hash table
  */
-void EnDecrypto::pack_1to1 (string &packed, const string &strIn, const htbl_t &map)
+void EnDecrypto::pack_1to1 (string &packed, const string &strIn,
+                            const htbl_t &map)
 {
     string single;    single.reserve(1);
     string::const_iterator i = strIn.begin(),   iEnd = strIn.end();
@@ -845,37 +849,42 @@ void EnDecrypto::unpackLarge_read2B (string &out, string::iterator &i,
     while (*i != (char) 254)
     {
         // Hdr len not multiple of keyLen
-        if (*i == (char) 255) { out += penaltySym(*(i+1));   i+=2;   continue; }
-        
-        leftB   = *i;
-        rightB  = *(i+1);
-        doubleB = leftB<<8 | rightB;    // Join two bytes
-        
-        tpl = unpack[doubleB];
-
-        if (tpl[0]!=XChar && tpl[1]!=XChar && tpl[2]!=XChar)              // ...
-        { out+=tpl;                                                      i+=2; }
-
-        else if (tpl[0]==XChar && tpl[1]!=XChar && tpl[2]!=XChar)         // X..
-        { out+=penaltySym(*(i+2));    out+=tpl[1];    out+=tpl[2];       i+=3; }
-
-        else if (tpl[0]!=XChar && tpl[1]==XChar && tpl[2]!=XChar)         // .X.
-        { out+=tpl[0];    out+=penaltySym(*(i+2));    out+=tpl[2];       i+=3; }
-
-        else if (tpl[0]==XChar && tpl[1]==XChar && tpl[2]!=XChar)         // XX.
-        { out+=penaltySym(*(i+2)); out+=penaltySym(*(i+3)); out+=tpl[2]; i+=4; }
-
-        else if (tpl[0]!=XChar && tpl[1]!=XChar && tpl[2]==XChar)         // ..X
-        { out+=tpl[0];    out+=tpl[1];    out+=penaltySym(*(i+2));       i+=3; }
-
-        else if (tpl[0]==XChar && tpl[1]!=XChar && tpl[2]==XChar)         // X.X
-        { out+=penaltySym(*(i+2)); out+=tpl[1]; out+=penaltySym(*(i+3)); i+=4; }
-
-        else if (tpl[0]!=XChar && tpl[1]==XChar && tpl[2]==XChar)         // .XX
-        { out+=tpl[0]; out+=penaltySym(*(i+2)); out+=penaltySym(*(i+3)); i+=4; }
-
-        else { out+=penaltySym(*(i+2));    out+=penaltySym(*(i+3));       // XXX
-               out+=penaltySym(*(i+4));                                  i+=5; }
+        if (*i == (char) 255) { out += penaltySym(*(i+1));    i+=2; }
+        else
+        {
+            leftB   = (byte) *i;
+            rightB  = (byte) *(i+1);
+            doubleB = leftB<<8 | rightB;    // Join two bytes
+            
+            tpl = unpack[doubleB];
+            
+            if (tpl[0]!=XChar && tpl[1]!=XChar && tpl[2]!=XChar)          // ...
+            { out+=tpl;                                                  i+=2; }
+            
+            else if (tpl[0]==XChar && tpl[1]!=XChar && tpl[2]!=XChar)     // X..
+            { out+=penaltySym(*(i+2));    out+=tpl[1];    out+=tpl[2];   i+=3; }
+            
+            else if (tpl[0]!=XChar && tpl[1]==XChar && tpl[2]!=XChar)     // .X.
+            { out+=tpl[0];    out+=penaltySym(*(i+2));    out+=tpl[2];   i+=3; }
+            
+            else if (tpl[0]==XChar && tpl[1]==XChar && tpl[2]!=XChar)     // XX.
+            { out+=penaltySym(*(i+2));  out+=penaltySym(*(i+3));  out+=tpl[2];
+                                                                         i+=4; }
+            
+            else if (tpl[0]!=XChar && tpl[1]!=XChar && tpl[2]==XChar)     // ..X
+            { out+=tpl[0];    out+=tpl[1];    out+=penaltySym(*(i+2));   i+=3; }
+            
+            else if (tpl[0]==XChar && tpl[1]!=XChar && tpl[2]==XChar)     // X.X
+            { out+=penaltySym(*(i+2));  out+=tpl[1];  out+=penaltySym(*(i+3));
+                                                                         i+=4; }
+            
+            else if (tpl[0]!=XChar && tpl[1]==XChar && tpl[2]==XChar)     // .XX
+            { out+=tpl[0];  out+=penaltySym(*(i+2));  out+=penaltySym(*(i+3));
+                                                                         i+=4; }
+            
+            else { out+=penaltySym(*(i+2));    out+=penaltySym(*(i+3));   // XXX
+                   out+=penaltySym(*(i+4));                              i+=5; }
+        }
     }
 }
 
@@ -886,7 +895,7 @@ void EnDecrypto::unpackLarge_read2B (string &out, string::iterator &i,
  * @param[in]  unpack  Table for unpacking
  */
 void EnDecrypto::unpack_read2B (string &out, string::iterator &i,
-                           const vector<string> &unpack)
+                                const vector<string> &unpack)
 {
     byte leftB, rightB;
     u16 doubleB;     // Double byte
@@ -896,9 +905,9 @@ void EnDecrypto::unpack_read2B (string &out, string::iterator &i,
     {
         // Hdr len not multiple of keyLen
         if (*i == (char) 255) { out += penaltySym(*(i+1));    continue; }
-
-        leftB   = *i;
-        rightB  = *(i+1);
+        
+        leftB   = (byte) *i;
+        rightB  = (byte) *(i+1);
         doubleB = leftB<<8 | rightB;    // Join two bytes
         
         out += unpack[doubleB];
@@ -912,7 +921,7 @@ void EnDecrypto::unpack_read2B (string &out, string::iterator &i,
  * @param[in]  unpack  Table for unpacking
  */
 void EnDecrypto::unpack_read1B (string &out, string::iterator &i,
-                           const vector<string> &unpack)
+                                const vector<string> &unpack)
 {
     out.clear();
     
@@ -921,6 +930,51 @@ void EnDecrypto::unpack_read1B (string &out, string::iterator &i,
         // Hdr len not multiple of keyLen
         if (*i == (char) 255) { out += penaltySym(*(++i));    continue; }
         out += unpack[(byte) *i];
+    }
+}
+
+/**
+ * @brief      Unpack 1 byte to 3 DNA bases
+ * @param[out] out  DNA bases
+ * @param[in]  i    Input string iterator
+ */
+void EnDecrypto::unpackSeq (string &out, string::iterator &i)
+{
+    string tpl;    tpl.reserve(3);     // Tuplet
+    out.clear();
+    
+    for (; *i != (char) 254; ++i)
+    {
+        if (*i == (char) 255)                       // Seq len not multiple of 3
+            out += penaltySym(*(++i));
+        else
+        {
+            tpl = DNA_UNPACK[(byte) *i];
+            
+            if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]!='X')                // ...
+            { out+=tpl;                                                        }
+                // Using just one 'out' makes trouble
+            else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]!='X')           // X..
+            { out+=penaltySym(*(++i));    out+=tpl[1];    out+=tpl[2];         }
+            
+            else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]!='X')           // .X.
+            { out+=tpl[0];    out+=penaltySym(*(++i));    out+=tpl[2];         }
+            
+            else if (tpl[0]=='X' && tpl[1]=='X' && tpl[2]!='X')           // XX.
+            { out+=penaltySym(*(++i));  out+=penaltySym(*(++i));  out+=tpl[2]; }
+            
+            else if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]=='X')           // ..X
+            { out+=tpl[0];    out+=tpl[1];    out+=penaltySym(*(++i));         }
+            
+            else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]=='X')           // X.X
+            { out+=penaltySym(*(++i));  out+=tpl[1];  out+=penaltySym(*(++i)); }
+            
+            else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]=='X')           // .XX
+            { out+=tpl[0];  out+=penaltySym(*(++i));  out+=penaltySym(*(++i)); }
+            
+            else { out+=penaltySym(*(++i));    out+=penaltySym(*(++i));   // XXX
+                   out+=penaltySym(*(++i));                                    }
+        }
     }
 }
 
@@ -966,7 +1020,7 @@ void EnDecrypto::un_shuffleSeedGen ()
     // Using old rand to generate the new rand seed
     u64 seed = 0;
     
-    mutxEnDe.lock();//--------------------------------------------------------------
+    mutxEnDe.lock();//----------------------------------------------------------
 //    my_srand(20543 * seedInit * (u32) passDigitsMult + 81647);
 //    for (byte i = (byte) pass.size(); i--;)
 //        seed += ((u64) pass[i] * my_rand()) + my_rand();
@@ -977,7 +1031,7 @@ void EnDecrypto::un_shuffleSeedGen ()
     my_srand(20543 * (u32) passDigitsMult + 81647);
     for (byte i = (byte) pass.size(); i--;)
         seed += (u64) pass[i] * my_rand();
-    mutxEnDe.unlock();//------------------------------------------------------------
+    mutxEnDe.unlock();//--------------------------------------------------------
     
 //    seed %= 2106945901;
  

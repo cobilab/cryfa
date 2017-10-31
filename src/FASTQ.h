@@ -39,22 +39,23 @@ struct unpackfq_s
     /**< @brief Points to a quality score unpacking function */
 };
 
-
+/**
+ * @brief Compression/Decompression of FASTQ
+ */
 class FASTQ : public EnDecrypto
 {
 public:
-    FASTQ             () = default;
-    void compressFQ   ();
-    void decompressFQ ();
+    FASTQ            () = default;
+    void compress    ();
+    void decompress  ();
     
-//private:
-    void gatherHdrQs      (string&, string&);
-    void packFQ           (const packfq_s&,   byte);
-    void unpackHSQS       (const unpackfq_s&, byte);
-    void unpackHSQL       (const unpackfq_s&, byte);
-    void unpackHLQS       (const unpackfq_s&, byte);
-    void unpackHLQL       (const unpackfq_s&, byte);
-    void unpackSeqFQ_3to1 (string&, string::iterator&);
+private:
+    void gatherHdrQs (string&, string&);
+    void pack        (const packfq_s&,   byte);
+    void unpackHSQS  (const unpackfq_s&, byte);
+    void unpackHSQL  (const unpackfq_s&, byte);
+    void unpackHLQS  (const unpackfq_s&, byte);
+    void unpackHLQL  (const unpackfq_s&, byte);
 };
 
 #endif //CRYFA_FASTQ_H

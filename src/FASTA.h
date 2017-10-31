@@ -32,21 +32,21 @@ struct unpackfa_s
          (string&, string::iterator&, const vector<string>&);
 };
 
-
+/**
+ * @brief Compression/Decompression of FASTA
+ */
 class FASTA : public EnDecrypto
 {
 public:
-    FASTA             () = default;
-    void compressFA   ();
-//    void decompressFA ();
+    FASTA            () = default;
+    void compress    ();
+    void decompress  ();
 
-//private:
-    void gatherHdrBs      (string&);
-    void packFA           (const packfa_s&,   byte);
-//    inline void unpackHS         (const unpackfa_s&, byte);
-//    inline void unpackHL         (const unpackfa_s&, byte);
-//    inline void unpackSeqFA_3to1 (string&, string::iterator&);
+private:
+    void gatherHdrBs (string&);
+    void pack        (const packfa_s&,   byte);
+    void unpackHS    (const unpackfa_s&, byte);
+    void unpackHL    (const unpackfa_s&, byte);
 };
-
 
 #endif //CRYFA_FASTA_H

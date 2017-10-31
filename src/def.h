@@ -37,7 +37,7 @@ typedef std::char_traits<char>::pos_type  pos_t; /**< @brief tellg(), tellp() */
 
 // Metaprograms
 /**
- * Power (B^E) -- Usage: "cerr << POWER<3,2>::val;" which yields 9
+ * Power (B^E). Usage: "cerr << POWER<3,2>::val;" which yields 9
  * @tparam  B  Base
  * @tparam  E  Exponent
  * @warning Base (B) and exponent (E) MUST be known at compile time.
@@ -168,7 +168,6 @@ const htbl_t DNA_MAP =
     {"XXA", 210}, {"XXC", 211}, {"XXG", 212}, {"XXT", 213}, {"XXN", 214},
     {"XXX", 215}
 };
-
 
 /**
  * @brief Usage guide

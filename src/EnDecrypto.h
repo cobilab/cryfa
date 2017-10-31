@@ -21,26 +21,27 @@ using std::vector;
 class EnDecrypto
 {
 public:
-    bool   verbose        =false; /**< @brief Verbose mode    @hideinitializer*/
-    bool   disable_shuffle=false; /**< @brief Disable shuffle @hideinitializer*/
-    byte   n_threads;             /**< @brief Number of threads */
-    string inFileName;            /**< @brief Input file name */
-    string keyFileName;           /**< @brief Password file name */
+    static bool   verbose;        /**< @brief Verbose mode    @hideinitializer*/
+    static bool   disable_shuffle;/**< @brief Disable shuffle @hideinitializer*/
+    static byte   n_threads;      /**< @brief Number of threads */
+    static string inFileName;     /**< @brief Input file name */
+    static string keyFileName;    /**< @brief Password file name */
     
-    EnDecrypto   () = default;
-    void decrypt ();
-    void packLargeHdr_3to2  (string&, const string&, const htbl_t&);
-    void packLargeQs_3to2   (string&, const string&, const htbl_t&);
-    void pack_3to2          (string&, const string&, const htbl_t&);
-    void pack_2to1          (string&, const string&, const htbl_t&);
-    void pack_3to1          (string&, const string&, const htbl_t&);
-    void pack_5to1          (string&, const string&, const htbl_t&);
-    void pack_7to1          (string&, const string&, const htbl_t&);
-    void pack_1to1          (string&, const string&, const htbl_t&);
-    void unpack_read2B      (string&, string::iterator&, const vector<string>&);
-    void unpack_read1B      (string&, string::iterator&, const vector<string>&);
+    EnDecrypto             () = default;
+    void decrypt           ();
+    void packLargeHdr_3to2 (string&, const string&, const htbl_t&);
+    void packLargeQs_3to2  (string&, const string&, const htbl_t&);
+    void pack_3to2         (string&, const string&, const htbl_t&);
+    void pack_2to1         (string&, const string&, const htbl_t&);
+    void pack_3to1         (string&, const string&, const htbl_t&);
+    void pack_5to1         (string&, const string&, const htbl_t&);
+    void pack_7to1         (string&, const string&, const htbl_t&);
+    void pack_1to1         (string&, const string&, const htbl_t&);
+    void unpack_read2B     (string&, string::iterator&, const vector<string>&);
+    void unpack_read1B     (string&, string::iterator&, const vector<string>&);
+    void unpackSeq         (string&, string::iterator&);
 
-//protected:
+protected:
     bool shuffInProgress=true;/**< @brief Shuffle in progress @hideinitializer*/
     bool   justPlus     =true;/**< @brief If line 3 is just + @hideinitializer*/
     bool   shuffled     =true;/**< @hideinitializer */
@@ -60,15 +61,14 @@ public:
     void printKey           (byte*)                 const;
     string extractPass      ()                      const;
     bool hasFQjustPlus      ()                      const;
-//    inline void buildHashTable     (htbl_t&, const string&, short);
     void buildHashTable     (htbl_t&, const string&, short);
     void buildUnpack        (vector<string>&, const string&, u16);
     byte dnaPack            (const string&);
     u16  largePack          (const string&, const htbl_t&);
     void packSeq_3to1       (string&, const string&);
     char penaltySym         (char);
-    void unpackLarge_read2B (string&, string::iterator&,
-                             char, const vector<string>&);
+    void unpackLarge_read2B (string&, string::iterator&, char,
+                             const vector<string>&);
     void my_srand           (u32);
     int  my_rand            ();
     std::minstd_rand0 &randomEngine ();

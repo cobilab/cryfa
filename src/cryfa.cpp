@@ -28,7 +28,7 @@
 #include "def.h"
 #include "EnDecrypto.h"
 #include "FASTA.h"
-//#include "FASTQ.h"
+#include "FASTQ.h"
 
 using std::string;
 using std::cout;
@@ -117,6 +117,13 @@ inline void checkPass (const string& keyFileName, const bool k_flag)
     }
 }
 
+// Instantiation of static variables in EnDecrypto class
+bool   EnDecrypto::verbose         = false;
+bool   EnDecrypto::disable_shuffle = false;
+byte   EnDecrypto::n_threads       = DEFAULT_N_THR;
+string EnDecrypto::inFileName      = "";
+string EnDecrypto::keyFileName     = "";
+
 /**
  * @brief Main function
  */
@@ -126,10 +133,10 @@ int main (int argc, char* argv[])
 //   high_resolution_clock::time_point startTime = high_resolution_clock::now();
 
     EnDecrypto cryptObj;
+    FASTA      fastaObj;
+    FASTQ      fastqObj;
     cryptObj.inFileName = argv[argc-1];  // Input file name
-    cryptObj.n_threads = DEFAULT_N_THR;  // Initialize number of threads
-    FASTA fastaObj;
-//    FASTQ fastqObj;
+    cryptObj.n_threads  = DEFAULT_N_THR; // Initialize number of threads
     
     static int h_flag, a_flag, v_flag, d_flag, s_flag;
     bool k_flag = false;
@@ -189,13 +196,13 @@ int main (int argc, char* argv[])
 
     if (d_flag)
     {
-//        cryptObj.decrypt();                                         // Decrypt
-//
-//        ifstream in(DEC_FILENAME);
-//        cerr << "Decompressing...\n";
-//        (in.peek() == (char) 127) ? fastaObj.decompressFA()         // FASTA
-//                                  : fastqObj.decompressFQ();        // FASTQ
-//        in.close();
+        cryptObj.decrypt();                                         // Decrypt
+
+        ifstream in(DEC_FILENAME);
+        cerr << "Decompressing...\n";
+        (in.peek() == (char) 127) ? fastaObj.decompress()         // FASTA
+                                  : fastqObj.decompress();        // FASTQ
+        in.close();
 
 ////        // Stop timer
 ////        high_resolution_clock::time_point finishTime =
@@ -212,15 +219,15 @@ int main (int argc, char* argv[])
     {//todo sam
         switch (fileType(cryptObj.inFileName))
         {
-            case 'A':  cerr<<"Compacting...\n";  fastaObj.compressFA();   break;
-//            case 'Q':  cerr<<"Compacting...\n";  fastqObj.compressFQ();   break;
-//            case 'S':  cerr<<"Compacting...\n";  cerr<<"SAM";             break;
-//            case 'n':
-//            default :  cerr<<"Error: \"" << cryptObj.inFileName << "\" is not a"
-//                           <<" valid FASTA or FASTQ file.\n";
-//                       return 0;                                          break;
+            case 'A':  cerr<<"Compacting...\n";   fastaObj.compress();    break;
+            case 'Q':  cerr<<"Compacting...\n";   fastqObj.compress();    break;
+            case 'S':  cerr<<"Compacting...\n";   cerr<<"SAM";            break;
+            case 'n':
+            default :  cerr<<"Error: \"" << cryptObj.inFileName << "\" is not a"
+                           <<" valid FASTA or FASTQ file.\n";
+                       return 0;                                          break;
         }
-
+        
 //        // Stop timer
 //        high_resolution_clock::time_point finishTime =
 //                high_resolution_clock::now();

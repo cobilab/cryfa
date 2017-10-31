@@ -32,9 +32,9 @@ std::mutex mutxFQ;    /**< @brief Mutex */
 
 
 /**
- * @brief Compress FASTQ
+ * @brief Compress
  */
-void FASTQ::compressFQ ()
+void FASTQ::compress ()
 {
     // Start timer for compression
     high_resolution_clock::time_point startTime = high_resolution_clock::now();
@@ -70,7 +70,6 @@ void FASTQ::compressFQ ()
     if (headersLen > MAX_C5)          // If len > 39 filter the last 39 ones
     {
         Hdrs = headers.substr(headersLen - MAX_C5);
-//        Hdrs_g = Hdrs;
         // ASCII char after the last char in Hdrs -- Always <= (char) 127
         HdrsX = Hdrs;    HdrsX += (char) (Hdrs.back() + 1);
         buildHashTable(HdrMap, HdrsX, KEYLEN_C5);
@@ -79,7 +78,6 @@ void FASTQ::compressFQ ()
     else
     {
         Hdrs = headers;
-//        Hdrs_g = Hdrs;
         
         if (headersLen > MAX_C4)                            // 16 <= cat 5 <= 39
         {
@@ -118,7 +116,6 @@ void FASTQ::compressFQ ()
     if (qscoresLen > MAX_C5)              // If len > 39 filter the last 39 ones
     {
         QSs = qscores.substr(qscoresLen - MAX_C5);
-//        QSs_g = QSs;
         // ASCII char after last char in QUALITY_SCORES
         QSsX = QSs;     QSsX += (char) (QSs.back() + 1);
         buildHashTable(QsMap, QSsX, KEYLEN_C5);
@@ -127,7 +124,6 @@ void FASTQ::compressFQ ()
     else
     {
         QSs = qscores;
-//        QSs_g = QSs;
         
         if (qscoresLen > MAX_C4)                            // 16 <= cat 5 <= 39
         {
@@ -167,7 +163,7 @@ void FASTQ::compressFQ ()
     
     // Distribute file among threads, for reading and packing
     for (t = 0; t != n_threads; ++t)
-        arrThread[t] = thread(&FASTQ::packFQ, this, pkStruct, t);
+        arrThread[t] = thread(&FASTQ::pack, this, pkStruct, t);
     for (t = 0; t != n_threads; ++t)
         if (arrThread[t].joinable())    arrThread[t].join();
     
@@ -257,11 +253,11 @@ void FASTQ::compressFQ ()
 }
 
 /**
- * @brief Pack FASTQ -- '@' at the beginning of headers is not packed
+ * @brief Pack. '@' at the beginning of headers is not packed
  * @param pkStruct  Pack structure
  * @param threadID  Thread ID
  */
-void FASTQ::packFQ (const packfq_s& pkStruct, byte threadID)
+void FASTQ::pack (const packfq_s &pkStruct, byte threadID)
 {
     // Function pointers
     using packHdrFPtr   = void (EnDecrypto::*)
@@ -306,11 +302,11 @@ void FASTQ::packFQ (const packfq_s& pkStruct, byte threadID)
         // shuffle
         if (!disable_shuffle)
         {
-            mutxFQ.lock();//------------------------------------------------------
+            mutxFQ.lock();//----------------------------------------------------
             if (verbose && shuffInProgress)    cerr << "Shuffling...\n";
             
             shuffInProgress = false;
-            mutxFQ.unlock();//----------------------------------------------------
+            mutxFQ.unlock();//--------------------------------------------------
             
             shufflePkd(context);
         }
@@ -335,8 +331,8 @@ void FASTQ::packFQ (const packfq_s& pkStruct, byte threadID)
 }
 
 /**
- * @brief      Gather chars of all headers & quality scores
- *             in FASTQ, excluding '@' in headers
+ * @brief      Gather chars of all headers & quality scores, excluding
+ *             '@' in headers
  * @param[out] headers  Chars of all headers
  * @param[out] qscores  Chars of all quality scores
  */
@@ -406,9 +402,9 @@ void FASTQ::gatherHdrQs (string& headers, string& qscores)
 }
 
 /**
- * @brief Decompress FASTQ
+ * @brief Decompress
  */
-void FASTQ::decompressFQ ()
+void FASTQ::decompress ()
 {
     // Start timer for decompression
     high_resolution_clock::time_point startTime = high_resolution_clock::now();
@@ -687,8 +683,8 @@ void FASTQ::decompressFQ ()
 }
 
 /**
- * @brief Unpack FQ: small header, small quality score
- *        -- '@' at the beginning of headers not packed
+ * @brief Unpack: small header, small quality score.
+ *        '@' at the beginning of headers not packed
  * @param upkStruct  Unpack structure
  * @param threadID   Thread ID
  */
@@ -723,11 +719,11 @@ void FASTQ::unpackHSQS (const unpackfq_s &upkStruct, byte threadID)
         // Unshuffle
         if (shuffled)
         {
-            mutxFQ.lock();//------------------------------------------------------
+            mutxFQ.lock();//----------------------------------------------------
             if (verbose && shuffInProgress)    cerr << "Unshuffling...\n";
             
             shuffInProgress = false;
-            mutxFQ.unlock();//----------------------------------------------------
+            mutxFQ.unlock();//--------------------------------------------------
             
             unshufflePkd(i, chunkSize);
         }
@@ -738,8 +734,8 @@ void FASTQ::unpackHSQS (const unpackfq_s &upkStruct, byte threadID)
             
             (this->*unpackHdr) (upkHdrOut, i, upkStruct.hdrUnpack);
             upkfile << (plusMore = upkHdrOut) << '\n';              ++i;  // Hdr
-            
-            unpackSeqFQ_3to1(upkSeqOut, i);
+    
+            unpackSeq(upkSeqOut, i);
             upkfile << upkSeqOut << '\n';                                 // Seq
             
             upkfile << (justPlus ? "+" : "+" + plusMore) << '\n';   ++i;  // +
@@ -770,8 +766,8 @@ void FASTQ::unpackHSQS (const unpackfq_s &upkStruct, byte threadID)
 }
 
 /**
- * @brief Unpack FQ: small header, large quality score
- *        -- '@' at the beginning of headers not packed
+ * @brief Unpack: small header, large quality score.
+ *        '@' at the beginning of headers not packed
  * @param upkStruct  Unpack structure
  * @param threadID   Thread ID
  */
@@ -802,11 +798,11 @@ void FASTQ::unpackHSQL (const unpackfq_s &upkStruct, byte threadID)
         // Unshuffle
         if (shuffled)
         {
-            mutxFQ.lock();//------------------------------------------------------
+            mutxFQ.lock();//----------------------------------------------------
             if (verbose && shuffInProgress)    cerr << "Unshuffling...\n";
             
             shuffInProgress = false;
-            mutxFQ.unlock();//----------------------------------------------------
+            mutxFQ.unlock();//--------------------------------------------------
             
             unshufflePkd(i, chunkSize);
         }
@@ -817,8 +813,8 @@ void FASTQ::unpackHSQL (const unpackfq_s &upkStruct, byte threadID)
             
             (this->*unpackHdr) (upkHdrOut, i, upkStruct.hdrUnpack);
             upkfile << (plusMore = upkHdrOut) << '\n';               ++i; // Hdr
-            
-            unpackSeqFQ_3to1(upkSeqOut, i);
+    
+            unpackSeq(upkSeqOut, i);
             upkfile << upkSeqOut << '\n';                                 // Seq
             
             upkfile << (justPlus ? "+" : "+" + plusMore) << '\n';    ++i; // +
@@ -850,8 +846,8 @@ void FASTQ::unpackHSQL (const unpackfq_s &upkStruct, byte threadID)
 }
 
 /**
- * @brief Unpack FQ: large header, small quality score
- *        -- '@' at the beginning of headers not packed
+ * @brief Unpack: large header, small quality score.
+ *        '@' at the beginning of headers not packed
  * @param upkStruct  Unpack structure
  * @param threadID   Thread ID
  */
@@ -882,11 +878,11 @@ void FASTQ::unpackHLQS (const unpackfq_s &upkStruct, byte threadID)
         // Unshuffle
         if (shuffled)
         {
-            mutxFQ.lock();//------------------------------------------------------
+            mutxFQ.lock();//----------------------------------------------------
             if (verbose && shuffInProgress)    cerr << "Unshuffling...\n";
             
             shuffInProgress = false;
-            mutxFQ.unlock();//----------------------------------------------------
+            mutxFQ.unlock();//--------------------------------------------------
             
             unshufflePkd(i, chunkSize);
         }
@@ -898,8 +894,8 @@ void FASTQ::unpackHLQS (const unpackfq_s &upkStruct, byte threadID)
             unpackLarge_read2B(upkHdrOut, i,
                                upkStruct.XChar_hdr, upkStruct.hdrUnpack);
             upkfile << (plusMore = upkHdrOut) << '\n';              ++i;  // Hdr
-            
-            unpackSeqFQ_3to1(upkSeqOut, i);
+    
+            unpackSeq(upkSeqOut, i);
             upkfile << upkSeqOut << '\n';                                 // Seq
             
             upkfile << (justPlus ? "+" : "+" + plusMore) << '\n';   ++i;  // +
@@ -930,8 +926,8 @@ void FASTQ::unpackHLQS (const unpackfq_s &upkStruct, byte threadID)
 }
 
 /**
- * @brief Unpack FQ: large header, large quality score
- *        -- '@' at the beginning of headers not packed
+ * @brief Unpack: large header, large quality score.
+ *        '@' at the beginning of headers not packed
  * @param upkStruct  Unpack structure
  * @param threadID   Thread ID
  */
@@ -959,11 +955,11 @@ void FASTQ::unpackHLQL (const unpackfq_s &upkStruct, byte threadID)
         // Unshuffle
         if (shuffled)
         {
-            mutxFQ.lock();//------------------------------------------------------
+            mutxFQ.lock();//----------------------------------------------------
             if (verbose && shuffInProgress)    cerr << "Unshuffling...\n";
             
             shuffInProgress = false;
-            mutxFQ.unlock();//----------------------------------------------------
+            mutxFQ.unlock();//--------------------------------------------------
             
             unshufflePkd(i, chunkSize);
         }
@@ -975,8 +971,8 @@ void FASTQ::unpackHLQL (const unpackfq_s &upkStruct, byte threadID)
             unpackLarge_read2B(upkHdrOut, i,
                                upkStruct.XChar_hdr, upkStruct.hdrUnpack);
             upkfile << (plusMore = upkHdrOut) << '\n';              ++i;  // Hdr
-            
-            unpackSeqFQ_3to1(upkSeqOut, i);
+    
+            unpackSeq(upkSeqOut, i);
             upkfile << upkSeqOut << '\n';                                 // Seq
             
             upkfile << (justPlus ? "+" : "+" + plusMore) << '\n';   ++i;  // +
@@ -1005,46 +1001,4 @@ void FASTQ::unpackHLQL (const unpackfq_s &upkStruct, byte threadID)
     
     upkfile.close();
     in.close();
-}
-
-/**
- * @brief      Unpack 1 byte to 3 DNA bases -- FASTQ
- * @param[out] out  Unpacked DNA bases
- * @param[in]  i    Input string iterator
- */
-void FASTQ::unpackSeqFQ_3to1 (string &out, string::iterator &i)
-{
-    string tpl;    tpl.reserve(3);
-    out.clear();
-    
-    for (; *i != (char) 254; ++i)
-    {
-        // Seq len not multiple of 3
-        if (*i == (char) 255) { out += penaltySym(*(++i));    continue; }
-        
-        tpl = DNA_UNPACK[(byte) *i];
-        
-        if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]!='X')    out+=tpl;       // ...
-        
-        else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]!='X')               // X..
-        { out+=penaltySym(*(++i));    out+=tpl[1];    out+=tpl[2];             }
-        
-        else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]!='X')               // .X.
-        { out+=tpl[0];    out+=penaltySym(*(++i));    out+=tpl[2];             }
-        
-        else if (tpl[0]=='X' && tpl[1]=='X' && tpl[2]!='X')               // XX.
-        { out+=penaltySym(*(++i));    out+=penaltySym(*(++i));    out+=tpl[2]; }
-        
-        else if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]=='X')               // ..X
-        { out+=tpl[0];    out+=tpl[1];    out+=penaltySym(*(++i));             }
-        
-        else if (tpl[0]=='X' && tpl[1]!='X' && tpl[2]=='X')               // X.X
-        { out+=penaltySym(*(++i));    out+=tpl[1];    out+=penaltySym(*(++i)); }
-        
-        else if (tpl[0]!='X' && tpl[1]=='X' && tpl[2]=='X')               // .XX
-        { out+=tpl[0];    out+=penaltySym(*(++i));    out+=penaltySym(*(++i)); }
-        
-        else { out+=penaltySym(*(++i));    out+=penaltySym(*(++i));       // XXX
-            out+=penaltySym(*(++i));                                        }
-    }
 }
