@@ -11,6 +11,7 @@
 #define CRYFA_FASTA_H
 
 #include "EnDecrypto.h"
+#include "Security.h"
 
 
 /** @brief Packing FASTA */

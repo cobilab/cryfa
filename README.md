@@ -67,7 +67,7 @@ Options:
     -v,  --verbose
          verbose mode (more information)
 
-    -s,  --disable_shuffle
+    -s,  --disableShuffle
          disable shuffling input
 
     -t [NUMBER],  --thread [NUMBER]

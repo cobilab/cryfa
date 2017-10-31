@@ -9,15 +9,8 @@
 
 #include <fstream>
 #include <functional>
-#include <mutex>
-#include <thread>
 #include <algorithm>
-#include <chrono>       // time
-#include <iomanip>      // setw, setprecision
 #include "EnDecrypto.h"
-#include "cryptopp/aes.h"
-#include "cryptopp/eax.h"
-#include "cryptopp/files.h"
 
 using std::vector;
 using std::cout;
@@ -26,198 +19,8 @@ using std::ifstream;
 using std::ofstream;
 using std::getline;
 using std::to_string;
-using std::thread;
 using std::stoull;
-using std::chrono::high_resolution_clock;
-using std::setprecision;
-using CryptoPP::AES;
-using CryptoPP::CBC_Mode_ExternalCipher;
-using CryptoPP::CBC_Mode;
-using CryptoPP::StreamTransformationFilter;
-using CryptoPP::FileSource;
-using CryptoPP::FileSink;
 
-std::mutex mutxEnDe;    /**< @brief Mutex */
-
-/**
- * @brief   Encrypt
- * @details AES encryption uses a secret key of a variable length (128, 196
- *          or 256 bit). This key is secretly exchanged between two parties
- *          before communication begins.
- *
- *          DEFAULT_KEYLENGTH = 16 bytes.
- */
-void EnDecrypto::encrypt ()
-{
-    cerr << "Encrypting...\n";
-    
-    // Start timer for encryption
-    high_resolution_clock::time_point startTime = high_resolution_clock::now();
-    
-    byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
-    memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
-    memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
-    
-    const string pass = extractPass();
-    buildKey(key, pass);
-    buildIV(iv, pass);
-//    printIV(iv);      // Debug
-//    printKey(key);    // Debug
-    
-    // Encrypt
-    const char* inFile = PCKD_FILENAME;
-    CBC_Mode<CryptoPP::AES>::Encryption
-            cbcEnc(key, (size_t) AES::DEFAULT_KEYLENGTH, iv);
-    FileSource(inFile, true,
-               new StreamTransformationFilter(cbcEnc, new FileSink(cout)));
-    
-    // Stop timer for encryption
-    high_resolution_clock::time_point finishTime = high_resolution_clock::now();
-    // Encryption duration in seconds
-    std::chrono::duration<double> elapsed = finishTime - startTime;
-    
-    cerr << (verbose ? "Encryption done," : "Done,") << " in "
-         << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
-    
-    // Delete packed file
-    const string pkdFileName = PCKD_FILENAME;
-    std::remove(pkdFileName.c_str());
-    
-    /*
-    byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
-    memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
-    memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
-    
-    const string pass = extractPass();
-    buildKey(key, pass);
-    buildIV(iv, pass);
-//    printIV(iv);      // debug
-//    printKey(key);    // debug
-    
-    string cipherText;
-    AES::Encryption aesEncryption(key, (size_t) AES::DEFAULT_KEYLENGTH);
-    CBC_Mode_ExternalCipher::Encryption cbcEncryption(aesEncryption, iv);
-    StreamTransformationFilter
-        stfEncryptor(cbcEncryption, new CryptoPP::StringSink(cipherText));
-    stfEncryptor.Put(reinterpret_cast<const byte*>
-                     (context.c_str()), context.length() + 1);
-    stfEncryptor.MessageEnd();
-
-//    if (verbose)
-//    {
-//        cerr << "   sym size: " << context.size()    << '\n';
-//        cerr << "cipher size: " << cipherText.size() << '\n';
-//        cerr << " block size: " << AES::BLOCKSIZE    << '\n';
-//    }
-    
-    string encryptedText;
-    for (const char &c : cipherText)
-        encryptedText += (char) (c & 0xFF);
-////        encryptedText += (char) (0xFF & static_cast<byte> (c));
-
-////    encryptedText+='\n';
-    return encryptedText;
-    */
-}
-
-/**
- * @brief   Decrypt
- * @details AES encryption uses a secret key of a variable length (128, 196
- *          or 256 bit). This key is secretly exchanged between two parties
- *          before communication begins.
- *
- *          DEFAULT_KEYLENGTH = 16 bytes.
- */
-void EnDecrypto::decrypt ()
-{
-    ifstream in(inFileName);
-    if (!in.good())
-    { cerr << "Error: failed opening \"" << inFileName << "\".\n";    exit(1); }
-    
-    // Watermark
-    string watermark = "#cryfa v";
-    watermark += to_string(VERSION_CRYFA);    watermark += ".";
-    watermark += to_string(RELEASE_CRYFA);    watermark += "\n";
-    
-    // Invalid encrypted file
-    string line;    getline(in, line);
-    if ((line + "\n") != watermark)
-    {
-        cerr << "Error: \"" << inFileName << '"'
-             << " is not a valid file encrypted by cryfa.\n";
-        exit(1);
-    }
-    
-////    string::size_type watermarkIdx = cipherText.find(watermark);
-////    if (watermarkIdx == string::npos)
-////    { cerr << "Error: invalid encrypted file!\n";    exit(1); }
-////    else  cipherText.erase(watermarkIdx, watermark.length());
-    
-    cerr << "Decrypting...\n";
-    
-    // Start timer for decryption
-    high_resolution_clock::time_point startTime = high_resolution_clock::now();
-    
-    byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
-    memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
-    memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
-    
-    const string pass = extractPass();
-    buildKey(key, pass);
-    buildIV(iv, pass);
-//    printIV(iv);      // Debug
-//    printKey(key);    // Debug
-
-//    string cipherText( (std::istreambuf_iterator<char> (in)),
-//                       std::istreambuf_iterator<char> () );
-
-//    if (verbose)
-//    {
-//        cerr << "cipher size: " << cipherText.size()-1 << '\n';
-//        cerr << " block size: " << AES::BLOCKSIZE        << '\n';
-//    }
-    
-    const char* outFile = DEC_FILENAME;
-    CBC_Mode<CryptoPP::AES>::Decryption
-            cbcDec(key, (size_t) AES::DEFAULT_KEYLENGTH, iv);
-    FileSource(in, true,
-               new StreamTransformationFilter(cbcDec, new FileSink(outFile)));
-    
-    // Stop timer for decryption
-    high_resolution_clock::time_point finishTime = high_resolution_clock::now();
-    // Decryption duration in seconds
-    std::chrono::duration<double> elapsed = finishTime - startTime;
-    
-    cerr << (verbose ? "Decryption done," : "Done,") << " in "
-         << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
-    
-    in.close();
-}
-
-/**
- * @brief  Check if the third line of FASTQ file contains only +
- * @return True or false
- */
-bool EnDecrypto::hasFQjustPlus () const
-{
-    ifstream in(inFileName);
-    string   line;
-    
-    IGNORE_THIS_LINE(in);    // Ignore header
-    IGNORE_THIS_LINE(in);    // Ignore seq
-    bool justPlus = !(getline(in, line).good() && line.length() > 1);
-    
-    in.close();
-    return justPlus;
-    
-    /* If input was string, instead of file
-    // check if the third line contains only +
-    bool justPlus = true;
-    string::const_iterator lFFirst = std::find(in.begin(), in.end(), '\n');
-    string::const_iterator lFSecond = std::find(lFFirst+1, in.end(), '\n');
-    if (*(lFSecond+2) != '\n')  justPlus = false;   // check symbol after +
-    */
-}
 
 /**
  * @brief      Build a hash table
@@ -225,7 +28,7 @@ bool EnDecrypto::hasFQjustPlus () const
  * @param[in]  strIn   The string including the keys
  * @param[in]  keyLen  Length of the keys
  */
-void EnDecrypto::buildHashTable (htbl_t &map, const string &strIn, short keyLen)
+void EnDecrypto::buildHashTbl (htbl_t &map, const string &strIn, short keyLen)
 {
     u64 elementNo = 0;
     string element;    element.reserve(keyLen);
@@ -319,8 +122,8 @@ void EnDecrypto::buildHashTable (htbl_t &map, const string &strIn, short keyLen)
  * @param[in]  strIn   The string including the keys
  * @param[in]  keyLen  Length of the keys
  */
-void EnDecrypto::buildUnpack (vector<string> &unpack, const string &strIn,
-                              u16 keyLen)
+void EnDecrypto::buildUnpackTbl (vector<string> &unpack, const string &strIn,
+                                 u16 keyLen)
 {
     string element;    element.reserve(keyLen);
     unpack.clear();
@@ -410,7 +213,8 @@ void EnDecrypto::buildUnpack (vector<string> &unpack, const string &strIn,
  * @param  key  Key
  * @return Value (based on the idea of key-value in a hash table)
  */
-byte EnDecrypto::dnaPack (const string &key)   // Maybe byte <-> u16 replacement
+// Maybe byte <-> u16 replacement
+byte EnDecrypto::dnaPackIndex (const string &key)
 {
     htbl_t::const_iterator got = DNA_MAP.find(key);
     if (got == DNA_MAP.end())
@@ -424,7 +228,7 @@ byte EnDecrypto::dnaPack (const string &key)   // Maybe byte <-> u16 replacement
  * @param  map  Hash table
  * @return Value (based on the idea of key-value in a hash table)
  */
-u16 EnDecrypto::largePack (const string &key, const htbl_t &map)
+u16 EnDecrypto::largePackIndex (const string &key, const htbl_t &map)
 {
     htbl_t::const_iterator got = map.find(key);
     if (got == map.end())
@@ -437,7 +241,7 @@ u16 EnDecrypto::largePack (const string &key, const htbl_t &map)
  * @param[out] packedSeq  Packed sequence
  * @param[in]  seq        Sequence
  */
-void EnDecrypto::packSeq_3to1 (string &packedSeq, const string &seq)
+void EnDecrypto::packSeq (string &packedSeq, const string &seq)
 {
     bool firstNotIn, secondNotIn, thirdNotIn;
     char s0, s1, s2;
@@ -459,7 +263,7 @@ void EnDecrypto::packSeq_3to1 (string &packedSeq, const string &seq)
            (thirdNotIn = (s2!='A' && s2!='C' && s2!='G' && s2!='T' && s2!='N'))
            ? 'X' : s2;
         
-        packedSeq += dnaPack(tuple);
+        packedSeq += dnaPackIndex(tuple);
         if (firstNotIn)  packedSeq += s0;
         if (secondNotIn) packedSeq += s1;
         if (thirdNotIn)  packedSeq += s2;
@@ -476,81 +280,55 @@ void EnDecrypto::packSeq_3to1 (string &packedSeq, const string &seq)
             packedSeq+=(char) 255;    packedSeq+=*i;
             packedSeq+=(char) 255;    packedSeq+=*(i+1);
             break;
-
+            
         default: break;
     }
 }
 
 /**
  * @brief      Encapsulate 3 header symbols in 2 bytes, when # >= 40.
- *             Reduction ~1/3
+ *             -- FASTA/FASTQ. Reduction ~1/3
  * @param[out] packed  Packed header
  * @param[in]  strIn   Header
  * @param[in]  map     Hash table
  */
-void EnDecrypto::packLargeHdr_3to2 (string &packed, const string &strIn,
-                                    const htbl_t &map)
+void EnDecrypto::packLHdrFaFq (string &packed, const string &strIn,
+                               const htbl_t &map)
 {
-    string tuple;    tuple.reserve(3);
-    bool firstNotIn, secondNotIn, thirdNotIn;
-    char s0, s1, s2;
-    u16 shortTuple;
-    string hdrs = Hdrs;
-    // ASCII char after the last char in HEADERS string
-    const char XChar = (char) (hdrs.back() + 1);
-    string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-2;
-    
-    for (; i < iEnd; i += 3)
-    {
-        s0 = *i,    s1 = *(i+1),    s2 = *(i+2);
-        
-        tuple.clear();
-        tuple  = (firstNotIn  = (hdrs.find(s0)==string::npos)) ? XChar : s0;
-        tuple += (secondNotIn = (hdrs.find(s1)==string::npos)) ? XChar : s1;
-        tuple += (thirdNotIn  = (hdrs.find(s2)==string::npos)) ? XChar : s2;
-    
-        shortTuple = largePack(tuple, map);
-        packed += (unsigned char) (shortTuple >> 8);      // Left byte
-        packed += (unsigned char) (shortTuple & 0xFF);    // Right byte
-        
-        if (firstNotIn)   packed += s0;
-        if (secondNotIn)  packed += s1;
-        if (thirdNotIn)   packed += s2;
-    }
-    
-    // If len isn't multiple of 3, add (char) 255 before each sym
-    switch (strIn.length() % 3)
-    {
-        case 1:
-            packed+=(char) 255;    packed+=*i;
-            break;
-        
-        case 2:
-            packed+=(char) 255;    packed+=*i;
-            packed+=(char) 255;    packed+=*(i+1);
-            break;
-        
-        default: break;
-    }
+    packLarge(packed, strIn, Hdrs, map);
 }
 
 /**
  * @brief      Encapsulate 3 quality score symbols in 2 bytes, when # >= 40.
- *             Reduction ~1/3
+ *             -- FASTQ. Reduction ~1/3
  * @param[out] packed  Packed qulity scores
  * @param[in]  strIn   Quality scores
  * @param[in]  map     Hash table
  */
-void EnDecrypto::packLargeQs_3to2 (string &packed, const string &strIn,
-                                   const htbl_t &map)
+void EnDecrypto::packLQsFq (string &packed, const string &strIn,
+                            const htbl_t &map)
+{
+    packLarge(packed, strIn, QSs, map);
+}
+
+/**
+ * @brief      Encapsulate 3 header/quality score symbols in 2 bytes,
+ *             when # >= 40 -- FASTA/FASTQ. Reduction ~1/3
+ * @param[out] packed  Packed qulity scores
+ * @param[in]  strIn   Input header/quality score
+ * @param[in]  hdrQs   Collection of headers/quality scores
+ * @param[in]  map     Hash table
+ */
+inline void EnDecrypto::packLarge (string &packed, const string &strIn,
+                                   const string &hdrQs, const htbl_t &map)
 {
     string tuple;    tuple.reserve(3);
     bool firstNotIn, secondNotIn, thirdNotIn;
     char s0, s1, s2;
     u16 shortTuple;
-    string qss = QSs;
+    string hQ = hdrQs;    // header/quality score
     // ASCII char after the last char in QUALITY_SCORES string
-    const char XChar = (char) (qss.back() + 1);
+    const char XChar = (char) (hQ.back() + 1);
     string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-2;
     
     for (; i < iEnd; i += 3)
@@ -558,11 +336,11 @@ void EnDecrypto::packLargeQs_3to2 (string &packed, const string &strIn,
         s0 = *i,    s1 = *(i+1),  s2 = *(i+2);
         
         tuple.clear();
-        tuple  = (firstNotIn  = (qss.find(s0)==string::npos)) ? XChar : s0;
-        tuple += (secondNotIn = (qss.find(s1)==string::npos)) ? XChar : s1;
-        tuple += (thirdNotIn  = (qss.find(s2)==string::npos)) ? XChar : s2;
+        tuple  = (firstNotIn  = (hQ.find(s0)==string::npos)) ? XChar : s0;
+        tuple += (secondNotIn = (hQ.find(s1)==string::npos)) ? XChar : s1;
+        tuple += (thirdNotIn  = (hQ.find(s2)==string::npos)) ? XChar : s2;
         
-        shortTuple = largePack(tuple, map);
+        shortTuple = largePackIndex(tuple, map);
         packed += (unsigned char) (shortTuple >> 8);      // Left byte
         packed += (unsigned char) (shortTuple & 0xFF);    // Right byte
         
@@ -838,8 +616,8 @@ char EnDecrypto::penaltySym (char c)
  * @param[in]  XChar   Extra character for unpacking
  * @param[in]  unpack  Table for unpacking
  */
-void EnDecrypto::unpackLarge_read2B (string &out, string::iterator &i,
-                                     char XChar, const vector<string> &unpack)
+void EnDecrypto::unpackLarge (string &out, string::iterator &i,
+                              char XChar, const vector<string> &unpack)
 {
     byte leftB, rightB;
     u16 doubleB;                      // Double byte
@@ -894,8 +672,8 @@ void EnDecrypto::unpackLarge_read2B (string &out, string::iterator &i,
  * @param[in]  i       Input string iterator
  * @param[in]  unpack  Table for unpacking
  */
-void EnDecrypto::unpack_read2B (string &out, string::iterator &i,
-                                const vector<string> &unpack)
+void EnDecrypto::unpack_2B (string &out, string::iterator &i,
+                            const vector<string> &unpack)
 {
     byte leftB, rightB;
     u16 doubleB;     // Double byte
@@ -920,8 +698,8 @@ void EnDecrypto::unpack_read2B (string &out, string::iterator &i,
  * @param[in]  i       Input string iterator
  * @param[in]  unpack  Table for unpacking
  */
-void EnDecrypto::unpack_read1B (string &out, string::iterator &i,
-                                const vector<string> &unpack)
+void EnDecrypto::unpack_1B (string &out, string::iterator &i,
+                            const vector<string> &unpack)
 {
     out.clear();
     
@@ -976,194 +754,4 @@ void EnDecrypto::unpackSeq (string &out, string::iterator &i)
                    out+=penaltySym(*(++i));                                    }
         }
     }
-}
-
-/**
- * @brief  Random number engine
- * @return The classic Minimum Standard rand0
- */
-std::minstd_rand0 &EnDecrypto::randomEngine ()
-{
-    static std::minstd_rand0 e{};
-    return e;
-}
-
-/**
- * @brief    Random number seed -- Emulate C srand()
- * @param s  Seed
- */
-void EnDecrypto::my_srand (u32 s)
-{
-    randomEngine().seed(s);
-}
-
-/**
- * @brief  Random number generate -- Emulate C rand()
- * @return Random number
- */
-int EnDecrypto::my_rand ()
-{
-    return (int) (randomEngine()() - randomEngine().min());
-}
-
-/**
- * @brief Shuffle/unshuffle seed generator -- For each chunk
- */
-//inline u64 EnDecrypto::un_shuffleSeedGen (const u32 seedInit)
-void EnDecrypto::un_shuffleSeedGen ()
-{
-    const string pass = extractPass();
-    
-    u64 passDigitsMult = 1;    // Multiplication of all pass digits
-    for (u32 i = (u32) pass.size(); i--;)    passDigitsMult *= pass[i];
-    
-    // Using old rand to generate the new rand seed
-    u64 seed = 0;
-    
-    mutxEnDe.lock();//----------------------------------------------------------
-//    my_srand(20543 * seedInit * (u32) passDigitsMult + 81647);
-//    for (byte i = (byte) pass.size(); i--;)
-//        seed += ((u64) pass[i] * my_rand()) + my_rand();
-
-//    my_srand(20543 * seedInit + 81647);
-//    for (byte i = (byte) pass.size(); i--;)
-//        seed += (u64) pass[i] * my_rand();
-    my_srand(20543 * (u32) passDigitsMult + 81647);
-    for (byte i = (byte) pass.size(); i--;)
-        seed += (u64) pass[i] * my_rand();
-    mutxEnDe.unlock();//--------------------------------------------------------
-    
-//    seed %= 2106945901;
- 
-    seed_shared = seed;
-//    return seed;
-}
-
-/**
- * @brief          Shuffle
- * @param[in, out] str  String to be shuffled
- */
-void EnDecrypto::shufflePkd (string &str)
-{
-//    const u64 seed = un_shuffleSeedGen((u32) in.size());    // Shuffling seed
-//    std::shuffle(in.begin(), in.end(), std::mt19937(seed));
-    un_shuffleSeedGen();    // shuffling seed
-    std::shuffle(str.begin(), str.end(), std::mt19937(seed_shared));
-}
-
-/**
- * @brief       Unshuffle
- * @param i     Shuffled string iterator
- * @param size  Size of shuffled string
- */
-void EnDecrypto::unshufflePkd (string::iterator &i, u64 size)
-{
-    string shuffledStr;     // Copy of shuffled string
-    for (u64 j = 0; j != size; ++j, ++i)    shuffledStr += *i;
-    string::iterator shIt = shuffledStr.begin();
-    i -= size;
-    
-    // Shuffle vector of positions
-    vector<u64> vPos(size);
-    std::iota(vPos.begin(), vPos.end(), 0);     // Insert 0 .. N-1
-//    const u64 seed = un_shuffleSeedGen((u32) size);
-//    std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed));
-    un_shuffleSeedGen();
-    std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed_shared));
-
-    // Insert unshuffled data
-    for (const u64& vI : vPos)  *(i + vI) = *shIt++;       // *shIt, then ++shIt
-}
-
-/**
- * @brief Build initialization vector (IV) for cryption
- * @param iv    IV
- * @param pass  Password
- */
-void EnDecrypto::buildIV (byte *iv, const string &pass)
-{
-    std::uniform_int_distribution<rng_type::result_type> udist(0, 255);
-    rng_type rng;
-    
-    // Using old rand to generate the new rand seed
-    my_srand((u32) 7919 * pass[2] * pass[5] + 75653);
-//    srand((u32) 7919 * pass[2] * pass[5] + 75653);
-    u64 seed = 0;
-    for (byte i = (byte) pass.size(); i--;)
-        seed += ((u64) pass[i] * my_rand()) + my_rand();
-//    seed += ((u64) pass[i] * rand()) + rand();
-    seed %= 4294967295;
-    
-    const rng_type::result_type seedval = seed;
-    rng.seed(seedval);
-
-    for (u32 i = (u32) AES::BLOCKSIZE; i--;)
-        iv[i] = (byte) (udist(rng) % 255);
-}
-
-/**
- * @brief Build key for cryption
- * @param key  Key
- * @param pwd  password
- */
-void EnDecrypto::buildKey (byte *key, const string &pwd)
-{
-    std::uniform_int_distribution<rng_type::result_type> udist(0, 255);
-    rng_type rng;
-    
-    // Using old rand to generate the new rand seed
-    my_srand((u32) 24593 * (pwd[0] * pwd[2]) + 49157);
-//    srand((u32) 24593 * (pwd[0] * pwd[2]) + 49157);
-    u64 seed = 0;
-    for (byte i = (byte) pwd.size(); i--;)
-        seed += ((u64) pwd[i] * my_rand()) + my_rand();
-//    seed += ((u64) pwd[i] * rand()) + rand();
-    seed %= 4294967295;
-    
-    const rng_type::result_type seedval = seed;
-    rng.seed(seedval);
-
-    for (u32 i = (u32) AES::DEFAULT_KEYLENGTH; i--;)
-        key[i] = (byte) (udist(rng) % 255);
-}
-
-/**
- * @brief Print IV
- * @param iv  IV
- */
-void EnDecrypto::printIV (byte *iv) const
-{
-    cerr << "IV = [" << (int) iv[0];
-    for (u32 i = 1; i != AES::BLOCKSIZE; ++i)
-        cerr << " " << (int) iv[i];
-    cerr << "]\n";
-}
-
-/**
- * @brief Print key
- * @param key  Key
- */
-void EnDecrypto::printKey (byte *key) const
-{
-    cerr << "KEY: [" << (int) key[0];
-    for (u32 i = 1; i != AES::DEFAULT_KEYLENGTH; ++i)
-        cerr << " " << (int) key[i];
-    cerr << "]\n";
-}
-
-/**
- * @brief  Get password from a file
- * @return Password (string)
- */
-string EnDecrypto::extractPass () const
-{
-    ifstream in(keyFileName);
-    char     c;
-    string   pass;
-    pass.clear();
-    
-    while (in.get(c))    pass += c;
-    
-    in.close();
-    return pass;
 }

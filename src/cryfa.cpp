@@ -26,6 +26,7 @@
 //#include <chrono>       // time
 #include <iomanip>      // setw, setprecision
 #include "def.h"
+#include "Security.h"
 #include "EnDecrypto.h"
 #include "FASTA.h"
 #include "FASTQ.h"
@@ -118,11 +119,12 @@ inline void checkPass (const string& keyFileName, const bool k_flag)
 }
 
 // Instantiation of static variables in EnDecrypto class
-bool   EnDecrypto::verbose         = false;
-bool   EnDecrypto::disable_shuffle = false;
-byte   EnDecrypto::n_threads       = DEFAULT_N_THR;
-string EnDecrypto::inFileName      = "";
-string EnDecrypto::keyFileName     = "";
+byte   EnDecrypto::nThreads      = DEFAULT_N_THR;
+// Instantiation of static variables in Security class
+bool   Security::disableShuffle  = false;
+bool   Security::verbose         = false;
+string Security::inFileName      = "";
+string Security::keyFileName     = "";
 
 /**
  * @brief Main function
@@ -131,12 +133,13 @@ int main (int argc, char* argv[])
 {
 //   // Start timer
 //   high_resolution_clock::time_point startTime = high_resolution_clock::now();
-
+    
+    Security   secObj;
     EnDecrypto cryptObj;
     FASTA      fastaObj;
     FASTQ      fastqObj;
-    cryptObj.inFileName = argv[argc-1];  // Input file name
-    cryptObj.n_threads  = DEFAULT_N_THR; // Initialize number of threads
+    secObj.inFileName  = argv[argc-1];  // Input file name
+    cryptObj.nThreads  = DEFAULT_N_THR; // Initialize number of threads
     
     static int h_flag, a_flag, v_flag, d_flag, s_flag;
     bool k_flag = false;
@@ -149,7 +152,7 @@ int main (int argc, char* argv[])
         {"help",            no_argument, &h_flag, (int) 'h'},   // Help
         {"about",           no_argument, &a_flag, (int) 'a'},   // About
         {"verbose",         no_argument, &v_flag, (int) 'v'},   // Verbose
-        {"disable_shuffle", no_argument, &s_flag, (int) 's'},   // D (un)shuffle
+        {"disableShuffle",  no_argument, &s_flag, (int) 's'},   // D (un)shuffle
         {"decrypt",         no_argument, &d_flag, (int) 'd'},   // Decrypt mode
         {"key",       required_argument,       0,       'k'},   // Key file
         {"thread",    required_argument,       0,       't'},   // #threads >= 1
@@ -173,15 +176,15 @@ int main (int argc, char* argv[])
                 
             case 'k':
                 k_flag = true;
-                cryptObj.keyFileName = string(optarg);
+                secObj.keyFileName = string(optarg);
                 break;
                 
             case 'h':  h_flag=1;    Help();                               break;
             case 'a':  a_flag=1;    About();                              break;
-            case 'v':  v_flag=1;    cryptObj.verbose = true;              break;
-            case 's':  s_flag=1;    cryptObj.disable_shuffle = true;      break;
+            case 'v':  v_flag=1;    secObj.verbose = true;                break;
+            case 's':  s_flag=1;    secObj.disableShuffle = true;         break;
             case 'd':  d_flag=1;                                          break;
-            case 't':  cryptObj.n_threads = (byte) stoi(string(optarg));  break;
+            case 't':  cryptObj.nThreads = (byte) stoi(string(optarg));   break;
 
             default:
                 cerr << "Option '" << (char) optopt << "' is invalid.\n"; break;
@@ -189,7 +192,7 @@ int main (int argc, char* argv[])
     }
     
     // Check password file
-    if (!h_flag && !a_flag)    checkPass(cryptObj.keyFileName, k_flag);
+    if (!h_flag && !a_flag)    checkPass(secObj.keyFileName, k_flag);
     
     if (v_flag)
         cerr << "Verbose mode on.\n";
@@ -217,13 +220,13 @@ int main (int argc, char* argv[])
     
     if (!h_flag && !a_flag)
     {//todo sam
-        switch (fileType(cryptObj.inFileName))
+        switch (fileType(secObj.inFileName))
         {
             case 'A':  cerr<<"Compacting...\n";   fastaObj.compress();    break;
             case 'Q':  cerr<<"Compacting...\n";   fastqObj.compress();    break;
             case 'S':  cerr<<"Compacting...\n";   cerr<<"SAM";            break;
             case 'n':
-            default :  cerr<<"Error: \"" << cryptObj.inFileName << "\" is not a"
+            default :  cerr<<"Error: \"" << secObj.inFileName << "\" is not a"
                            <<" valid FASTA or FASTQ file.\n";
                        return 0;                                          break;
         }

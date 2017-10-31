@@ -11,6 +11,7 @@
 #define CRYFA_FASTQ_H
 
 #include "EnDecrypto.h"
+#include "Security.h"
 
 
 /** @brief Packing FASTQ */
@@ -50,6 +51,9 @@ public:
     void decompress  ();
     
 private:
+    bool justPlus = true;   /**< @brief If line 3 is just +  @hideinitializer */
+    
+    bool hasJustPlus ()  const;
     void gatherHdrQs (string&, string&);
     void pack        (const packfq_s&,   byte);
     void unpackHSQS  (const unpackfq_s&, byte);

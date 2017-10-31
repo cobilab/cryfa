@@ -11,6 +11,8 @@
 #define CRYFA_ENDECRYPTO_H
 
 #include "def.h"
+#include "Security.h"
+
 using std::string;
 using std::vector;
 
@@ -18,34 +20,24 @@ using std::vector;
 /**
  * @brief Encryption/Decryption
  */
-class EnDecrypto
+class EnDecrypto : public Security
 {
 public:
-    static bool   verbose;        /**< @brief Verbose mode    @hideinitializer*/
-    static bool   disable_shuffle;/**< @brief Disable shuffle @hideinitializer*/
-    static byte   n_threads;      /**< @brief Number of threads */
-    static string inFileName;     /**< @brief Input file name */
-    static string keyFileName;    /**< @brief Password file name */
+    static byte nThreads;       /**< @brief Number of threads */
     
-    EnDecrypto             () = default;
-    void decrypt           ();
-    void packLargeHdr_3to2 (string&, const string&, const htbl_t&);
-    void packLargeQs_3to2  (string&, const string&, const htbl_t&);
-    void pack_3to2         (string&, const string&, const htbl_t&);
-    void pack_2to1         (string&, const string&, const htbl_t&);
-    void pack_3to1         (string&, const string&, const htbl_t&);
-    void pack_5to1         (string&, const string&, const htbl_t&);
-    void pack_7to1         (string&, const string&, const htbl_t&);
-    void pack_1to1         (string&, const string&, const htbl_t&);
-    void unpack_read2B     (string&, string::iterator&, const vector<string>&);
-    void unpack_read1B     (string&, string::iterator&, const vector<string>&);
-    void unpackSeq         (string&, string::iterator&);
+    EnDecrypto        () = default;
+    void packLHdrFaFq (string&, const string&, const htbl_t&);
+    void packLQsFq    (string&, const string&, const htbl_t&);
+    void pack_3to2    (string&, const string&, const htbl_t&);
+    void pack_2to1    (string&, const string&, const htbl_t&);
+    void pack_3to1    (string&, const string&, const htbl_t&);
+    void pack_5to1    (string&, const string&, const htbl_t&);
+    void pack_7to1    (string&, const string&, const htbl_t&);
+    void pack_1to1    (string&, const string&, const htbl_t&);
+    void unpack_2B    (string&, string::iterator&, const vector<string>&);
+    void unpack_1B    (string&, string::iterator&, const vector<string>&);
 
 protected:
-    bool shuffInProgress=true;/**< @brief Shuffle in progress @hideinitializer*/
-    bool   justPlus     =true;/**< @brief If line 3 is just + @hideinitializer*/
-    bool   shuffled     =true;/**< @hideinitializer */
-    u64    seed_shared;       /**< @brief Shared seed */
     string Hdrs;              /**< @brief Max: 39 values */
     string QSs;               /**< @brief Max: 39 values */
     string HdrsX;             /**< @brief Extended Hdrs */
@@ -54,28 +46,17 @@ protected:
     htbl_t QsMap;             /**< @brief QSs hash table */
     u32    BlockLine;         /**< @brief Max block lines */
 
-    void encrypt            ();
-    void buildIV            (byte*, const string&);
-    void buildKey           (byte*, const string&);
-    void printIV            (byte*)                 const;
-    void printKey           (byte*)                 const;
-    string extractPass      ()                      const;
-    bool hasFQjustPlus      ()                      const;
-    void buildHashTable     (htbl_t&, const string&, short);
-    void buildUnpack        (vector<string>&, const string&, u16);
-    byte dnaPack            (const string&);
-    u16  largePack          (const string&, const htbl_t&);
-    void packSeq_3to1       (string&, const string&);
-    char penaltySym         (char);
-    void unpackLarge_read2B (string&, string::iterator&, char,
+    void buildHashTbl       (htbl_t&, const string&, short);
+    void buildUnpackTbl     (vector<string>&, const string&, u16);
+    byte dnaPackIndex       (const string&);
+    u16  largePackIndex     (const string&, const htbl_t&);
+    inline void packLarge   (string&, const string&,
+                             const string&, const htbl_t&);
+    void packSeq            (string&, const string&);
+    void unpackSeq          (string&, string::iterator&);
+    void unpackLarge        (string&, string::iterator&, char,
                              const vector<string>&);
-    void my_srand           (u32);
-    int  my_rand            ();
-    std::minstd_rand0 &randomEngine ();
-//    inline u64  un_shuffleSeedGen (const u32);
-    void un_shuffleSeedGen  ();
-    void shufflePkd         (string&);
-    void unshufflePkd       (string::iterator&, u64);
+    char penaltySym         (char);
 };
 
 #endif //CRYFA_ENDECRYPTO_H
