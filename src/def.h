@@ -21,8 +21,8 @@ using std::vector;
 
 
 // Version and release
-#define VERSION_CRYFA 1
-#define RELEASE_CRYFA 10.17
+const string VERSION_CRYFA = "1";
+const string RELEASE_CRYFA = "10.17";
 
 
 // Typedefs
@@ -67,27 +67,27 @@ struct POWER<B, 0> { static const u64 val = 1; };
 
 
 // Constants
-#define THR_ID_HDR     "THRD="      /**< @brief Thread ID header */
-#define PK_FILENAME    "CRYFA_PK"   /**< @brief Packed file name */
-#define PCKD_FILENAME  "CRYFA_PCKD" /**< @brief Packed file name -- joined */
-#define DEC_FILENAME   "CRYFA_DEC"  /**< @brief Decrypted file name */
-#define UPK_FILENAME   "CRYFA_UPK"  /**< @brief Unpacked file name */
-#define DEFAULT_N_THR  1            /**< @brief Default number of threads */
-#define BLOCK_SIZE     (8*1024)     /**< @brief To read from input file */
-#define C1             2            /**< @brief       Cat 1  =  2 */
-#define C2             3            /**< @brief       Cat 2  =  3 */
-#define MIN_C3         4            /**< @brief  4 <= Cat 3 <=  6 */
-#define MID_C3         5
-#define MAX_C3         6
-#define MIN_C4         7            /**< @brief  7 <= Cat 4 <= 15 */
-#define MAX_C4         15
-#define MIN_C5         16           /**< @brief 16 <= Cat 5 <= 39 */
-#define MAX_C5         39
-#define KEYLEN_C1      7     /**< @brief 7 to 1 byte. For building hash table */
-#define KEYLEN_C2      5            /**< @brief 5 to 1 byte */
-#define KEYLEN_C3      3            /**< @brief 3 to 1 byte */
-#define KEYLEN_C4      2            /**< @brief 2 to 1 byte */
-#define KEYLEN_C5      3            /**< @brief 3 to 2 byte */
+const   string THR_ID_HDR    = "THRD=";      /**< @brief Thread ID header */
+const   string PK_FILENAME   = "CRYFA_PK";   /**< @brief Packed file name */
+const   string PCKD_FILENAME = "CRYFA_PCKD"; /**< @brief Pckd f name - joined */
+const   string DEC_FILENAME  = "CRYFA_DEC";  /**< @brief Decrypted file name */
+const   string UPK_FILENAME  = "CRYFA_UPK";  /**< @brief Unpacked file name */
+constexpr byte DEFAULT_N_THR = 1;   /**< @brief Default number of threads */
+constexpr u64  BLOCK_SIZE    = 8 * 1024;  /**< @brief To read from input file */
+constexpr byte C1            = 2;   /**< @brief       Cat 1  =  2 */
+constexpr byte C2            = 3;   /**< @brief       Cat 2  =  3 */
+constexpr byte MIN_C3        = 4;   /**< @brief  4 <= Cat 3 <=  6 */
+constexpr byte MID_C3        = 5;
+constexpr byte MAX_C3        = 6;
+constexpr byte MIN_C4        = 7;   /**< @brief  7 <= Cat 4 <= 15 */
+constexpr byte MAX_C4        = 15;
+constexpr byte MIN_C5        = 16;  /**< @brief 16 <= Cat 5 <= 39 */
+constexpr byte MAX_C5        = 39;
+constexpr byte KEYLEN_C1     = 7;   /**< @brief 7 to 1 byte. Build hash table */
+constexpr byte KEYLEN_C2     = 5;   /**< @brief 5 to 1 byte */
+constexpr byte KEYLEN_C3     = 3;   /**< @brief 3 to 1 byte */
+constexpr byte KEYLEN_C4     = 2;   /**< @brief 2 to 1 byte */
+constexpr byte KEYLEN_C5     = 3;   /**< @brief 3 to 2 byte */
 
 
 /**
@@ -211,16 +211,16 @@ inline void Help ()
 inline void About ()
 {
     cout                                                                << '\n'
-        << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"  << '\n'
-        << " cryfa v" << VERSION_CRYFA << "." << RELEASE_CRYFA
+        << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << '\n'
+        << "  cryfa v" << VERSION_CRYFA << "." << RELEASE_CRYFA
         << ":: FASTA/FASTQ compaction and encryption"                   << '\n'
-        << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"  << '\n'
+        << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << '\n'
         << "          Morteza Hosseini    seyedmorteza@ua.pt"           << '\n'
         << "          Diogo Pratas        pratas@ua.pt"                 << '\n'
         << "          Armando J. Pinho    ap@ua.pt"                     << '\n'
-        << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"  << '\n'
+        << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << '\n'
         << "     Copyright (C) 2017, IEETA, University of Aveiro"       << '\n'
-        << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%"  << '\n'
+        << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << '\n'
                                                                         << '\n'
         << "This is a Free software, under GPLv3. You may redistribute" << '\n'
         << " copies of it under the terms of the GNU - General Public"  << '\n'

@@ -117,8 +117,7 @@ void FASTA::compress ()
     ifstream pkFile[nThreads];
 
     // Watermark for encrypted file
-    cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
-            + to_string(RELEASE_CRYFA) + "\n";
+    cout << "#cryfa v" + VERSION_CRYFA + "." + RELEASE_CRYFA + "\n";
 
     // Open packed file
     ofstream pckdFile(PCKD_FILENAME);
@@ -315,8 +314,8 @@ void FASTA::decompress ()
     thread     arrThread[nThreads]; // Array of threads
     byte       t;                   // For threads
     u64        offset;              // To traverse decompressed file
-
-    ifstream in(DEC_FILENAME);
+    ifstream   in(DEC_FILENAME);
+    
     in.ignore(1);                   // Jump over decText[0]==(char) 127
     in.get(c);    shuffled = (c==(char) 128); // Check if file had been shuffled
     while (in.get(c) && c != (char) 254)    headers += c;
@@ -487,8 +486,9 @@ void FASTA::unpackHS (const unpackfa_s &upkStruct, byte threadID)
     string::iterator i;
     char             c;
     pos_t            endPos;
-    ofstream upkfile(UPK_FILENAME+to_string(threadID), std::ios_base::app);
-    string upkhdrOut, upkSeqOut;
+    ofstream         upkfile(UPK_FILENAME+to_string(threadID),
+                             std::ios_base::app);
+    string           upkhdrOut, upkSeqOut;
 
     while (in.peek() != EOF)
     {
@@ -560,8 +560,9 @@ void FASTA::unpackHL (const unpackfa_s &upkStruct, byte threadID)
     string::iterator i;
     char             c;
     pos_t            endPos;
-    ofstream upkfile(UPK_FILENAME+to_string(threadID), std::ios_base::app);
-    string upkHdrOut, upkSeqOut;
+    ofstream         upkfile(UPK_FILENAME+to_string(threadID),
+                             std::ios_base::app);
+    string           upkHdrOut, upkSeqOut;
 
     while (in.peek() != EOF)
     {

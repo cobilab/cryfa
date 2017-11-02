@@ -138,13 +138,13 @@ int main (int argc, char* argv[])
     EnDecrypto cryptObj;
     FASTA      fastaObj;
     FASTQ      fastqObj;
-    secObj.inFileName  = argv[argc-1];  // Input file name
-    cryptObj.nThreads  = DEFAULT_N_THR; // Initialize number of threads
+    secObj.inFileName = argv[argc-1];  // Input file name
+    cryptObj.nThreads = DEFAULT_N_THR; // Initialize number of threads
     
     static int h_flag, a_flag, v_flag, d_flag, s_flag;
-    bool k_flag = false;
-    int  c;                              // Deal with getopt_long()
-    int  option_index;                   // Option index stored by getopt_long()
+    bool       k_flag = false;
+    int        c;                      // Deal with getopt_long()
+    int        option_index;           // Option index stored by getopt_long()
     opterr = 0;  // Force getopt_long() to remain silent when it finds a problem
 
     static struct option long_options[] =
@@ -196,15 +196,19 @@ int main (int argc, char* argv[])
     
     if (v_flag)
         cerr << "Verbose mode on.\n";
-
+    
     if (d_flag)
     {
         cryptObj.decrypt();                                         // Decrypt
 
         ifstream in(DEC_FILENAME);
         cerr << "Decompressing...\n";
-        (in.peek() == (char) 127) ? fastaObj.decompress()         // FASTA
-                                  : fastqObj.decompress();        // FASTQ
+        switch (in.peek())
+        {
+            case (char) 127:    fastaObj.decompress();    break;    // FASTA
+            case (char) 126:    fastqObj.decompress();    break;    // FASTQ
+            default:                                      break;
+        }
         in.close();
 
 ////        // Stop timer

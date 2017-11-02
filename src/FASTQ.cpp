@@ -174,15 +174,15 @@ void FASTQ::compress ()
     string context;
     
     // Watermark for encrypted file
-    cout << "#cryfa v" + to_string(VERSION_CRYFA) + "."
-            + to_string(RELEASE_CRYFA) + "\n";
+    cout << "#cryfa v" + VERSION_CRYFA + "." + RELEASE_CRYFA + "\n";
     
     // Open packed file
     ofstream pckdFile(PCKD_FILENAME);
+    pckdFile << (char) 126;                  // Let decryptor know this is FASTQ
     pckdFile << (!disableShuffle ? (char) 128 : (char) 129); // Shuffling on/off
-    pckdFile << headers;                            // Send headers to decryptor
-    pckdFile << (char) 254;                         // To detect headers in dec.
-    pckdFile << qscores;                            // Send qscores to decryptor
+    pckdFile << headers;                     // Send headers to decryptor
+    pckdFile << (char) 254;                  // To detect headers in dec.
+    pckdFile << qscores;                     // Send qscores to decryptor
     pckdFile << (hasJustPlus() ? (char) 253 : '\n');         // If just '+'
     
     // Open input files
@@ -260,17 +260,17 @@ void FASTQ::compress ()
 void FASTQ::pack (const packfq_s &pkStruct, byte threadID)
 {
     // Function pointers
-    using packHdrFPtr   = void (EnDecrypto::*)
-            (string&, const string&, const htbl_t&);
+    using packHdrFPtr   =
+                   void (EnDecrypto::*) (string&, const string&, const htbl_t&);
     packHdrFPtr packHdr = pkStruct.packHdrFPtr;
-    using packQSPtr     = void (EnDecrypto::*)
-            (string&, const string&, const htbl_t&);
+    using packQSPtr     =
+                   void (EnDecrypto::*) (string&, const string&, const htbl_t&);
     packQSPtr   packQS  = pkStruct.packQSFPtr;
     
-    ifstream in(inFileName);
-    string   context;       // Output string
-    string   line;
-    ofstream pkfile(PK_FILENAME+to_string(threadID), std::ios_base::app);
+    ifstream    in(inFileName);
+    string      context;       // Output string
+    string      line;
+    ofstream    pkfile(PK_FILENAME+to_string(threadID), std::ios_base::app);
     
     // Lines ignored at the beginning
     for (u64 l = (u64) threadID*BlockLine; l--;)    IGNORE_THIS_LINE(in);
@@ -365,11 +365,11 @@ void FASTQ::gatherHdrQs (string& headers, string& qscores)
 {
     u32  maxHLen=0,   maxQLen=0;       // Max length of headers & quality scores
     bool hChars[127], qChars[127];
-    std::memset(hChars+32, false, 95);
-    std::memset(qChars+32, false, 95);
+    memset(hChars+32, false, 95);
+    memset(qChars+32, false, 95);
     
     ifstream in(inFileName);
-    string line;
+    string   line;
     while (!in.eof())
     {
         if (getline(in, line).good())
@@ -441,8 +441,9 @@ void FASTQ::decompress ()
     thread     arrThread[nThreads]; // Array of threads
     byte       t;                   // For threads
     u64        offset;              // To traverse decompressed file
+    ifstream   in(DEC_FILENAME);
     
-    ifstream in(DEC_FILENAME);
+    in.ignore(1);                   // Jump over decText[0]==(char) 126
     in.get(c);    shuffled = (c==(char) 128); // Check if file had been shuffled
     while (in.get(c) && c != (char) 254)                 headers += c;
     while (in.get(c) && c != '\n' && c != (char) 253)    qscores += c;
@@ -717,10 +718,10 @@ void FASTQ::unpackHSQS (const unpackfq_s &upkStruct, byte threadID)
 {
     // Function pointers
     using unpackHdrFPtr =
-    void (EnDecrypto::*) (string&, string::iterator&, const vector<string>&);
+       void (EnDecrypto::*) (string&, string::iterator&, const vector<string>&);
     unpackHdrFPtr    unpackHdr = upkStruct.unpackHdrFPtr;
     using unpackQSFPtr  =
-    void (EnDecrypto::*) (string&, string::iterator&, const vector<string>&);
+       void (EnDecrypto::*) (string&, string::iterator&, const vector<string>&);
     unpackQSFPtr     unpackQS  = upkStruct.unpackQSFPtr;
     pos_t            begPos    = upkStruct.begPos;
     u64              chunkSize = upkStruct.chunkSize;
@@ -729,8 +730,9 @@ void FASTQ::unpackHSQS (const unpackfq_s &upkStruct, byte threadID)
     string::iterator i;
     char             c;
     pos_t            endPos;
-    ofstream upkfile(UPK_FILENAME+to_string(threadID), std::ios_base::app);
-    string upkHdrOut, upkSeqOut, upkQsOut;
+    ofstream         upkfile(UPK_FILENAME+to_string(threadID),
+                             std::ios_base::app);
+    string           upkHdrOut, upkSeqOut, upkQsOut;
     
     while (in.peek() != EOF)
     {
@@ -799,7 +801,7 @@ void FASTQ::unpackHSQS (const unpackfq_s &upkStruct, byte threadID)
 void FASTQ::unpackHSQL (const unpackfq_s &upkStruct, byte threadID)
 {
     using unpackHdrFPtr =
-    void (EnDecrypto::*) (string&, string::iterator&, const vector<string>&);
+       void (EnDecrypto::*) (string&, string::iterator&, const vector<string>&);
     unpackHdrFPtr    unpackHdr = upkStruct.unpackHdrFPtr;    // Function pointer
     pos_t            begPos    = upkStruct.begPos;
     u64              chunkSize = upkStruct.chunkSize;
@@ -808,8 +810,9 @@ void FASTQ::unpackHSQL (const unpackfq_s &upkStruct, byte threadID)
     string::iterator i;
     char             c;
     pos_t            endPos;
-    ofstream upkfile(UPK_FILENAME + to_string(threadID), std::ios_base::app);
-    string upkHdrOut, upkSeqOut, upkQsOut;
+    ofstream         upkfile(UPK_FILENAME + to_string(threadID),
+                             std::ios_base::app);
+    string           upkHdrOut, upkSeqOut, upkQsOut;
     
     while (in.peek() != EOF)
     {
@@ -879,7 +882,7 @@ void FASTQ::unpackHSQL (const unpackfq_s &upkStruct, byte threadID)
 void FASTQ::unpackHLQS (const unpackfq_s &upkStruct, byte threadID)
 {
     using unpackQSFPtr =
-    void (EnDecrypto::*) (string&, string::iterator&, const vector<string>&);
+       void (EnDecrypto::*) (string&, string::iterator&, const vector<string>&);
     unpackQSFPtr     unpackQS = upkStruct.unpackQSFPtr;      // Function pointer
     pos_t            begPos    = upkStruct.begPos;
     u64              chunkSize = upkStruct.chunkSize;
@@ -888,8 +891,9 @@ void FASTQ::unpackHLQS (const unpackfq_s &upkStruct, byte threadID)
     string::iterator i;
     char             c;
     pos_t            endPos;
-    ofstream upkfile(UPK_FILENAME + to_string(threadID), std::ios_base::app);
-    string upkHdrOut, upkSeqOut, upkQsOut;
+    ofstream         upkfile(UPK_FILENAME + to_string(threadID),
+                             std::ios_base::app);
+    string           upkHdrOut, upkSeqOut, upkQsOut;
     
     while (in.peek() != EOF)
     {
@@ -965,8 +969,9 @@ void FASTQ::unpackHLQL (const unpackfq_s &upkStruct, byte threadID)
     string::iterator i;
     char             c;
     pos_t            endPos;
-    ofstream upkfile(UPK_FILENAME + to_string(threadID), std::ios_base::app);
-    string upkHdrOut, upkSeqOut, upkQsOut;
+    ofstream         upkfile(UPK_FILENAME + to_string(threadID),
+                             std::ios_base::app);
+    string           upkHdrOut, upkSeqOut, upkQsOut;
     
     while (in.peek() != EOF)
     {

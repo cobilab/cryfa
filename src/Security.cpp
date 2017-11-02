@@ -42,9 +42,8 @@ string Security::extractPass () const
     ifstream in(keyFileName);
     char     c;
     string   pass;
-    pass.clear();
     
-    while (in.get(c))    pass += c;
+    pass.clear();    while (in.get(c))  pass += c;
     
     in.close();
     return pass;
@@ -76,7 +75,7 @@ void Security::encrypt ()
 //    printKey(key);    // Debug
     
     // Encrypt
-    const char* inFile = PCKD_FILENAME;
+    const char* inFile = PCKD_FILENAME.c_str();
     CBC_Mode<CryptoPP::AES>::Encryption
             cbcEnc(key, (size_t) AES::DEFAULT_KEYLENGTH, iv);
     FileSource(inFile, true,
@@ -146,9 +145,7 @@ void Security::decrypt ()
     { cerr << "Error: failed opening \"" << inFileName << "\".\n";    exit(1); }
     
     // Watermark
-    string watermark = "#cryfa v";
-    watermark += to_string(VERSION_CRYFA);    watermark += ".";
-    watermark += to_string(RELEASE_CRYFA);    watermark += "\n";
+    string watermark = "#cryfa v" + VERSION_CRYFA + "." + RELEASE_CRYFA + "\n";
     
     // Invalid encrypted file
     string line;    getline(in, line);
@@ -188,7 +185,7 @@ void Security::decrypt ()
 //        cerr << " block size: " << AES::BLOCKSIZE        << '\n';
 //    }
     
-    const char* outFile = DEC_FILENAME;
+    const char* outFile = DEC_FILENAME.c_str();
     CBC_Mode<CryptoPP::AES>::Decryption
             cbcDec(key, (size_t) AES::DEFAULT_KEYLENGTH, iv);
     FileSource(in, true,

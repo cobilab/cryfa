@@ -32,8 +32,7 @@ void EnDecrypto::buildHashTbl (htbl_t &map, const string &strIn, short keyLen)
 {
     u64 elementNo = 0;
     string element;    element.reserve(keyLen);
-    map.clear();
-    map.reserve((u64) std::pow(strIn.size(), keyLen));
+    map.clear();       map.reserve((u64) std::pow(strIn.size(), keyLen));
     
     switch (keyLen)
     {
@@ -126,8 +125,7 @@ void EnDecrypto::buildUnpackTbl (vector<string> &unpack, const string &strIn,
                                  u16 keyLen)
 {
     string element;    element.reserve(keyLen);
-    unpack.clear();
-    unpack.reserve((u64) std::pow(strIn.size(), keyLen));
+    unpack.clear();    unpack.reserve((u64) std::pow(strIn.size(), keyLen));
     
     switch (keyLen)
     {
@@ -243,8 +241,8 @@ u16 EnDecrypto::largePackIndex (const string &key, const htbl_t &map)
  */
 void EnDecrypto::packSeq (string &packedSeq, const string &seq)
 {
-    bool firstNotIn, secondNotIn, thirdNotIn;
-    char s0, s1, s2;
+    bool   firstNotIn, secondNotIn, thirdNotIn;
+    char   s0, s1, s2;
     string tuple;   tuple.reserve(3);
     string::const_iterator i = seq.begin(),   iEnd = seq.end()-2;
     
@@ -323,9 +321,9 @@ inline void EnDecrypto::packLarge (string &packed, const string &strIn,
                                    const string &hdrQs, const htbl_t &map)
 {
     string tuple;    tuple.reserve(3);
-    bool firstNotIn, secondNotIn, thirdNotIn;
-    char s0, s1, s2;
-    u16 shortTuple;
+    bool   firstNotIn, secondNotIn, thirdNotIn;
+    char   s0, s1, s2;
+    u16    shortTuple;
     string hQ = hdrQs;    // header/quality score
     // ASCII char after the last char in QUALITY_SCORES string
     const char XChar = (char) (hQ.back() + 1);
@@ -414,7 +412,6 @@ void EnDecrypto::pack_2to1 (string &packed, const string &strIn,
                             const htbl_t &map)
 {
     string tuple;    tuple.reserve(2);
-    
     string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-1;
     
     for (; i < iEnd; i += 2)
@@ -438,7 +435,6 @@ void EnDecrypto::pack_3to1 (string &packed, const string &strIn,
                             const htbl_t &map)
 {
     string tuple;    tuple.reserve(3);
-    
     string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-2;
 
     for (; i < iEnd; i += 3)
@@ -619,8 +615,8 @@ char EnDecrypto::penaltySym (char c)
 void EnDecrypto::unpackLarge (string &out, string::iterator &i,
                               char XChar, const vector<string> &unpack)
 {
-    byte leftB, rightB;
-    u16 doubleB;                      // Double byte
+    byte   leftB, rightB;
+    u16    doubleB;                      // Double byte
     string tpl;    tpl.reserve(3);    // Tuplet
     out.clear();
 
@@ -676,7 +672,7 @@ void EnDecrypto::unpack_2B (string &out, string::iterator &i,
                             const vector<string> &unpack)
 {
     byte leftB, rightB;
-    u16 doubleB;     // Double byte
+    u16  doubleB;     // Double byte
     out.clear();
     
     for (; *i != (char) 254; i += 2)
