@@ -86,7 +86,7 @@ void Security::encrypt ()
     // Encryption duration in seconds
     std::chrono::duration<double> elapsed = finishTime - startTime;
     
-    cerr << (verbose ? "Encryption done," : "Done,") << " in "
+    cerr << (VERBOSE ? "Encryption done," : "Done,") << " in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
     
     // Delete packed file
@@ -113,7 +113,7 @@ void Security::encrypt ()
                      (context.c_str()), context.length() + 1);
     stfEncryptor.MessageEnd();
 
-//    if (verbose)
+//    if (VERBOSE)
 //    {
 //        cerr << "   sym size: " << context.size()    << '\n';
 //        cerr << "cipher size: " << cipherText.size() << '\n';
@@ -179,7 +179,7 @@ void Security::decrypt ()
 //    string cipherText( (std::istreambuf_iterator<char> (in)),
 //                       std::istreambuf_iterator<char> () );
 
-//    if (verbose)
+//    if (VERBOSE)
 //    {
 //        cerr << "cipher size: " << cipherText.size()-1 << '\n';
 //        cerr << " block size: " << AES::BLOCKSIZE        << '\n';
@@ -196,7 +196,7 @@ void Security::decrypt ()
     // Decryption duration in seconds
     std::chrono::duration<double> elapsed = finishTime - startTime;
     
-    cerr << (verbose ? "Decryption done," : "Done,") << " in "
+    cerr << (VERBOSE ? "Decryption done," : "Done,") << " in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
     
     in.close();

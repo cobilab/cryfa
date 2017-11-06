@@ -19,9 +19,7 @@
 class Security
 {
 public:
-    static bool   disableShuffle; /**< @brief Disable shuffle */
-    static bool   verbose;        /**< @brief Verbose mode */
-    static string inFileName;     /**< @brief Input file name */
+    static string inFileName;    /**< @brief  file name */
     static string keyFileName;    /**< @brief Password file name */
 
     void   decrypt ();

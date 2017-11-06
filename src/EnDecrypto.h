@@ -23,8 +23,6 @@ using std::vector;
 class EnDecrypto : public Security
 {
 public:
-    static byte nThreads;       /**< @brief Number of threads */
-    
     EnDecrypto        () = default;
     void packLHdrFaFq (string&, const string&, const htbl_t&);
     void packLQsFq    (string&, const string&, const htbl_t&);
@@ -50,12 +48,14 @@ protected:
     void buildUnpackTbl     (vector<string>&, const string&, u16);
     byte dnaPackIndex       (const string&);
     u16  largePackIndex     (const string&, const htbl_t&);
-    inline void packLarge   (string&, const string&,
-                             const string&, const htbl_t&);
     void packSeq            (string&, const string&);
     void unpackSeq          (string&, string::iterator&);
     void unpackLarge        (string&, string::iterator&, char,
                              const vector<string>&);
+    
+private:
+    inline void packLarge   (string&, const string&, const string&,
+                             const htbl_t&);
     char penaltySym         (char);
 };
 

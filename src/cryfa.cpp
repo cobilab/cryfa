@@ -41,16 +41,16 @@ using std::setprecision;
 
 /**
  * @brief  Find file type: FASTA (A), FASTQ (Q), none (n)
- * @param  inFileName  Input file name
+ * @param  inFile  Input file name
  * @return A, Q or n
  */
-inline char fileType (const string& inFileName)
+inline char fileType (const string& inFile)
 {
     char     c;
-    ifstream in(inFileName);
+    ifstream in(inFile);
     
     if (!in.good())
-    { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
+    { cerr << "Error: failed opening '" << inFile << "'.\n";    exit(1); }
     
     // Skip leading blank lines or spaces
     while (in.peek()=='\n' || in.peek()==' ')    in.get(c);
@@ -118,13 +118,10 @@ inline void checkPass (const string& keyFileName, const bool k_flag)
     }
 }
 
-// Instantiation of static variables in EnDecrypto class
-byte   EnDecrypto::nThreads      = DEFAULT_N_THR;
 // Instantiation of static variables in Security class
-bool   Security::disableShuffle  = false;
-bool   Security::verbose         = false;
 string Security::inFileName      = "";
 string Security::keyFileName     = "";
+
 
 /**
  * @brief Main function
@@ -139,8 +136,8 @@ int main (int argc, char* argv[])
     FASTA      fastaObj;
     FASTQ      fastqObj;
     secObj.inFileName = argv[argc-1];  // Input file name
-    cryptObj.nThreads = DEFAULT_N_THR; // Initialize number of threads
-    
+//    inFileName = argv[argc-1];  // Input file name
+
     static int h_flag, a_flag, v_flag, d_flag, s_flag;
     bool       k_flag = false;
     int        c;                      // Deal with getopt_long()
@@ -164,7 +161,7 @@ int main (int argc, char* argv[])
         option_index = 0;
         if ((c = getopt_long(argc, argv, ":havsdk:t:",
                              long_options, &option_index)) == -1)         break;
-        
+
         switch (c)
         {
             case 0:
@@ -173,30 +170,30 @@ int main (int argc, char* argv[])
                 cout << "option '" << long_options[option_index].name << "'\n";
                 if (optarg)    cout << " with arg " << optarg << '\n';
                 break;
-                
+
             case 'k':
                 k_flag = true;
                 secObj.keyFileName = string(optarg);
                 break;
-                
+
             case 'h':  h_flag=1;    Help();                               break;
             case 'a':  a_flag=1;    About();                              break;
-            case 'v':  v_flag=1;    secObj.verbose = true;                break;
-            case 's':  s_flag=1;    secObj.disableShuffle = true;         break;
+            case 'v':  v_flag=1;    VERBOSE = true;                       break;
+            case 's':  s_flag=1;    DISABLE_SHUFFLE = true;               break;
             case 'd':  d_flag=1;                                          break;
-            case 't':  cryptObj.nThreads = (byte) stoi(string(optarg));   break;
+            case 't':  N_THREADS = (byte) stoi(string(optarg));           break;
 
             default:
                 cerr << "Option '" << (char) optopt << "' is invalid.\n"; break;
         }
     }
-    
+
     // Check password file
     if (!h_flag && !a_flag)    checkPass(secObj.keyFileName, k_flag);
-    
+
     if (v_flag)
         cerr << "Verbose mode on.\n";
-    
+
     if (d_flag)
     {
         cryptObj.decrypt();                                         // Decrypt
@@ -221,20 +218,21 @@ int main (int argc, char* argv[])
 
         return 0;
     }
-    
+
     if (!h_flag && !a_flag)
     {//todo sam
         switch (fileType(secObj.inFileName))
+//        switch (fileType(inFileName))
         {
             case 'A':  cerr<<"Compacting...\n";   fastaObj.compress();    break;
             case 'Q':  cerr<<"Compacting...\n";   fastqObj.compress();    break;
             case 'S':  cerr<<"Compacting...\n";   cerr<<"SAM";            break;
-            case 'n':
-            default :  cerr<<"Error: \"" << secObj.inFileName << "\" is not a"
-                           <<" valid FASTA or FASTQ file.\n";
-                       return 0;                                          break;
+//            case 'n':
+//            default :  cerr<<"Error: \"" << secObj.inFileName << "\" is not a"
+//                           <<" valid FASTA or FASTQ file.\n";
+//                       return 0;                                          break;
         }
-        
+
 //        // Stop timer
 //        high_resolution_clock::time_point finishTime =
 //                high_resolution_clock::now();

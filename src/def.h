@@ -90,6 +90,13 @@ constexpr byte KEYLEN_C4     = 2;   /**< @brief 2 to 1 byte */
 constexpr byte KEYLEN_C5     = 3;   /**< @brief 3 to 2 byte */
 
 
+// Command line input arguments
+static bool   VERBOSE         = false;          /**< @brief Verbose mode */
+static bool   DISABLE_SHUFFLE = false;          /**< @brief Disable shuffle */
+static byte   N_THREADS       = DEFAULT_N_THR;  /**< @brief Number of threads */
+//static string inFileName = "";    /**< @brief Input file name */
+
+
 /**
  * @brief Lookup table for unpacking -- 216 elements
  * @hideinitializer

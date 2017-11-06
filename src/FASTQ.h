@@ -49,7 +49,7 @@ public:
     FASTQ            () = default;
     void compress    ();
     void decompress  ();
-    
+
 private:
     bool justPlus = true;   /**< @brief If line 3 is just +  @hideinitializer */
     

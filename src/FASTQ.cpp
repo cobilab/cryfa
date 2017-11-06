@@ -40,12 +40,12 @@ void FASTQ::compress ()
     high_resolution_clock::time_point startTime = high_resolution_clock::now();
     
     string   line;
-    thread   arrThread[nThreads];
+    thread   arrThread[N_THREADS];
     byte     t;                   // For threads
     string   headers, qscores;
     packfq_s pkStruct;            // Collection of inputs to pass to pack...
     
-    if (verbose)    cerr << "Calculating number of different characters...\n";
+    if (VERBOSE)    cerr << "Calculating number of different characters...\n";
     
     // Gather different chars and max length in all headers and quality scores
     gatherHdrQs(headers, qscores);
@@ -54,7 +54,7 @@ void FASTQ::compress ()
     const size_t qscoresLen = qscores.length();
     
     // Show number of different chars in headers and qs -- Ignore '@'=64 in hdr
-    if (verbose)
+    if (VERBOSE)
         cerr << "In headers, they are " << headersLen << ".\n"
              << "In quality scores, they are " << qscoresLen << ".\n";
     
@@ -162,15 +162,15 @@ void FASTQ::compress ()
     pkStruct.packQSFPtr  = packQS;
     
     // Distribute file among threads, for reading and packing
-    for (t = 0; t != nThreads; ++t)
+    for (t = 0; t != N_THREADS; ++t)
         arrThread[t] = thread(&FASTQ::pack, this, pkStruct, t);
-    for (t = 0; t != nThreads; ++t)
+    for (t = 0; t != N_THREADS; ++t)
         if (arrThread[t].joinable())    arrThread[t].join();
     
-    if (verbose)    cerr << "Shuffling done!\n";
+    if (VERBOSE)    cerr << "Shuffling done!\n";
     
     // Join partially packed files
-    ifstream pkFile[nThreads];
+    ifstream pkFile[N_THREADS];
     string context;
     
     // Watermark for encrypted file
@@ -179,19 +179,19 @@ void FASTQ::compress ()
     // Open packed file
     ofstream pckdFile(PCKD_FILENAME);
     pckdFile << (char) 126;                  // Let decryptor know this is FASTQ
-    pckdFile << (!disableShuffle ? (char) 128 : (char) 129); // Shuffling on/off
+    pckdFile << (!DISABLE_SHUFFLE ? (char) 128 : (char) 129); //Shuffling on/off
     pckdFile << headers;                     // Send headers to decryptor
     pckdFile << (char) 254;                  // To detect headers in dec.
     pckdFile << qscores;                     // Send qscores to decryptor
     pckdFile << (hasJustPlus() ? (char) 253 : '\n');         // If just '+'
     
     // Open input files
-    for (t = 0; t != nThreads; ++t)   pkFile[t].open(PK_FILENAME+to_string(t));
+    for (t = 0; t != N_THREADS; ++t)   pkFile[t].open(PK_FILENAME+to_string(t));
     
     bool prevLineNotThrID;                 // If previous line was "THR=" or not
     while (!pkFile[0].eof())
     {
-        for (t = 0; t != nThreads; ++t)
+        for (t = 0; t != N_THREADS; ++t)
         {
             prevLineNotThrID = false;
             
@@ -210,7 +210,7 @@ void FASTQ::compress ()
     // Close/delete input/output files
     pckdFile.close();
     string pkFileName;
-    for (t = 0; t != nThreads; ++t)
+    for (t = 0; t != N_THREADS; ++t)
     {
         pkFile[t].close();
         pkFileName=PK_FILENAME;    pkFileName+=to_string(t);
@@ -222,7 +222,7 @@ void FASTQ::compress ()
     // Compression duration in seconds
     std::chrono::duration<double> elapsed = finishTime - startTime;
     
-    cerr << (verbose ? "Compaction done," : "Done,") << " in "
+    cerr << (VERBOSE ? "Compaction done," : "Done,") << " in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
     
     // Cout encrypted content
@@ -300,10 +300,10 @@ void FASTQ::pack (const packfq_s &pkStruct, byte threadID)
         }
         
         // shuffle
-        if (!disableShuffle)
+        if (!DISABLE_SHUFFLE)
         {
             mutxFQ.lock();//----------------------------------------------------
-            if (verbose && shuffInProgress)    cerr << "Shuffling...\n";
+            if (VERBOSE && shuffInProgress)    cerr << "Shuffling...\n";
             
             shuffInProgress = false;
             mutxFQ.unlock();//--------------------------------------------------
@@ -323,7 +323,7 @@ void FASTQ::pack (const packfq_s &pkStruct, byte threadID)
         pkfile << context << '\n';
         
         // Ignore to go to the next related chunk
-        for (u64 l = (u64) (nThreads-1)*BlockLine; l--;)   IGNORE_THIS_LINE(in);
+        for (u64 l = (u64) (N_THREADS-1)*BlockLine; l--;)  IGNORE_THIS_LINE(in);
     }
     
     pkfile.close();
@@ -438,7 +438,7 @@ void FASTQ::decompress ()
     string     headers, qscores;
     unpackfq_s upkStruct;           // Collection of inputs to pass to unpack...
     string     chunkSizeStr;        // Chunk size (string) -- For unshuffling
-    thread     arrThread[nThreads]; // Array of threads
+    thread     arrThread[N_THREADS];// Array of threads
     byte       t;                   // For threads
     u64        offset;              // To traverse decompressed file
     ifstream   in(DEC_FILENAME);
@@ -454,7 +454,7 @@ void FASTQ::decompress ()
     u16 keyLen_hdr = 0,  keyLen_qs = 0;
     
     // Show number of different chars in headers and qs -- ignore '@'=64
-    if (verbose)
+    if (VERBOSE)
         cerr << headersLen << " different characters are in headers.\n"
              << qscoresLen << " different characters are in quality scores.\n";
     
@@ -511,7 +511,7 @@ void FASTQ::decompress ()
         buildUnpackTbl(upkStruct.qsUnpack,  qscores, keyLen_qs);
         
         // Distribute file among threads, for reading and unpacking
-        for (t = 0; t != nThreads; ++t)
+        for (t = 0; t != N_THREADS; ++t)
         {
             in.get(c);
             if (c == (char) 253)
@@ -534,10 +534,10 @@ void FASTQ::decompress ()
             if (in.peek() == 252)    break;
         }
         // Join threads
-        for (t = 0; t != nThreads; ++t)
+        for (t = 0; t != N_THREADS; ++t)
             if (arrThread[t].joinable())    arrThread[t].join();
         
-        if (verbose)    cerr << "Unshuffling done!\n";
+        if (VERBOSE)    cerr << "Unshuffling done!\n";
     }
     else if (headersLen <= MAX_C5 && qscoresLen > MAX_C5)
     {
@@ -551,7 +551,7 @@ void FASTQ::decompress ()
         buildUnpackTbl(upkStruct.qsUnpack,  decQscoresX, keyLen_qs);
         
         // Distribute file among threads, for reading and unpacking
-        for (t = 0; t != nThreads; ++t)
+        for (t = 0; t != N_THREADS; ++t)
         {
             in.get(c);
             if (c == (char) 253)
@@ -573,10 +573,10 @@ void FASTQ::decompress ()
             if (in.peek() == 252)    break;
         }
         // Join threads
-        for (t = 0; t != nThreads; ++t)
+        for (t = 0; t != N_THREADS; ++t)
             if (arrThread[t].joinable())    arrThread[t].join();
         
-        if (verbose)    cerr << "Unshuffling done!\n";
+        if (VERBOSE)    cerr << "Unshuffling done!\n";
     }
     else if (headersLen > MAX_C5 && qscoresLen > MAX_C5)
     {
@@ -593,7 +593,7 @@ void FASTQ::decompress ()
         buildUnpackTbl(upkStruct.qsUnpack,  decQscoresX, keyLen_qs);
         
         // Distribute file among threads, for reading and unpacking
-        for (t = 0; t != nThreads; ++t)
+        for (t = 0; t != N_THREADS; ++t)
         {
             in.get(c);
             if (c == (char) 253)
@@ -614,10 +614,10 @@ void FASTQ::decompress ()
             if (in.peek() == 252)    break;
         }
         // Join threads
-        for (t = 0; t != nThreads; ++t)
+        for (t = 0; t != N_THREADS; ++t)
             if (arrThread[t].joinable())    arrThread[t].join();
         
-        if (verbose)    cerr << "Unshuffling done!\n";
+        if (VERBOSE)    cerr << "Unshuffling done!\n";
     }
     else if (headersLen > MAX_C5 && qscoresLen <= MAX_C5)
     {
@@ -631,7 +631,7 @@ void FASTQ::decompress ()
         buildUnpackTbl(upkStruct.qsUnpack,  qscores, keyLen_qs);
         
         // Distribute file among threads, for reading and unpacking
-        for (t = 0; t != nThreads; ++t)
+        for (t = 0; t != N_THREADS; ++t)
         {
             in.get(c);
             if (c == (char) 253)
@@ -653,10 +653,10 @@ void FASTQ::decompress ()
             if (in.peek() == 252)    break;
         }
         // Join threads
-        for (t = 0; t != nThreads; ++t)
+        for (t = 0; t != N_THREADS; ++t)
             if (arrThread[t].joinable())    arrThread[t].join();
         
-        if (verbose)    cerr << "Unshuffling done!\n";
+        if (VERBOSE)    cerr << "Unshuffling done!\n";
     }
     
     // Close/delete decrypted file
@@ -665,14 +665,14 @@ void FASTQ::decompress ()
     std::remove(decFileName.c_str());
     
     // Join unpacked files
-    ifstream upkdFile[nThreads];
-    string line;
-    for (t = nThreads; t--;)   upkdFile[t].open(UPK_FILENAME+to_string(t));
+    ifstream upkdFile[N_THREADS];
+    string   line;
+    for (t = N_THREADS; t--;)    upkdFile[t].open(UPK_FILENAME+to_string(t));
     
     bool prevLineNotThrID;            // If previous line was "THRD=" or not
     while (!upkdFile[0].eof())
     {
-        for (t = 0; t != nThreads; ++t)
+        for (t = 0; t != N_THREADS; ++t)
         {
             prevLineNotThrID = false;
             
@@ -695,12 +695,12 @@ void FASTQ::decompress ()
     // Decompression duration in seconds
     std::chrono::duration<double> elapsed = finishTime - startTime;
     
-    cerr << (verbose ? "Decompression done," : "Done,") << " in "
+    cerr << (VERBOSE ? "Decompression done," : "Done,") << " in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
     
     // Close/delete input/output files
     string upkdFileName;
-    for (t = nThreads; t--;)
+    for (t = N_THREADS; t--;)
     {
         upkdFile[t].close();
         upkdFileName=UPK_FILENAME;    upkdFileName+=to_string(t);
@@ -747,7 +747,7 @@ void FASTQ::unpackHSQS (const unpackfq_s &upkStruct, byte threadID)
         if (shuffled)
         {
             mutxFQ.lock();//----------------------------------------------------
-            if (verbose && shuffInProgress)    cerr << "Unshuffling...\n";
+            if (VERBOSE && shuffInProgress)    cerr << "Unshuffling...\n";
             
             shuffInProgress = false;
             mutxFQ.unlock();//--------------------------------------------------
@@ -772,7 +772,7 @@ void FASTQ::unpackHSQS (const unpackfq_s &upkStruct, byte threadID)
         } while (++i != decText.end());        // If trouble: change "!=" to "<"
         
         // Update the chunk size and positions (beg & end)
-        for (byte t = nThreads; t--;)
+        for (byte t = N_THREADS; t--;)
         {
             in.seekg(endPos);
             in.get(c);
@@ -827,7 +827,7 @@ void FASTQ::unpackHSQL (const unpackfq_s &upkStruct, byte threadID)
         if (shuffled)
         {
             mutxFQ.lock();//----------------------------------------------------
-            if (verbose && shuffInProgress)    cerr << "Unshuffling...\n";
+            if (VERBOSE && shuffInProgress)    cerr << "Unshuffling...\n";
             
             shuffInProgress = false;
             mutxFQ.unlock();//--------------------------------------------------
@@ -853,7 +853,7 @@ void FASTQ::unpackHSQL (const unpackfq_s &upkStruct, byte threadID)
         } while (++i != decText.end());        // If trouble: change "!=" to "<"
         
         // Update the chunk size and positions (beg & end)
-        for (byte t = nThreads; t--;)
+        for (byte t = N_THREADS; t--;)
         {
             in.seekg(endPos);
             in.get(c);
@@ -908,7 +908,7 @@ void FASTQ::unpackHLQS (const unpackfq_s &upkStruct, byte threadID)
         if (shuffled)
         {
             mutxFQ.lock();//----------------------------------------------------
-            if (verbose && shuffInProgress)    cerr << "Unshuffling...\n";
+            if (VERBOSE && shuffInProgress)    cerr << "Unshuffling...\n";
             
             shuffInProgress = false;
             mutxFQ.unlock();//--------------------------------------------------
@@ -934,7 +934,7 @@ void FASTQ::unpackHLQS (const unpackfq_s &upkStruct, byte threadID)
         } while (++i != decText.end());        // If trouble: change "!=" to "<"
         
         // Update the chunk size and positions (beg & end)
-        for (byte t = nThreads; t--;)
+        for (byte t = N_THREADS; t--;)
         {
             in.seekg(endPos);
             in.get(c);
@@ -986,7 +986,7 @@ void FASTQ::unpackHLQL (const unpackfq_s &upkStruct, byte threadID)
         if (shuffled)
         {
             mutxFQ.lock();//----------------------------------------------------
-            if (verbose && shuffInProgress)    cerr << "Unshuffling...\n";
+            if (VERBOSE && shuffInProgress)    cerr << "Unshuffling...\n";
             
             shuffInProgress = false;
             mutxFQ.unlock();//--------------------------------------------------
@@ -1013,7 +1013,7 @@ void FASTQ::unpackHLQL (const unpackfq_s &upkStruct, byte threadID)
         } while (++i != decText.end());        // If trouble: change "!=" to "<"
         
         // Update the chunk size and positions (beg & end)
-        for (byte t = nThreads; t--;)
+        for (byte t = N_THREADS; t--;)
         {
             in.seekg(endPos);
             in.get(c);
