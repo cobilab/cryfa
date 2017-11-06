@@ -65,16 +65,16 @@ RUN_METHODS=1
       RUN_FQC=0                    # FQC
       RUN_CRYFA_FQ=0               # cryfa
       # results
-      PRINT_RESULTS_COMP=0
+      PRINT_RESULTS_COMP=1
 
   # encrypt/decrypt
   RUN_METHODS_ENC=0
       RUN_AESCRYPT=0               # AES crypt
       # results
-      PRINT_RESULTS_ENC=0
+      PRINT_RESULTS_ENC=1
 
   # compress/decompress plus encrypt/decrypt
-  RUN_METHODS_COMP_ENC=0
+  RUN_METHODS_COMP_ENC=1
       # FASTA
       RUN_GZIP_FA_AESCRYPT=0       # gzip + AES crypt
       RUN_BZIP2_FA_AESCRYPT=0      # bzip2 + AES crypt
@@ -90,7 +90,7 @@ RUN_METHODS=1
       RUN_DSRC_AESCRYPT=0          # DSRC + AES crypt
       RUN_FQC_AESCRYPT=0           # FQC + AES crypt
       # results
-      PRINT_RESULTS_COMP_ENC=0
+      PRINT_RESULTS_COMP_ENC=1
 
   # cryfa exclusive
   CRYFA_EXCLUSIVE=0
@@ -1322,14 +1322,14 @@ then
       sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_detail_FA.$INF;
 
       # for each dataset
-      c_each="UnC_Ratio\tC_Speed(MB/s)\tC_Time_cpu(m)\tC_Mem(MB)"
+      c_each="C_Ratio\tC_Speed(MB/s)\tC_Time_cpu(m)\tC_Mem(MB)"
       d_each="D_Speed(MB/s)\tD_Time_cpu(m)\tD_Mem(MB)"
       printf "Dataset\tSize(MB)\tC_Method\t$c_each\t$d_each\tEq\n" \
           > ${INWF}_FA.tmp
       cat ${INWF}_detail_FA.$INF | awk 'NR>1' | awk 'BEGIN{}{
        printf "%s\t%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.f\t%.2f\t%.f\t%.1f\n",
-       $1, $2/(1024*1024), $3, $2/($2-$4), $2/(1024*1024*$5), $6/60,
-       $7/1024, $4/(1024*1024*$8), $9/60, $10/1024, $11;
+       $1, $2/(1024*1024), $3, $2/$4, $2/(1024*1024*$5), $6/60, $7/1024,
+       $4/(1024*1024*$8), $9/60, $10/1024, $11;
        }'  >> ${INWF}_FA.tmp
 
        for i in $FASTA_DATASET; do
@@ -1340,7 +1340,7 @@ then
        rm -f ${INWF}_FA.tmp
 
       # total
-      c_tot="UnC_Ratio\tC_Speed(MB/s)\tC_Time_cpu(m)"
+      c_tot="C_Ratio\tC_Speed(MB/s)\tC_Time_cpu(m)"
       d_tot="D_Speed(MB/s)\tD_Time_cpu(m)"
       printf "Size(MB)\tC_Method\t$c_tot\t$d_tot\tEq\n" \
           > ${INWF}_tot_FA.$INF;
@@ -1349,8 +1349,8 @@ then
        s+=$2;  cS+=$4;  cTR+=$5;  cTC+=$6;  dTR+=$8;  dTC+=$9;  eq+=$11;
        if (NR % dsSize==0) {
         printf "%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.2f\t%.1f\n",
-               s/(1024*1024), $3, s/(s-cS), s/(1024*1024*cTR),
-               cTC/60, cS/(1024*1024*dTR), dTC/60, eq;
+               s/(1024*1024), $3, s/cS, s/(1024*1024*cTR), cTC/60,
+               cS/(1024*1024*dTR), dTC/60, eq;
         s=0;   cS=0;   cTR=0;   cTC=0;   dTR=0;   dTC=0;   eq=0;
        }
        }' >> ${INWF}_tot_FA.$INF
@@ -1365,8 +1365,8 @@ then
           > ${INWF}_FQ.tmp
       cat ${INWF}_detail_FQ.$INF | awk 'NR>1' | awk 'BEGIN{}{
        printf "%s\t%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.f\t%.2f\t%.f\t%.1f\n",
-       $1, $2/(1024*1024), $3, $2/($2-$4), $2/(1024*1024*$5), $6/60,
-       $7/1024, $4/(1024*1024*$8), $9/60, $10/1024, $11;
+       $1, $2/(1024*1024), $3, $2/$4, $2/(1024*1024*$5), $6/60, $7/1024,
+       $4/(1024*1024*$8), $9/60, $10/1024, $11;
        }'  >> ${INWF}_FQ.tmp
 
        for i in $FASTQ_DATASET; do
@@ -1383,8 +1383,8 @@ then
        s+=$2;  cS+=$4;  cTR+=$5;  cTC+=$6;  dTR+=$8;  dTC+=$9;  eq+=$11;
        if (NR % dsSize==0) {
         printf "%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.2f\t%.1f\n",
-               s/(1024*1024), $3, s/(s-cS), s/(1024*1024*cTR),
-               cTC/60, cS/(1024*1024*dTR), dTC/60, eq;
+               s/(1024*1024), $3, s/cS, s/(1024*1024*cTR), cTC/60,
+               cS/(1024*1024*dTR), dTC/60, eq;
         s=0;   cS=0;   cTR=0;   cTC=0;   dTR=0;   dTC=0;   eq=0;
        }
        }' >> ${INWF}_tot_FQ.$INF
@@ -1445,14 +1445,14 @@ then
       sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_detail_FA.$INF;
 
       # for each dataset
-      en_each="UnEn_Ratio\tEn_Speed(MB/s)\tEn_Time_cpu(m)\tEn_Mem(MB)"
+      en_each="C_Ratio\tEn_Speed(MB/s)\tEn_Time_cpu(m)\tEn_Mem(MB)"
       de_each="De_Speed(MB/s)\tDe_Time_cpu(m)\tDe_Mem(MB)"
       printf "Dataset\tSize(MB)\tEn_Method\t$en_each\t$de_each\tEq\n" \
           > ${INWF}_FA.tmp
       cat ${INWF}_detail_FA.$INF | awk 'NR>1' | awk 'BEGIN{}{
        printf "%s\t%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.f\t%.2f\t%.f\t%.1f\n",
-       $1, $2/(1024*1024), $3, $2/($2-$4), $2/(1024*1024*$5), $6/60,
-       $7/1024, $4/(1024*1024*$8), $9/60, $10/1024, $11;
+       $1, $2/(1024*1024), $3, $2/$4, $2/(1024*1024*$5), $6/60, $7/1024,
+       $4/(1024*1024*$8), $9/60, $10/1024, $11;
        }'  >> ${INWF}_FA.tmp
 
        for i in $FASTA_DATASET; do
@@ -1467,7 +1467,7 @@ then
        rm -f ${INWF}_FA.tmp
 
       # total
-      en_tot="UnEn_Ratio\tEn_Speed(MB/s)\tEn_Time_cpu(m)"
+      en_tot="C_Ratio\tEn_Speed(MB/s)\tEn_Time_cpu(m)"
       de_tot="De_Speed(MB/s)\tDe_Time_cpu(m)"
       printf "Size(MB)\tEn_Method\t$en_tot\t$de_tot\tEq\n" \
           > ${INWF}_tot_FA.$INF;
@@ -1476,8 +1476,8 @@ then
        s+=$2;  cS+=$4;  cTR+=$5;  cTC+=$6;  dTR+=$8;  dTC+=$9;  eq+=$11;
        if (NR % dsSize==0) {
         printf "%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.2f\t%.1f\n",
-               s/(1024*1024), $3, s/(s-cS), s/(1024*1024*cTR),
-               cTC/60, cS/(1024*1024*dTR), dTC/60, eq;
+               s/(1024*1024), $3, s/cS, s/(1024*1024*cTR), cTC/60,
+               cS/(1024*1024*dTR), dTC/60, eq;
         s=0;   cS=0;   cTR=0;   cTC=0;   dTR=0;   dTC=0;   eq=0;
        }
        }' >> ${INWF}_tot_FA.$INF
@@ -1496,8 +1496,8 @@ then
           > ${INWF}_FQ.tmp
       cat ${INWF}_detail_FQ.$INF | awk 'NR>1' | awk 'BEGIN{}{
        printf "%s\t%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.f\t%.2f\t%.f\t%.1f\n",
-       $1, $2/(1024*1024), $3, $2/($2-$4), $2/(1024*1024*$5), $6/60,
-       $7/1024, $4/(1024*1024*$8), $9/60, $10/1024, $11;
+       $1, $2/(1024*1024), $3, $2/$4, $2/(1024*1024*$5), $6/60, $7/1024,
+       $4/(1024*1024*$8), $9/60, $10/1024, $11;
        }'  >> ${INWF}_FQ.tmp
 
        for i in $FASTQ_DATASET; do
@@ -1518,8 +1518,8 @@ then
        s+=$2;  cS+=$4;  cTR+=$5;  cTC+=$6;  dTR+=$8;  dTC+=$9;  eq+=$11;
        if (NR % dsSize==0) {
         printf "%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.2f\t%.1f\n",
-               s/(1024*1024), $3, s/(s-cS), s/(1024*1024*cTR),
-               cTC/60, cS/(1024*1024*dTR), dTC/60, eq;
+               s/(1024*1024), $3, s/cS, s/(1024*1024*cTR), cTC/60,
+               cS/(1024*1024*dTR), dTC/60, eq;
         s=0;   cS=0;   cTR=0;   cTC=0;   dTR=0;   dTC=0;   eq=0;
        }
        }' >> ${INWF}_tot_FQ.$INF
@@ -1616,14 +1616,14 @@ then
       sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_detail_FA.$INF;
 
       # for each dataset
-      cen_each="UnCEn_Ratio\tCEn_Speed(MB/s)\tCEn_Time_cpu(m)\tCEn_Mem(MB)"
+      cen_each="C_Ratio\tCEn_Speed(MB/s)\tCEn_Time_cpu(m)\tCEn_Mem(MB)"
       ded_each="DeD_Speed(MB/s)\tDeD_Time_cpu(m)\tDeD_Mem(MB)"
       printf "Dataset\tSize(MB)\tCEn_Method\t$cen_each\t$ded_each\tEq\n" \
           > ${INWF}_FA.tmp
       cat ${INWF}_detail_FA.$INF | awk 'NR>1' | awk 'BEGIN{}{
       printf "%s\t%.f\t%s+%s\t%.1f\t%.f\t%.2f\t%.f\t%.f\t%.2f\t%.f\t%.1f\n",
-       $1, $2/(1024*1024), $3, $4, $2/($2-$5), $2/(1024*1024*$6), $7/60,
-       $8/1024, $5/(1024*1024*$9), $10/60, $11/1024, $12;
+       $1, $2/(1024*1024), $3, $4, $2/$5, $2/(1024*1024*$6), $7/60, $8/1024,
+       $5/(1024*1024*$9), $10/60, $11/1024, $12;
        }'  >> ${INWF}_FA.tmp
 
        for i in $FASTA_DATASET; do
@@ -1638,7 +1638,7 @@ then
        rm -f ${INWF}_FA.tmp
 
       # total
-      cen_tot="UnCEn_Ratio\tCEn_Speed(MB/s)\tCEn_Time_cpu(m)"
+      cen_tot="C_Ratio\tCEn_Speed(MB/s)\tCEn_Time_cpu(m)"
       ded_tot="DeD_Speed(MB/s)\tDeD_Time_cpu(m)"
       printf "Size(MB)\tCEn_Method\t$cen_tot\t$ded_tot\tEq\n" \
           > ${INWF}_tot_FA.$INF;
@@ -1647,8 +1647,8 @@ then
        s+=$2; cenS+=$5; cenTR+=$6; cenTC+=$7; dedTR+=$9; dedTC+=$10; eq+=$12;
        if (NR % dsSize==0) {
         printf "%.f\t%s+%s\t%.1f\t%.f\t%.2f\t%.f\t%.2f\t%.1f\n",
-               s/(1024*1024), $3, $4, s/(s-cenS), s/(1024*1024*cenTR),
-               cenTC/60, cenS/(1024*1024*dedTR), dedTC/60, eq;
+               s/(1024*1024), $3, $4, s/cenS, s/(1024*1024*cenTR), cenTC/60,
+               cenS/(1024*1024*dedTR), dedTC/60, eq;
         s=0;  cenS=0;  cenTR=0;  cenTC=0;  dedTR=0;  dedTC=0;  eq=0;
        }
        }' >> ${INWF}_tot_FA.$INF
@@ -1667,8 +1667,8 @@ then
           > ${INWF}_FQ.tmp
       cat ${INWF}_detail_FQ.$INF | awk 'NR>1' | awk 'BEGIN{}{
        printf "%s\t%.f\t%s+%s\t%.1f\t%.f\t%.2f\t%.f\t%.f\t%.2f\t%.f\t%.1f\n",
-       $1, $2/(1024*1024), $3, $4, $2/($2-$5), $2/(1024*1024*$6), $7/60,
-       $8/1024, $5/(1024*1024*$9), $10/60, $11/1024, $12;
+       $1, $2/(1024*1024), $3, $4, $2/$5, $2/(1024*1024*$6), $7/60, $8/1024,
+       $5/(1024*1024*$9), $10/60, $11/1024, $12;
        }'  >> ${INWF}_FQ.tmp
 
        for i in $FASTQ_DATASET; do
@@ -1690,8 +1690,8 @@ then
        s+=$2; cenS+=$5; cenTR+=$6; cenTC+=$7; dedTR+=$9; dedTC+=$10; eq+=$12;
        if (NR % dsSize==0) {
         printf "%.f\t%s+%s\t%.1f\t%.f\t%.2f\t%.f\t%.2f\t%.1f\n",
-               s/(1024*1024), $3, $4, s/(s-cenS), s/(1024*1024*cenTR),
-               cenTC/60, cenS/(1024*1024*dedTR), dedTC/60, eq;
+               s/(1024*1024), $3, $4, s/cenS, s/(1024*1024*cenTR), cenTC/60,
+               cenS/(1024*1024*dedTR), dedTC/60, eq;
         s=0;  cenS=0;  cenTR=0;  cenTC=0;  dedTR=0;  dedTC=0;  eq=0;
        }
        }' >> ${INWF}_tot_FQ.$INF
@@ -1746,12 +1746,12 @@ then
       printf "\t%.3f\t%.f\t%d\n", d_cpuTime, $12, $13;
       }' >> ${INWF}_detail.$INF
 
-      c_each="UnC_Ratio\tC_Speed(MB/s)\tC_Time_cpu(m)\tC_Mem(MB)"
+      c_each="C_Ratio\tC_Speed(MB/s)\tC_Time_cpu(m)\tC_Mem(MB)"
       d_each="D_Speed(MB/s)\tD_Time_cpu(m)\tD_Mem(MB)"
       printf "Size(MB)\tThread\t$c_each\t$d_each\tEq\n" > $INWF.$INF
       cat ${INWF}_detail.$INF | awk 'NR>1' | awk 'BEGIN{}{
        printf "%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.f\t%.2f\t%.f\t%.1f\n",
-       $2/(1024*1024), $3, $2/($2-$4), $2/(1024*1024*$5), $6/60, $7/1024,
+       $2/(1024*1024), $3, $2/$4, $2/(1024*1024*$5), $6/60, $7/1024,
        $4/(1024*1024*$8), $9/60, $10/1024, $11;
        }'  >> $INWF.$INF
   }
