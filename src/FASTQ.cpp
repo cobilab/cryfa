@@ -304,7 +304,6 @@ void FASTQ::pack (const packfq_s &pkStruct, byte threadID)
         {
             mutxFQ.lock();//----------------------------------------------------
             if (VERBOSE && shuffInProgress)    cerr << "Shuffling...\n";
-            
             shuffInProgress = false;
             mutxFQ.unlock();//--------------------------------------------------
     
@@ -748,7 +747,6 @@ void FASTQ::unpackHSQS (const unpackfq_s &upkStruct, byte threadID)
         {
             mutxFQ.lock();//----------------------------------------------------
             if (VERBOSE && shuffInProgress)    cerr << "Unshuffling...\n";
-            
             shuffInProgress = false;
             mutxFQ.unlock();//--------------------------------------------------
     
@@ -828,7 +826,6 @@ void FASTQ::unpackHSQL (const unpackfq_s &upkStruct, byte threadID)
         {
             mutxFQ.lock();//----------------------------------------------------
             if (VERBOSE && shuffInProgress)    cerr << "Unshuffling...\n";
-            
             shuffInProgress = false;
             mutxFQ.unlock();//--------------------------------------------------
     
@@ -909,7 +906,6 @@ void FASTQ::unpackHLQS (const unpackfq_s &upkStruct, byte threadID)
         {
             mutxFQ.lock();//----------------------------------------------------
             if (VERBOSE && shuffInProgress)    cerr << "Unshuffling...\n";
-            
             shuffInProgress = false;
             mutxFQ.unlock();//--------------------------------------------------
     
@@ -987,7 +983,6 @@ void FASTQ::unpackHLQL (const unpackfq_s &upkStruct, byte threadID)
         {
             mutxFQ.lock();//----------------------------------------------------
             if (VERBOSE && shuffInProgress)    cerr << "Unshuffling...\n";
-            
             shuffInProgress = false;
             mutxFQ.unlock();//--------------------------------------------------
     

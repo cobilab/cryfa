@@ -338,11 +338,15 @@ void FASTA::decompress ()
         cerr << headers.length() << " different characters are in headers.\n";
     
     unpackFP_t unpackHdr;           // Function pointer
-
+    
     // Header -- Set unpack table and unpack function
-    set_unpackTbl_unpackFn(unpackHdr, headers, upkStruct);
-
+    set_unpackTbl_unpackFn(upkStruct, headers);
+    
     // Distribute file among threads, for reading and unpacking
+    typedef void (FASTA::*unpackHFP_t) (const unpackfa_s&, byte);
+    unpackHFP_t unpackH =
+            (headers.length() <= MAX_C5) ? &FASTA::unpackHS : &FASTA::unpackHL;
+    
     for (t = 0; t != N_THREADS; ++t)
     {
         in.get(c);
@@ -354,13 +358,8 @@ void FASTA::decompress ()
             
             upkStruct.begPos    = in.tellg();
             upkStruct.chunkSize = offset;
-            
-            if (headers.length() <= MAX_C5)
-            {
-                upkStruct.unpackHdrFP = unpackHdr;
-                arrThread[t]    = thread(&FASTA::unpackHS, this, upkStruct, t);
-            }
-            else { arrThread[t] = thread(&FASTA::unpackHL, this, upkStruct, t);}
+    
+            arrThread[t] = thread(unpackH, this, upkStruct, t);
             
             // Jump to the beginning of the next chunk
             in.seekg((std::streamoff) offset, std::ios_base::cur);
@@ -396,8 +395,7 @@ void FASTA::decompress ()
  * @param[out] upkStruct  Unpack structure
  * @param[in]  headers    Headers
  */
-void FASTA::set_unpackTbl_unpackFn (unpackFP_t &unpackHdr,
-                                   const string &headers, unpackfa_s &upkStruct)
+void FASTA::set_unpackTbl_unpackFn(unpackfa_s &upkStruct, const string &headers)
 {
     const size_t headersLen = headers.length();
     u16 keyLen_hdr = 0;
@@ -405,12 +403,12 @@ void FASTA::set_unpackTbl_unpackFn (unpackFP_t &unpackHdr,
     if (headersLen > MAX_C5)                keyLen_hdr = KEYLEN_C5;
     else if (headersLen > MAX_C4)                                       // Cat 5
     {
-        unpackHdr  = &EnDecrypto::unpack_2B;
+        upkStruct.unpackHdrFP = &EnDecrypto::unpack_2B;
         keyLen_hdr = KEYLEN_C5;
     }
     else
     {
-        unpackHdr  = &EnDecrypto::unpack_1B;
+        upkStruct.unpackHdrFP = &EnDecrypto::unpack_1B;
     
         if (headersLen > MAX_C3)            keyLen_hdr = KEYLEN_C4;     // Cat 4
         else if (headersLen==MAX_C3 || headersLen==MID_C3 || headersLen==MIN_C3)
@@ -420,11 +418,9 @@ void FASTA::set_unpackTbl_unpackFn (unpackFP_t &unpackHdr,
         else                                keyLen_hdr = 1;             // = 1
     }
     
+    // Build unpacking tables
     if (headersLen <= MAX_C5)
-    {
-        // Tables for unpacking
         buildUnpackTbl(upkStruct.hdrUnpack, headers, keyLen_hdr);
-    }
     else
     {
         const string decHeaders = headers.substr(headersLen - MAX_C5);
@@ -432,7 +428,6 @@ void FASTA::set_unpackTbl_unpackFn (unpackFP_t &unpackHdr,
         string decHeadersX = decHeaders;
         decHeadersX += (upkStruct.XChar_hdr = (char) (decHeaders.back() + 1));
         
-        // Tables for unpacking
         buildUnpackTbl(upkStruct.hdrUnpack, decHeadersX, keyLen_hdr);
     }
 }
@@ -454,7 +449,7 @@ void FASTA::unpackHS (const unpackfa_s &upkStruct, byte threadID)
     pos_t      endPos;
     ofstream   upkfile(UPK_FILENAME+to_string(threadID), std::ios_base::app);
     string     upkhdrOut, upkSeqOut;
-
+    
     while (in.peek() != EOF)
     {
         in.seekg(begPos);      // Read the file from this position
