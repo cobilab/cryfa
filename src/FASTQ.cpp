@@ -222,7 +222,7 @@ void FASTQ::compress ()
     // Compression duration in seconds
     std::chrono::duration<double> elapsed = finishTime - startTime;
     
-    cerr << (VERBOSE ? "Compaction done," : "Done,") << " in "
+    cerr << (VERBOSE ? "Compaction done" : "Done") << ", in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
     
     // Cout encrypted content
@@ -459,10 +459,10 @@ void FASTQ::decompress ()
              << qscoresLen << " different characters are in quality scores.\n";
     
     using unpackHdrPtr =
-    void (EnDecrypto::*) (string&, string::iterator&, const vector<string>&);
+       void (EnDecrypto::*) (string&, string::iterator&, const vector<string>&);
     unpackHdrPtr unpackHdr;                                  // Function pointer
     using unpackQSPtr =
-    void (EnDecrypto::*) (string&, string::iterator&, const vector<string>&);
+       void (EnDecrypto::*) (string&, string::iterator&, const vector<string>&);
     unpackQSPtr  unpackQS;                                   // Function pointer
     
     // Header

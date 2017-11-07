@@ -19,7 +19,7 @@
 class Security : protected InArgs
 {
 public:
-    void decrypt ();
+    void decrypt       ();
     
 protected:
     bool shuffInProgress=true;/**< @brief Shuffle in progress @hideinitializer*/
@@ -28,11 +28,11 @@ protected:
     void encrypt       ();
     void shuffle       (string&);
     void unshuffle     (string::iterator&, u64);
-
+    
 private:
-    u64  seed_shared;         /**< @brief Shared seed */
-
-    string extractPass ()  const;
+    u64  seed_shared;        /**< @brief Shared seed */
+    
+    string extractPass ()                       const;
     void newSrand      (u32);
     int  newRand       ();
     std::minstd_rand0 &randomEngine ();
@@ -40,8 +40,8 @@ private:
     void shuffSeedGen  ();
     void buildIV       (byte*, const string&);
     void buildKey      (byte*, const string&);
-    void printIV       (byte*)  const;
-    void printKey      (byte*)  const;
+    void printIV       (byte*)                  const;
+    void printKey      (byte*)                  const;
 };
 
 #endif //CRYFA_SECURITY_H

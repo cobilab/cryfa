@@ -17,20 +17,17 @@
 /** @brief Packing FASTA */
 struct packfa_s
 {
-    /** @brief Points to a header packing function */
-    void (EnDecrypto::*packHdrFPtr) (string&, const string&, const htbl_t&);
+    packFP_t packHdrFP;      /**< @brief Points to a header packing function */
 };
 
 /** @brief Unpakcing FASTA */
 struct unpackfa_s
 {
-    char  XChar_hdr;           /**< @brief Extra char if header's length > 39 */
-    pos_t begPos;              /**< @brief Begining position for each thread */
-    u64   chunkSize;           /**< @brief Chunk size */
-    vector<string> hdrUnpack;  /**< @brief Lookup table for unpacking headers */
-    /** @brief Points to a header unpacking function */
-    void (EnDecrypto::*unpackHdrFPtr)
-         (string&, string::iterator&, const vector<string>&);
+    char  XChar_hdr;         /**< @brief Extra char if header's length > 39 */
+    pos_t begPos;            /**< @brief Begining position for each thread */
+    u64   chunkSize;         /**< @brief Chunk size */
+    vector<string> hdrUnpack;/**< @brief Lookup table for unpacking headers */
+    unpackFP_t unpackHdrFP;  /**< @brief Points to a header unpacking function*/
 };
 
 /**
@@ -39,17 +36,19 @@ struct unpackfa_s
 class FASTA : public EnDecrypto
 {
 public:
-    FASTA           () = default;
-    void compress   ();
-    void decompress ();
+    FASTA                       () = default;
+    void compress               ();
+    void decompress             ();
 
 private:
-    void gatherHdrBs        (string&);
-    void set_HashTbl_packFn (packfa_s&, const string&);
-    void pack               (const packfa_s&,   byte);
-    void joinPackedFiles    (const string&)  const;
-    void unpackHS           (const unpackfa_s&, byte);
-    void unpackHL           (const unpackfa_s&, byte);
+    void gatherHdrBs            (string&);
+    void set_hashTbl_packFn     (packfa_s&, const string&);
+    void pack                   (const packfa_s&, byte);
+    void joinPackedFiles        (const string&)                           const;
+    void set_unpackTbl_unpackFn (unpackFP_t&, const string&, unpackfa_s&);
+    void unpackHS               (const unpackfa_s&, byte);
+    void unpackHL               (const unpackfa_s&, byte);
+    void joinUnpackedFiles      ()                                        const;
 };
 
 #endif //CRYFA_FASTA_H

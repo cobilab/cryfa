@@ -51,25 +51,25 @@ void FASTA::compress ()
     if (VERBOSE)   cerr << "In headers, they are " << headers.length() << ".\n";
     
     // Set Hash table and pack function
-    set_HashTbl_packFn(pkStruct, headers);
+    set_hashTbl_packFn(pkStruct, headers);
     
     // Distribute file among threads, for reading and packing
     for (t = 0; t != N_THREADS; ++t)
         arrThread[t] = thread(&FASTA::pack, this, pkStruct, t);
     for (t = 0; t != N_THREADS; ++t)
         if (arrThread[t].joinable())    arrThread[t].join();
-
+    
     if (VERBOSE)    cerr << "Shuffling done!\n";
     
     // Join partially packed files
     joinPackedFiles(headers);
-
+    
     // Stop timer for compression
     high_resolution_clock::time_point finishTime = high_resolution_clock::now();
     // Compression duration in seconds
     std::chrono::duration<double> elapsed = finishTime - startTime;
     
-    cerr << (VERBOSE ? "Compaction done," : "Done,") << " in "
+    cerr << (VERBOSE ? "Compaction done" : "Done") << ", in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
     
     // Cout encrypted content
@@ -81,14 +81,10 @@ void FASTA::compress ()
  * @param[out] pkStruct  Pack structure
  * @param[in]  headers   Headers
  */
-void FASTA::set_HashTbl_packFn (packfa_s &pkStruct, const string &headers)
+void FASTA::set_hashTbl_packFn (packfa_s &pkStruct, const string &headers)
 {
     const size_t headersLen = headers.length();
-
-    // Function pointer
-    using packHdrPointer = void (EnDecrypto::*)
-                                (string&, const string&, const htbl_t&);
-    packHdrPointer packHdr;
+    packFP_t packHdr;    // Function pointer
     
     // Header
     if (headersLen > MAX_C5)             // If len > 39, filter the last 39 ones
@@ -136,7 +132,7 @@ void FASTA::set_HashTbl_packFn (packfa_s &pkStruct, const string &headers)
         }
     }
     
-    pkStruct.packHdrFPtr = packHdr;
+    pkStruct.packHdrFP = packHdr;
 }
 
 /**
@@ -146,12 +142,10 @@ void FASTA::set_HashTbl_packFn (packfa_s &pkStruct, const string &headers)
  */
 void FASTA::pack (const packfa_s &pkStruct, byte threadID)
 {
-    using packHdrFPtr   = void (EnDecrypto::*)
-                               (string&, const string&, const htbl_t&);
-    packHdrFPtr packHdr = pkStruct.packHdrFPtr;              // Function pointer
-    ifstream    in(IN_FILE_NAME);
-    string      line, context, seq;
-    ofstream    pkfile(PK_FILENAME+to_string(threadID), std::ios_base::app);
+    packFP_t packHdr = pkStruct.packHdrFP;    // Function pointer
+    ifstream in(IN_FILE_NAME);
+    string   line, context, seq;
+    ofstream pkfile(PK_FILENAME+to_string(threadID), std::ios_base::app);
 
     // Lines ignored at the beginning
     for (u64 l = (u64) threadID*BlockLine; l--;)    IGNORE_THIS_LINE(in);
@@ -204,13 +198,12 @@ void FASTA::pack (const packfa_s &pkStruct, byte threadID)
             packSeq(context, seq);
             context += (char) 254;
         }
-
+        
         // Shuffle
         if (!DISABLE_SHUFFLE)
         {
             mutxFA.lock();//----------------------------------------------------
             if (VERBOSE && shuffInProgress)    cerr << "Shuffling...\n";
-
             shuffInProgress = false;
             mutxFA.unlock();//--------------------------------------------------
     
@@ -340,19 +333,76 @@ void FASTA::decompress ()
     in.ignore(1);                   // Jump over decText[0]==(char) 127
     in.get(c);    shuffled = (c==(char) 128); // Check if file had been shuffled
     while (in.get(c) && c != (char) 254)    headers += c;
+    
+    if (VERBOSE)   // Show number of different chars in headers -- Ignore '>'=62
+        cerr << headers.length() << " different characters are in headers.\n";
+    
+    unpackFP_t unpackHdr;           // Function pointer
+
+    // Header -- Set unpack table and unpack function
+    set_unpackTbl_unpackFn(unpackHdr, headers, upkStruct);
+
+    // Distribute file among threads, for reading and unpacking
+    for (t = 0; t != N_THREADS; ++t)
+    {
+        in.get(c);
+        if (c == (char) 253)
+        {
+            chunkSizeStr.clear();   // Chunk size
+            while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
+            offset = stoull(chunkSizeStr);
+            
+            upkStruct.begPos    = in.tellg();
+            upkStruct.chunkSize = offset;
+            
+            if (headers.length() <= MAX_C5)
+            {
+                upkStruct.unpackHdrFP = unpackHdr;
+                arrThread[t]    = thread(&FASTA::unpackHS, this, upkStruct, t);
+            }
+            else { arrThread[t] = thread(&FASTA::unpackHL, this, upkStruct, t);}
+            
+            // Jump to the beginning of the next chunk
+            in.seekg((std::streamoff) offset, std::ios_base::cur);
+        }
+        // End of file
+        if (in.peek() == 252)    break;
+    }
+    // Join threads
+    for (t = 0; t != N_THREADS; ++t)
+        if (arrThread[t].joinable())    arrThread[t].join();
+    
+    if (VERBOSE)    cerr << "Unshuffling done!\n";
+    
+    // Close/delete decrypted file
+    in.close();
+    const string decFileName = DEC_FILENAME;
+    std::remove(decFileName.c_str());
+    
+    // Join partially unpacked files
+    joinUnpackedFiles();
+    
+    // Stop timer for decompression
+    high_resolution_clock::time_point finishTime = high_resolution_clock::now();
+    // Decompression duration in seconds
+    std::chrono::duration<double> elapsed = finishTime - startTime;
+
+    cerr << (VERBOSE ? "Decompression done" : "Done") << ", in "
+         << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
+}
+
+/**
+ * @brief      Set unpack table and unpack function
+ * @param[out] upkStruct  Unpack structure
+ * @param[in]  headers    Headers
+ */
+void FASTA::set_unpackTbl_unpackFn (unpackFP_t &unpackHdr,
+                                   const string &headers, unpackfa_s &upkStruct)
+{
     const size_t headersLen = headers.length();
     u16 keyLen_hdr = 0;
-
-    // Show number of different chars in headers -- Ignore '>'=62
-    if (VERBOSE)  cerr<< headersLen <<" different characters are in headers.\n";
-
-    // Function pointer
-    using unpackHdrPtr =
-    void (EnDecrypto::*) (string&, string::iterator&, const vector<string>&);
-    unpackHdrPtr unpackHdr;
-
-    // Header
-    if      (headersLen > MAX_C5)           keyLen_hdr = KEYLEN_C5;
+    
+    if (headersLen > MAX_C5)                keyLen_hdr = KEYLEN_C5;
     else if (headersLen > MAX_C4)                                       // Cat 5
     {
         unpackHdr  = &EnDecrypto::unpack_2B;
@@ -361,47 +411,19 @@ void FASTA::decompress ()
     else
     {
         unpackHdr  = &EnDecrypto::unpack_1B;
-
-        if      (headersLen > MAX_C3)       keyLen_hdr = KEYLEN_C4;     // Cat 4
+    
+        if (headersLen > MAX_C3)            keyLen_hdr = KEYLEN_C4;     // Cat 4
         else if (headersLen==MAX_C3 || headersLen==MID_C3 || headersLen==MIN_C3)
-            keyLen_hdr = KEYLEN_C3;     // Cat 3
+                                            keyLen_hdr = KEYLEN_C3;     // Cat 3
         else if (headersLen == C2)          keyLen_hdr = KEYLEN_C2;     // Cat 2
         else if (headersLen == C1)          keyLen_hdr = KEYLEN_C1;     // Cat 1
         else                                keyLen_hdr = 1;             // = 1
     }
-
+    
     if (headersLen <= MAX_C5)
     {
         // Tables for unpacking
         buildUnpackTbl(upkStruct.hdrUnpack, headers, keyLen_hdr);
-
-        // Distribute file among threads, for reading and unpacking
-        for (t = 0; t != N_THREADS; ++t)
-        {
-            in.get(c);
-            if (c == (char) 253)
-            {
-                chunkSizeStr.clear();   // Chunk size
-                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
-                offset = stoull(chunkSizeStr);
-
-                upkStruct.begPos        = in.tellg();
-                upkStruct.chunkSize     = offset;
-                upkStruct.unpackHdrFPtr = unpackHdr;
-
-                arrThread[t]= thread(&FASTA::unpackHS, this, upkStruct, t);
-
-                // Jump to the beginning of the next chunk
-                in.seekg((std::streamoff) offset, std::ios_base::cur);
-            }
-            // End of file
-            if (in.peek() == 252)    break;
-        }
-        // Join threads
-        for (t = 0; t != N_THREADS; ++t)
-            if (arrThread[t].joinable())    arrThread[t].join();
-
-        if (VERBOSE)    cerr << "Unshuffling done!\n";
     }
     else
     {
@@ -409,84 +431,9 @@ void FASTA::decompress ()
         // ASCII char after the last char in headers string
         string decHeadersX = decHeaders;
         decHeadersX += (upkStruct.XChar_hdr = (char) (decHeaders.back() + 1));
-
+        
         // Tables for unpacking
         buildUnpackTbl(upkStruct.hdrUnpack, decHeadersX, keyLen_hdr);
-
-        // Distribute file among threads, for reading and unpacking
-        for (t = 0; t != N_THREADS; ++t)
-        {
-            in.get(c);
-            if (c == (char) 253)
-            {
-                chunkSizeStr.clear();   // Chunk size
-                while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
-                offset = stoull(chunkSizeStr);
-
-                upkStruct.begPos        = in.tellg();
-                upkStruct.chunkSize     = offset;
-
-                arrThread[t]= thread(&FASTA::unpackHL, this, upkStruct, t);
-
-                // Jump to the beginning of the next chunk
-                in.seekg((std::streamoff) offset, std::ios_base::cur);
-            }
-            // End of file
-            if (in.peek() == 252)    break;
-        }
-        // Join threads
-        for (t = 0; t != N_THREADS; ++t)
-            if (arrThread[t].joinable())    arrThread[t].join();
-
-        if (VERBOSE)    cerr << "Unshuffling done!\n";
-    }
-
-    // Close/delete decrypted file
-    in.close();
-    const string decFileName = DEC_FILENAME;
-    std::remove(decFileName.c_str());
-
-    // Join unpacked files
-    ifstream upkdFile[N_THREADS];
-    string   line;
-    for (t = N_THREADS; t--;)    upkdFile[t].open(UPK_FILENAME+to_string(t));
-
-    bool prevLineNotThrID;            // If previous line was "THRD=" or not
-    while (!upkdFile[0].eof())
-    {
-        for (t = 0; t != N_THREADS; ++t)
-        {
-            prevLineNotThrID = false;
-
-            while (getline(upkdFile[t], line).good() &&
-                   line != THR_ID_HDR+to_string(t))
-            {
-                if (prevLineNotThrID)
-                    cout << '\n';
-                cout << line;
-
-                prevLineNotThrID = true;
-            }
-
-            if (prevLineNotThrID)    cout << '\n';
-        }
-    }
-
-    // Stop timer for decompression
-    high_resolution_clock::time_point finishTime = high_resolution_clock::now();
-    // Decompression duration in seconds
-    std::chrono::duration<double> elapsed = finishTime - startTime;
-
-    cerr << (VERBOSE ? "Decompression done," : "Done,") << " in "
-         << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
-
-    // Close/delete input/output files
-    string upkdFileName;
-    for (t = N_THREADS; t--;)
-    {
-        upkdFile[t].close();
-        upkdFileName=UPK_FILENAME;    upkdFileName+=to_string(t);
-        std::remove(upkdFileName.c_str());
     }
 }
 
@@ -497,19 +444,16 @@ void FASTA::decompress ()
  */
 void FASTA::unpackHS (const unpackfa_s &upkStruct, byte threadID)
 {
-    using unpackHdrFPtr =
-       void (EnDecrypto::*) (string&, string::iterator&, const vector<string>&);
-    unpackHdrFPtr    unpackHdr = upkStruct.unpackHdrFPtr;    // Function pointer
-    pos_t            begPos    = upkStruct.begPos;
-    u64              chunkSize = upkStruct.chunkSize;
-    ifstream         in(DEC_FILENAME);
-    string           decText, chunkSizeStr;
+    unpackFP_t unpackHdr = upkStruct.unpackHdrFP;    // Function pointer
+    pos_t      begPos    = upkStruct.begPos;
+    u64        chunkSize = upkStruct.chunkSize;
+    ifstream   in(DEC_FILENAME);
+    string     decText, chunkSizeStr;
     string::iterator i;
-    char             c;
-    pos_t            endPos;
-    ofstream         upkfile(UPK_FILENAME+to_string(threadID),
-                             std::ios_base::app);
-    string           upkhdrOut, upkSeqOut;
+    char       c;
+    pos_t      endPos;
+    ofstream   upkfile(UPK_FILENAME+to_string(threadID), std::ios_base::app);
+    string     upkhdrOut, upkSeqOut;
 
     while (in.peek() != EOF)
     {
@@ -525,7 +469,6 @@ void FASTA::unpackHS (const unpackfa_s &upkStruct, byte threadID)
         {
             mutxFA.lock();//----------------------------------------------------
             if (VERBOSE && shuffInProgress)    cerr << "Unshuffling...\n";
-
             shuffInProgress = false;
             mutxFA.unlock();//--------------------------------------------------
     
@@ -574,16 +517,15 @@ void FASTA::unpackHS (const unpackfa_s &upkStruct, byte threadID)
  */
 void FASTA::unpackHL (const unpackfa_s &upkStruct, byte threadID)
 {
-    pos_t            begPos    = upkStruct.begPos;
-    u64              chunkSize = upkStruct.chunkSize;
-    ifstream         in(DEC_FILENAME);
-    string           decText, chunkSizeStr;
+    pos_t    begPos    = upkStruct.begPos;
+    u64      chunkSize = upkStruct.chunkSize;
+    ifstream in(DEC_FILENAME);
+    string   decText, chunkSizeStr;
     string::iterator i;
-    char             c;
-    pos_t            endPos;
-    ofstream         upkfile(UPK_FILENAME+to_string(threadID),
-                             std::ios_base::app);
-    string           upkHdrOut, upkSeqOut;
+    char     c;
+    pos_t    endPos;
+    ofstream upkfile(UPK_FILENAME+to_string(threadID), std::ios_base::app);
+    string   upkHdrOut, upkSeqOut;
 
     while (in.peek() != EOF)
     {
@@ -599,7 +541,6 @@ void FASTA::unpackHL (const unpackfa_s &upkStruct, byte threadID)
         {
             mutxFA.lock();//----------------------------------------------------
             if (VERBOSE && shuffInProgress)    cerr << "Unshuffling...\n";
-
             shuffInProgress = false;
             mutxFA.unlock();//--------------------------------------------------
     
@@ -640,4 +581,45 @@ void FASTA::unpackHL (const unpackfa_s &upkStruct, byte threadID)
 
     upkfile.close();
     in.close();
+}
+
+/**
+ * @brief Join partially unpacked files
+ */
+void FASTA::joinUnpackedFiles ()  const
+{
+    byte     t;                     // For threads
+    ifstream upkdFile[N_THREADS];
+    string   line;
+    for (t = N_THREADS; t--;)    upkdFile[t].open(UPK_FILENAME+to_string(t));
+    
+    bool prevLineNotThrID;            // If previous line was "THRD=" or not
+    while (!upkdFile[0].eof())
+    {
+        for (t = 0; t != N_THREADS; ++t)
+        {
+            prevLineNotThrID = false;
+            
+            while (getline(upkdFile[t], line).good() &&
+                   line != THR_ID_HDR+to_string(t))
+            {
+                if (prevLineNotThrID)
+                    cout << '\n';
+                cout << line;
+                
+                prevLineNotThrID = true;
+            }
+            
+            if (prevLineNotThrID)    cout << '\n';
+        }
+    }
+    
+    // Close/delete input/output files
+    string upkdFileName;
+    for (t = N_THREADS; t--;)
+    {
+        upkdFile[t].close();
+        upkdFileName=UPK_FILENAME;    upkdFileName+=to_string(t);
+        std::remove(upkdFileName.c_str());
+    }
 }
