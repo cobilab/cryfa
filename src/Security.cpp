@@ -39,7 +39,7 @@ std::mutex mutxSec;    /**< @brief Mutex */
  */
 string Security::extractPass () const
 {
-    ifstream in(keyFileName);
+    ifstream in(KEY_FILE_NAME);
     char     c;
     string   pass;
     
@@ -140,9 +140,9 @@ void Security::encrypt ()
  */
 void Security::decrypt ()
 {
-    ifstream in(inFileName);
+    ifstream in(IN_FILE_NAME);
     if (!in.good())
-    { cerr << "Error: failed opening \"" << inFileName << "\".\n";    exit(1); }
+    { cerr << "Error: failed opening \"" << IN_FILE_NAME << "\".\n";    exit(1); }
     
     // Watermark
     string watermark = "#cryfa v" + VERSION_CRYFA + "." + RELEASE_CRYFA + "\n";
@@ -151,8 +151,8 @@ void Security::decrypt ()
     string line;    getline(in, line);
     if ((line + "\n") != watermark)
     {
-        cerr << "Error: \"" << inFileName << '"'
-             << " is not a valid file encrypted by cryfa.\n";
+        cerr << "Error: \"" << IN_FILE_NAME << "\" "
+             << "is not a valid file encrypted by cryfa.\n";
         exit(1);
     }
 

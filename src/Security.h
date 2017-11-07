@@ -16,13 +16,10 @@
 /**
  * @brief Security
  */
-class Security
+class Security : protected InArgs
 {
 public:
-    static string inFileName;    /**< @brief  file name */
-    static string keyFileName;    /**< @brief Password file name */
-
-    void   decrypt ();
+    void decrypt ();
     
 protected:
     bool shuffInProgress=true;/**< @brief Shuffle in progress @hideinitializer*/

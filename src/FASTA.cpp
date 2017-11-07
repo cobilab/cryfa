@@ -44,19 +44,52 @@ void FASTA::compress ()
     string   headers;
     packfa_s pkStruct;    // Collection of inputs to pass to pack...
 
-    if (VERBOSE)    cerr << "Calculating number of different characters...\n";
+    if (VERBOSE)   cerr << "Calculating number of different characters...\n";
     // Gather different chars in all headers and max length in all bases
     gatherHdrBs(headers);
-
-    const size_t headersLen = headers.length();
     // Show number of different chars in headers -- ignore '>'=62
-    if (VERBOSE)    cerr << "In headers, they are " << headersLen << ".\n";
+    if (VERBOSE)   cerr << "In headers, they are " << headers.length() << ".\n";
+    
+    // Set Hash table and pack function
+    set_HashTbl_packFn(pkStruct, headers);
+    
+    // Distribute file among threads, for reading and packing
+    for (t = 0; t != N_THREADS; ++t)
+        arrThread[t] = thread(&FASTA::pack, this, pkStruct, t);
+    for (t = 0; t != N_THREADS; ++t)
+        if (arrThread[t].joinable())    arrThread[t].join();
+
+    if (VERBOSE)    cerr << "Shuffling done!\n";
+    
+    // Join partially packed files
+    joinPackedFiles(headers);
+
+    // Stop timer for compression
+    high_resolution_clock::time_point finishTime = high_resolution_clock::now();
+    // Compression duration in seconds
+    std::chrono::duration<double> elapsed = finishTime - startTime;
+    
+    cerr << (VERBOSE ? "Compaction done," : "Done,") << " in "
+         << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
+    
+    // Cout encrypted content
+    encrypt();
+}
+
+/**
+ * @brief      Set hash table and pack function
+ * @param[out] pkStruct  Pack structure
+ * @param[in]  headers   Headers
+ */
+void FASTA::set_HashTbl_packFn (packfa_s &pkStruct, const string &headers)
+{
+    const size_t headersLen = headers.length();
 
     // Function pointer
     using packHdrPointer = void (EnDecrypto::*)
                                 (string&, const string&, const htbl_t&);
     packHdrPointer packHdr;
-
+    
     // Header
     if (headersLen > MAX_C5)             // If len > 39, filter the last 39 ones
     {
@@ -64,12 +97,12 @@ void FASTA::compress ()
         // ASCII char after the last char in Hdrs -- always <= (char) 127
         HdrsX = Hdrs;    HdrsX += (char) (Hdrs.back() + 1);
         buildHashTbl(HdrMap, HdrsX, KEYLEN_C5);
-        packHdr= &EnDecrypto::packLHdrFaFq;
+        packHdr = &EnDecrypto::packLHdrFaFq;
     }
     else
     {
         Hdrs = headers;
-
+        
         if (headersLen > MAX_C4)                            // 16 <= cat 5 <= 39
         {
             buildHashTbl(HdrMap, Hdrs, KEYLEN_C5);
@@ -102,73 +135,8 @@ void FASTA::compress ()
             packHdr = &EnDecrypto::pack_1to1;
         }
     }
-
+    
     pkStruct.packHdrFPtr = packHdr;
-
-    // Distribute file among threads, for reading and packing
-    for (t = 0; t != N_THREADS; ++t)
-        arrThread[t] = thread(&FASTA::pack, this, pkStruct, t);
-    for (t = 0; t != N_THREADS; ++t)
-        if (arrThread[t].joinable())    arrThread[t].join();
-
-    if (VERBOSE)    cerr << "Shuffling done!\n";
-
-    // Join partially packed files
-    ifstream pkFile[N_THREADS];
-
-    // Watermark for encrypted file
-    cout << "#cryfa v" + VERSION_CRYFA + "." + RELEASE_CRYFA + "\n";
-
-    // Open packed file
-    ofstream pckdFile(PCKD_FILENAME);
-    pckdFile << (char) 127;                // Let decryptor know this is FASTA
-    pckdFile << (!DISABLE_SHUFFLE ? (char) 128 : (char) 129); //Shuffling on/off
-    pckdFile << headers;                   // Send headers to decryptor
-    pckdFile << (char) 254;                // To detect headers in decompressor
-
-    // Open input files
-    for (t = 0; t != N_THREADS; ++t)   pkFile[t].open(PK_FILENAME+to_string(t));
-
-    string line;
-    bool prevLineNotThrID;                 // If previous line was "THR=" or not
-    while (!pkFile[0].eof())
-    {
-        for (t = 0; t != N_THREADS; ++t)
-        {
-            prevLineNotThrID = false;
-
-            while (getline(pkFile[t], line).good() &&
-                   line != THR_ID_HDR+to_string(t))
-            {
-                if (prevLineNotThrID)   pckdFile << '\n';
-                pckdFile << line;
-
-                prevLineNotThrID = true;
-            }
-        }
-    }
-    pckdFile << (char) 252;
-
-    // Stop timer for compression
-    high_resolution_clock::time_point finishTime = high_resolution_clock::now();
-    // Compression duration in seconds
-    std::chrono::duration<double> elapsed = finishTime - startTime;
-
-    cerr << (VERBOSE ? "Compaction done," : "Done,") << " in "
-         << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
-
-    // Close/delete input/output files
-    pckdFile.close();
-    string pkFileName;
-    for (t = 0; t != N_THREADS; ++t)
-    {
-        pkFile[t].close();
-        pkFileName=PK_FILENAME;    pkFileName+=to_string(t);
-        std::remove(pkFileName.c_str());
-    }
-
-    // Cout encrypted content
-    encrypt();
 }
 
 /**
@@ -181,7 +149,7 @@ void FASTA::pack (const packfa_s &pkStruct, byte threadID)
     using packHdrFPtr   = void (EnDecrypto::*)
                                (string&, const string&, const htbl_t&);
     packHdrFPtr packHdr = pkStruct.packHdrFPtr;              // Function pointer
-    ifstream    in(inFileName);
+    ifstream    in(IN_FILE_NAME);
     string      line, context, seq;
     ofstream    pkfile(PK_FILENAME+to_string(threadID), std::ios_base::app);
 
@@ -256,7 +224,7 @@ void FASTA::pack (const packfa_s &pkStruct, byte threadID)
         contextSize += (char) 254;
         context.insert(0, contextSize);
 
-        // Write header containing threadID for each
+        // Write header containing threadID for each partially packed file
         pkfile << THR_ID_HDR << to_string(threadID) << '\n';
         pkfile << context << '\n';
 
@@ -266,6 +234,59 @@ void FASTA::pack (const packfa_s &pkStruct, byte threadID)
 
     pkfile.close();
     in.close();
+}
+
+/**
+ * @brief Join partially packed files
+ * @param headers  Headers
+ */
+void FASTA::joinPackedFiles (const string &headers)  const
+{
+    byte     t;                    // For threads
+    ifstream pkFile[N_THREADS];    // Join partially packed files
+    
+    // Watermark for encrypted file
+    cout << "#cryfa v" + VERSION_CRYFA + "." + RELEASE_CRYFA + "\n";
+    
+    // Open packed file
+    ofstream pckdFile(PCKD_FILENAME);
+    pckdFile << (char) 127;                // Let decryptor know this is FASTA
+    pckdFile << (!DISABLE_SHUFFLE ? (char) 128 : (char) 129); //Shuffling on/off
+    pckdFile << headers;                   // Send headers to decryptor
+    pckdFile << (char) 254;                // To detect headers in decompressor
+    
+    // Open input files
+    for (t = 0; t != N_THREADS; ++t)   pkFile[t].open(PK_FILENAME+to_string(t));
+    
+    string line;
+    bool prevLineNotThrID;                 // If previous line was "THR=" or not
+    while (!pkFile[0].eof())
+    {
+        for (t = 0; t != N_THREADS; ++t)
+        {
+            prevLineNotThrID = false;
+            
+            while (getline(pkFile[t], line).good() &&
+                   line != THR_ID_HDR+to_string(t))
+            {
+                if (prevLineNotThrID)   pckdFile << '\n';
+                pckdFile << line;
+                
+                prevLineNotThrID = true;
+            }
+        }
+    }
+    pckdFile << (char) 252;
+    
+    // Close/delete input/output files
+    pckdFile.close();
+    string pkFileName;
+    for (t = 0; t != N_THREADS; ++t)
+    {
+        pkFile[t].close();
+        pkFileName=PK_FILENAME;    pkFileName+=to_string(t);
+        std::remove(pkFileName.c_str());
+    }
 }
 
 /**
@@ -279,7 +300,7 @@ void FASTA::gatherHdrBs (string &headers)
     bool hChars[127];
     memset(hChars+32, false, 95);
 
-    ifstream in(inFileName);
+    ifstream in(IN_FILE_NAME);
     string   line;
     while (getline(in, line).good())
     {

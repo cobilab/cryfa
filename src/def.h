@@ -36,6 +36,17 @@ typedef std::unordered_map<string, u64>   htbl_t;
 typedef std::char_traits<char>::pos_type  pos_t; /**< @brief tellg(), tellp() */
 
 
+/** @brief Command line input arguments */
+struct InArgs
+{
+    static bool   VERBOSE;            /**< @brief Verbose mode */
+    static bool   DISABLE_SHUFFLE;    /**< @brief Disable shuffle */
+    static byte   N_THREADS;          /**< @brief Number of threads */
+    static string IN_FILE_NAME;       /**< @brief Input file name */
+    static string KEY_FILE_NAME;      /**< @brief Password file name */
+};
+
+
 // Metaprograms
 /**
  * Power (B^E). Usage: "cerr << POWER<3,2>::val;" which yields 9
@@ -88,13 +99,6 @@ constexpr byte KEYLEN_C2     = 5;   /**< @brief 5 to 1 byte */
 constexpr byte KEYLEN_C3     = 3;   /**< @brief 3 to 1 byte */
 constexpr byte KEYLEN_C4     = 2;   /**< @brief 2 to 1 byte */
 constexpr byte KEYLEN_C5     = 3;   /**< @brief 3 to 2 byte */
-
-
-// Command line input arguments
-static bool   VERBOSE         = false;          /**< @brief Verbose mode */
-static bool   DISABLE_SHUFFLE = false;          /**< @brief Disable shuffle */
-static byte   N_THREADS       = DEFAULT_N_THR;  /**< @brief Number of threads */
-//static string inFileName = "";    /**< @brief Input file name */
 
 
 /**

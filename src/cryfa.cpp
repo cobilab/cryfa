@@ -41,16 +41,16 @@ using std::setprecision;
 
 /**
  * @brief  Find file type: FASTA (A), FASTQ (Q), none (n)
- * @param  inFile  Input file name
+ * @param  inFileName  Input file name
  * @return A, Q or n
  */
-inline char fileType (const string& inFile)
+inline char fileType (const string& inFileName)
 {
     char     c;
-    ifstream in(inFile);
+    ifstream in(inFileName);
     
     if (!in.good())
-    { cerr << "Error: failed opening '" << inFile << "'.\n";    exit(1); }
+    { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
     
     // Skip leading blank lines or spaces
     while (in.peek()=='\n' || in.peek()==' ')    in.get(c);
@@ -118,9 +118,13 @@ inline void checkPass (const string& keyFileName, const bool k_flag)
     }
 }
 
-// Instantiation of static variables in Security class
-string Security::inFileName      = "";
-string Security::keyFileName     = "";
+
+// Instantiation of static variables in InArgs structure
+bool   InArgs::VERBOSE         = false;
+bool   InArgs::DISABLE_SHUFFLE = false;
+byte   InArgs::N_THREADS       = DEFAULT_N_THR;
+string InArgs::IN_FILE_NAME    = "";
+string InArgs::KEY_FILE_NAME   = "";
 
 
 /**
@@ -131,12 +135,13 @@ int main (int argc, char* argv[])
 //   // Start timer
 //   high_resolution_clock::time_point startTime = high_resolution_clock::now();
     
+    InArgs     inArgsObj;
     Security   secObj;
     EnDecrypto cryptObj;
     FASTA      fastaObj;
     FASTQ      fastqObj;
-    secObj.inFileName = argv[argc-1];  // Input file name
-//    inFileName = argv[argc-1];  // Input file name
+    
+    inArgsObj.IN_FILE_NAME = argv[argc-1];    // Input file name
 
     static int h_flag, a_flag, v_flag, d_flag, s_flag;
     bool       k_flag = false;
@@ -173,15 +178,15 @@ int main (int argc, char* argv[])
 
             case 'k':
                 k_flag = true;
-                secObj.keyFileName = string(optarg);
+                inArgsObj.KEY_FILE_NAME = string(optarg);
                 break;
-
+                
             case 'h':  h_flag=1;    Help();                               break;
             case 'a':  a_flag=1;    About();                              break;
-            case 'v':  v_flag=1;    VERBOSE = true;                       break;
-            case 's':  s_flag=1;    DISABLE_SHUFFLE = true;               break;
+            case 'v':  v_flag=1;    inArgsObj.VERBOSE = true;             break;
+            case 's':  s_flag=1;    inArgsObj.DISABLE_SHUFFLE = true;     break;
             case 'd':  d_flag=1;                                          break;
-            case 't':  N_THREADS = (byte) stoi(string(optarg));           break;
+            case 't':  inArgsObj.N_THREADS = (byte) stoi(string(optarg)); break;
 
             default:
                 cerr << "Option '" << (char) optopt << "' is invalid.\n"; break;
@@ -189,11 +194,13 @@ int main (int argc, char* argv[])
     }
 
     // Check password file
-    if (!h_flag && !a_flag)    checkPass(secObj.keyFileName, k_flag);
-
+    if (!h_flag && !a_flag)    checkPass(inArgsObj.KEY_FILE_NAME, k_flag);
+    
+    // Verbose mode
     if (v_flag)
         cerr << "Verbose mode on.\n";
-
+    
+    // Decompress+Decrypt
     if (d_flag)
     {
         cryptObj.decrypt();                                         // Decrypt
@@ -218,19 +225,19 @@ int main (int argc, char* argv[])
 
         return 0;
     }
-
+    
     if (!h_flag && !a_flag)
     {//todo sam
-        switch (fileType(secObj.inFileName))
-//        switch (fileType(inFileName))
+//        switch (fileType(secObj.inFileName))
+        switch (fileType(inArgsObj.IN_FILE_NAME))
         {
             case 'A':  cerr<<"Compacting...\n";   fastaObj.compress();    break;
             case 'Q':  cerr<<"Compacting...\n";   fastqObj.compress();    break;
             case 'S':  cerr<<"Compacting...\n";   cerr<<"SAM";            break;
-//            case 'n':
-//            default :  cerr<<"Error: \"" << secObj.inFileName << "\" is not a"
-//                           <<" valid FASTA or FASTQ file.\n";
-//                       return 0;                                          break;
+            case 'n':
+            default :  cerr<<"Error: \"" << inArgsObj.IN_FILE_NAME << "\" "
+                           <<"is not a valid FASTA or FASTQ file.\n";
+                       return 0;                                          break;
         }
 
 //        // Stop timer

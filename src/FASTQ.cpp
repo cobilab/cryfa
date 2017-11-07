@@ -267,7 +267,7 @@ void FASTQ::pack (const packfq_s &pkStruct, byte threadID)
                    void (EnDecrypto::*) (string&, const string&, const htbl_t&);
     packQSPtr   packQS  = pkStruct.packQSFPtr;
     
-    ifstream    in(inFileName);
+    ifstream    in(IN_FILE_NAME);
     string      context;       // Output string
     string      line;
     ofstream    pkfile(PK_FILENAME+to_string(threadID), std::ios_base::app);
@@ -336,7 +336,7 @@ void FASTQ::pack (const packfq_s &pkStruct, byte threadID)
  */
 bool FASTQ::hasJustPlus ()  const
 {
-    ifstream in(inFileName);
+    ifstream in(IN_FILE_NAME);
     string   line;
     
     IGNORE_THIS_LINE(in);    // Ignore header
@@ -368,7 +368,7 @@ void FASTQ::gatherHdrQs (string& headers, string& qscores)
     memset(hChars+32, false, 95);
     memset(qChars+32, false, 95);
     
-    ifstream in(inFileName);
+    ifstream in(IN_FILE_NAME);
     string   line;
     while (!in.eof())
     {
@@ -403,7 +403,7 @@ void FASTQ::gatherHdrQs (string& headers, string& qscores)
     u32 hL=0, qL=0;
     u64 hH=0, qH=0;
     string headers, qscores;
-    ifstream in(inFileName);
+    ifstream in(IN_FILE_NAME);
     string line;
     while (!in.eof())
     {

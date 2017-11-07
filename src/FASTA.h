@@ -39,15 +39,17 @@ struct unpackfa_s
 class FASTA : public EnDecrypto
 {
 public:
-    FASTA            () = default;
-    void compress    ();
-    void decompress  ();
+    FASTA           () = default;
+    void compress   ();
+    void decompress ();
 
 private:
-    void gatherHdrBs (string&);
-    void pack        (const packfa_s&,   byte);
-    void unpackHS    (const unpackfa_s&, byte);
-    void unpackHL    (const unpackfa_s&, byte);
+    void gatherHdrBs        (string&);
+    void set_HashTbl_packFn (packfa_s&, const string&);
+    void pack               (const packfa_s&,   byte);
+    void joinPackedFiles    (const string&)  const;
+    void unpackHS           (const unpackfa_s&, byte);
+    void unpackHL           (const unpackfa_s&, byte);
 };
 
 #endif //CRYFA_FASTA_H
