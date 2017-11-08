@@ -10,13 +10,9 @@
 #include <fstream>
 #include <thread>
 #include <mutex>
-#include <chrono>       // time
 #include <iomanip>      // setw, setprecision
 #include <cstring>
 #include "FASTA.h"
-
-//#include <functional>
-//#include <algorithm>
 
 using std::chrono::high_resolution_clock;
 using std::thread;
@@ -36,9 +32,7 @@ std::mutex mutxFA;    /**< @brief Mutex */
  */
 void FASTA::compress ()
 {
-    // Start timer for compression
-    high_resolution_clock::time_point startTime = high_resolution_clock::now();
-
+    auto     startTime = high_resolution_clock::now();            // Start timer
     thread   arrThread[N_THREADS];
     byte     t;           // For threads
     string   headers;
@@ -64,10 +58,8 @@ void FASTA::compress ()
     // Join partially packed files
     joinPackedFiles(headers);
     
-    // Stop timer for compression
-    high_resolution_clock::time_point finishTime = high_resolution_clock::now();
-    // Compression duration in seconds
-    std::chrono::duration<double> elapsed = finishTime - startTime;
+    auto finishTime = high_resolution_clock::now();                 //Stop timer
+    std::chrono::duration<double> elapsed = finishTime - startTime; //Dur. (sec)
     
     cerr << (VERBOSE ? "Compaction done" : "Done") << ", in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
@@ -84,7 +76,6 @@ void FASTA::compress ()
 void FASTA::set_hashTbl_packFn (packfa_s &pkStruct, const string &headers)
 {
     const size_t headersLen = headers.length();
-    packFP_t packHdr;    // Function pointer
     
     // Header
     if (headersLen > MAX_C5)             // If len > 39, filter the last 39 ones
@@ -93,7 +84,7 @@ void FASTA::set_hashTbl_packFn (packfa_s &pkStruct, const string &headers)
         // ASCII char after the last char in Hdrs -- always <= (char) 127
         HdrsX = Hdrs;    HdrsX += (char) (Hdrs.back() + 1);
         buildHashTbl(HdrMap, HdrsX, KEYLEN_C5);
-        packHdr = &EnDecrypto::packLHdrFaFq;
+        pkStruct.packHdrFP = &EnDecrypto::packLHdrFaFq;
     }
     else
     {
@@ -102,37 +93,35 @@ void FASTA::set_hashTbl_packFn (packfa_s &pkStruct, const string &headers)
         if (headersLen > MAX_C4)                            // 16 <= cat 5 <= 39
         {
             buildHashTbl(HdrMap, Hdrs, KEYLEN_C5);
-            packHdr = &EnDecrypto::pack_3to2;
+            pkStruct.packHdrFP = &EnDecrypto::pack_3to2;
         }
         else if (headersLen > MAX_C3)                       // 7 <= cat 4 <= 15
         {
             buildHashTbl(HdrMap, Hdrs, KEYLEN_C4);
-            packHdr = &EnDecrypto::pack_2to1;
+            pkStruct.packHdrFP = &EnDecrypto::pack_2to1;
         }
         else if (headersLen==MAX_C3 || headersLen==MID_C3   // 4 <= cat 3 <= 6
                  || headersLen==MIN_C3)
         {
             buildHashTbl(HdrMap, Hdrs, KEYLEN_C3);
-            packHdr = &EnDecrypto::pack_3to1;
+            pkStruct.packHdrFP = &EnDecrypto::pack_3to1;
         }
         else if (headersLen == C2)                          // cat 2 = 3
         {
             buildHashTbl(HdrMap, Hdrs, KEYLEN_C2);
-            packHdr = &EnDecrypto::pack_5to1;
+            pkStruct.packHdrFP = &EnDecrypto::pack_5to1;
         }
         else if (headersLen == C1)                          // cat 1 = 2
         {
             buildHashTbl(HdrMap, Hdrs, KEYLEN_C1);
-            packHdr = &EnDecrypto::pack_7to1;
+            pkStruct.packHdrFP = &EnDecrypto::pack_7to1;
         }
         else                                                // headersLen = 1
         {
             buildHashTbl(HdrMap, Hdrs, 1);
-            packHdr = &EnDecrypto::pack_1to1;
+            pkStruct.packHdrFP = &EnDecrypto::pack_1to1;
         }
     }
-    
-    pkStruct.packHdrFP = packHdr;
 }
 
 /**
@@ -252,7 +241,7 @@ void FASTA::joinPackedFiles (const string &headers)  const
     for (t = 0; t != N_THREADS; ++t)   pkFile[t].open(PK_FILENAME+to_string(t));
     
     string line;
-    bool prevLineNotThrID;                 // If previous line was "THR=" or not
+    bool   prevLineNotThrID;               // If previous line was "THR=" or not
     while (!pkFile[0].eof())
     {
         for (t = 0; t != N_THREADS; ++t)
@@ -318,9 +307,7 @@ void FASTA::gatherHdrBs (string &headers)
  */
 void FASTA::decompress ()
 {
-    // Start timer for decompression
-    high_resolution_clock::time_point startTime = high_resolution_clock::now();
-
+    auto       startTime = high_resolution_clock::now();          // Start timer
     char       c;                   // Chars in file
     string     headers;
     unpackfa_s upkStruct;           // Collection of inputs to pass to unpack...
@@ -337,14 +324,12 @@ void FASTA::decompress ()
     if (VERBOSE)   // Show number of different chars in headers -- Ignore '>'=62
         cerr << headers.length() << " different characters are in headers.\n";
     
-    unpackFP_t unpackHdr;           // Function pointer
-    
     // Header -- Set unpack table and unpack function
     set_unpackTbl_unpackFn(upkStruct, headers);
     
     // Distribute file among threads, for reading and unpacking
-    typedef void (FASTA::*unpackHFP_t) (const unpackfa_s&, byte);
-    unpackHFP_t unpackH =
+    using unpackHFP   = void (FASTA::*) (const unpackfa_s&, byte);
+    unpackHFP unpackH =
             (headers.length() <= MAX_C5) ? &FASTA::unpackHS : &FASTA::unpackHL;
     
     for (t = 0; t != N_THREADS; ++t)
@@ -381,10 +366,8 @@ void FASTA::decompress ()
     // Join partially unpacked files
     joinUnpackedFiles();
     
-    // Stop timer for decompression
-    high_resolution_clock::time_point finishTime = high_resolution_clock::now();
-    // Decompression duration in seconds
-    std::chrono::duration<double> elapsed = finishTime - startTime;
+    auto finishTime = high_resolution_clock::now();                 //Stop timer
+    std::chrono::duration<double> elapsed = finishTime - startTime; //Dur. (sec)
 
     cerr << (VERBOSE ? "Decompression done" : "Done") << ", in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";

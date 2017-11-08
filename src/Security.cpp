@@ -10,7 +10,6 @@
 #include <fstream>
 #include <mutex>
 #include <cstring>
-#include <chrono>       // time
 #include <iomanip>      // setw, setprecision
 #include "Security.h"
 #include "cryptopp/aes.h"
@@ -61,9 +60,7 @@ void Security::encrypt ()
 {
     cerr << "Encrypting...\n";
     
-    // Start timer for encryption
-    high_resolution_clock::time_point startTime = high_resolution_clock::now();
-    
+    auto startTime = high_resolution_clock::now();      // Start timer
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
     memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
@@ -81,10 +78,8 @@ void Security::encrypt ()
     FileSource(inFile, true,
                new StreamTransformationFilter(cbcEnc, new FileSink(cout)));
     
-    // Stop timer for encryption
-    high_resolution_clock::time_point finishTime = high_resolution_clock::now();
-    // Encryption duration in seconds
-    std::chrono::duration<double> elapsed = finishTime - startTime;
+    auto finishTime = high_resolution_clock::now();                 //Stop timer
+    std::chrono::duration<double> elapsed = finishTime - startTime; //Dur. (sec)
     
     cerr << (VERBOSE ? "Encryption done," : "Done,") << " in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
@@ -163,9 +158,7 @@ void Security::decrypt ()
     
     cerr << "Decrypting...\n";
     
-    // Start timer for decryption
-    high_resolution_clock::time_point startTime = high_resolution_clock::now();
-    
+    auto startTime = high_resolution_clock::now();      // Start timer
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
     memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
@@ -191,10 +184,8 @@ void Security::decrypt ()
     FileSource(in, true,
                new StreamTransformationFilter(cbcDec, new FileSink(outFile)));
     
-    // Stop timer for decryption
-    high_resolution_clock::time_point finishTime = high_resolution_clock::now();
-    // Decryption duration in seconds
-    std::chrono::duration<double> elapsed = finishTime - startTime;
+    auto finishTime = high_resolution_clock::now();                 //Stop timer
+    std::chrono::duration<double> elapsed = finishTime - startTime; //Dur. (sec)
     
     cerr << (VERBOSE ? "Decryption done," : "Done,") << " in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
@@ -239,7 +230,7 @@ void Security::shuffSeedGen ()
     const string pass = extractPass();
     
     u64 passDigitsMult = 1;    // Multiplication of all pass digits
-    for (u32 i = (u32) pass.size(); i--;)    passDigitsMult *= pass[i];
+    for (auto i = (u32) pass.size(); i--;)    passDigitsMult *= pass[i];
     
     // Using old rand to generate the new rand seed
     u64 seed = 0;
@@ -253,7 +244,7 @@ void Security::shuffSeedGen ()
 //    for (byte i = (byte) pass.size(); i--;)
 //        seed += (u64) pass[i] * newRand();
     newSrand(20543 * (u32) passDigitsMult + 81647);
-    for (byte i = (byte) pass.size(); i--;)
+    for (auto i = (byte) pass.size(); i--;)
         seed += (u64) pass[i] * newRand();
     mutxSec.unlock();//--------------------------------------------------------
 
@@ -313,7 +304,7 @@ void Security::buildIV (byte *iv, const string &pass)
     newSrand((u32) 7919 * pass[2] * pass[5] + 75653);
 //    srand((u32) 7919 * pass[2] * pass[5] + 75653);
     u64 seed = 0;
-    for (byte i = (byte) pass.size(); i--;)
+    for (auto i = (byte) pass.size(); i--;)
         seed += ((u64) pass[i] * newRand()) + newRand();
 //    seed += ((u64) pass[i] * rand()) + rand();
     seed %= 4294967295;
@@ -321,7 +312,7 @@ void Security::buildIV (byte *iv, const string &pass)
     const rng_type::result_type seedval = seed;
     rng.seed(seedval);
     
-    for (u32 i = (u32) AES::BLOCKSIZE; i--;)
+    for (auto i = (u32) AES::BLOCKSIZE; i--;)
         iv[i] = (byte) (udist(rng) % 255);
 }
 
@@ -339,7 +330,7 @@ void Security::buildKey (byte *key, const string &pwd)
     newSrand((u32) 24593 * (pwd[0] * pwd[2]) + 49157);
 //    srand((u32) 24593 * (pwd[0] * pwd[2]) + 49157);
     u64 seed = 0;
-    for (byte i = (byte) pwd.size(); i--;)
+    for (auto i = (byte) pwd.size(); i--;)
         seed += ((u64) pwd[i] * newRand()) + newRand();
 //    seed += ((u64) pwd[i] * rand()) + rand();
     seed %= 4294967295;
@@ -347,7 +338,7 @@ void Security::buildKey (byte *key, const string &pwd)
     const rng_type::result_type seedval = seed;
     rng.seed(seedval);
     
-    for (u32 i = (u32) AES::DEFAULT_KEYLENGTH; i--;)
+    for (auto i = (u32) AES::DEFAULT_KEYLENGTH; i--;)
         key[i] = (byte) (udist(rng) % 255);
 }
 

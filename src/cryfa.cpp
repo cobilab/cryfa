@@ -23,7 +23,7 @@
 #include <iostream>
 #include <fstream>
 #include <getopt.h>
-//#include <chrono>       // time
+#include <chrono>       // time
 #include <iomanip>      // setw, setprecision
 #include "def.h"
 #include "Security.h"
@@ -35,8 +35,8 @@ using std::string;
 using std::cout;
 using std::cerr;
 using std::ifstream;
-//using std::chrono::high_resolution_clock;
 using std::setprecision;
+using std::chrono::high_resolution_clock;
 
 
 /**
@@ -132,9 +132,7 @@ string InArgs::KEY_FILE_NAME   = "";
  */
 int main (int argc, char* argv[])
 {
-//   // Start timer
-//   high_resolution_clock::time_point startTime = high_resolution_clock::now();
-    
+////auto       startTime = high_resolution_clock::now();          // Start timer
     InArgs     inArgsObj;
     Security   secObj;
     EnDecrypto cryptObj;
@@ -161,7 +159,7 @@ int main (int argc, char* argv[])
         {0,                           0,       0,         0}
     };
 
-    while (1)
+    while (true)
     {
         option_index = 0;
         if ((c = getopt_long(argc, argv, ":havsdk:t:",
@@ -200,7 +198,7 @@ int main (int argc, char* argv[])
     if (v_flag)
         cerr << "Verbose mode on.\n";
     
-    // Decompress+Decrypt
+    // Decrypt + Decompress
     if (d_flag)
     {
         cryptObj.decrypt();                                         // Decrypt
@@ -214,21 +212,19 @@ int main (int argc, char* argv[])
             default:                                      break;
         }
         in.close();
-
-////        // Stop timer
-////        high_resolution_clock::time_point finishTime =
-////                high_resolution_clock::now();
-////        // Duration in seconds
-////        std::chrono::duration<double> elapsed = finishTime - startTime;
-////        cerr << "took " << std::fixed << setprecision(4) << elapsed.count()
-////             << " seconds.\n";
+        
+////    auto finishTime = high_resolution_clock::now();        // Stop timer
+////    std::chrono::duration<double> elapsed =                // Duration (sec)
+////            finishTime - startTime;
+////
+////    cerr << "took " << std::fixed << setprecision(4) << elapsed.count()
+////         << " seconds.\n";
 
         return 0;
     }
     
     if (!h_flag && !a_flag)
     {//todo sam
-//        switch (fileType(secObj.inFileName))
         switch (fileType(inArgsObj.IN_FILE_NAME))
         {
             case 'A':  cerr<<"Compacting...\n";   fastaObj.compress();    break;
@@ -240,13 +236,12 @@ int main (int argc, char* argv[])
                        return 0;                                          break;
         }
 
-//        // Stop timer
-//        high_resolution_clock::time_point finishTime =
-//                high_resolution_clock::now();
-//        // Duration in seconds
-//        std::chrono::duration<double> elapsed = finishTime - startTime;
-//        cerr << "took " << std::fixed << setprecision(4) << elapsed.count()
-//             << " seconds.\n";
+////    auto finishTime = high_resolution_clock::now();        // Stop timer
+////    std::chrono::duration<double> elapsed =                // Duration (sec)
+////            finishTime - startTime;
+////
+////    cerr << "took " << std::fixed << setprecision(4) << elapsed.count()
+////         << " seconds.\n";
     }
     
     return 0;

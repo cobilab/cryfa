@@ -17,17 +17,17 @@
 /** @brief Packing FASTA */
 struct packfa_s
 {
-    packFP_t packHdrFP;      /**< @brief Points to a header packing function */
+    packFP_t packHdrFP;        /**< @brief Points to a header packing function */
 };
 
 /** @brief Unpakcing FASTA */
 struct unpackfa_s
 {
-    char  XChar_hdr;         /**< @brief Extra char if header's length > 39 */
-    pos_t begPos;            /**< @brief Begining position for each thread */
-    u64   chunkSize;         /**< @brief Chunk size */
-    vector<string> hdrUnpack;/**< @brief Lookup table for unpacking headers */
-    unpackFP_t unpackHdrFP;  /**< @brief Points to a header unpacking function*/
+    char           XChar_hdr;  /**< @brief Extra char if header's length > 39 */
+    pos_t          begPos;     /**< @brief Begining position for each thread */
+    u64            chunkSize;  /**< @brief Chunk size */
+    vector<string> hdrUnpack;  /**< @brief Lookup table for unpacking headers */
+    unpackFP_t     unpackHdrFP;/**< @brief Points to a header unpacking fn */
 };
 
 /**

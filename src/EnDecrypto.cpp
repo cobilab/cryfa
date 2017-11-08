@@ -31,7 +31,7 @@ using std::stoull;
 void EnDecrypto::buildHashTbl (htbl_t &map, const string &strIn, short keyLen)
 {
     u64 elementNo = 0;
-    string element;    element.reserve(keyLen);
+    string element;    element.reserve((unsigned long) keyLen);
     map.clear();       map.reserve((u64) std::pow(strIn.size(), keyLen));
     
     switch (keyLen)
@@ -616,7 +616,7 @@ void EnDecrypto::unpackLarge (string &out, string::iterator &i,
                               char XChar, const vector<string> &unpack)
 {
     byte   leftB, rightB;
-    u16    doubleB;                      // Double byte
+    u16    doubleB;                   // Double byte
     string tpl;    tpl.reserve(3);    // Tuplet
     out.clear();
 
@@ -678,13 +678,16 @@ void EnDecrypto::unpack_2B (string &out, string::iterator &i,
     for (; *i != (char) 254; i += 2)
     {
         // Hdr len not multiple of keyLen
-        if (*i == (char) 255) { out += penaltySym(*(i+1));    continue; }
-        
-        leftB   = (byte) *i;
-        rightB  = (byte) *(i+1);
-        doubleB = leftB<<8 | rightB;    // Join two bytes
-        
-        out += unpack[doubleB];
+        if (*i == (char) 255)
+            out += penaltySym(*(i+1));
+        else
+        {
+            leftB   = (byte) *i;
+            rightB  = (byte) *(i + 1);
+            doubleB = leftB << 8 | rightB;    // Join two bytes
+    
+            out += unpack[doubleB];
+        }
     }
 }
 
@@ -698,12 +701,12 @@ void EnDecrypto::unpack_1B (string &out, string::iterator &i,
                             const vector<string> &unpack)
 {
     out.clear();
-    
+
     for (; *i != (char) 254; ++i)
     {
         // Hdr len not multiple of keyLen
-        if (*i == (char) 255) { out += penaltySym(*(++i));    continue; }
-        out += unpack[(byte) *i];
+        if (*i == (char) 255)    out += penaltySym(*(++i));
+        else                     out += unpack[(byte) *i];
     }
 }
 

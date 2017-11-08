@@ -17,6 +17,13 @@ using std::string;
 using std::vector;
 
 
+class EnDecrypto;
+
+// Type define
+typedef void (EnDecrypto::*packFP_t) (string&, const string&, const htbl_t&);
+typedef void (EnDecrypto::*unpackFP_t)
+             (string&, string::iterator&, const vector<string>&);
+
 /**
  * @brief Encryption/Decryption
  */
@@ -58,12 +65,5 @@ private:
                            const htbl_t&);
     char penaltySym       (char);
 };
-
-
-// Type define
-typedef void (EnDecrypto::*packFP_t)
-             (string&, const string&,     const htbl_t&);
-typedef void (EnDecrypto::*unpackFP_t)
-             (string&, string::iterator&, const vector<string>&);
 
 #endif //CRYFA_ENDECRYPTO_H
