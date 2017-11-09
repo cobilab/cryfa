@@ -1,95 +1,112 @@
-<p align="center"><img src="imgs/logo.png" 
-alt="Cryfa" width="150" border="0" /></p>
+<p align="center"><img src="imgs/logo.png" alt="Cryfa" width="150" 
+border="0" /></p>
 <br>
 
-Cryfa is a FASTA/FASTQ compaction plus encryption tool.
+Cryfa is a FASTA/FASTQ compression and encryption tool.
 It uses AES (Advanced Encryption Standard) for the purpose of encryption.
-Cryfa can be applied to any FASTA or FASTQ file (DNA sequences, headers and quality-scores).
-It compacts 3 DNA bases into 1 char, using a fixed block size packing.
-When compared with general compression tools, it allows to decrease the file size by a factor of 3, without creating security problems such as those derived from CRIME or BREACH attacks.
+Cryfa can be applied to any FASTA or FASTQ file (DNA sequences, headers and
+quality-scores).
+Compacting 3 DNA bases into 1 char, it uses a fixed block size packing.
+Compared with general compression tools, it allows to decrease the file size by
+a factor of 3, without creating security problems such as those derived from 
+CRIME or BREACH attacks.
 
 
 ## INSTALLATION
-First, get cryfa using:
+First, get cryfa:
 ```bash
 git clone https://github.com/pratas/cryfa.git
 ```
-Then, if you want to run cryfa in stand-alone mode, use the following command:
-```bash
-cmake . | make | ./cryfa [OPTION]... -k [KEY_FILE] [INPUT_FILE] > [OUTPUT_FILE]
-```
-As an example:
-```bash
-cmake . | make | ./cryfa -t 8 -k pass.txt in.fa > out
-```
-If you want to download datasets and compare cryfa with other methods, you should set the parameters in **run.sh**, which is an all-in-one bash script.
-
-Finally, you can run the **run.sh** script using:
-```bash
-./run.sh
-```
-or
-```bash
-./run.sh INPUT_FILE > OUTPUT_FILE
-```
-for a different parameter setting.
-Please note that when the parameter *CRYFA_COMP_DECOMP_COMPARE* is set to 1, compression, decompression and comparing results will be carried out. In this case, **run.sh** script must be run without redirection symbol, *>*, in the following way:
-```bash
-./run.sh INPUT_FILE OUTPUT_FILE
-```
-
-## PARAMETERS
-Cryfa executable is a file called **cryfa**. To see the possible options, if this executable is not yet made, you should make it, first, using:
+Then, go to the cryfa directory and make the project:
 ```bash
 cmake .
 make
 ```
-Then you can type
+
+
+## RUNNING
+If you want to run cryfa in stand-alone mode, use the following command:
+```bash
+./cryfa [OPTION]... -k [KEY_FILE] [-d] [IN_FILE] > [OUT_FILE]
+```
+For example, to compress:
+```bash
+./cryfa -t 8 -k pass.txt in.fq > comp
+```
+and, to decompress:
+```bash
+./cryfa -t 8 -k pass.txt -d comp > orig.fq
+```
+Options are described in the following section.
+
+If you want to compare cryfa with other methods, set the parameters in 
+**run.sh** bash script, then run it:
+```bash
+./run.sh
+```
+With this script, you can download the datasets, install the dependencies, 
+install the compression and encryption methods and finally, run them.
+
+
+### OPTIONS
+To see the possible options, you can type:
 ```bash
 ./cryfa -h
 ```
 
-This will print the following options:
+which provides the following:
 ```bash
-Synopsis:
-    cryfa [OPTION]... -k [KEY_FILE] [INPUT_FILE]
+SYNOPSIS
+      ./cryfa [OPTION]... -k [KEY_FILE] [-d] [IN_FILE] > [OUT_FILE]
 
-Options:
-    -h,  --help
-         usage guide
+SAMPLE
+      COMPRESSION:     ./cryfa -t 8 -k pass.txt in.fq > comp     
+      DECOMPRESSION:   ./cryfa -t 8 -k pass.txt -d comp > orig.fq
 
-    -k [KEY_FILE],  --key [KEY_FILE]
-         key file name -- Mandatory
+DESCRIPTION
+      Compress and encrypt FASTA/FASTQ files.
 
-    -d,  --decrypt
-         decryption
+      The KEY_FILE specifies a file including the password.
 
-    -v,  --verbose
-         verbose mode (more information)
+      -h,  --help
+           usage guide
 
-    -s,  --disableShuffle
-         disable shuffling input
+      -k [KEY_FILE],  --key [KEY_FILE]
+           key file name -- MANDATORY
 
-    -t [NUMBER],  --thread [NUMBER]
-         number of threads
+      -d,  --decrypt
+           decryption
 
-    -a,  --about
-         about cryfa
+      -v,  --verbose
+           verbose mode (more information)
+
+      -s,  --disable_shuffle
+           disable input shuffling
+
+      -t [NUMBER],  --thread [NUMBER]
+           number of threads
 ```
-Cryfa uses standard input and ouput streams, hence, it can be directly integrated with pipelines.
+
+Cryfa uses standard input and ouput streams, hence, it can be directly 
+integrated with pipelines.
+
 
 ## CITATION
-Please cite the followings, if you use cryfa:
-* D. Pratas, M. Hosseini and A.J. Pinho, "Cryfa: a tool to compact and encrypt FASTA files," *11'th International Conference on Practical Applications of Computational Biology & Bioinformatics* (PACBB), Springer, June 2017.
+Please cite the following, if you use cryfa:
+* D. Pratas, M. Hosseini and A.J. Pinho, "Cryfa: a tool to compact and encrypt
+FASTA files," *11'th International Conference on Practical Applications of 
+Computational Biology & Bioinformatics* (PACBB), Springer, June 2017.
+
 
 ## RELEASES
-https://github.com/pratas/cryfa/releases:
-
-* Release 2: FASTA and FASTQ handling.
-* Release 1: FASTA handling.
+* [Release](https://github.com/pratas/cryfa/releases) 2: FASTA and FASTQ handling.
+* [Release](https://github.com/pratas/cryfa/releases) 1: FASTA handling.
 
 ## ISSUES
-Please let us know if there is any [issues](https://github.com/pratas/cryfa/issues).
+Please let us know if there is any 
+[issues](https://github.com/pratas/cryfa/issues).
+
 
 ## LICENSE
-Cryfa is under GPL v3 license. For more information, click [here](http://www.gnu.org/licenses/gpl-3.0.html).
+Cryfa is under GPL v3 license. For more information, click 
+[here](http://www.gnu.org/licenses/gpl-3.0.html).

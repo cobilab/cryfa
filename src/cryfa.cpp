@@ -55,22 +55,18 @@ inline char fileType (const string& inFileName)
     // Skip leading blank lines or spaces
     while (in.peek()=='\n' || in.peek()==' ')    in.get(c);
     
-    
-    
-    //todo sam
-    // SAM/FASTQ
+    // FASTQ
     while (in.peek() == '@')     IGNORE_THIS_LINE(in);
     byte nTabs=0;    while (in.get(c) && c!='\n')  if (c=='\t') ++nTabs;
 
-    if (nTabs > 9)             { in.close();    return 'S'; }       // SAM
-    else if (in.peek() == '+') { in.close();    return 'Q'; }       // FASTQ
+    if (in.peek() == '+') { in.close();    return 'Q'; }            // FASTQ
 
     // FASTA/Not valid
     in.clear();   in.seekg(0, std::ios::beg); // Return to beginning of the file
     while (in.peek()!='>' && in.peek()!=EOF)    IGNORE_THIS_LINE(in);
 
-    if (in.peek() == '>')      { in.close();    return 'A'; }       // FASTA
-    else                       { in.close();    return 'n'; }       // Not valid
+    if (in.peek() == '>') { in.close();    return 'A'; }            // FASTA
+    else                  { in.close();    return 'n'; }            // Not valid
 }
 
 /**
@@ -118,7 +114,6 @@ inline void checkPass (const string& keyFileName, const bool k_flag)
     }
 }
 
-
 // Instantiation of static variables in InArgs structure
 bool   InArgs::VERBOSE         = false;
 bool   InArgs::DISABLE_SHUFFLE = false;
@@ -126,13 +121,11 @@ byte   InArgs::N_THREADS       = DEFAULT_N_THR;
 string InArgs::IN_FILE_NAME    = "";
 string InArgs::KEY_FILE_NAME   = "";
 
-
 /**
  * @brief Main function
  */
 int main (int argc, char* argv[])
 {
-////auto       startTime = high_resolution_clock::now();          // Start timer
     InArgs     inArgsObj;
     Security   secObj;
     EnDecrypto cryptObj;
@@ -141,7 +134,7 @@ int main (int argc, char* argv[])
     
     inArgsObj.IN_FILE_NAME = argv[argc-1];    // Input file name
 
-    static int h_flag, a_flag, v_flag, d_flag, s_flag;
+    static int h_flag, v_flag, d_flag, s_flag;
     bool       k_flag = false;
     int        c;                      // Deal with getopt_long()
     int        option_index;           // Option index stored by getopt_long()
@@ -150,7 +143,6 @@ int main (int argc, char* argv[])
     static struct option long_options[] =
     {
         {"help",            no_argument, &h_flag, (int) 'h'},   // Help
-        {"about",           no_argument, &a_flag, (int) 'a'},   // About
         {"verbose",         no_argument, &v_flag, (int) 'v'},   // Verbose
         {"disableShuffle",  no_argument, &s_flag, (int) 's'},   // D (un)shuffle
         {"decrypt",         no_argument, &d_flag, (int) 'd'},   // Decrypt mode
@@ -162,7 +154,7 @@ int main (int argc, char* argv[])
     while (true)
     {
         option_index = 0;
-        if ((c = getopt_long(argc, argv, ":havsdk:t:",
+        if ((c = getopt_long(argc, argv, ":hvsdk:t:",
                              long_options, &option_index)) == -1)         break;
 
         switch (c)
@@ -180,7 +172,6 @@ int main (int argc, char* argv[])
                 break;
                 
             case 'h':  h_flag=1;    Help();                               break;
-            case 'a':  a_flag=1;    About();                              break;
             case 'v':  v_flag=1;    inArgsObj.VERBOSE = true;             break;
             case 's':  s_flag=1;    inArgsObj.DISABLE_SHUFFLE = true;     break;
             case 'd':  d_flag=1;                                          break;
@@ -192,13 +183,12 @@ int main (int argc, char* argv[])
     }
 
     // Check password file
-    if (!h_flag && !a_flag)    checkPass(inArgsObj.KEY_FILE_NAME, k_flag);
+    if (!h_flag)    checkPass(inArgsObj.KEY_FILE_NAME, k_flag);
     
     // Verbose mode
-    if (v_flag)
-        cerr << "Verbose mode on.\n";
+    if (v_flag)     cerr << "Verbose mode on.\n";
     
-    // Decrypt + Decompress
+    // Decrypt + decompress
     if (d_flag)
     {
         cryptObj.decrypt();                                         // Decrypt
@@ -213,35 +203,21 @@ int main (int argc, char* argv[])
         }
         in.close();
         
-////    auto finishTime = high_resolution_clock::now();        // Stop timer
-////    std::chrono::duration<double> elapsed =                // Duration (sec)
-////            finishTime - startTime;
-////
-////    cerr << "took " << std::fixed << setprecision(4) << elapsed.count()
-////         << " seconds.\n";
-
         return 0;
     }
     
-    if (!h_flag && !a_flag)
-    {//todo sam
+    // Compress + encrypt
+    if (!h_flag)
+    {
         switch (fileType(inArgsObj.IN_FILE_NAME))
         {
             case 'A':  cerr<<"Compacting...\n";   fastaObj.compress();    break;
             case 'Q':  cerr<<"Compacting...\n";   fastqObj.compress();    break;
-            case 'S':  cerr<<"Compacting...\n";   cerr<<"SAM";            break;
             case 'n':
             default :  cerr<<"Error: \"" << inArgsObj.IN_FILE_NAME << "\" "
                            <<"is not a valid FASTA or FASTQ file.\n";
                        return 0;                                          break;
         }
-
-////    auto finishTime = high_resolution_clock::now();        // Stop timer
-////    std::chrono::duration<double> elapsed =                // Duration (sec)
-////            finishTime - startTime;
-////
-////    cerr << "took " << std::fixed << setprecision(4) << elapsed.count()
-////         << " seconds.\n";
     }
     
     return 0;

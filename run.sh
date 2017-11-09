@@ -1,5 +1,5 @@
           #######################################################
-          #                 All in one script                   #
+          #                        Run                          #
           #       - - - - - - - - - - - - - - - - - - - -       #
           #        Morteza Hosseini    seyedmorteza@ua.pt       #
           #        Diogo Pratas        pratas@ua.pt             #
@@ -8,7 +8,7 @@
 #!/bin/bash
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   parameters -- set to 1 to activate and 0 to deactivate
+#   parameters -- set to 1 to activate, and 0 to deactivate
 #   get/generate datasets, install dependencies, install & run methods
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -51,14 +51,12 @@ RUN_METHODS=1
       # FASTA
       RUN_GZIP_FA=0                # gzip
       RUN_BZIP2_FA=0               # bzip2
-###      RUN_LZMA_FA=0                # lzma
       RUN_MFCOMPRESS=0             # MFCompress
       RUN_DELIMINATE=0             # DELIMINATE
       RUN_CRYFA_FA=0               # cryfa
       # FASTQ
       RUN_GZIP_FQ=0                # gzip
       RUN_BZIP2_FQ=0               # bzip2
-###      RUN_LZMA_FQ=0                # lzma
       RUN_FQZCOMP=0                # fqzcomp
       RUN_QUIP=0                   # quip
       RUN_DSRC=0                   # DSRC
@@ -78,13 +76,11 @@ RUN_METHODS=1
       # FASTA
       RUN_GZIP_FA_AESCRYPT=0       # gzip + AES crypt
       RUN_BZIP2_FA_AESCRYPT=0      # bzip2 + AES crypt
-###      RUN_LZMA_FA_AESCRYPT=0       # lzma + AES crypt
       RUN_MFCOMPRESS_AESCRYPT=0    # MFCompress + AES crypt
       RUN_DELIMINATE_AESCRYPT=0    # DELIMINATE + AES crypt
       # FASTQ
       RUN_GZIP_FQ_AESCRYPT=0       # gzip + AES crypt
       RUN_BZIP2_FQ_AESCRYPT=0      # bzip2 + AES crypt
-###      RUN_LZMA_FQ_AESCRYPT=0       # lzma + AES crypt
       RUN_FQZCOMP_AESCRYPT=0       # fqzcomp + AES crypt
       RUN_QUIP_AESCRYPT=0          # quip + AES crypt
       RUN_DSRC_AESCRYPT=0          # DSRC + AES crypt
@@ -96,20 +92,8 @@ RUN_METHODS=1
   CRYFA_EXCLUSIVE=0
       MAX_N_THR=8                  # max number of threads
       CRYFA_XCL_DATASET="dataset/FA/V/viruses.fasta"
-#      CRYFA_XCL_DATASET="dataset/FA/HS/HS.fasta"
-#      CRYFA_XCL_DATASET="dataset/FQ/HS/HS-ERR013103_1.fastq"
-#      CRYFA_XCL_DATASET="dataset/FQ/DS/DS-B1088_SR.fastq"
       RUN_CRYFA_XCL=1
       PRINT_RESULTS_CRYFA_XCL=1
-
-
-# test purpose
-N_THREADS=8             # cryfa: number of threads
-SHUFFLE=1               # cryfa: shuffle -- enabled by default
-VERBOSE=1               # cryga: verbose mode -- disabled by default
-CRYFA_COMP=0            # cryfa -- compress
-CRYFA_DECOMP=0          # cryfa -- decompress
-CRYFA_COMP_DECOMP_COMPARE=0   # test -- cryfa: comp. + decomp. + compare results
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -146,6 +130,7 @@ Synth="Synth"
 #   definitions
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 CRYFA_DEFAULT_N_THR=8
+CRYFA_KEY_FILE="pass.txt"
 CHR="chr"
 HUMAN_CHR_PREFIX="hs_ref_GRCh38.p7_"
 HUMAN_CHROMOSOME="$HUMAN_CHR_PREFIX$CHR"
@@ -155,8 +140,8 @@ INF="dat"         # information (data) file type
 RES="res"         # result file type
 fasta="fasta"     # FASTA file extension
 fastq="fastq"     # FASTQ file extension
-FASTA_METHODS="GZIP BZIP2 MFCOMPRESS DELIM"         # LZMA
-FASTQ_METHODS="GZIP BZIP2 FQZCOMP QUIP DSRC FQC"    # LZMA
+FASTA_METHODS="GZIP BZIP2 MFCOMPRESS DELIM"
+FASTQ_METHODS="GZIP BZIP2 FQZCOMP QUIP DSRC FQC"
 ENC_METHODS="AESCRYPT"
 FASTA_DATASET="HS viruses SynFA-1 SynFA-2"
 FASTQ_DATASET="HS-ERR013103_1 HS-ERR015767_2 HS-ERR031905_2 HS-SRR442469_1"
@@ -588,7 +573,6 @@ then
       case $methodUpCase in
         "GZIP")                 echo "gzip";;
         "BZIP2")                echo "bzip2";;
-        "LZMA")                 echo "LZMA";;
         "MFCOMPRESS")           echo "MFCompress";;
         "DELIM"|"DELIMINATE")   echo "DELIMINATE";;
         "CRYFA")                echo "Cryfa";;
@@ -651,9 +635,10 @@ then
             dProg="MFCompress";    dCmd="./MFCompressD";;
 
         "cryfa")
-            cFT="cryfa";     cCmd="./cryfa -k pass.txt -t $CRYFA_DEFAULT_N_THR";
+            cFT="cryfa";
+            cCmd="./cryfa -k $CRYFA_KEY_FILE -t $CRYFA_DFAULT_N_THR";
             cProg="cryfa";   dProg="cryfa";
-            dCmd="./cryfa -k pass.txt -t $CRYFA_DEFAULT_N_THR -d";;
+            dCmd="./cryfa -k $CRYFA_KEY_FILE -t $CRYFA_DEFAULT_N_THR -d";;
       esac
 
       ### compress
@@ -1778,7 +1763,6 @@ then
       ### FASTA
       if [[ $RUN_GZIP_FA    -eq 1 ]]; then compDecompOnDataset gzip       fa; fi
       if [[ $RUN_BZIP2_FA   -eq 1 ]]; then compDecompOnDataset bzip2      fa; fi
-###   if [[ $RUN_LZMA_FA    -eq 1 ]]; then compDecompOnDataset lzma       fa; fi
       if [[ $RUN_MFCOMPRESS -eq 1 ]]; then compDecompOnDataset mfcompress fa; fi
       if [[ $RUN_DELIMINATE -eq 1 ]]; then compDecompOnDataset delim      fa; fi
       if [[ $RUN_CRYFA_FA   -eq 1 ]];
@@ -1794,7 +1778,6 @@ then
       ### FASTQ
       if [[ $RUN_GZIP_FQ    -eq 1 ]]; then compDecompOnDataset gzip       fq; fi
       if [[ $RUN_BZIP2_FQ   -eq 1 ]]; then compDecompOnDataset bzip2      fq; fi
-###   if [[ $RUN_LZMA_FQ    -eq 1 ]]; then compDecompOnDataset lzma       fq; fi
       if [[ $RUN_FQZCOMP    -eq 1 ]]; then compDecompOnDataset fqzcomp    fq; fi
       if [[ $RUN_QUIP       -eq 1 ]]; then compDecompOnDataset quip       fq; fi
       if [[ $RUN_DSRC       -eq 1 ]]; then compDecompOnDataset dsrc       fq; fi
@@ -1906,9 +1889,6 @@ then
       if [[ $RUN_BZIP2_FA_AESCRYPT -eq 1 ]]; then
         compEncDecDecompOnDataset bzip2 fa aescrypt;
       fi
-###      if [[ $RUN_LZMA_FA_AESCRYPT -eq 1 ]]; then
-###        compEncDecDecompOnDataset lzma fa aescrypt;
-###      fi
       if [[ $RUN_MFCOMPRESS_AESCRYPT -eq 1 ]]; then
         compEncDecDecompOnDataset mfcompress fa aescrypt;
       fi
@@ -1923,9 +1903,6 @@ then
       if [[ $RUN_BZIP2_FQ_AESCRYPT -eq 1 ]]; then
         compEncDecDecompOnDataset bzip2 fq aescrypt;
       fi
-###      if [[ $RUN_LZMA_FQ_AESCRYPT -eq 1 ]]; then
-###        compEncDecDecompOnDataset lzma fq aescrypt;
-###      fi
       if [[ $RUN_FQZCOMP_AESCRYPT -eq 1 ]]; then
         compEncDecDecompOnDataset fqzcomp fq aescrypt;
       fi
@@ -2016,8 +1993,9 @@ then
           cd $cryfa_xcl
 
           for nThr in $CRYFA_THR_RUN; do
-              cFT="cryfa";           cCmd="./cryfa -k pass.txt -t $nThr";
-              dCmd="./cryfa -k pass.txt -t $nThr -d";
+              cFT="cryfa";
+              cCmd="./cryfa -k $CRYFA_KEY_FILE -t $nThr";
+              dCmd="./cryfa -k $CRYFA_KEY_FILE -t $nThr -d";
 
               # compress
               progMemoryStart cryfa &
@@ -2114,75 +2092,4 @@ then
           cd ..
       fi
   fi
-fi
-
-
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   test purpose -- run cryfa - compress
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ $CRYFA_COMP -eq 1 ]]; then
-
-    ### shuffle off + verbose off
-    if [[ $SHUFFLE -eq 0 && $VERBOSE -eq 0 ]]; then
-        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt -s $1
-
-    ### shuffle off + verbose on
-    elif [[ $SHUFFLE -eq 0 && $VERBOSE -eq 1 ]]; then
-        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt -s -v $1
-
-    ### shuffle on + verbose off
-    elif [[ $SHUFFLE -eq 1 && $VERBOSE -eq 0 ]]; then
-        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt $1
-
-    ### shuffle on + verbose on
-    elif [[ $SHUFFLE -eq 1 && $VERBOSE -eq 1 ]]; then
-        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt -v $1
-    fi
-fi
-
-
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   test purpose -- run cryfa - decompress
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ $CRYFA_DECOMP -eq 1 ]]; then
-
-    ### verbose off
-    if [[ $VERBOSE -eq 0 ]]; then
-        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt -d $1
-
-    ### verbose on
-    elif [[ $VERBOSE -eq 1 ]]; then
-        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt -v -d $1
-    fi
-fi
-
-
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   test purpose -- run cryfa -- compress + decompress + compare results
-#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ $CRYFA_COMP_DECOMP_COMPARE -eq 1 ]]; then
-
-    ### shuffle off + verbose off
-    if [[ $SHUFFLE -eq 0 && $VERBOSE -eq 0 ]]; then
-        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt -s $1 > $2#compress
-        ./cryfa -t $N_THREADS -k pass.txt -d $2>"CRYFA_DECOMPRESSED" #decompress
-
-    ### shuffle off + verbose on
-    elif [[ $SHUFFLE -eq 0 && $VERBOSE -eq 1 ]]; then
-        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt -sv $1 >$2#compress
-        ./cryfa -t $N_THREADS -k pass.txt -vd $2>"CRYFA_DECOMPRESSED"#decompress
-
-    ### shuffle on + verbose off
-    elif [[ $SHUFFLE -eq 1 && $VERBOSE -eq 0 ]]; then
-        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt $1 > $2   #compress
-        ./cryfa -t $N_THREADS -k pass.txt -d $2>"CRYFA_DECOMPRESSED" #decompress
-
-    ### shuffle on + verbose on
-    elif [[ $SHUFFLE -eq 1 && $VERBOSE -eq 1 ]]; then
-        cmake . | make | ./cryfa -t $N_THREADS -k pass.txt -v $1 >$2 #compress
-        ./cryfa -t $N_THREADS -k pass.txt -vd $2>"CRYFA_DECOMPRESSED"#decompress
-    fi
-
-    ### compare results
-    cmp $1 "CRYFA_DECOMPRESSED"
 fi

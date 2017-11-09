@@ -104,7 +104,7 @@ void Security::decrypt ()
     { cerr << "Error: failed opening \"" << IN_FILE_NAME << "\".\n";    exit(1); }
     
     // Watermark
-    string watermark = "#cryfa v" + VERSION_CRYFA + "." + RELEASE_CRYFA + "\n";
+    string watermark = "#cryfa v" + VERSION + "\n";
     
     // Invalid encrypted file
     string line;    getline(in, line);

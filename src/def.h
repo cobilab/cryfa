@@ -20,9 +20,11 @@ using std::unordered_map;
 using std::vector;
 
 
-// Version and release
-const string VERSION_CRYFA = "1";
-const string RELEASE_CRYFA = "11.17";
+// Version
+const string MONTH     = "11";
+const string YEAR      = "17";
+const string VERSION   = YEAR + "." + MONTH;
+const string DEV_YEARS = "2017";
 
 
 // Typedefs
@@ -186,61 +188,53 @@ const htbl_t DNA_MAP =
 inline void Help ()
 {
     cout                                                                << '\n'
-        << "NAME"                                                       << '\n'
-        << "    cryfa - FASTA/FASTQ compaction and encryption"          << '\n'
+       << "NAME"                                                        << '\n'
+       << "      cryfa v" << VERSION << " - FASTA/FASTQ compression and "
+       << "encryption"                                                  << '\n'
                                                                         << '\n'
-        << "SYNOPSIS"                                                   << '\n'
-        << "    ./cryfa [OPTION]... -k [KEY_FILE] [-d] [INPUT_FILE] "
-        <<                                          "> [OUTPUT_FILE]"   << '\n'
+       << "AUTHORS"                                                     << '\n'
+       << "      Morteza Hosseini    seyedmorteza@ua.pt"                << '\n'
+       << "      Diogo Pratas        pratas@ua.pt"                      << '\n'
+       << "      Armando J. Pinho    ap@ua.pt"                          << '\n'
                                                                         << '\n'
-        << "OPTIONS"                                                    << '\n'
-        << "    -h,  --help"                                            << '\n'
-        << "         usage guide"                                       << '\n'
+       << "SYNOPSIS"                                                    << '\n'
+       << "      ./cryfa [OPTION]... -k [KEY_FILE] [-d] [IN_FILE] "
+       <<                                            "> [OUT_FILE]"     << '\n'
                                                                         << '\n'
-        << "    -k [KEY_FILE],  --key [KEY_FILE]"                       << '\n'
-        << "         key file name -- Mandatory"                        << '\n'
+       << "SAMPLE"                                                      << '\n'
+       << "      COMPRESSION:     ./cryfa -t 8 -k pass.txt in.fq > comp     \n"
+       << "      DECOMPRESSION:   ./cryfa -t 8 -k pass.txt -d comp > orig.fq\n"
                                                                         << '\n'
-        << "    -d,  --decrypt"                                         << '\n'
-        << "         decryption"                                        << '\n'
+       << "DESCRIPTION"                                                 << '\n'
+       << "      Compress and encrypt FASTA/FASTQ files."               << '\n'
                                                                         << '\n'
-        << "    -v,  --verbose"                                         << '\n'
-        << "         verbose mode (more information)"                   << '\n'
+       << "      The KEY_FILE specifies a file including the password." << '\n'
                                                                         << '\n'
-        << "    -s,  --disable_shuffle"                                 << '\n'
-        << "         disable shuffling input"                           << '\n'
+       << "      -h,  --help"                                           << '\n'
+       << "           usage guide"                                      << '\n'
                                                                         << '\n'
-        << "    -t [NUMBER],  --thread [NUMBER]"                        << '\n'
-        << "         number of threads"                                 << '\n'
+       << "      -k [KEY_FILE],  --key [KEY_FILE]"                      << '\n'
+       << "           key file name -- MANDATORY"                       << '\n'
                                                                         << '\n'
-        << "    -a,  --about"                                           << '\n'
-        << "         about cryfa"                                       << '\n'
-                                                                        << '\n';
-    
-    exit(1);
-}
-
-/**
- * @brief About cryfa
- */
-inline void About ()
-{
-    cout                                                                << '\n'
-        << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << '\n'
-        << "  cryfa v" << VERSION_CRYFA << "." << RELEASE_CRYFA
-        << ":: FASTA/FASTQ compaction and encryption"                   << '\n'
-        << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << '\n'
-        << "          Morteza Hosseini    seyedmorteza@ua.pt"           << '\n'
-        << "          Diogo Pratas        pratas@ua.pt"                 << '\n'
-        << "          Armando J. Pinho    ap@ua.pt"                     << '\n'
-        << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << '\n'
-        << "     Copyright (C) 2017, IEETA, University of Aveiro"       << '\n'
-        << "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%" << '\n'
+       << "      -d,  --decrypt"                                        << '\n'
+       << "           decryption"                                       << '\n'
                                                                         << '\n'
-        << "This is a Free software, under GPLv3. You may redistribute" << '\n'
-        << " copies of it under the terms of the GNU - General Public"  << '\n'
-        << " License v3 <http://www.gnu.org/licenses/gpl.html>. There"  << '\n'
-        << "   is NOT ANY WARRANTY, to the extent permitted by law."    << '\n'
-                                                                        << '\n';
+       << "      -v,  --verbose"                                        << '\n'
+       << "           verbose mode (more information)"                  << '\n'
+                                                                        << '\n'
+       << "      -s,  --disable_shuffle"                                << '\n'
+       << "           disable input shuffling"                          << '\n'
+                                                                        << '\n'
+       << "      -t [NUMBER],  --thread [NUMBER]"                       << '\n'
+       << "           number of threads"                                << '\n'
+                                                                        << '\n'
+       << "COPYRIGHT"                                                   << '\n'
+       << "      Copyright (C) " << DEV_YEARS << ", IEETA, University of "
+       <<                                                     "Aveiro." << '\n'
+       << "      This is a Free software, under GPLv3. You may redistribute \n"
+       << "      copies of it under the terms of the GNU - General Public   \n"
+       << "      License v3 <http://www.gnu.org/licenses/gpl.html>. There   \n"
+       << "      is NOT ANY WARRANTY, to the extent permitted by law."  << '\n';
     
     exit(1);
 }
