@@ -16,7 +16,7 @@
 /**
  * @brief Security
  */
-class Security : protected InArgs
+class Security : public InArgs
 {
 public:
     void decrypt       ();

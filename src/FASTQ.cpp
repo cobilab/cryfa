@@ -94,29 +94,6 @@ void FASTQ::compress ()
 
     // Cout encrypted content
     encrypt();
-
-
-    /*
-    // get size of file
-    infile.seekg(0, infile.end);
-    long size = 1000000;//infile.tellg();
-    infile.seekg(0);
-
-    // allocate memory for file content
-    char *buffer = new char[size];
-
-    // read content of infile
-    infile.read(buffer, size);
-
-    // write to outfile
-    outfile.write(buffer, size);
-
-    // release dynamically-allocated memory
-    delete[] buffer;
-
-    outfile.close();
-    infile.close();
-    */
 }
 
 /**
@@ -337,33 +314,6 @@ void FASTQ::gatherHdrQs (string& headers, string& qscores)
     for (byte i = 32; i != 64;  ++i)    if (*(hChars+i))  headers += i;
     for (byte i = 65; i != 127; ++i)    if (*(hChars+i))  headers += i;
     for (byte i = 32; i != 127; ++i)    if (*(qChars+i))  qscores += i;
-
-
-    /* IDEA -- Slower
-    u32 hL=0, qL=0;
-    u64 hH=0, qH=0;
-    string headers, qscores;
-    ifstream in(IN_FILE_NAME);
-    string line;
-    while (!in.eof())
-    {
-        if (getline(in, line).good())
-            for (const char &c : line)
-                (c & 0xC0) ? (hH |= 1ULL<<(c-64)) : (hL |= 1U<<(c-32));
-        IGNORE_THIS_LINE(in);    // ignore sequence
-        IGNORE_THIS_LINE(in);    // ignore +
-        if (getline(in, line).good())
-            for (const char &c : line)
-                (c & 0xC0) ? (qH |= 1ULL<<(c-64)) : (qL |= 1U<<(c-32));
-    }
-    in.close();
-
-    // gather the characters -- ignore '@'=64 for headers
-    for (byte i = 0; i != 32; ++i)    if (hL>>i & 1)  headers += i+32;
-    for (byte i = 1; i != 62; ++i)    if (hH>>i & 1)  headers += i+64;
-    for (byte i = 0; i != 32; ++i)    if (qL>>i & 1)  qscores += i+32;
-    for (byte i = 1; i != 62; ++i)    if (qH>>i & 1)  qscores += i+64;
-    */
 }
 
 /**
@@ -398,9 +348,9 @@ void FASTQ::decompress ()
     // Distribute file among threads, for reading and unpacking
     using unpackHQFP    = void (FASTQ::*) (const unpackfq_s&, byte);
     unpackHQFP unpackHQ =
-           (headers.length() <= MAX_C5)
-           ? (qscores.length() <= MAX_C5 ? &FASTQ::unpackHSQS : &FASTQ::unpackHSQL)
-           : (qscores.length() >  MAX_C5 ? &FASTQ::unpackHLQL : &FASTQ::unpackHLQS);
+       (headers.length() <= MAX_C5)
+       ? (qscores.length() <= MAX_C5 ? &FASTQ::unpackHSQS : &FASTQ::unpackHSQL)
+       : (qscores.length() >  MAX_C5 ? &FASTQ::unpackHLQL : &FASTQ::unpackHLQS);
     
     for (t = 0; t != N_THREADS; ++t)
     {

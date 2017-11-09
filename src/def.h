@@ -22,7 +22,7 @@ using std::vector;
 
 // Version and release
 const string VERSION_CRYFA = "1";
-const string RELEASE_CRYFA = "10.17";
+const string RELEASE_CRYFA = "11.17";
 
 
 // Typedefs
@@ -64,7 +64,6 @@ struct POWER<B, 0> { static const u64 val = 1; };
 
 
 // Macros
-//#define LOOP(i,S)               for(byte (i)=0; i!=(S); ++i)
 #define LOOP(i,S)                 for(const char& (i) : (S))
 #define LOOP2(i,j,S)              LOOP(i,S) LOOP(j,S)
 #define LOOP3(i,j,k,S)            LOOP(i,S) LOOP(j,S) LOOP(k,S)
@@ -187,10 +186,14 @@ const htbl_t DNA_MAP =
 inline void Help ()
 {
     cout                                                                << '\n'
-        << "Synopsis:"                                                  << '\n'
-        << "    cryfa [OPTION]... -k [KEY_FILE] [INPUT_FILE]"           << '\n'
+        << "NAME"                                                       << '\n'
+        << "    cryfa - FASTA/FASTQ compaction and encryption"          << '\n'
                                                                         << '\n'
-        << "Options:"                                                   << '\n'
+        << "SYNOPSIS"                                                   << '\n'
+        << "    ./cryfa [OPTION]... -k [KEY_FILE] [-d] [INPUT_FILE] "
+        <<                                          "> [OUTPUT_FILE]"   << '\n'
+                                                                        << '\n'
+        << "OPTIONS"                                                    << '\n'
         << "    -h,  --help"                                            << '\n'
         << "         usage guide"                                       << '\n'
                                                                         << '\n'

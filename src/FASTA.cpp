@@ -170,10 +170,6 @@ void FASTA::pack (const packfa_s &pkStruct, byte threadID)
             // Sequence
             else
             {
-                //todo. check if it's needed to check for blank char
-//                if (line.find(' ') != string::npos)
-//              { cerr<< "Invalid sequence -- spaces not allowed.\n"; exit(1); }
-
                 // (char) 252 instead of '\n' at the end of each seq line
                 seq += line;
                 seq += (char) 252;

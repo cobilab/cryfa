@@ -211,7 +211,6 @@ void EnDecrypto::buildUnpackTbl (vector<string> &unpack, const string &strIn,
  * @param  key  Key
  * @return Value (based on the idea of key-value in a hash table)
  */
-// Maybe byte <-> u16 replacement
 byte EnDecrypto::dnaPackIndex (const string &key)
 {
     htbl_t::const_iterator got = DNA_MAP.find(key);
@@ -757,13 +756,15 @@ void EnDecrypto::unpackSeq (string &out, string::iterator &i)
 
 /**
  * @brief Join partially packed files
- * @param headers  Headers
- * @param qscores  Quality scores
+ * @param headers   Headers
+ * @param qscores   Quality scores
+ * @param fT        File type
+ * @param justPlus  If the third line of FASTQ contains only the '+' char
  */
 void EnDecrypto::joinPackedFiles (const string &headers, const string &qscores,
                                   char fT, bool justPlus) const
 {
-    byte     t;                    // For threads
+    byte     t;                            // For threads
     ifstream pkFile[N_THREADS];
     
     // Watermark for encrypted file
@@ -777,13 +778,13 @@ void EnDecrypto::joinPackedFiles (const string &headers, const string &qscores,
         case 'Q':   pckdFile << (char) 126;                   break;    // FASTQ
         default :                                             break;
     }
-    pckdFile << (!DISABLE_SHUFFLE ? (char) 128 : (char) 129); //Shuffling on/off
-    pckdFile << headers;                   // Send headers to decryptor
-    pckdFile << (char) 254;                // To detect headers in dec.
+    pckdFile << (!DISABLE_SHUFFLE ? (char) 128 : (char) 129);
+    pckdFile << headers;
+    pckdFile << (char) 254;                // To detect headers in decryptor
     if (fT == 'Q')
     {
-        pckdFile << qscores;                   // Send qscores to decryptor
-        pckdFile << (justPlus ? (char) 253 : '\n');          // If just '+'
+        pckdFile << qscores;
+        pckdFile << (justPlus ? (char) 253 : '\n');
     }
     
     // Open input files
@@ -825,12 +826,12 @@ void EnDecrypto::joinPackedFiles (const string &headers, const string &qscores,
  */
 void EnDecrypto::joinUnpackedFiles ()  const
 {
-    byte     t;                     // For threads
+    byte     t;                           // For threads
     ifstream upkdFile[N_THREADS];
     string   line;
     for (t = N_THREADS; t--;)    upkdFile[t].open(UPK_FILENAME+to_string(t));
     
-    bool prevLineNotThrID;            // If previous line was "THRD=" or not
+    bool prevLineNotThrID;                // If previous line was "THRD=" or not
     while (!upkdFile[0].eof())
     {
         for (t = 0; t != N_THREADS; ++t)
