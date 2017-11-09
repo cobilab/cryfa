@@ -84,7 +84,7 @@ void FASTQ::compress ()
     if (VERBOSE)    cerr << "Shuffling done!\n";
     
     // Join partially packed files
-    joinPackedFiles(headers, qscores);
+    joinPackedFiles(headers, qscores, 'Q', hasJustPlus());
 
     auto finishTime = high_resolution_clock::now();                 //Stop timer
     std::chrono::duration<double> elapsed = finishTime - startTime; //Dur. (sec)
@@ -293,63 +293,6 @@ void FASTQ::pack (const packfq_s &pkStruct, byte threadID)
 
     pkfile.close();
     in.close();
-}
-
-/**
- * @brief Join partially packed files
- * @param headers  Headers
- * @param qscores  Quality scores
- */
-void FASTQ::joinPackedFiles (const string &headers, const string &qscores) const
-{
-    byte     t;                    // For threads
-    ifstream pkFile[N_THREADS];
-    string   context;
-    
-    // Watermark for encrypted file
-    cout << "#cryfa v" + VERSION_CRYFA + "." + RELEASE_CRYFA + "\n";
-    
-    // Open packed file
-    ofstream pckdFile(PCKD_FILENAME);
-    pckdFile << (char) 126;                // Let decryptor know this is FASTQ
-    pckdFile << (!DISABLE_SHUFFLE ? (char) 128 : (char) 129); //Shuffling on/off
-    pckdFile << headers;                   // Send headers to decryptor
-    pckdFile << (char) 254;                // To detect headers in dec.
-    pckdFile << qscores;                   // Send qscores to decryptor
-    pckdFile << (hasJustPlus() ? (char) 253 : '\n');          // If just '+'
-    
-    // Open input files
-    for (t = 0; t != N_THREADS; ++t)   pkFile[t].open(PK_FILENAME+to_string(t));
-    
-    string line;
-    bool   prevLineNotThrID;               // If previous line was "THR=" or not
-    while (!pkFile[0].eof())
-    {
-        for (t = 0; t != N_THREADS; ++t)
-        {
-            prevLineNotThrID = false;
-            
-            while (getline(pkFile[t], line).good() &&
-                   line != THR_ID_HDR+to_string(t))
-            {
-                if (prevLineNotThrID)   pckdFile << '\n';
-                pckdFile << line;
-                
-                prevLineNotThrID = true;
-            }
-        }
-    }
-    pckdFile << (char) 252;
-    
-    // Close/delete input/output files
-    pckdFile.close();
-    string pkFileName;
-    for (t = 0; t != N_THREADS; ++t)
-    {
-        pkFile[t].close();
-        pkFileName=PK_FILENAME;    pkFileName+=to_string(t);
-        std::remove(pkFileName.c_str());
-    }
 }
 
 /**
@@ -894,45 +837,4 @@ void FASTQ::unpackHLQL (const unpackfq_s &upkStruct, byte threadID)
 
     upkfile.close();
     in.close();
-}
-
-/**
- * @brief Join partially unpacked files
- */
-void FASTQ::joinUnpackedFiles ()  const
-{
-    byte     t;                     // For threads
-    ifstream upkdFile[N_THREADS];
-    string   line;
-    for (t = N_THREADS; t--;)    upkdFile[t].open(UPK_FILENAME+to_string(t));
-
-    bool prevLineNotThrID;            // If previous line was "THRD=" or not
-    while (!upkdFile[0].eof())
-    {
-        for (t = 0; t != N_THREADS; ++t)
-        {
-            prevLineNotThrID = false;
-
-            while (getline(upkdFile[t], line).good() &&
-                   line != THR_ID_HDR+to_string(t))
-            {
-                if (prevLineNotThrID)
-                    cout << '\n';
-                cout << line;
-
-                prevLineNotThrID = true;
-            }
-
-            if (prevLineNotThrID)    cout << '\n';
-        }
-    }
-    
-    // Close/delete input/output files
-    string upkdFileName;
-    for (t = N_THREADS; t--;)
-    {
-        upkdFile[t].close();
-        upkdFileName=UPK_FILENAME;    upkdFileName+=to_string(t);
-        std::remove(upkdFileName.c_str());
-    }
 }

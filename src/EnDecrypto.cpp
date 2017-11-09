@@ -754,3 +754,109 @@ void EnDecrypto::unpackSeq (string &out, string::iterator &i)
         }
     }
 }
+
+/**
+ * @brief Join partially packed files
+ * @param headers  Headers
+ * @param qscores  Quality scores
+ */
+void EnDecrypto::joinPackedFiles (const string &headers, const string &qscores,
+                                  char fT, bool justPlus) const
+{
+    byte     t;                    // For threads
+    ifstream pkFile[N_THREADS];
+    
+    // Watermark for encrypted file
+    cout << "#cryfa v" + VERSION_CRYFA + "." + RELEASE_CRYFA + "\n";
+    
+    // Open packed file
+    ofstream pckdFile(PCKD_FILENAME);
+    switch (fT)
+    {
+        case 'A':   pckdFile << (char) 127;                   break;    // FASTA
+        case 'Q':   pckdFile << (char) 126;                   break;    // FASTQ
+        default :                                             break;
+    }
+    pckdFile << (!DISABLE_SHUFFLE ? (char) 128 : (char) 129); //Shuffling on/off
+    pckdFile << headers;                   // Send headers to decryptor
+    pckdFile << (char) 254;                // To detect headers in dec.
+    if (fT == 'Q')
+    {
+        pckdFile << qscores;                   // Send qscores to decryptor
+        pckdFile << (justPlus ? (char) 253 : '\n');          // If just '+'
+    }
+    
+    // Open input files
+    for (t = 0; t != N_THREADS; ++t)   pkFile[t].open(PK_FILENAME+to_string(t));
+    
+    string line;
+    bool   prevLineNotThrID;               // If previous line was "THR=" or not
+    while (!pkFile[0].eof())
+    {
+        for (t = 0; t != N_THREADS; ++t)
+        {
+            prevLineNotThrID = false;
+            
+            while (getline(pkFile[t], line).good() &&
+                   line != THR_ID_HDR+to_string(t))
+            {
+                if (prevLineNotThrID)   pckdFile << '\n';
+                pckdFile << line;
+                
+                prevLineNotThrID = true;
+            }
+        }
+    }
+    pckdFile << (char) 252;
+    
+    // Close/delete input/output files
+    pckdFile.close();
+    string pkFileName;
+    for (t = 0; t != N_THREADS; ++t)
+    {
+        pkFile[t].close();
+        pkFileName=PK_FILENAME;    pkFileName+=to_string(t);
+        std::remove(pkFileName.c_str());
+    }
+}
+
+/**
+ * @brief Join partially unpacked files
+ */
+void EnDecrypto::joinUnpackedFiles ()  const
+{
+    byte     t;                     // For threads
+    ifstream upkdFile[N_THREADS];
+    string   line;
+    for (t = N_THREADS; t--;)    upkdFile[t].open(UPK_FILENAME+to_string(t));
+    
+    bool prevLineNotThrID;            // If previous line was "THRD=" or not
+    while (!upkdFile[0].eof())
+    {
+        for (t = 0; t != N_THREADS; ++t)
+        {
+            prevLineNotThrID = false;
+            
+            while (getline(upkdFile[t], line).good() &&
+                   line != THR_ID_HDR+to_string(t))
+            {
+                if (prevLineNotThrID)
+                    cout << '\n';
+                cout << line;
+                
+                prevLineNotThrID = true;
+            }
+            
+            if (prevLineNotThrID)    cout << '\n';
+        }
+    }
+    
+    // Close/delete input/output files
+    string upkdFileName;
+    for (t = N_THREADS; t--;)
+    {
+        upkdFile[t].close();
+        upkdFileName=UPK_FILENAME;    upkdFileName+=to_string(t);
+        std::remove(upkdFileName.c_str());
+    }
+}

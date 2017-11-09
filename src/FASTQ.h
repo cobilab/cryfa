@@ -51,13 +51,11 @@ private:
     void gatherHdrQs            (string&, string&);
     void set_hashTbl_packFn     (packfq_s&, const string&, const string&);
     void pack                   (const packfq_s&,   byte);
-    void joinPackedFiles        (const string&, const string&)            const;
     void set_unpackTbl_unpackFn (unpackfq_s&, const string&, const string&);
     void unpackHSQS             (const unpackfq_s&, byte);
     void unpackHSQL             (const unpackfq_s&, byte);
     void unpackHLQS             (const unpackfq_s&, byte);
     void unpackHLQL             (const unpackfq_s&, byte);
-    void joinUnpackedFiles      ()                                        const;
 };
 
 #endif //CRYFA_FASTQ_H

@@ -44,11 +44,9 @@ private:
     void gatherHdrBs            (string&);
     void set_hashTbl_packFn     (packfa_s&, const string&);
     void pack                   (const packfa_s&, byte);
-    void joinPackedFiles        (const string&)                           const;
     void set_unpackTbl_unpackFn (unpackfa_s&, const string&);
     void unpackHS               (const unpackfa_s&, byte);
     void unpackHL               (const unpackfa_s&, byte);
-    void joinUnpackedFiles      ()                                        const;
 };
 
 #endif //CRYFA_FASTA_H
