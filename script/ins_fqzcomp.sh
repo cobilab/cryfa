@@ -7,8 +7,6 @@
           #######################################################
 #!/bin/bash
 
-. par.sh        # Internal parameters
-
 rm -f fqzcomp-4.6.tar.gz
 
 url="https://downloads.sourceforge.net/project/fqzcomp"

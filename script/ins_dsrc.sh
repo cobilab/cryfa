@@ -7,8 +7,6 @@
           #######################################################
 #!/bin/bash
 
-. par.sh        # Internal parameters
-
 rm -fr dsrc/
 
 git clone https://github.com/lrog/dsrc.git

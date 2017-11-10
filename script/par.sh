@@ -52,10 +52,10 @@ HS_SEQ_RUN=`seq -s' ' 1 22`; HS_SEQ_RUN+=" X Y MT AL UL UP"
 
 WGET_OP=" --trust-server-names "
 
-INF="dat"         # Information (data) file type
-RES="res"         # Result file type
-fasta="fasta"     # FASTA file extension
-fastq="fastq"     # FASTQ file extension
+INF="dat"        # Information (data) file type
+RES="res"        # Result file type
+fasta="fasta"    # FASTA file extension
+fastq="fastq"    # FASTQ file extension
 
 FASTA_METHODS="GZIP BZIP2 MFCOMPRESS DELIM"
 FASTQ_METHODS="GZIP BZIP2 FQZCOMP QUIP DSRC FQC"

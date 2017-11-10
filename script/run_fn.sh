@@ -7,19 +7,6 @@
           #######################################################
 #!/bin/bash
 
-. par.sh        # Internal parameters
-
-
-### Check if a file is available. $1: file name
-function isAvail
-{
-  if [[ ! -e $1 ]]; then
-    echo "Warning: The file \"$1\" is not available.";
-    return;
-  fi
-}
-
-
 ### Memory
 function progMemoryStart
 {
@@ -41,7 +28,7 @@ function progMemoryStop
 }
 
 
-### memory2
+### Memory2
 #function progMemory2
 #{
 #    valgrind --tool=massif --pages-as-heap=yes \

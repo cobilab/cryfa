@@ -7,7 +7,7 @@
           #######################################################
 #!/bin/bash
 
-. par.sh        # Internal parameters
+. par.sh        # Parameters
 
 
 # convert memory numbers scale to MB and times to fractional minutes in

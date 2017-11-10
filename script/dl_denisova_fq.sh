@@ -7,8 +7,6 @@
           #######################################################
 #!/bin/bash
 
-. par.sh        # Internal parameters
-
 ### Create a folder for FASTQ files and one for Denisova dataset
 if [[ ! -d $dataset/$FQ/$DENISOVA ]]; then  mkdir -p $dataset/$FQ/$DENISOVA;  fi
 

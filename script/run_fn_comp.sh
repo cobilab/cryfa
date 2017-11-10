@@ -1,5 +1,5 @@
           #######################################################
-          #          Functions for running compression          #
+          #      Functions for running compression methods      #
           #       - - - - - - - - - - - - - - - - - - - -       #
           #        Morteza Hosseini    seyedmorteza@ua.pt       #
           #        Diogo Pratas        pratas@ua.pt             #
@@ -7,8 +7,7 @@
           #######################################################
 #!/bin/bash
 
-. par.sh        # Internal parameters
-. run_fn.sh
+. run_fn.sh    # Common Functions
 
 
 ### Compress and decompress. $1: program's name, $2: input data
@@ -32,10 +31,6 @@ function compDecomp
       "bzip2")
           cFT="bz2";             cCmd="bzip2";             cProg="bzip2";
           dProg="bzip2";         dCmd="bunzip2";;
-
-      "lzma")
-          cFT="lzma";            cCmd="lzma";              cProg="lzma";
-          dProg="lzma";          dCmd="lzma -d";;
 
       "fqzcomp")
           cFT="fqz";             cCmd="./fqz_comp";        cProg="fqz_comp";
@@ -68,14 +63,14 @@ function compDecomp
           dCmd="./cryfa -k $CRYFA_KEY_FILE -t $CRYFA_DEFAULT_N_THR -d";;
     esac
 
-    ### compress
+    ### Compress
     progMemoryStart $cProg &
     MEMPID=$!
 
     rm -f $in.$cFT
-    case $1 in                                                    # time
-      "gzip"|"bzip2"|"lzma")
-          (time $cCmd < $2 > $in.$cFT)&> $result_FLD/${upIn}_CT__${inwf}_$ft;;
+    case $1 in                                                    # Time
+      "gzip"|"bzip2")
+          (time $cCmd < $2 > $in.$cFT) &> $result_FLD/${upIn}_CT__${inwf}_$ft;;
 
       "cryfa"|"quip"|"fqzcomp")
           (time $cCmd $2 > $in.$cFT) &> $result_FLD/${upIn}_CT__${inwf}_$ft;;
@@ -88,23 +83,22 @@ function compDecomp
           mv $inPath/$in.$cFT $in.$cFT;;
 
       "fqc")
-          (time $cCmd -i $2 -o $in.$cFT) \
-              &> $result_FLD/${upIn}_CT__${inwf}_$ft;;
+          (time $cCmd -i $2 -o $in.$cFT)&> $result_FLD/${upIn}_CT__${inwf}_$ft;;
 
       "mfcompress")
           (time $cCmd -o $in.$cFT $2) &> $result_FLD/${upIn}_CT__${inwf}_$ft;;
     esac
 
-    ls -la $in.$cFT > $result_FLD/${upIn}_CS__${inwf}_$ft         # size
-    progMemoryStop $MEMPID $result_FLD/${upIn}_CM__${inwf}_$ft    # memory
+    ls -la $in.$cFT > $result_FLD/${upIn}_CS__${inwf}_$ft         # Size
+    progMemoryStop $MEMPID $result_FLD/${upIn}_CM__${inwf}_$ft    # Memory
 
-    ### decompress
+    ### Decompress
     progMemoryStart $dProg &
     MEMPID=$!
 
-    case $1 in                                                    # time
-      "gzip"|"bzip2"|"lzma")
-          (time $dCmd < $in.$cFT> $in)&> $result_FLD/${upIn}_DT__${inwf}_$ft;;
+    case $1 in                                                    # Time
+      "gzip"|"bzip2")
+          (time $dCmd < $in.$cFT> $in) &> $result_FLD/${upIn}_DT__${inwf}_$ft;;
 
       "cryfa"|"fqzcomp"|"quip")
           (time $dCmd $in.$cFT > $in) &> $result_FLD/${upIn}_DT__${inwf}_$ft;;
@@ -113,16 +107,15 @@ function compDecomp
           (time $dCmd $in.$cFT $in) &> $result_FLD/${upIn}_DT__${inwf}_$ft;;
 
       "fqc")
-          (time $dCmd -i $in.$cFT -o $in) \
-              &> $result_FLD/${upIn}_DT__${inwf}_$ft;;
+          (time $dCmd -i $in.$cFT -o $in)&>$result_FLD/${upIn}_DT__${inwf}_$ft;;
 
       "mfcompress")
-          (time $dCmd -o $in $in.$cFT)&> $result_FLD/${upIn}_DT__${inwf}_$ft;;
+          (time $dCmd -o $in $in.$cFT) &> $result_FLD/${upIn}_DT__${inwf}_$ft;;
     esac
 
-    progMemoryStop $MEMPID $result_FLD/${upIn}_DM__${inwf}_$ft    # memory
+    progMemoryStop $MEMPID $result_FLD/${upIn}_DM__${inwf}_$ft    # Memory
 
-    ### verify if input and decompressed files are the same
+    ### Verify if input and decompressed files are the same
     cmp $2 $in &> $result_FLD/${upIn}_V__${inwf}_$ft;
 }
 
@@ -130,7 +123,7 @@ function compDecomp
 ### Compress/decompress on datasets. $1: program's name
 function compDecompOnDataset
 {
-    method="$(echo $1 | tr A-Z a-z)"    # method's name in lower case
+    method="$(echo $1 | tr A-Z a-z)"    # Method's name in lower case
     if [[ ! -d $progs/$method ]]; then  mkdir -p $progs/$method;  fi
     cd $progs/$method
     dsPath=../../$dataset

@@ -7,8 +7,6 @@
           #######################################################
 #!/bin/bash
 
-. par.sh        # Internal parameters
-
 rm -f MFCompress-src-1.01.tgz
 
 url="http://sweet.ua.pt/ap/software/mfcompress"

@@ -7,8 +7,6 @@
           #######################################################
 #!/bin/bash
 
-. par.sh        # Internal parameters
-
 rm -fr aescrypt-3.13/
 
 url="https://www.aescrypt.com/download/v3/linux"

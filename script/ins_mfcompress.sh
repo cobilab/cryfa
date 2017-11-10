@@ -7,8 +7,6 @@
           #######################################################
 #!/bin/bash
 
-. par.sh        # Internal parameters
-
 rm -f DELIMINATE_LINUX_64bit.tar.gz
 
 url="http://metagenomics.atc.tcs.com/Compression_archive"

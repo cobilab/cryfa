@@ -7,12 +7,10 @@
           #######################################################
 #!/bin/bash
 
-. par.sh        # Internal parameters
-
 sudo apt-get install p7zip-full
 
 
-## rm -f FILES
+#rm -f FILES
 #url="http://sourceforge.net/projects/p7zip/files/latest";
 #wget $WGET_OP $url/download?source=typ_redirect -O FILES.tar.bz2
 #tar -xjf FILES.tar.bz2

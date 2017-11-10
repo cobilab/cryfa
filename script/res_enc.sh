@@ -7,7 +7,7 @@
           #######################################################
 #!/bin/bash
 
-. par.sh        # Internal parameters
+. par.sh        # Parameters
 
 
   # print encrypt/decrypt results. $1: program's name, $2: dataset

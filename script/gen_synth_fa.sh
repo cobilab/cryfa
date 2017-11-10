@@ -7,9 +7,7 @@
           #######################################################
 #!/bin/bash
 
-. par.sh        # Internal parameters
-
-INSTALL_XS=1    # To install XS simulator
+INSTALL_XS=1    # Install XS simulator
 
 ### Create a folder for FASTA files and one for synthetic dataset
 if [[ ! -d $dataset/$FA/$Synth ]]; then  mkdir -p $dataset/$FA/$Synth;  fi

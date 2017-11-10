@@ -7,8 +7,6 @@
           #######################################################
 #!/bin/bash
 
-. par.sh        # Internal parameters
-
 ### Create a folder for FASTQ files and one for human dataset
 if [[ ! -d $dataset/$FQ/$HUMAN ]]; then  mkdir -p $dataset/$FQ/$HUMAN;  fi
 

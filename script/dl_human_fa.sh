@@ -7,8 +7,6 @@
           #######################################################
 #!/bin/bash
 
-. par.sh        # Internal parameters
-
 ### Create a folder for FASTA files and one for human dataset
 if [[ ! -d $dataset/$FA/$HUMAN ]]; then  mkdir -p $dataset/$FA/$HUMAN;  fi
 
@@ -23,12 +21,13 @@ for dual in "alts AL" "unplaced UP" "unlocalized UL"; do
     set $dual
     wget $WGET_OP $HUMAN_FA_URL/$HUMAN_CHR_PREFIX$1.fa.gz;
     gunzip < $HUMAN_CHR_PREFIX$1.fa.gz | grep -Ev "^$" \
-           > $dataset/$FA/$HUMAN/$HUMAN-$2.$fasta
+           > $HOME/$dataset/$FA/$HUMAN/$HUMAN-$2.$fasta
     rm -f $HUMAN_CHR_PREFIX$1.fa.gz;
 done
 
-### Join all files
+### Merge all chromosomes into one file
+cd $dataset/$FA/$HUMAN
 for i in $HS_SEQ_RUN; do
     cat $HUMAN-$i.$fasta >> HS.$fasta;
-    rm -f $HUMAN-$i.$fasta
+    rm -f $HUMAN-$i.$fasta    # remove individual chromosomes
 done

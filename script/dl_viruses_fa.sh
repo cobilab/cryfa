@@ -7,8 +7,6 @@
           #######################################################
 #!/bin/bash
 
-. par.sh    # Internal parameters
-
 ### Create a folder for FASTA files and one for viruses dataset
 if [[ ! -d $dataset/$FA/$VIRUSES ]]; then  mkdir -p $dataset/$FA/$VIRUSES;  fi
 

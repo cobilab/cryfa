@@ -7,8 +7,6 @@
           #######################################################
 #!/bin/bash
 
-. par.sh        # Internal parameters
-
 rm -f quip-1.1.8.tar.gz
 
 url="http://homes.cs.washington.edu/~dcjones/quip"

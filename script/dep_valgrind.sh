@@ -7,6 +7,4 @@
           #######################################################
 #!/bin/bash
 
-. par.sh        # Internal parameters
-
 sudo apt-get install valgrind

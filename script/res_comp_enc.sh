@@ -7,7 +7,7 @@
           #######################################################
 #!/bin/bash
 
-. par.sh        # Internal parameters
+. par.sh        # Parameters
 
 
   # print comp/decomp plus enc/dec results.

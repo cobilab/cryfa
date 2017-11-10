@@ -7,6 +7,6 @@
           #######################################################
 #!/bin/bash
 
-. par.sh        # Internal parameters
+. par.sh        # Parameters
 . run_fn.sh
 
