@@ -1,4 +1,4 @@
-<p align="center"><img src="imgs/logo.png" alt="Cryfa" width="150" 
+<p align="center"><img src="img/logo.png" alt="Cryfa" width="150" 
 border="0" /></p>
 <br>
 
@@ -12,7 +12,7 @@ a factor of 3, without creating security problems such as those derived from
 CRIME or BREACH attacks.
 
 
-## INSTALLATION
+## INSTALL
 First, get cryfa:
 ```bash
 git clone https://github.com/pratas/cryfa.git
@@ -24,7 +24,7 @@ make
 ```
 
 
-## RUNNING
+## RUN
 If you want to run cryfa in stand-alone mode, use the following command:
 ```bash
 ./cryfa [OPTION]... -k [KEY_FILE] [-d] [IN_FILE] > [OUT_FILE]
@@ -49,7 +49,7 @@ install the compression and encryption methods and finally, run them.
 
 
 ### OPTIONS
-To see the possible options, you can type:
+To see the possible options, type:
 ```bash
 ./cryfa -h
 ```
@@ -91,7 +91,7 @@ Cryfa uses standard input and ouput streams, hence, it can be directly
 integrated with pipelines.
 
 
-## CITATION
+## CITE
 Please cite the following, if you use cryfa:
 * D. Pratas, M. Hosseini and A.J. Pinho, "Cryfa: a tool to compact and encrypt
 FASTA files," *11'th International Conference on Practical Applications of 
@@ -99,7 +99,8 @@ Computational Biology & Bioinformatics* (PACBB), Springer, June 2017.
 
 
 ## RELEASES
-* [Release](https://github.com/pratas/cryfa/releases) 2: FASTA and FASTQ handling.
+* [Release](https://github.com/pratas/cryfa/releases) 2: FASTA and FASTQ 
+handling.
 * [Release](https://github.com/pratas/cryfa/releases) 1: FASTA handling.
 
 ## ISSUES

@@ -100,6 +100,7 @@ RUN_METHODS=1
 #   folders
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 dataset="dataset"
+script="script"
 progs="progs"
 cryfa_xcl="cryfa_xcl"
 result="result"
@@ -199,7 +200,7 @@ then
       fi
 
       # download
-      perl ./scripts/DownloadViruses.pl
+      perl ./$script/DownloadViruses.pl
 
       # remove blank lines in downloaded file & move it to dataset folder
       cat viruses.fa | grep -Ev "^$" > $dataset/$FA/$VIRUSES/viruses.$fasta
