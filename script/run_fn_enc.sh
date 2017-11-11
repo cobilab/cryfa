@@ -18,7 +18,6 @@ function encDecrypt
     ft="${in##*.}"                           # Input filetype
     inPath="${2%/*}"                         # Input file's path
     upIn="$(echo $1 | tr a-z A-Z)"           # Input program's name in uppercase
-
     case $1 in
       "aescrypt")
           enFT="aescrypt"                    # Encrypted filetype

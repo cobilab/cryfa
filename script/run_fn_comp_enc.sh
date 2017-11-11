@@ -1,5 +1,5 @@
           #######################################################
-          #     Functions for running compression+encryption    #
+          # Functions for running compression+encryption methods#
           #       - - - - - - - - - - - - - - - - - - - -       #
           #        Morteza Hosseini    seyedmorteza@ua.pt       #
           #        Diogo Pratas        pratas@ua.pt             #
@@ -7,29 +7,26 @@
           #######################################################
 #!/bin/bash
 
-. par.sh        # Parameters
-. run_fn.sh
+. run_fn.sh    # Common Functions
 
-
-### Comp/decomp plus enc/dec. $1: comp program, $2: input data, $3: enc program
+### Compression+encryption and decryption+decompression.
+### $1: comp program, $2: input data, $3: enc program
 function compEncDecDecompress
 {
     result_FLD="../../$result"
-    in="${2##*/}"                       # input file name
-    inwf="${in%.*}"                     # input file name without filetype
-    ft="${in##*.}"                      # input filetype
-    inPath="${2%/*}"                    # input file's path
-    upInComp="$(echo $1 | tr a-z A-Z)"  # compress program's name in uppercase
-    upInEnc="$(echo $3 | tr a-z A-Z)"   # encrypt program's name in uppercase
-
-    ### arguments for compression methods
+    in="${2##*/}"                         # Input file name
+    inwf="${in%.*}"                       # Input file name without filetype
+    ft="${in##*.}"                        # Input filetype
+    inPath="${2%/*}"                      # Input file's path
+    upInComp="$(echo $1 | tr a-z A-Z)"    # Compress program's name in uppercase
+    upInEnc="$(echo $3 | tr a-z A-Z)"     # Encrypt program's name in uppercase
     case $1 in
       "gzip")
-          cFT="gz"                      # compressed filetype
-          cCmd="gzip"                   # compression command
-          cProg="gzip"                  # compress program's name
-          dProg="gunzip"                # decompress program's name
-          dCmd="gunzip";;               # decompress command
+          cFT="gz"                        # Compressed filetype
+          cCmd="gzip"                     # Compression command
+          cProg="gzip"                    # Compress program's name
+          dProg="gunzip"                  # Decompress program's name
+          dCmd="gunzip";;                 # Decompress command
 
       "bzip2")
           cFT="bz2";             cCmd="bzip2";             cProg="bzip2";
@@ -63,25 +60,23 @@ function compEncDecDecompress
           cFT="mfc";             cCmd="./MFCompressC";     cProg="MFCompress";
           dProg="MFCompress";    dCmd="./MFCompressD";;
     esac
-
-    ### arguments for encryption methods
     case $3 in
       "aescrypt")
-          enFT="aescrypt"                        # encrypted filetype
-          enCmd="./aescrypt -e -k pass.txt"      # encryption command
-          deProg="aescrypt"                      # decrypt program's name
-          deCmd="./aescrypt -d -k pass.txt";;    # decryption command
+          enFT="aescrypt"                        # Encrypted filetype
+          enCmd="./aescrypt -e -k pass.txt"      # Encryption command
+          deProg="aescrypt"                      # Decrypt program's name
+          deCmd="./aescrypt -d -k pass.txt";;    # Decryption command
     esac
 
-    ### compress
+    ### Compress
     cd $progs/$1
 
     progMemoryStart $cProg &
     MEMPID=$!
 
     rm -f $in $in.$cFT
-    case $1 in                                                          # time
-      "gzip"|"bzip2"|"lzma")
+    case $1 in                                                           # Time
+      "gzip"|"bzip2")
           (time $cCmd < $2 > $in.$cFT) \
               &> $result_FLD/${upInComp}_${upInEnc}_CT__${inwf}_$ft;;
 
@@ -94,8 +89,7 @@ function compEncDecDecompress
               &> $result_FLD/${upInComp}_${upInEnc}_CT__${inwf}_$ft;;
 
       "delim")
-          (time $cCmd $2) \
-              &> $result_FLD/${upInComp}_${upInEnc}_CT__${inwf}_$ft
+          (time $cCmd $2) &> $result_FLD/${upInComp}_${upInEnc}_CT__${inwf}_$ft
           mv $inPath/$in.$cFT $in.$cFT;;
 
       "fqc")
@@ -107,19 +101,19 @@ function compEncDecDecompress
               &> $result_FLD/${upInComp}_${upInEnc}_CT__${inwf}_$ft;;
     esac
 
-    ls -la $in.$cFT > $result_FLD/${upInComp}_${upInEnc}_CS__${inwf}_$ft #size
+    ls -la $in.$cFT > $result_FLD/${upInComp}_${upInEnc}_CS__${inwf}_$ft # Size
     progMemoryStop $MEMPID \
-                   $result_FLD/${upInComp}_${upInEnc}_CM__${inwf}_$ft    # mem
+                   $result_FLD/${upInComp}_${upInEnc}_CM__${inwf}_$ft    # Mem
 
-    ### encrypt
+    ### Encrypt
     cd ../$3
-    compPath="../$1"    # path of compressed file
+    compPath="../$1"    # Path of compressed file
 
     progMemoryStart $3 &
     MEMPID=$!
 
     rm -f $in.$cFT $in.$cFT.$enFT
-    case $3 in                                                          # time
+    case $3 in                                                           # Time
       "aescrypt")
           (time $enCmd -o $in.$cFT.$enFT $compPath/$in.$cFT) \
               &> $result_FLD/${upInComp}_${upInEnc}_EnT__${inwf}_$ft;;
@@ -127,29 +121,29 @@ function compEncDecDecompress
 
     ls -la $in.$cFT.$enFT >$result_FLD/${upInComp}_${upInEnc}_EnS__${inwf}_$ft
     progMemoryStop $MEMPID \
-                   $result_FLD/${upInComp}_${upInEnc}_EnM__${inwf}_$ft   # mem
+                   $result_FLD/${upInComp}_${upInEnc}_EnM__${inwf}_$ft   # Mem
 
-    ### decrypt
+    ### Decrypt
     progMemoryStart $deProg &
     MEMPID=$!
 
-    case $3 in                                                          # time
+    case $3 in                                                           # Time
       "aescrypt")
           (time $deCmd -o $in.$cFT $in.$cFT.$enFT) \
               &> $result_FLD/${upInComp}_${upInEnc}_DeT__${inwf}_$ft;;
     esac
 
     progMemoryStop $MEMPID \
-                   $result_FLD/${upInComp}_${upInEnc}_DeM__${inwf}_$ft  # mem
+                   $result_FLD/${upInComp}_${upInEnc}_DeM__${inwf}_$ft   # Mem
 
-    ### decompress
+    ### Decompress
     cd ../$1
-    encPath="../$3"    # path of encrypted file
+    encPath="../$3"    # Path of encrypted file
 
     progMemoryStart $dProg &
     MEMPID=$!
 
-    case $1 in                                                          # time
+    case $1 in                                                           # Time
       "gzip"|"bzip2"|"lzma")
           (time $dCmd < $encPath/$in.$cFT> $in) \
               &> $result_FLD/${upInComp}_${upInEnc}_DT__${inwf}_$ft;;
@@ -172,12 +166,10 @@ function compEncDecDecompress
     esac
 
     progMemoryStop $MEMPID \
-                   $result_FLD/${upInComp}_${upInEnc}_DM__${inwf}_$ft    # mem
+                   $result_FLD/${upInComp}_${upInEnc}_DM__${inwf}_$ft    # Mem
 
-    ### verify if input and decompressed files are the same
+    ### Verify if input and decompressed files are the same
     cmp $2 $in &> $result_FLD/${upInComp}_${upInEnc}_V__${inwf}_$ft;
-
-    cd ../..
 }
 
 
@@ -185,8 +177,8 @@ function compEncDecDecompress
 ### $1: compression program, $2: filetype, $3: encryption program
 function compEncDecDecompOnDataset
 {
-    methodComp="$(echo $1 | tr A-Z a-z)"    # comp method's name in lower case
-    methodEnc="$(echo $3 | tr A-Z a-z)"     # enc  method's name in lower case
+    methodComp="$(echo $1 | tr A-Z a-z)"    # Comp method's name in lower case
+    methodEnc="$(echo $3 | tr A-Z a-z)"     # Enc  method's name in lower case
     if [[ ! -d $progs/$methodComp ]]; then mkdir -p $progs/$methodComp; fi
     if [[ ! -d $progs/$methodEnc ]];  then mkdir -p $progs/$methodEnc;  fi
     dsPath="../../$dataset"
@@ -217,4 +209,6 @@ function compEncDecDecompOnDataset
                   $methodComp $dsPath/$FQ/$Synth/SynFQ-$i.$fastq $methodEnc
           done;;
     esac
+
+    cd ../..
 }

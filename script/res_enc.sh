@@ -217,14 +217,14 @@ de="De_Time_real(s)\tDe_Time_user(s)\tDe_Time_sys(s)\tDe_Mem(KB)"
 printf "Dataset\tSize(B)\tMethod\t$en\t$de\n" > $OUT;
 
 for i in $ENC_METHODS; do
-    # FASTA -- human - viruses - synthetic
+    ### FASTA -- human - viruses - synthetic
     encDecRes $i $FAdsPath/$HUMAN/HS.$fasta >> $OUT;
     encDecRes $i $FAdsPath/$VIRUSES/viruses.$fasta >> $OUT;
     for j in 1 2; do
         encDecRes $i $FAdsPath/$Synth/SynFA-${j}.$fasta >> $OUT;
     done
 
-    # FASTQ -- human - Denisova - synthetic
+    ### FASTQ -- human - Denisova - synthetic
     for j in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 SRR707196_1; do
         encDecRes $i $FQdsPath/$HUMAN/HS-${j}.$fastq >> $OUT;
     done
