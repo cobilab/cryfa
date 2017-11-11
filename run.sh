@@ -97,9 +97,7 @@ CRYFA_EXCLUSIVE=0
 ################################################################################
 #################          D O   N O T   C H A N G E          ##################
 ################################################################################
-
 . script/par.sh    # Parameters
-
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #   Get dataset
@@ -168,7 +166,7 @@ then
     if [[ ! -d $progs  ]]; then  mkdir -p $progs;   fi
     if [[ ! -d $result ]]; then  mkdir -p $result;  fi
 
-    ### Check if dataset is available
+    ### Check if the whole dataset is available
     . $script/avail_dataset.sh;
 
     ### Compression functions
@@ -194,22 +192,23 @@ then
     if [[ $RESULTS_COMP -eq 1 ]]; then  . $script/res_comp.sh;  fi
 fi
 
+
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #   Run encryption methods
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $RUN_METHODS_ENC -eq 1 ]];
 then
-    ### create folders, if they don't already exist
+    ### Create folders, if they don't already exist
     if [[ ! -d $progs   ]]; then  mkdir -p $progs;   fi
     if [[ ! -d $result  ]]; then  mkdir -p $result;  fi
 
-    ### Dataset availablity
+    ### Check if the whole dataset is available
     . $script/avail_dataset.sh;
 
-    ### Functions
+    ### Encryption functions
     . $script/run_fn_enc.sh
 
-    ### AEScrypt
+    ### FASTA/FASTQ
     if [[ $RUN_AESCRYPT -eq 1 ]]; then  encDecOnDataset aescrypt;  fi
 
     ### Results

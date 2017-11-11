@@ -7,67 +7,63 @@
           #######################################################
 #!/bin/bash
 
-. par.sh        # Parameters
-. run_fn.sh
-
+. run_fn.sh    # Common Functions
 
 ### Encrypt/decrypt. $1: program's name, $2: input data
 function encDecrypt
 {
     result_FLD="../../$result"
-    in="${2##*/}"                     # input file name
-    inwf="${in%.*}"                   # input file name without filetype
-    ft="${in##*.}"                    # input filetype
-    inPath="${2%/*}"                  # input file's path
-    upIn="$(echo $1 | tr a-z A-Z)"    # input program's name in uppercase
+    in="${2##*/}"                            # Input file name
+    inwf="${in%.*}"                          # Input file name without filetype
+    ft="${in##*.}"                           # Input filetype
+    inPath="${2%/*}"                         # Input file's path
+    upIn="$(echo $1 | tr a-z A-Z)"           # Input program's name in uppercase
 
     case $1 in
       "aescrypt")
-          enFT="aescrypt"                        # encrypted filetype
-          enCmd="./aescrypt -e -k pass.txt"      # encryption command
-          enProg="aescrypt"                      # encrypt program's name
-          deProg="aescrypt"                      # decrypt program's name
-          deCmd="./aescrypt -d -k pass.txt";;    # decryption command
+          enFT="aescrypt"                    # Encrypted filetype
+          enCmd="./aescrypt -e -k pass.txt"  # Encryption command
+          enProg="aescrypt"                  # Encrypt program's name
+          deProg="aescrypt"                  # Decrypt program's name
+          deCmd="./aescrypt -d -k pass.txt";;# Decryption command
     esac
 
-    ### encrypt
+    ### Encrypt
     progMemoryStart $enProg &
     MEMPID=$!
 
     rm -f $in.$enFT
-    case $1 in                                                     # time
+    case $1 in                                                     # Time
       "aescrypt")
-          (time $enCmd -o $in.$enFT $2) \
-              &> $result_FLD/${upIn}_EnT__${inwf}_$ft;;
+          (time $enCmd -o $in.$enFT $2) &>$result_FLD/${upIn}_EnT__${inwf}_$ft;;
     esac
 
-    ls -la $in.$enFT > $result_FLD/${upIn}_EnS__${inwf}_$ft        # size
-    progMemoryStop $MEMPID $result_FLD/${upIn}_EnM__${inwf}_$ft    # memory
+    ls -la $in.$enFT > $result_FLD/${upIn}_EnS__${inwf}_$ft        # Size
+    progMemoryStop $MEMPID $result_FLD/${upIn}_EnM__${inwf}_$ft    # Memory
 
-    ### decrypt
+    ### Decrypt
     progMemoryStart $deProg &
     MEMPID=$!
 
-    case $1 in                                                     # time
+    case $1 in                                                     # Time
       "aescrypt")
-          (time $deCmd -o $in $in.$enFT) \
-              &> $result_FLD/${upIn}_DeT__${inwf}_$ft;;
+          (time $deCmd -o $in $in.$enFT)&>$result_FLD/${upIn}_DeT__${inwf}_$ft;;
     esac
 
-    progMemoryStop $MEMPID $result_FLD/${upIn}_DeM__${inwf}_$ft    # memory
+    progMemoryStop $MEMPID $result_FLD/${upIn}_DeM__${inwf}_$ft    # Memory
 }
 
 
 ### Encrypt/decrypt on datasets. $1: program's name
 function encDecOnDataset
 {
-    method="$(echo $1 | tr A-Z a-z)"    # method's name in lower case
+    method="$(echo $1 | tr A-Z a-z)"    # Method's name in lower case
     if [[ ! -d $progs/$method ]]; then mkdir -p $progs/$method; fi
     cd $progs/$method
     dsPath=../../$dataset
 
     case $1 in
-      "aescrypt")   # AES crypt
+      "aescrypt")   # AEScrypt
           # FASTA
           encDecrypt $method $dsPath/$FA/$HUMAN/HS.$fasta
           encDecrypt $method $dsPath/$FA/$VIRUSES/viruses.$fasta
@@ -76,13 +72,12 @@ function encDecOnDataset
           done
 
           # FASTQ
-          for i in ERR013103_1 ERR015767_2 ERR031905_2 \
-                   SRR442469_1 SRR707196_1; do
+          for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
+                   SRR707196_1; do
               encDecrypt $method $dsPath/$FQ/$HUMAN/$HUMAN-$i.$fastq
           done
           for i in B1087 B1088 B1110 B1128 SL3003; do
-              encDecrypt $method \
-                         $dsPath/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq
+              encDecrypt $method $dsPath/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq
           done
           for i in 1 2; do
               encDecrypt $method $dsPath/$FQ/$Synth/SynFQ-$i.$fastq

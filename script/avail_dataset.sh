@@ -13,10 +13,10 @@
 ### Check if a file is available. $1: file name
 function isAvail
 {
-  if [[ ! -e $1 ]]; then
-    echo "Warning: The file \"$1\" is not available.";
-    return;
-  fi
+    if [[ ! -e $1 ]]; then
+        echo "Warning: The file \"$1\" is not available.";
+        return;
+    fi
 }
 
 

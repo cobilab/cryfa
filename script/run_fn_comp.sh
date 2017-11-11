@@ -9,24 +9,23 @@
 
 . run_fn.sh    # Common Functions
 
-
 ### Compress and decompress. $1: program's name, $2: input data
 function compDecomp
 {
     result_FLD="../../$result"
-    in="${2##*/}"                     # input file name
-    inwf="${in%.*}"                   # input file name without filetype
-    ft="${in##*.}"                    # input filetype
-    inPath="${2%/*}"                  # input file's path
-    upIn="$(echo $1 | tr a-z A-Z)"    # input program's name in uppercase
+    in="${2##*/}"                     # Input file name
+    inwf="${in%.*}"                   # Input file name without filetype
+    ft="${in##*.}"                    # Input filetype
+    inPath="${2%/*}"                  # Input file's path
+    upIn="$(echo $1 | tr a-z A-Z)"    # Input program's name in uppercase
 
     case $1 in
       "gzip")
-          cFT="gz"                    # compressed filetype
-          cCmd="gzip"                 # compression command
-          cProg="gzip"                # compress program's name
-          dProg="gunzip"              # decompress program's name
-          dCmd="gunzip";;             # decompress command
+          cFT="gz"                    # Compressed filetype
+          cCmd="gzip"                 # Compression command
+          cProg="gzip"                # Compress program's name
+          dProg="gunzip"              # Decompress program's name
+          dCmd="gunzip";;             # Decompress command
 
       "bzip2")
           cFT="bz2";             cCmd="bzip2";             cProg="bzip2";
@@ -129,16 +128,16 @@ function compDecompOnDataset
     dsPath=../../$dataset
 
     case $2 in
-      "fa"|"FA"|"fasta"|"FASTA")   # FASTA -- human - viruses - synthetic
+      "fa"|"FA"|"fasta"|"FASTA")        # FASTA -- human - viruses - synthetic
           compDecomp $method $dsPath/$FA/$HUMAN/HS.$fasta
           compDecomp $method $dsPath/$FA/$VIRUSES/viruses.$fasta
           for i in 1 2; do
               compDecomp $method $dsPath/$FA/$Synth/SynFA-$i.$fasta
           done;;
 
-      "fq"|"FQ"|"fastq"|"FASTQ")   # FASTQ -- human - Denisova - synthetic
-          for i in ERR013103_1 ERR015767_2 ERR031905_2 \
-                   SRR442469_1 SRR707196_1; do
+      "fq"|"FQ"|"fastq"|"FASTQ")        # FASTQ -- human - Denisova - synthetic
+          for i in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
+                   SRR707196_1; do
               compDecomp $method $dsPath/$FQ/$HUMAN/HS-$i.$fastq
           done
           for i in B1087 B1088 B1110 B1128 SL3003; do

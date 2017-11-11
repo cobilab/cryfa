@@ -29,5 +29,5 @@ done
 cd $dataset/$FA/$HUMAN
 for i in $HS_SEQ_RUN; do
     cat $HUMAN-$i.$fasta >> HS.$fasta;
-    rm -f $HUMAN-$i.$fasta    # remove individual chromosomes
+    rm -f $HUMAN-$i.$fasta    # Remove individual chromosomes
 done

@@ -1,5 +1,5 @@
           #######################################################
-          #            Functions for running methods            #
+          #         Common functions for running methods        #
           #       - - - - - - - - - - - - - - - - - - - -       #
           #        Morteza Hosseini    seyedmorteza@ua.pt       #
           #        Diogo Pratas        pratas@ua.pt             #
@@ -51,15 +51,15 @@ function printMethodName
     methodUpCase="$(echo $1 | tr a-z A-Z)"
 
     case $methodUpCase in
-      "GZIP")                 echo "gzip";;
-      "BZIP2")                echo "bzip2";;
-      "MFCOMPRESS")           echo "MFCompress";;
-      "DELIM"|"DELIMINATE")   echo "DELIMINATE";;
-      "CRYFA")                echo "Cryfa";;
-      "FQZCOMP")              echo "Fqzcomp";;
-      "QUIP")                 echo "Quip";;
-      "DSRC")                 echo "DSRC";;
-      "FQC")                  echo "FQC";;
-      "AESCRYPT")             echo "AEScrypt";;
+      "GZIP")                  echo "gzip";;
+      "BZIP2")                 echo "bzip2";;
+      "MFCOMPRESS")            echo "MFCompress";;
+      "DELIM"|"DELIMINATE")    echo "DELIMINATE";;
+      "CRYFA")                 echo "Cryfa";;
+      "FQZCOMP")               echo "Fqzcomp";;
+      "QUIP")                  echo "Quip";;
+      "DSRC")                  echo "DSRC";;
+      "FQC")                   echo "FQC";;
+      "AESCRYPT")              echo "AEScrypt";;
     esac
 }
