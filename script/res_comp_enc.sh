@@ -328,5 +328,7 @@ for i in $ENC_METHODS; do
    done
 done
 
+rm -f mem_ps
+
 ### Make the result file human readable
 compEncResHumanReadable $OUT;

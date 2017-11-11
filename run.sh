@@ -44,7 +44,7 @@ INSTALL_METHODS=0
     INS_AESCRYPT=0      # AEScrypt
 
 ### Run compression methods
-RUN_METHODS_COMP=0
+RUN_METHODS_COMP=1
     # FASTA
     RUN_GZIP_FA=0       # Gzip
     RUN_BZIP2_FA=0      # Bzip2
@@ -87,9 +87,9 @@ RUN_METHODS_COMP_ENC=0
 
 ### Run cryfa, exclusively
 CRYFA_EXCLUSIVE=0
-    MAX_N_THR=8                  # max number of threads
+    MAX_N_THR=8                  # Max number of threads
     CRYFA_XCL_DATASET="dataset/FA/V/viruses.fasta"
-    RUN_CRYFA_XCL=1
+    RUN_CRYFA_XCL=0
     RESULTS_CRYFA_XCL=1
 
 
@@ -278,17 +278,17 @@ then
     ### Create a folder for cryfa, if it doesn't already exist
     if [[ ! -d $cryfa_xcl ]]; then  mkdir -p $cryfa_xcl;  fi
 
-    ### Paramaters
-    inData="../$CRYFA_XCL_DATASET"
-    in="${inData##*/}"     # Input file name
-    inDataWF="${in%.*}"    # Input file name without filetype
-    ft="${in##*.}"         # Input filetype
-    fsize=`stat --printf="%s" $CRYFA_XCL_DATASET`    # File size (bytes)
-    result_FLD="../$result"
-    CRYFA_THR_RUN=`seq -s' ' 1 $MAX_N_THR`;
+    ### Check if the dataset is available
+    if [[ ! -e $CRYFA_XCL_DATASET ]]; then
+        echo "Error: The file \"$CRYFA_XCL_DATASET\" is not available.";
+        return;
+    fi
+
+    ### Cryfa compress/decompress function
+    . $script/run_cryfa_xcl.sh
 
     ### Run
-    if [[ $RUN_CRYFA_XCL     -eq 1 ]]; then  . $script/run_cryfa_xcl.sh;  fi
+    if [[ $RUN_CRYFA_XCL     -eq 1 ]]; then  runCryfa;  fi
 
     ### Results
     if [[ $RESULTS_CRYFA_XCL -eq 1 ]]; then  . $script/res_cryfa_xcl.sh;  fi

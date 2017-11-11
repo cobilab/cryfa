@@ -7,7 +7,7 @@
           #######################################################
 #!/bin/bash
 
-. run_fn.sh    # Common Functions
+. $script/run_fn.sh    # Common Functions
 
 ### Encrypt/decrypt. $1: program's name, $2: input data
 function encDecrypt
@@ -82,6 +82,8 @@ function encDecOnDataset
               encDecrypt $method $dsPath/$FQ/$Synth/SynFQ-$i.$fastq
           done;;
     esac
+
+    rm -f mem_ps
 
     cd ../..
 }

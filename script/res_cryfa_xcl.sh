@@ -132,6 +132,8 @@ for nThr in $CRYFA_THR_RUN; do
     printf "$inDataWF\t$fsize\t$nThr\t$c\t$d\t$V\n" >> $OUT;
 done
 
+rm -f mem_ps
+
 ### Make the result file human readable
 cryfaXclResHumanReadable $OUT;
 

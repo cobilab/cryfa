@@ -131,7 +131,7 @@ function compResHumanReadable
     c_each="C_Ratio\tC_Speed(MB/s)\tC_Time_cpu(m)\tC_Mem(MB)"
     d_each="D_Speed(MB/s)\tD_Time_cpu(m)\tD_Mem(MB)"
 
-    printf "Dataset\tSize(MB)\tC_Method\t$c_each\t$d_each\tEq\n" >${INWF}_FA.tmp
+    printf "Dataset\tSize(MB)\tC_Method\t$c_each\t$d_each\tEq\n" > ${INWF}_FA.tmp
     cat ${INWF}_detail_FA.$INF | awk 'NR>1' | awk 'BEGIN{}{
       printf "%s\t%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.f\t%.2f\t%.f\t%.1f\n",
              $1, $2/(1024*1024), $3, $2/$4, $2/(1024*1024*$5), $6/60, $7/1024,
@@ -141,7 +141,7 @@ function compResHumanReadable
     for i in $FASTA_DATASET; do
         sed "2,$ d" ${INWF}_FA.tmp > ${INWF}_${i}_FA.$INF;
         cat ${INWF}_FA.tmp | awk 'NR>1' \
-          | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_FA.$INF;
+         | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_FA.$INF;
     done
     rm -f ${INWF}_FA.tmp
 

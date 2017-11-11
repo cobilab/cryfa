@@ -7,7 +7,7 @@
           #######################################################
 #!/bin/bash
 
-. run_fn.sh    # Common Functions
+. $script/run_fn.sh    # Common Functions
 
 ### Compress and decompress. $1: program's name, $2: input data
 function compDecomp
@@ -146,6 +146,8 @@ function compDecompOnDataset
               compDecomp $method $dsPath/$FQ/$Synth/SynFQ-$i.$fastq
           done;;
     esac
+
+    rm -f mem_ps
 
     cd ../..
 }
