@@ -30,7 +30,7 @@ INSTALL_DEPENDENCIES=0
     INS_ZLIB=1          # Zlib
 
 ### Install methods
-INSTALL_METHODS=1
+INSTALL_METHODS=0
     INS_CRYFA=1         # Cryfa
     # FASTA
     INS_MFCOMPRESS=0    # MFCompress -- error: make -- executables available
@@ -71,17 +71,17 @@ RUN_METHODS_ENC=0
 ### Run compression+encryption methods
 RUN_METHODS_COMP_ENC=1
     # FASTA
-    RUN_GZIP_FA_AESCRYPT=1       # Gzip       + AEScrypt
-    RUN_BZIP2_FA_AESCRYPT=1      # Bzip2      + AEScrypt
-    RUN_MFCOMPRESS_AESCRYPT=1    # MFCompress + AEScrypt
-    RUN_DELIMINATE_AESCRYPT=1    # DELIMINATE + AEScrypt
+    RUN_GZIP_FA_AESCRYPT=0       # Gzip       + AEScrypt
+    RUN_BZIP2_FA_AESCRYPT=0      # Bzip2      + AEScrypt
+    RUN_MFCOMPRESS_AESCRYPT=0    # MFCompress + AEScrypt
+    RUN_DELIMINATE_AESCRYPT=0    # DELIMINATE + AEScrypt
     # FASTQ
-    RUN_GZIP_FQ_AESCRYPT=0       # Gzip       + AEScrypt
-    RUN_BZIP2_FQ_AESCRYPT=0      # Bzip2      + AEScrypt
-    RUN_FQZCOMP_AESCRYPT=0       # Fqzcomp    + AEScrypt
-    RUN_QUIP_AESCRYPT=0          # Quip       + AEScrypt
-    RUN_DSRC_AESCRYPT=0          # DSRC       + AEScrypt
-    RUN_FQC_AESCRYPT=0           # FQC        + AEScrypt
+    RUN_GZIP_FQ_AESCRYPT=1       # Gzip       + AEScrypt
+    RUN_BZIP2_FQ_AESCRYPT=1      # Bzip2      + AEScrypt
+    RUN_FQZCOMP_AESCRYPT=1       # Fqzcomp    + AEScrypt
+    RUN_QUIP_AESCRYPT=1          # Quip       + AEScrypt
+    RUN_DSRC_AESCRYPT=1          # DSRC       + AEScrypt
+    RUN_FQC_AESCRYPT=1           # FQC        + AEScrypt
     # Results
     RESULTS_COMP_ENC=0
 
