@@ -84,7 +84,7 @@ for nThr in $CRYFA_THR_RUN; do
     cs_file="$result_FLD/CRYFA_THR_${nThr}_CS__${inDataWF}_$ft"
     if [[ -e $cs_file ]]; then
         CS=`cat $cs_file | awk '{ print $5; }'`;
-        rm -f $cs_file;
+#        rm -f $cs_file;
     fi
 
     ### Compression time -- real - user - system
@@ -93,14 +93,14 @@ for nThr in $CRYFA_THR_RUN; do
         CT_r=`cat $ct_file |tail -n 3 |head -n 1 | awk '{ print $2;}'`
         CT_u=`cat $ct_file |tail -n 2 |head -n 1 | awk '{ print $2;}'`
         CT_s=`cat $ct_file |tail -n 1 |awk '{ print $2;}'`
-        rm -f $ct_file;
+#        rm -f $ct_file;
     fi
 
     ### Compression memory
     cm_file="$result_FLD/CRYFA_THR_${nThr}_CM__${inDataWF}_$ft"
     if [[ -e $cm_file ]]; then
         CM=`cat $cm_file`;
-        rm -f $cm_file;
+#        rm -f $cm_file;
     fi
 
     ### Decompression time -- real - user - system
@@ -109,21 +109,21 @@ for nThr in $CRYFA_THR_RUN; do
         DT_r=`cat $dt_file |tail -n 3 |head -n 1 | awk '{ print $2;}'`
         DT_u=`cat $dt_file |tail -n 2 |head -n 1 | awk '{ print $2;}'`
         DT_s=`cat $dt_file |tail -n 1 |awk '{ print $2;}'`
-        rm -f $dt_file;
+#        rm -f $dt_file;
     fi
 
     ### Decompression memory
     dm_file="$result_FLD/CRYFA_THR_${nThr}_DM__${inDataWF}_$ft"
     if [[ -e $dm_file ]]; then
         DM=`cat $dm_file`;
-        rm -f $dm_file;
+#        rm -f $dm_file;
     fi
 
     ### Verify if the decompressed and the original files are equal
     v_file="$result_FLD/CRYFA_THR_${nThr}_V__${inDataWF}_$ft"
     if [[ -e $v_file ]]; then
         V=`cat $v_file | wc -l`;
-        rm -f $v_file;
+#        rm -f $v_file;
     fi
 
     c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"    # Compression results

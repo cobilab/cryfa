@@ -26,7 +26,7 @@ function encDecRes
     ens_file="$result/${1}_EnS__${dName}_$ft"
     if [[ -e $ens_file ]]; then
         EnS=`cat $ens_file | awk '{ print $5; }'`;
-        rm -f $ens_file;
+#        rm -f $ens_file;
     fi
 
     ### Encryption time -- real - user - system
@@ -35,14 +35,14 @@ function encDecRes
         EnT_r=`cat $ent_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
         EnT_u=`cat $ent_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
         EnT_s=`cat $ent_file | tail -n 1 | awk '{ print $2;}'`;
-        rm -f $ent_file;
+#        rm -f $ent_file;
     fi
 
     ### Encryption memory
     enm_file="$result/${1}_EnM__${dName}_$ft"
     if [[ -e $enm_file ]]; then
         EnM=`cat $enm_file`;
-        rm -f $enm_file;
+#        rm -f $enm_file;
     fi
 
     ### Decryption time -- real - user - system
@@ -51,14 +51,14 @@ function encDecRes
         DeT_r=`cat $det_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
         DeT_u=`cat $det_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
         DeT_s=`cat $det_file | tail -n 1 | awk '{ print $2;}'`;
-        rm -f $det_file;
+#        rm -f $det_file;
     fi
 
     ### Decryption memory
     dem_file="$result/${1}_DeM__${dName}_$ft"
     if [[ -e $dem_file ]]; then
         DeM=`cat $dem_file`;
-        rm -f $dem_file;
+#        rm -f $dem_file;
     fi
 
     en="$EnS\t$EnT_r\t$EnT_u\t$EnT_s\t$EnM"    # Encryption results

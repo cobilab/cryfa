@@ -30,7 +30,7 @@ function compEncDecDecompRes
     cs_file="$result/${1}_${2}_CS__${dName}_$ft"
     if [[ -e $cs_file ]]; then
         CS=`cat $cs_file | awk '{ print $5; }'`;
-        rm -f $cs_file;
+#        rm -f $cs_file;
     fi
 
     ### Compression time -- real - user - system
@@ -39,21 +39,21 @@ function compEncDecDecompRes
         CT_r=`cat $ct_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
         CT_u=`cat $ct_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
         CT_s=`cat $ct_file | tail -n 1 | awk '{ print $2;}'`;
-        rm -f $ct_file;
+#        rm -f $ct_file;
     fi
 
     ### Compression memory
     cm_file="$result/${1}_${2}_CM__${dName}_$ft"
     if [[ -e $cm_file ]]; then
         CM=`cat $cm_file`;
-        rm -f $cm_file;
+#        rm -f $cm_file;
     fi
 
     ### Encrypted file size
     ens_file="$result/${1}_${2}_EnS__${dName}_$ft"
     if [[ -e $ens_file ]]; then
         EnS=`cat $ens_file | awk '{ print $5; }'`;
-        rm -f $ens_file;
+#        rm -f $ens_file;
     fi
 
     ### Encryption time -- real - user - system
@@ -62,14 +62,14 @@ function compEncDecDecompRes
         EnT_r=`cat $ent_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
         EnT_u=`cat $ent_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
         EnT_s=`cat $ent_file | tail -n 1 | awk '{ print $2;}'`;
-        rm -f $ent_file;
+#        rm -f $ent_file;
     fi
 
     ### Encryption memory
     enm_file="$result/${1}_${2}_EnM__${dName}_$ft"
     if [[ -e $enm_file ]]; then
         EnM=`cat $enm_file`;
-        rm -f $enm_file;
+#        rm -f $enm_file;
     fi
 
     ### Decryption time -- real - user - system
@@ -78,14 +78,14 @@ function compEncDecDecompRes
         DeT_r=`cat $det_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
         DeT_u=`cat $det_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
         DeT_s=`cat $det_file | tail -n 1 | awk '{ print $2;}'`;
-        rm -f $det_file;
+#        rm -f $det_file;
     fi
 
     ### Decryption memory
     dem_file="$result/${1}_${2}_DeM__${dName}_$ft"
     if [[ -e $dem_file ]]; then
         DeM=`cat $dem_file`;
-        rm -f $dem_file;
+#        rm -f $dem_file;
     fi
 
     ### Decompression time -- real - user - system
@@ -94,21 +94,21 @@ function compEncDecDecompRes
         DT_r=`cat $dt_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
         DT_u=`cat $dt_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
         DT_s=`cat $dt_file | tail -n 1 | awk '{ print $2;}'`;
-        rm -f $dt_file;
+#        rm -f $dt_file;
     fi
 
     ### Decompression memory
     dm_file="$result/${1}_${2}_DM__${dName}_$ft"
     if [[ -e $dm_file ]]; then
         DM=`cat $dm_file`;
-        rm -f $dm_file;
+#        rm -f $dm_file;
     fi
 
     ### Verify if the decompressed and the original files are equal
     v_file="$result/${1}_${2}_V__${dName}_$ft"
     if [[ -e $v_file ]]; then
         V=`cat $v_file | wc -l`;
-        rm -f $v_file;
+#        rm -f $v_file;
     fi
 
     c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"          # Compression results
