@@ -76,9 +76,9 @@ RUN_METHODS_COMP_ENC=1
     RUN_MFCOMPRESS_AESCRYPT=0    # MFCompress + AEScrypt
     RUN_DELIMINATE_AESCRYPT=0    # DELIMINATE + AEScrypt
     # FASTQ
-    RUN_GZIP_FQ_AESCRYPT=1       # Gzip       + AEScrypt
-    RUN_BZIP2_FQ_AESCRYPT=1      # Bzip2      + AEScrypt
-    RUN_FQZCOMP_AESCRYPT=1       # Fqzcomp    + AEScrypt
+    RUN_GZIP_FQ_AESCRYPT=0       # Gzip       + AEScrypt
+    RUN_BZIP2_FQ_AESCRYPT=0      # Bzip2      + AEScrypt
+    RUN_FQZCOMP_AESCRYPT=0       # Fqzcomp    + AEScrypt
     RUN_QUIP_AESCRYPT=1          # Quip       + AEScrypt
     RUN_DSRC_AESCRYPT=1          # DSRC       + AEScrypt
     RUN_FQC_AESCRYPT=1           # FQC        + AEScrypt
