@@ -202,8 +202,10 @@ inline void Help ()
        <<                                            "> [OUT_FILE]"     << '\n'
                                                                         << '\n'
        << "SAMPLE"                                                      << '\n'
-       << "      COMPRESSION:     ./cryfa -t 8 -k pass.txt in.fq > comp     \n"
-       << "      DECOMPRESSION:   ./cryfa -t 8 -k pass.txt -d comp > orig.fq\n"
+       << "      Compress   & Encrypt:   ./cryfa -k pass.txt in.fq "
+       <<                                                      "> comp" << '\n'
+       << "      Decompress & Decrypt:   ./cryfa -k pass.txt -d comp "
+       <<                                                   "> orig.fq" << '\n'
                                                                         << '\n'
        << "DESCRIPTION"                                                 << '\n'
        << "      Compress and encrypt FASTA/FASTQ files."               << '\n'
