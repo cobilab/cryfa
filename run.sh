@@ -18,7 +18,7 @@ GET_DATASET=0
     GEN_SYNTH_FA=0      # Generate synthetic dataset (FASTA) -- 4   GB
     DL_HUMAN_FQ=0       # Download human             (FASTQ) -- 27  GB
     DL_DENISOVA_FQ=0    # Download denisova          (FASTQ) -- 172 GB
-    GEN_SYNTH_FQ=0      # Generate synthetic dataset (FASTQ) -- 6.2 GB
+    GEN_SYNTH_FQ=0      # Generate synthetic dataset (FASTQ) -- 6.7 GB
 
 ### Dependencies
 INSTALL_DEPENDENCIES=0
@@ -44,7 +44,7 @@ INSTALL_METHODS=0
     INS_AESCRYPT=0      # AEScrypt
 
 ### Run compression methods
-RUN_METHODS_COMP=0
+RUN_METHODS_COMP=1
     # FASTA
     RUN_GZIP_FA=0       # Gzip
     RUN_BZIP2_FA=0      # Bzip2
@@ -63,8 +63,8 @@ RUN_METHODS_COMP=0
     RESULTS_COMP=0
 
 ### Run encryption methods
-RUN_METHODS_ENC=1
-    RUN_AESCRYPT=1      # AEScrypt
+RUN_METHODS_ENC=0
+    RUN_AESCRYPT=0      # AEScrypt
     # Results
     RESULTS_ENC=0
 

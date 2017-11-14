@@ -1,5 +1,5 @@
           #######################################################
-          #    Generate synthetic dataset (FASTQ) -- 6.2 GB     #
+          #    Generate synthetic dataset (FASTQ) -- 6.7 GB     #
           #       - - - - - - - - - - - - - - - - - - - -       #
           #        Morteza Hosseini    seyedmorteza@ua.pt       #
           #        Diogo Pratas        pratas@ua.pt             #
@@ -21,7 +21,7 @@ if [[ $INSTALL_XS -eq 1 ]]; then
     cd ..
 fi
 
-### Generate dataset -- 4.2 GB - 2 GB
+### Generate dataset -- 4.6 GB - 2.1 GB
 XS/XS -t 1 -n 16000000 -ld 70:100 -o \
       -f 0.2,0.2,0.2,0.2,0.2       $dataset/$FQ/$Synth/SynFQ-1.$fastq
 XS/XS -t 2 -n 10000000 -ls 70 -qt 2 \

@@ -58,8 +58,8 @@ SYNOPSIS
       ./cryfa [OPTION]... -k [KEY_FILE] [-d] [IN_FILE] > [OUT_FILE]
 
 SAMPLE
-      COMPRESSION:     ./cryfa -k pass.txt in.fq > comp     
-      DECOMPRESSION:   ./cryfa -k pass.txt -d comp > orig.fq
+      Compression   & Encryption:   ./cryfa -k pass.txt in.fq > comp     
+      Decompression & Decryption:   ./cryfa -k pass.txt -d comp > orig.fq
 
 DESCRIPTION
       Compress and encrypt FASTA/FASTQ files.
