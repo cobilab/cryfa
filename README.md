@@ -53,7 +53,7 @@ To see the possible options, type:
 ```
 
 which provides the following:
-```bash
+```
 SYNOPSIS
       ./cryfa [OPTION]... -k [KEY_FILE] [-d] [IN_FILE] > [OUT_FILE]
 
