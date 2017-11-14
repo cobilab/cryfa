@@ -73,7 +73,7 @@ DESCRIPTION
            key file name -- MANDATORY
 
       -d,  --dec
-           decompression & decryption
+           decompress & decrypt
 
       -v,  --verbose
            verbose mode (more information)

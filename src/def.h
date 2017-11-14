@@ -219,7 +219,7 @@ inline void Help ()
        << "           key file name -- MANDATORY"                       << '\n'
                                                                         << '\n'
        << "      -d,  --dec"                                            << '\n'
-       << "           decompression & decryption"                       << '\n'
+       << "           decompress & decrypt"                             << '\n'
                                                                         << '\n'
        << "      -v,  --verbose"                                        << '\n'
        << "           verbose mode (more information)"                  << '\n'
