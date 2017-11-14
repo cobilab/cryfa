@@ -13,12 +13,10 @@ CRIME or BREACH attacks.
 
 
 ## INSTALL
-First, get cryfa:
+Get cryfa and make the project, using:
 ```bash
 git clone https://github.com/pratas/cryfa.git
-```
-Then, go to the cryfa directory and make the project:
-```bash
+cd cryfa
 cmake .
 make
 ```

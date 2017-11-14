@@ -50,7 +50,7 @@ RUN_METHODS_COMP=0
     RUN_BZIP2_FA=0      # Bzip2
     RUN_MFCOMPRESS=0    # MFCompress
     RUN_DELIMINATE=0    # DELIMINATE
-    RUN_CRYFA_FA=0      # Cryfa
+    RUN_CRYFA_FA=1      # Cryfa
     # FASTQ
     RUN_GZIP_FQ=0       # Gzip
     RUN_BZIP2_FQ=0      # Bzip2
@@ -58,18 +58,18 @@ RUN_METHODS_COMP=0
     RUN_QUIP=0          # Quip
     RUN_DSRC=0          # DSRC
     RUN_FQC=0           # FQC
-    RUN_CRYFA_FQ=0      # Cryfa
+    RUN_CRYFA_FQ=1      # Cryfa
     # Results
-    RESULTS_COMP=1
+    RESULTS_COMP=0
 
 ### Run encryption methods
-RUN_METHODS_ENC=0
-    RUN_AESCRYPT=0      # AEScrypt
+RUN_METHODS_ENC=1
+    RUN_AESCRYPT=1      # AEScrypt
     # Results
-    RESULTS_ENC=1
+    RESULTS_ENC=0
 
 ### Run compression+encryption methods
-RUN_METHODS_COMP_ENC=1
+RUN_METHODS_COMP_ENC=0
     # FASTA
     RUN_GZIP_FA_AESCRYPT=0       # Gzip       + AEScrypt
     RUN_BZIP2_FA_AESCRYPT=0      # Bzip2      + AEScrypt
@@ -79,9 +79,9 @@ RUN_METHODS_COMP_ENC=1
     RUN_GZIP_FQ_AESCRYPT=0       # Gzip       + AEScrypt
     RUN_BZIP2_FQ_AESCRYPT=0      # Bzip2      + AEScrypt
     RUN_FQZCOMP_AESCRYPT=0       # Fqzcomp    + AEScrypt
-    RUN_QUIP_AESCRYPT=1          # Quip       + AEScrypt
-    RUN_DSRC_AESCRYPT=1          # DSRC       + AEScrypt
-    RUN_FQC_AESCRYPT=1           # FQC        + AEScrypt
+    RUN_QUIP_AESCRYPT=0          # Quip       + AEScrypt
+    RUN_DSRC_AESCRYPT=0          # DSRC       + AEScrypt
+    RUN_FQC_AESCRYPT=0           # FQC        + AEScrypt
     # Results
     RESULTS_COMP_ENC=0
 
