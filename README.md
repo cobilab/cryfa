@@ -29,11 +29,11 @@ If you want to run cryfa in stand-alone mode, use the following command:
 ```
 For example, to compress:
 ```bash
-./cryfa -t 8 -k pass.txt in.fq > comp
+./cryfa -k pass.txt in.fq > comp
 ```
 and, to decompress:
 ```bash
-./cryfa -t 8 -k pass.txt -d comp > orig.fq
+./cryfa -k pass.txt -d comp > orig.fq
 ```
 Options are described in the following section.
 
@@ -58,8 +58,8 @@ SYNOPSIS
       ./cryfa [OPTION]... -k [KEY_FILE] [-d] [IN_FILE] > [OUT_FILE]
 
 SAMPLE
-      COMPRESSION:     ./cryfa -t 8 -k pass.txt in.fq > comp     
-      DECOMPRESSION:   ./cryfa -t 8 -k pass.txt -d comp > orig.fq
+      COMPRESSION:     ./cryfa -k pass.txt in.fq > comp     
+      DECOMPRESSION:   ./cryfa -k pass.txt -d comp > orig.fq
 
 DESCRIPTION
       Compress and encrypt FASTA/FASTQ files.
