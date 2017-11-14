@@ -72,8 +72,8 @@ DESCRIPTION
       -k [KEY_FILE],  --key [KEY_FILE]
            key file name -- MANDATORY
 
-      -d,  --decrypt
-           decryption
+      -d,  --dec
+           decompression & decryption
 
       -v,  --verbose
            verbose mode (more information)

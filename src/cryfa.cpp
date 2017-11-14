@@ -145,7 +145,7 @@ int main (int argc, char* argv[])
         {"help",            no_argument, &h_flag, (int) 'h'},   // Help
         {"verbose",         no_argument, &v_flag, (int) 'v'},   // Verbose
         {"disableShuffle",  no_argument, &s_flag, (int) 's'},   // D (un)shuffle
-        {"decrypt",         no_argument, &d_flag, (int) 'd'},   // Decrypt mode
+        {"dec",             no_argument, &d_flag, (int) 'd'},   // Decomp mode
         {"key",       required_argument,       0,       'k'},   // Key file
         {"thread",    required_argument,       0,       't'},   // #threads >= 1
         {0,                           0,       0,         0}
