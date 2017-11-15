@@ -43,7 +43,7 @@ If you want to compare cryfa with other methods, set the parameters in
 ./run.sh
 ```
 With this script, you can download the datasets, install the dependencies, 
-install the compression and encryption methods and finally, run them.
+install the compression and encryption tools, run these tools, and finally, print the results.
 
 
 ### OPTIONS

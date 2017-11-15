@@ -44,13 +44,13 @@ INSTALL_METHODS=0
     INS_AESCRYPT=0      # AEScrypt
 
 ### Run compression methods
-RUN_METHODS_COMP=1
+RUN_METHODS_COMP=0
     # FASTA
     RUN_GZIP_FA=0       # Gzip
     RUN_BZIP2_FA=0      # Bzip2
     RUN_MFCOMPRESS=0    # MFCompress
     RUN_DELIMINATE=0    # DELIMINATE
-    RUN_CRYFA_FA=1      # Cryfa
+    RUN_CRYFA_FA=0      # Cryfa
     # FASTQ
     RUN_GZIP_FQ=0       # Gzip
     RUN_BZIP2_FQ=0      # Bzip2
@@ -58,7 +58,7 @@ RUN_METHODS_COMP=1
     RUN_QUIP=0          # Quip
     RUN_DSRC=0          # DSRC
     RUN_FQC=0           # FQC
-    RUN_CRYFA_FQ=1      # Cryfa
+    RUN_CRYFA_FQ=0      # Cryfa
     # Results
     RESULTS_COMP=0
 
@@ -86,11 +86,12 @@ RUN_METHODS_COMP_ENC=0
     RESULTS_COMP_ENC=0
 
 ### Run cryfa, exclusively
-CRYFA_EXCLUSIVE=0
+CRYFA_EXCLUSIVE=1
     MAX_N_THR=8                  # Max number of threads
-    CRYFA_XCL_DATASET="dataset/FA/V/viruses.fasta"
-    RUN_CRYFA_XCL=0
-    RESULTS_CRYFA_XCL=1
+#    CRYFA_XCL_DATASET="dataset/FA/HS/HS.fasta"
+    CRYFA_XCL_DATASET="dataset/FQ/DS/DS-SL3003_SR.fastq"
+    RUN_CRYFA_XCL=1
+    RESULTS_CRYFA_XCL=0
 
 
 
