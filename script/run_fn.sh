@@ -55,11 +55,11 @@ function printMethodName
       "BZIP2")                 echo "bzip2";;
       "MFCOMPRESS")            echo "MFCompress";;
       "DELIM"|"DELIMINATE")    echo "DELIMINATE";;
-      "CRYFA")                 echo "Cryfa";;
-      "FQZCOMP")               echo "Fqzcomp";;
+      "CRYFA")                 echo "cryfa";;
+      "FQZCOMP")               echo "fqzcomp";;
       "QUIP")                  echo "Quip";;
       "DSRC")                  echo "DSRC";;
       "FQC")                   echo "FQC";;
-      "AESCRYPT")              echo "AEScrypt";;
+      "AESCRYPT")              echo "AESCrypt";;
     esac
 }

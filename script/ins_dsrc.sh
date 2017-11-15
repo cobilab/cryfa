@@ -1,5 +1,5 @@
           #######################################################
-          #                Install dsrc -- FASTQ                #
+          #                Install DSRC -- FASTQ                #
           #       - - - - - - - - - - - - - - - - - - - -       #
           #        Morteza Hosseini    seyedmorteza@ua.pt       #
           #        Diogo Pratas        pratas@ua.pt             #

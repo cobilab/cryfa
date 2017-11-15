@@ -1,5 +1,5 @@
           #######################################################
-          #             Install deliminate -- FASTA             #
+          #             Install MFCompress -- FASTA             #
           #       - - - - - - - - - - - - - - - - - - - -       #
           #        Morteza Hosseini    seyedmorteza@ua.pt       #
           #        Diogo Pratas        pratas@ua.pt             #
@@ -7,11 +7,16 @@
           #######################################################
 #!/bin/bash
 
-rm -f DELIMINATE_LINUX_64bit.tar.gz
+rm -f MFCompress-src-1.01.tgz
 
-url="http://metagenomics.atc.tcs.com/Compression_archive"
-wget $WGET_OP $url/DELIMINATE_LINUX_64bit.tar.gz
-tar -xzf DELIMINATE_LINUX_64bit.tar.gz
-mv EXECUTABLES deliminate    # Rename
-mv deliminate $progs/
-rm -f DELIMINATE_LINUX_64bit.tar.gz
+url="http://sweet.ua.pt/ap/software/mfcompress"
+wget $WGET_OP $url/MFCompress-src-1.01.tgz
+tar -xzf MFCompress-src-1.01.tgz
+mv MFCompress-src-1.01/ mfcompress/    # Rename
+mv mfcompress/ $progs/
+rm -f MFCompress-src-1.01.tgz
+
+cd $progs/mfcompress/
+cp Makefile.linux Makefile    # make -f Makefile.linux
+make
+cd ../..

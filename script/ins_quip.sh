@@ -1,5 +1,5 @@
           #######################################################
-          #                Install quip -- FASTQ                #
+          #                Install Quip -- FASTQ                #
           #       - - - - - - - - - - - - - - - - - - - -       #
           #        Morteza Hosseini    seyedmorteza@ua.pt       #
           #        Diogo Pratas        pratas@ua.pt             #

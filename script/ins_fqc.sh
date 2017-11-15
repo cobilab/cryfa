@@ -1,5 +1,5 @@
           #######################################################
-          #                 Install fqc -- FASTQ                #
+          #                 Install FQC -- FASTQ                #
           #       - - - - - - - - - - - - - - - - - - - -       #
           #        Morteza Hosseini    seyedmorteza@ua.pt       #
           #        Diogo Pratas        pratas@ua.pt             #

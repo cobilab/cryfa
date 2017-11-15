@@ -189,8 +189,8 @@ inline void Help ()
 {
     cout                                                                << '\n'
        << "NAME"                                                        << '\n'
-       << "      cryfa v" << VERSION << " - FASTA/FASTQ compression and "
-       << "encryption"                                                  << '\n'
+       << "      cryfa v" << VERSION << " - FASTA/FASTQ compression "
+       <<                                              "and encryption" << '\n'
                                                                         << '\n'
        << "AUTHORS"                                                     << '\n'
        << "      Morteza Hosseini    seyedmorteza@ua.pt"                << '\n'
@@ -199,7 +199,7 @@ inline void Help ()
                                                                         << '\n'
        << "SYNOPSIS"                                                    << '\n'
        << "      ./cryfa [OPTION]... -k [KEY_FILE] [-d] [IN_FILE] "
-       <<                                            "> [OUT_FILE]"     << '\n'
+       <<                                                "> [OUT_FILE]" << '\n'
                                                                         << '\n'
        << "SAMPLE"                                                      << '\n'
        << "      Compress   & Encrypt:   ./cryfa -k pass.txt in.fq "
@@ -231,8 +231,8 @@ inline void Help ()
        << "           number of threads"                                << '\n'
                                                                         << '\n'
        << "COPYRIGHT"                                                   << '\n'
-       << "      Copyright (C) " << DEV_YEARS << ", IEETA, University of "
-       <<                                                     "Aveiro." << '\n'
+       << "      Copyright (C) " << DEV_YEARS << ", IEETA, University "
+       <<                                                  "of Aveiro." << '\n'
        << "      This is a Free software, under GPLv3. You may redistribute \n"
        << "      copies of it under the terms of the GNU - General Public   \n"
        << "      License v3 <http://www.gnu.org/licenses/gpl.html>. There   \n"

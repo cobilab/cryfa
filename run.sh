@@ -31,57 +31,57 @@ INSTALL_DEPENDENCIES=0
 
 ### Install methods
 INSTALL_METHODS=0
-    INS_CRYFA=1         # Cryfa
+    INS_CRYFA=1         # cryfa
     # FASTA
     INS_MFCOMPRESS=0    # MFCompress -- error: make -- executables available
     INS_DELIMINATE=0    # DELIMINATE -- error: site not reachable -- exec avail.
     # FASTQ
-    INS_FQZCOMP=0       # Fqzcomp
+    INS_FQZCOMP=0       # fqzcomp
     INS_QUIP=0          # Quip
     INS_DSRC=0          # DSRC
     INS_FQC=0           # FQC -- error: site not reachable -- exec available
     # Encryption
-    INS_AESCRYPT=0      # AEScrypt
+    INS_AESCRYPT=0      # AES Crypt
 
 ### Run compression methods
 RUN_METHODS_COMP=0
     # FASTA
-    RUN_GZIP_FA=0       # Gzip
-    RUN_BZIP2_FA=0      # Bzip2
+    RUN_GZIP_FA=0       # gzip
+    RUN_BZIP2_FA=0      # bzip2
     RUN_MFCOMPRESS=0    # MFCompress
     RUN_DELIMINATE=0    # DELIMINATE
-    RUN_CRYFA_FA=0      # Cryfa
+    RUN_CRYFA_FA=0      # cryfa
     # FASTQ
-    RUN_GZIP_FQ=0       # Gzip
-    RUN_BZIP2_FQ=0      # Bzip2
-    RUN_FQZCOMP=0       # Fqzcomp
+    RUN_GZIP_FQ=0       # gzip
+    RUN_BZIP2_FQ=0      # bzip2
+    RUN_FQZCOMP=0       # fqzcomp
     RUN_QUIP=0          # Quip
     RUN_DSRC=0          # DSRC
     RUN_FQC=0           # FQC
-    RUN_CRYFA_FQ=0      # Cryfa
+    RUN_CRYFA_FQ=0      # cryfa
     # Results
     RESULTS_COMP=0
 
 ### Run encryption methods
 RUN_METHODS_ENC=0
-    RUN_AESCRYPT=0      # AEScrypt
+    RUN_AESCRYPT=0      # AES Crypt
     # Results
     RESULTS_ENC=0
 
 ### Run compression+encryption methods
 RUN_METHODS_COMP_ENC=0
     # FASTA
-    RUN_GZIP_FA_AESCRYPT=0       # Gzip       + AEScrypt
-    RUN_BZIP2_FA_AESCRYPT=0      # Bzip2      + AEScrypt
-    RUN_MFCOMPRESS_AESCRYPT=0    # MFCompress + AEScrypt
-    RUN_DELIMINATE_AESCRYPT=0    # DELIMINATE + AEScrypt
+    RUN_GZIP_FA_AESCRYPT=0       # gzip       + AES Crypt
+    RUN_BZIP2_FA_AESCRYPT=0      # bzip2      + AES Crypt
+    RUN_MFCOMPRESS_AESCRYPT=0    # MFCompress + AES Crypt
+    RUN_DELIMINATE_AESCRYPT=0    # DELIMINATE + AES Crypt
     # FASTQ
-    RUN_GZIP_FQ_AESCRYPT=0       # Gzip       + AEScrypt
-    RUN_BZIP2_FQ_AESCRYPT=0      # Bzip2      + AEScrypt
-    RUN_FQZCOMP_AESCRYPT=0       # Fqzcomp    + AEScrypt
-    RUN_QUIP_AESCRYPT=0          # Quip       + AEScrypt
-    RUN_DSRC_AESCRYPT=0          # DSRC       + AEScrypt
-    RUN_FQC_AESCRYPT=0           # FQC        + AEScrypt
+    RUN_GZIP_FQ_AESCRYPT=0       # gzip       + AES Crypt
+    RUN_BZIP2_FQ_AESCRYPT=0      # bzip2      + AES Crypt
+    RUN_FQZCOMP_AESCRYPT=0       # fqzcomp    + AES Crypt
+    RUN_QUIP_AESCRYPT=0          # Quip       + AES Crypt
+    RUN_DSRC_AESCRYPT=0          # DSRC       + AES Crypt
+    RUN_FQC_AESCRYPT=0           # FQC        + AES Crypt
     # Results
     RESULTS_COMP_ENC=0
 
@@ -285,7 +285,7 @@ then
         return;
     fi
 
-    ### Cryfa compress/decompress function
+    ### cryfa compress/decompress function
     . $script/run_cryfa_xcl.sh
 
     ### Run

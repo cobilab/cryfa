@@ -1,5 +1,5 @@
           #######################################################
-          #           Install aescrypt -- FASTA/FASTQ           #
+          #          Install AES Crypt -- FASTA/FASTQ           #
           #       - - - - - - - - - - - - - - - - - - - -       #
           #        Morteza Hosseini    seyedmorteza@ua.pt       #
           #        Diogo Pratas        pratas@ua.pt             #

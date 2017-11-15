@@ -2,9 +2,9 @@
 border="0" /></p>
 <br>
 
-Cryfa is a FASTA/FASTQ compression and encryption tool.
+cryfa is a FASTA/FASTQ compression and encryption tool.
 It uses AES (Advanced Encryption Standard) for the purpose of encryption.
-Cryfa can be applied to any FASTA or FASTQ file (DNA sequences, headers and
+cryfa can be applied to any FASTA or FASTQ file (DNA sequences, headers and
 quality-scores).
 Compacting 3 DNA bases into 1 char, it uses a fixed block size packing.
 Compared with general compression tools, it allows to decrease the file size by
@@ -85,7 +85,7 @@ DESCRIPTION
            number of threads
 ```
 
-Cryfa uses standard input and ouput streams, hence, it can be directly 
+cryfa uses standard input and ouput streams, hence, it can be directly 
 integrated with pipelines.
 
 
@@ -107,5 +107,5 @@ Please let us know if there is any
 
 
 ## LICENSE
-Cryfa is under GPL v3 license. For more information, click 
+cryfa is under GPL v3 license. For more information, click 
 [here](http://www.gnu.org/licenses/gpl-3.0.html).
