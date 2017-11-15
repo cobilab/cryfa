@@ -14,7 +14,7 @@
 ### Dataset
 GET_DATASET=0
     DL_HUMAN_FA=0       # Download human             (FASTA) -- 3.1 GB
-    DL_VIRUSES_FA=0     # Download viruses           (FASTA) -- 350 MB
+    DL_VIRUSES_FA=0     # Download viruses           (FASTA) -- 0.3 GB
     GEN_SYNTH_FA=0      # Generate synthetic dataset (FASTA) -- 4   GB
     DL_HUMAN_FQ=0       # Download human             (FASTQ) -- 27  GB
     DL_DENISOVA_FQ=0    # Download denisova          (FASTQ) -- 172 GB
@@ -31,6 +31,7 @@ INSTALL_DEPENDENCIES=0
 
 ### Install methods
 INSTALL_METHODS=0
+    # FASTA/FASTQ
     INS_CRYFA=1         # cryfa
     # FASTA
     INS_MFCOMPRESS=0    # MFCompress -- error: make -- executables available
