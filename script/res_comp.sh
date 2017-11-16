@@ -124,6 +124,9 @@ function compResHumanReadable
 
     ### FASTA
     # Details -- 1 row for headers and 1 row after all
+    FASTA_METHODS_SIZE=0    # If cryfa is the only compression method run
+
+
     removeFromRow=`echo $((FASTA_DATASET_SIZE*(FASTA_METHODS_SIZE+1)+1+1))`
     sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_detail_FA.$INF;
 
@@ -208,7 +211,8 @@ d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
 printf "Dataset\tSize(B)\tMethod\t$c\t$d\tEq\n" > $OUT;
 
 ### FASTA -- human - viruses - synthetic
-for i in CRYFA $FASTA_METHODS; do
+#for i in CRYFA $FASTA_METHODS; do
+for i in CRYFA; do
     compDecompRes $i $FAdsPath/$HUMAN/HS.$fasta >> $OUT;
     compDecompRes $i $FAdsPath/$VIRUSES/viruses.$fasta >> $OUT;
     for j in 1 2; do
@@ -217,7 +221,8 @@ for i in CRYFA $FASTA_METHODS; do
 done
 
 ### FASTQ -- human - Denisova - synthetic
-for i in CRYFA $FASTQ_METHODS; do
+#for i in CRYFA $FASTQ_METHODS; do
+for i in CRYFA; do
     for j in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 SRR707196_1; do
         compDecompRes $i $FQdsPath/$HUMAN/HS-${j}.$fastq >> $OUT;
     done

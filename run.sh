@@ -12,22 +12,22 @@
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ### Dataset
-GET_DATASET=0
-    DL_HUMAN_FA=0       # Download human             (FASTA) -- 3.1 GB
-    DL_VIRUSES_FA=0     # Download viruses           (FASTA) -- 0.3 GB
-    GEN_SYNTH_FA=0      # Generate synthetic dataset (FASTA) -- 4   GB
-    DL_HUMAN_FQ=0       # Download human             (FASTQ) -- 27  GB
-    DL_DENISOVA_FQ=0    # Download denisova          (FASTQ) -- 172 GB
-    GEN_SYNTH_FQ=0      # Generate synthetic dataset (FASTQ) -- 6.7 GB
+GET_DATASET=0           # 215 GB free disk space
+    DL_HUMAN_FA=1       # Download human             (FASTA) -- 3.1 GB
+    DL_VIRUSES_FA=1     # Download viruses           (FASTA) -- 0.3 GB
+    GEN_SYNTH_FA=1      # Generate synthetic dataset (FASTA) -- 4   GB
+    DL_HUMAN_FQ=1       # Download human             (FASTQ) -- 27  GB
+    DL_DENISOVA_FQ=1    # Download denisova          (FASTQ) -- 172 GB
+    GEN_SYNTH_FQ=1      # Generate synthetic dataset (FASTQ) -- 6.7 GB
 
 ### Dependencies
 INSTALL_DEPENDENCIES=0
     INS_7ZIP=1          # 7zip
     INS_CMAKE=1         # Cmake
-    INS_BOOST=1         # Boost
-    INS_CURL=1          # Curl
-    INS_VALGRIND=1      # Valgrind
-    INS_ZLIB=1          # Zlib
+    INS_BOOST=0         # Boost
+    INS_CURL=0          # Curl
+    INS_VALGRIND=0      # Valgrind
+    INS_ZLIB=0          # Zlib
 
 ### Install methods
 INSTALL_METHODS=0
@@ -45,38 +45,22 @@ INSTALL_METHODS=0
     INS_AESCRYPT=0      # AES Crypt
 
 ### Run compression methods
-RUN_METHODS_COMP=0
+RUN_METHODS_COMP=0      # 350 GB free disk space
     # FASTA
-    RUN_GZIP_FA=0       # gzip
-    RUN_BZIP2_FA=0      # bzip2
-    RUN_MFCOMPRESS=0    # MFCompress
-    RUN_DELIMINATE=0    # DELIMINATE
     RUN_CRYFA_FA=0      # cryfa
     # FASTQ
-    RUN_GZIP_FQ=0       # gzip
-    RUN_BZIP2_FQ=0      # bzip2
-    RUN_FQZCOMP=0       # fqzcomp
-    RUN_QUIP=0          # Quip
-    RUN_DSRC=0          # DSRC
-    RUN_FQC=0           # FQC
     RUN_CRYFA_FQ=0      # cryfa
     # Results
-    RESULTS_COMP=0
+    RESULTS_COMP=1
 
-### Run encryption methods
-RUN_METHODS_ENC=0
-    RUN_AESCRYPT=0      # AES Crypt
-    # Results
-    RESULTS_ENC=0
-
-### Run compression+encryption methods
+### Run compression & encryption methods
 RUN_METHODS_COMP_ENC=0
-    # FASTA
+    # FASTA -- 20 GB free disk space
     RUN_GZIP_FA_AESCRYPT=0       # gzip       + AES Crypt
     RUN_BZIP2_FA_AESCRYPT=0      # bzip2      + AES Crypt
     RUN_MFCOMPRESS_AESCRYPT=0    # MFCompress + AES Crypt
     RUN_DELIMINATE_AESCRYPT=0    # DELIMINATE + AES Crypt
-    # FASTQ
+    # FASTQ -- 600 GB free disk space
     RUN_GZIP_FQ_AESCRYPT=0       # gzip       + AES Crypt
     RUN_BZIP2_FQ_AESCRYPT=0      # bzip2      + AES Crypt
     RUN_FQZCOMP_AESCRYPT=0       # fqzcomp    + AES Crypt
@@ -84,15 +68,23 @@ RUN_METHODS_COMP_ENC=0
     RUN_DSRC_AESCRYPT=0          # DSRC       + AES Crypt
     RUN_FQC_AESCRYPT=0           # FQC        + AES Crypt
     # Results
-    RESULTS_COMP_ENC=0
+    RESULTS_COMP_ENC=1
+
+### Run encryption methods
+RUN_METHODS_ENC=0       # 430 GB free disk space
+    RUN_AESCRYPT=0      # AES Crypt
+    # Results
+    RESULTS_ENC=1
 
 ### Run cryfa, exclusively
-CRYFA_EXCLUSIVE=1
-    MAX_N_THR=8                  # Max number of threads
+CRYFA_EXCLUSIVE=0
+    MAX_N_THR=8         # Max number of threads
 #    CRYFA_XCL_DATASET="dataset/FA/HS/HS.fasta"
     CRYFA_XCL_DATASET="dataset/FQ/DS/DS-SL3003_SR.fastq"
-    RUN_CRYFA_XCL=1
-    RESULTS_CRYFA_XCL=0
+    # Run
+    RUN_CRYFA_XCL=0
+    # Results
+    RESULTS_CRYFA_XCL=1
 
 
 
@@ -175,19 +167,9 @@ then
     . $script/run_fn_comp.sh
 
     ### FASTA
-    if [[ $RUN_GZIP_FA    -eq 1 ]]; then  compDecompOnDataset gzip       fa;  fi
-    if [[ $RUN_BZIP2_FA   -eq 1 ]]; then  compDecompOnDataset bzip2      fa;  fi
-    if [[ $RUN_MFCOMPRESS -eq 1 ]]; then  compDecompOnDataset mfcompress fa;  fi
-    if [[ $RUN_DELIMINATE -eq 1 ]]; then  compDecompOnDataset delim      fa;  fi
     if [[ $RUN_CRYFA_FA   -eq 1 ]]; then  compDecompOnDataset cryfa      fa;  fi
 
     ### FASTQ
-    if [[ $RUN_GZIP_FQ    -eq 1 ]]; then  compDecompOnDataset gzip       fq;  fi
-    if [[ $RUN_BZIP2_FQ   -eq 1 ]]; then  compDecompOnDataset bzip2      fq;  fi
-    if [[ $RUN_FQZCOMP    -eq 1 ]]; then  compDecompOnDataset fqzcomp    fq;  fi
-    if [[ $RUN_QUIP       -eq 1 ]]; then  compDecompOnDataset quip       fq;  fi
-    if [[ $RUN_DSRC       -eq 1 ]]; then  compDecompOnDataset dsrc       fq;  fi
-    if [[ $RUN_FQC        -eq 1 ]]; then  compDecompOnDataset fqc        fq;  fi
     if [[ $RUN_CRYFA_FQ   -eq 1 ]]; then  compDecompOnDataset cryfa      fq;  fi
 
     ### Results
