@@ -275,5 +275,15 @@ then
     if [[ $RUN_CRYFA_XCL     -eq 1 ]]; then  runCryfa;  fi
 
     ### Results
-    if [[ $RESULTS_CRYFA_XCL -eq 1 ]]; then  . $script/res_cryfa_xcl.sh;  fi
+    if [[ $RESULTS_CRYFA_XCL -eq 1 ]]; then
+        . $script/res_cryfa_xcl.sh;
+
+        # Rename results according to dataset
+        mv $cryfa_xcl/CRYFA_THR.$RES \
+           $cryfa_xcl/CRYFA_THR__${inDataWF}_$ft.$RES
+        mv $cryfa_xcl/CRYFA_THR.$INF \
+           $cryfa_xcl/CRYFA_THR__${inDataWF}_$ft.$INF
+        mv $cryfa_xcl/CRYFA_THR_detail.$INF \
+           $cryfa_xcl/CRYFA_THR_detail__${inDataWF}_$ft.$INF
+    fi
 fi
