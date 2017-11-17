@@ -1,5 +1,5 @@
           #######################################################
-          #                    Cryfa results                    #
+          #  Results of cryfa with different number of threads  #
           #       - - - - - - - - - - - - - - - - - - - -       #
           #        Morteza Hosseini    seyedmorteza@ua.pt       #
           #        Diogo Pratas        pratas@ua.pt             #
@@ -7,12 +7,14 @@
           #######################################################
 #!/bin/bash
 
+. $script/run_fn_cryfa_thr.sh    # Dataset parameters
+
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #   Functions
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 ### Convert memory numbers scale to MB and times to fractional minutes in
 ### result files. $1: input file name
-function cryfaXclResHumanReadable
+function cryfaThrResHumanReadable
 {
     IN=$1              # Input file name
     INWF="${IN%.*}"    # Input file name without filetype
@@ -68,9 +70,7 @@ function cryfaXclResHumanReadable
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #   Print compression results
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-result_FLD="../$result"
-OUT="CRYFA_THR.$RES"    # Output file name
-cd $cryfa_xcl
+OUT="$result/CRYFA_THR__${inDataWF}_$ft.$RES"    # Output file name
 c="C_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)\tC_Mem(KB)"
 d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
 
@@ -81,14 +81,14 @@ for nThr in $CRYFA_THR_RUN; do
     DT_r="";     DT_u="";     DT_s="";     DM="";       V="";
 
     ### Compressed file size
-    cs_file="$result_FLD/CRYFA_THR_${nThr}_CS__${inDataWF}_$ft"
+    cs_file="$result/CRYFA_THR_${nThr}_CS__${inDataWF}_$ft"
     if [[ -e $cs_file ]]; then
         CS=`cat $cs_file | awk '{ print $5; }'`;
 #        rm -f $cs_file;
     fi
 
     ### Compression time -- real - user - system
-    ct_file="$result_FLD/CRYFA_THR_${nThr}_CT__${inDataWF}_$ft"
+    ct_file="$result/CRYFA_THR_${nThr}_CT__${inDataWF}_$ft"
     if [[ -e $ct_file ]]; then
         CT_r=`cat $ct_file |tail -n 3 |head -n 1 | awk '{ print $2;}'`
         CT_u=`cat $ct_file |tail -n 2 |head -n 1 | awk '{ print $2;}'`
@@ -97,14 +97,14 @@ for nThr in $CRYFA_THR_RUN; do
     fi
 
     ### Compression memory
-    cm_file="$result_FLD/CRYFA_THR_${nThr}_CM__${inDataWF}_$ft"
+    cm_file="$result/CRYFA_THR_${nThr}_CM__${inDataWF}_$ft"
     if [[ -e $cm_file ]]; then
         CM=`cat $cm_file`;
 #        rm -f $cm_file;
     fi
 
     ### Decompression time -- real - user - system
-    dt_file="$result_FLD/CRYFA_THR_${nThr}_DT__${inDataWF}_$ft"
+    dt_file="$result/CRYFA_THR_${nThr}_DT__${inDataWF}_$ft"
     if [[ -e $dt_file ]]; then
         DT_r=`cat $dt_file |tail -n 3 |head -n 1 | awk '{ print $2;}'`
         DT_u=`cat $dt_file |tail -n 2 |head -n 1 | awk '{ print $2;}'`
@@ -113,14 +113,14 @@ for nThr in $CRYFA_THR_RUN; do
     fi
 
     ### Decompression memory
-    dm_file="$result_FLD/CRYFA_THR_${nThr}_DM__${inDataWF}_$ft"
+    dm_file="$result/CRYFA_THR_${nThr}_DM__${inDataWF}_$ft"
     if [[ -e $dm_file ]]; then
         DM=`cat $dm_file`;
 #        rm -f $dm_file;
     fi
 
     ### Verify if the decompressed and the original files are equal
-    v_file="$result_FLD/CRYFA_THR_${nThr}_V__${inDataWF}_$ft"
+    v_file="$result/CRYFA_THR_${nThr}_V__${inDataWF}_$ft"
     if [[ -e $v_file ]]; then
         V=`cat $v_file | wc -l`;
 #        rm -f $v_file;
@@ -132,9 +132,5 @@ for nThr in $CRYFA_THR_RUN; do
     printf "$inDataWF\t$fsize\t$nThr\t$c\t$d\t$V\n" >> $OUT;
 done
 
-rm -f mem_ps
-
 ### Make the result file human readable
-cryfaXclResHumanReadable $OUT;
-
-cd ..
+cryfaThrResHumanReadable $OUT;

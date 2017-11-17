@@ -76,15 +76,15 @@ RUN_METHODS_ENC=0       # 430 GB free disk space
     # Results
     RESULTS_ENC=1
 
-### Run cryfa, exclusively
-CRYFA_EXCLUSIVE=0
+### Run cryfa with different number of threads
+RUN_CRYFA_THREADS=1
     MAX_N_THR=8         # Max number of threads
-#    CRYFA_XCL_DATASET="dataset/FA/HS/HS.fasta"
-    CRYFA_XCL_DATASET="dataset/FQ/DS/DS-SL3003_SR.fastq"
+    CRYFA_THR_DATASET="dataset/FA/HS/HS.fasta"
+#    CRYFA_THR_DATASET="dataset/FQ/DS/DS-SL3003_SR.fastq"
     # Run
-    RUN_CRYFA_XCL=0
+    RUN_CRYFA_THR=1
     # Results
-    RESULTS_CRYFA_XCL=1
+    RESULTS_CRYFA_THR=1
 
 
 
@@ -167,13 +167,13 @@ then
     . $script/run_fn_comp.sh
 
     ### FASTA
-    if [[ $RUN_CRYFA_FA   -eq 1 ]]; then  compDecompOnDataset cryfa      fa;  fi
+    if [[ $RUN_CRYFA_FA   -eq 1 ]]; then  compDecompOnDataset cryfa fa;  fi
 
     ### FASTQ
-    if [[ $RUN_CRYFA_FQ   -eq 1 ]]; then  compDecompOnDataset cryfa      fq;  fi
+    if [[ $RUN_CRYFA_FQ   -eq 1 ]]; then  compDecompOnDataset cryfa fq;  fi
 
     ### Results
-    if [[ $RESULTS_COMP -eq 1 ]]; then  . $script/res_comp.sh;  fi
+    if [[ $RESULTS_COMP   -eq 1 ]]; then  . $script/res_comp.sh;         fi
 fi
 
 
@@ -255,35 +255,25 @@ fi
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   Run cryfa, exclusively -- for different number of threads
+#   Run cryfa with different number of threads
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-if [[ $CRYFA_EXCLUSIVE -eq 1 ]];
+if [[ $RUN_CRYFA_THREADS -eq 1 ]];
 then
-    ### Create a folder for cryfa, if it doesn't already exist
-    if [[ ! -d $cryfa_xcl ]]; then  mkdir -p $cryfa_xcl;  fi
+    ### Create a folder for results, if it doesn't already exist
+    if [[ ! -d $result  ]]; then  mkdir -p $result;  fi
 
     ### Check if the dataset is available
-    if [[ ! -e $CRYFA_XCL_DATASET ]]; then
-        echo "Error: The file \"$CRYFA_XCL_DATASET\" is not available.";
+    if [[ ! -e $CRYFA_THR_DATASET ]]; then
+        echo "Error: The file \"$CRYFA_THR_DATASET\" is not available.";
         return;
     fi
 
     ### cryfa compress/decompress function
-    . $script/run_cryfa_xcl.sh
+    . $script/run_fn_cryfa_thr.sh
 
     ### Run
-    if [[ $RUN_CRYFA_XCL     -eq 1 ]]; then  runCryfa;  fi
+    if [[ $RUN_CRYFA_THR     -eq 1 ]]; then  runCryfa;  fi
 
     ### Results
-    if [[ $RESULTS_CRYFA_XCL -eq 1 ]]; then
-        . $script/res_cryfa_xcl.sh;
-
-        # Rename results according to dataset
-        mv $cryfa_xcl/CRYFA_THR.$RES \
-           $cryfa_xcl/CRYFA_THR__${inDataWF}_$ft.$RES
-        mv $cryfa_xcl/CRYFA_THR.$INF \
-           $cryfa_xcl/CRYFA_THR__${inDataWF}_$ft.$INF
-        mv $cryfa_xcl/CRYFA_THR_detail.$INF \
-           $cryfa_xcl/CRYFA_THR_detail__${inDataWF}_$ft.$INF
-    fi
+    if [[ $RESULTS_CRYFA_THR -eq 1 ]]; then  . $script/res_cryfa_thr.sh;  fi
 fi

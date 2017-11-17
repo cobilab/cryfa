@@ -1,5 +1,5 @@
           #######################################################
-          #                Run cryfa, exclusively               #
+          #      Run cryfa with different number of threads     #
           #       - - - - - - - - - - - - - - - - - - - -       #
           #        Morteza Hosseini    seyedmorteza@ua.pt       #
           #        Diogo Pratas        pratas@ua.pt             #
@@ -12,12 +12,11 @@
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #   Paramaters
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-inData="../$CRYFA_XCL_DATASET"
+inData="../../$CRYFA_THR_DATASET"
 in="${inData##*/}"                            # Input file name
 inDataWF="${in%.*}"                           # Input file name without filetype
 ft="${in##*.}"                                # Input filetype
-fsize=`stat --printf="%s" $CRYFA_XCL_DATASET` # File size (bytes)
-result_FLD="../$result"
+fsize=`stat --printf="%s" $CRYFA_THR_DATASET` # File size (bytes)
 CRYFA_THR_RUN=`seq -s' ' 1 $MAX_N_THR`;       # 1 2 3 ... $MAX_N_THR
 
 
@@ -27,10 +26,8 @@ CRYFA_THR_RUN=`seq -s' ' 1 $MAX_N_THR`;       # 1 2 3 ... $MAX_N_THR
 ### Run cryfa
 function runCryfa
 {
-    cmake .
-    make
-    cp cryfa pass.txt  $cryfa_xcl;
-    cd $cryfa_xcl
+    result_FLD="../../$result"
+    cd $progs/cryfa
 
     for nThr in $CRYFA_THR_RUN; do
         cFT="cryfa";
@@ -40,8 +37,6 @@ function runCryfa
         ### Compress
         progMemoryStart cryfa &
         MEMPID=$!
-
-        rm -f CRYFA_THR_${nThr}_CT__${inDataWF}_$ft
 
         (time $cCmd $inData > $in.$cFT) \
             &> $result_FLD/CRYFA_THR_${nThr}_CT__${inDataWF}_$ft          # Time
@@ -65,5 +60,5 @@ function runCryfa
 
     rm -f mem_ps
 
-    cd ..
+    cd ../..
 }
