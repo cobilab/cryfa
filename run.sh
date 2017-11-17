@@ -79,10 +79,10 @@ RUN_METHODS_ENC=0       # 430 GB free disk space
 ### Run cryfa with different number of threads
 RUN_CRYFA_THREADS=1
     MAX_N_THR=8         # Max number of threads
-    CRYFA_THR_DATASET="dataset/FA/HS/HS.fasta"
-#    CRYFA_THR_DATASET="dataset/FQ/DS/DS-SL3003_SR.fastq"
+#    CRYFA_THR_DATASET="dataset/FA/HS/HS.fasta"
+    CRYFA_THR_DATASET="dataset/FQ/DS/DS-SL3003_SR.fastq"
     # Run
-    RUN_CRYFA_THR=1
+    RUN_CRYFA_THR=0
     # Results
     RESULTS_CRYFA_THR=1
 

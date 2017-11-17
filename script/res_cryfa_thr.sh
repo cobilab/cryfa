@@ -55,14 +55,24 @@ function cryfaThrResHumanReadable
       printf "\t%.3f\t%.f\t%d\n", d_cpuTime, $12, $13;
     }' >> ${INWF}_detail.$INF
 
-    c_each="C_Ratio\tC_Speed(MB/s)\tC_Time_cpu(m)\tC_Mem(MB)"
-    d_each="D_Speed(MB/s)\tD_Time_cpu(m)\tD_Mem(MB)"
+#    c_each="C_Ratio\tC_Speed(MB/s)\tC_Time_cpu(m)\tC_Mem(MB)"
+#    d_each="D_Speed(MB/s)\tD_Time_cpu(m)\tD_Mem(MB)"
+#
+#    printf "Size(MB)\tThread\t$c_each\t$d_each\tEq\n" > $INWF.$INF
+#    cat ${INWF}_detail.$INF | awk 'NR>1' | awk 'BEGIN{}{
+#      printf "%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.f\t%.2f\t%.f\t%.1f\n",
+#             $2/(1024*1024), $3, $2/$4, $2/(1024*1024*$5), $6/60, $7/1024,
+#             $4/(1024*1024*$8), $9/60, $10/1024, $11;
+#    }' >> $INWF.$INF
+
+    c_each="C_Ratio\tC_Time_real(m)\tC_Time_cpu(m)\tC_Mem(MB)"
+    d_each="D_Time_real(m)\tD_Time_cpu(m)\tD_Mem(MB)"
 
     printf "Size(MB)\tThread\t$c_each\t$d_each\tEq\n" > $INWF.$INF
     cat ${INWF}_detail.$INF | awk 'NR>1' | awk 'BEGIN{}{
-      printf "%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.f\t%.2f\t%.f\t%.1f\n",
-             $2/(1024*1024), $3, $2/$4, $2/(1024*1024*$5), $6/60, $7/1024,
-             $4/(1024*1024*$8), $9/60, $10/1024, $11;
+      printf "%.f\t%s\t%.1f\t%.2f\t%.2f\t%.f\t%.2f\t%.2f\t%.f\t%.1f\n",
+             $2/(1024*1024), $3, $2/$4, $5/60, $6/60, $7/1024,
+             $8/60, $9/60, $10/1024, $11;
     }' >> $INWF.$INF
 }
 
