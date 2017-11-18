@@ -70,3 +70,4 @@ FASTA_DATASET_SIZE=`echo $FASTA_DATASET | wc -w`
 FASTQ_DATASET_SIZE=`echo $FASTQ_DATASET | wc -w`
 FASTA_METHODS_SIZE=`echo $FASTA_METHODS | wc -w`    # Except cryfa
 FASTQ_METHODS_SIZE=`echo $FASTQ_METHODS | wc -w`    # Except cryfa
+ENC_METHODS_SIZE=`echo $ENC_METHODS | wc -w`

@@ -126,13 +126,14 @@ function compEncResHumanReadable
 {
     IN=$1              # Input file name
     INWF="${IN%.*}"    # Input file name without filetype
+    cen="CEn_Method\tC_Ratio\tC_Size(MB)\tCEn_Time_real(m)\tCEn_Time_cpu(m)"
+    ded="DeD_Time_real(m)\tDeD_Time_cpu(m)"
 
-    cen="CEn_Size(B)\tCEn_Time_real(s)\tCEn_Time_cpu(s)\tCEn_Mem(KB)"
-    ded="DeD_Time_real(s)\tDeD_Time_cpu(s)\tDeD_Mem(KB)"
-
-    printf "Dataset\tSize(B)\tC_Method\tEn_Method\t$cen\t$ded\tEq\n" > $INWF.tmp
+    printf "Dataset\tSize(MB)\t$cen\tCEn_Mem(MB)\t$ded\tDeD_Mem(MB)\tEq\n" \
+        > $INWF.tmp
     cat $IN | awk 'NR>1' | tr ',' . | awk 'BEGIN {}{
-      printf "%s\t%.f\t%s\t%s\t%.f", $1, $2, $3, $4, $10;
+      printf "%s\t%.f\t%s+%s\t%.1f\t%.f",
+             $1, $2/(1024*1024), $3, $4, $2/$5, $10/(1024*1024);
 
       split($6, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
       split(c_arrMinReal[2], c_arrSecReal, "s");    c_secReal=c_arrSecReal[1];
@@ -141,7 +142,8 @@ function compEncResHumanReadable
       split(en_arrMinReal[2], en_arrSecReal, "s");  en_secReal=en_arrSecReal[1];
       en_realTime=en_minReal*60+en_secReal;
       cen_realTime=c_realTime+en_realTime;
-      printf "\t%.3f", cen_realTime;
+
+      printf "\t%.1f", cen_realTime/60;
 
       split($7, c_arrMinUser, "m");                 c_minUser=c_arrMinUser[1];
       split(c_arrMinUser[2], c_arrSecUser, "s");    c_secUser=c_arrSecUser[1];
@@ -158,11 +160,13 @@ function compEncResHumanReadable
       en_sysTime=en_minSys*60+en_secSys;
       en_cpuTime=en_userTime+en_sysTime;
       cen_cpuTime=c_cpuTime+en_cpuTime;
-      printf "\t%.3f", cen_cpuTime;
+
+      printf "\t%.1f", cen_cpuTime/60;
 
       max_cen_mem=($9 > $14 ? $9 : $14);
       cen_mem=max_cen_mem;
-      printf "\t%.f", cen_mem;
+
+      printf "\t%.f", cen_mem/1024;
 
       split($15, de_arrMinReal, "m");               de_minReal=de_arrMinReal[1];
       split(de_arrMinReal[2], de_arrSecReal, "s");  de_secReal=de_arrSecReal[1];
@@ -171,7 +175,8 @@ function compEncResHumanReadable
       split(d_arrMinReal[2], d_arrSecReal, "s");    d_secReal=d_arrSecReal[1];
       d_realTime=d_minReal*60+d_secReal;
       ded_realTime=de_realTime+d_realTime;
-      printf "\t%.3f", ded_realTime;
+
+      printf "\t%.1f", ded_realTime/60;
 
       split($16, de_arrMinUser, "m");               de_minUser=de_arrMinUser[1];
       split(de_arrMinUser[2], de_arrSecUser, "s");  de_secUser=de_arrSecUser[1];
@@ -188,57 +193,42 @@ function compEncResHumanReadable
       d_sysTime=d_minSys*60+d_secSys;
       d_cpuTime=d_userTime+d_sysTime;
       ded_cpuTime=de_cpuTime+d_cpuTime;
-      printf "\t%.3f", ded_cpuTime;
+
+      printf "\t%.1f", ded_cpuTime/60;
 
       max_ded_mem=($18 > $22 ? $18 : $22);
       ded_mem=max_ded_mem;
-      printf "\t%.f", ded_mem;
 
-      printf "\t%d\n", $23;
+      printf "\t%.f\t%d\n", ded_mem/1024, $23;
     }' >> $INWF.tmp
 
     ### FASTA
     # Details -- 1 row for headers and 1 row after all
     removeFromRow=`echo $((FASTA_DATASET_SIZE*FASTA_METHODS_SIZE+1+1))`
-    sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_detail_FA.$INF;
+    sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_FA.$INF;
 
     # For each dataset
-    cen_each="C_Ratio\tCEn_Speed(MB/s)\tCEn_Time_cpu(m)\tCEn_Mem(MB)"
-    ded_each="DeD_Speed(MB/s)\tDeD_Time_cpu(m)\tDeD_Mem(MB)"
-    printf "Dataset\tSize(MB)\tCEn_Method\t$cen_each\t$ded_each\tEq\n" \
-        > ${INWF}_FA.tmp
-    cat ${INWF}_detail_FA.$INF | awk 'NR>1' | awk 'BEGIN{}{
-      printf "%s\t%.f\t%s+%s\t%.1f\t%.f\t%.2f\t%.f\t%.f\t%.2f\t%.f\t%.1f\n",
-             $1, $2/(1024*1024), $3, $4, $2/$5, $2/(1024*1024*$6), $7/60, $8/1024,
-             $5/(1024*1024*$9), $10/60, $11/1024, $12;
-    }' >> ${INWF}_FA.tmp
-
     for i in $FASTA_DATASET; do
-        sed "2,$ d" ${INWF}_FA.tmp > ${INWF}_${i}_FA.$INF;
-        cat ${INWF}_FA.tmp | awk 'NR>1' \
+        sed "2,$ d" ${INWF}_FA.$INF > ${INWF}_${i}_FA.$INF;
+        cat ${INWF}_FA.$INF | awk 'NR>1' \
           | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_FA.$INF;
 
         # Extract from cryfa
         cat $result/COMP_${i}_FA.$INF | awk 'NR>1' \
           | awk 'BEGIN{}{if ($3=="cryfa") print;}' >> ${INWF}_${i}_FA.$INF;
     done
-    rm -f ${INWF}_FA.tmp
 
     # Total
-    cen_tot="C_Ratio\tCEn_Speed(MB/s)\tCEn_Time_cpu(m)"
-    ded_tot="DeD_Speed(MB/s)\tDeD_Time_cpu(m)"
-    printf "Size(MB)\tCEn_Method\t$cen_tot\t$ded_tot\tEq\n" \
-        > ${INWF}_tot_FA.$INF;
-    cat ${INWF}_detail_FA.$INF | awk 'NR>1' \
+    printf "Size(MB)\t$cen\t$ded\tEq\n" > ${INWF}_tot_FA.$INF;
+    cat ${INWF}_FA.$INF | awk 'NR>1' \
       | awk -v dsSize=$FASTA_DATASET_SIZE 'BEGIN{}{
       s+=$2;  cenS+=$5;  cenTR+=$6;  cenTC+=$7;  dedTR+=$9; dedTC+=$10; eq+=$12;
       if (NR % dsSize==0) {
-          printf "%.f\t%s+%s\t%.1f\t%.f\t%.2f\t%.f\t%.2f\t%.1f\n",
-                 s/(1024*1024), $3, $4, s/cenS, s/(1024*1024*cenTR), cenTC/60,
-                 cenS/(1024*1024*dedTR), dedTC/60, eq;
-          s=0;cenS=0;    cenTR=0;    cenTC=0;    dedTR=0;   dedTC=0;    eq=0; }
+          printf "%.f\t%s\t%.1f\t%.f\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\n",
+                 s, $3, s/cenS, cenS, cenTR, cenTC, dedTR, dedTC, eq;
+          s=0;cenS=0;    cenTR=0;    cenTC=0;    dedTR=0;   dedTC=0;    eq=0;
+      }
     }' >> ${INWF}_tot_FA.$INF
-
     # Extract from cryfa
     cat $result/COMP_tot_FA.$INF | awk 'NR>1' \
       | awk 'BEGIN{}{if ($2=="cryfa") print;}' >> ${INWF}_tot_FA.$INF
@@ -246,41 +236,30 @@ function compEncResHumanReadable
     ### FASTQ
     # Details -- 1 row for headers and 1 row after all
     removeUpToRow=`echo $((removeFromRow-1))`
-    sed "2,$removeUpToRow d" $INWF.tmp > ${INWF}_detail_FQ.$INF;
+    sed "2,$removeUpToRow d" $INWF.tmp > ${INWF}_FQ.$INF;
 
     # For each dataset
-    printf "Dataset\tSize(MB)\tCEn_Method\t$cen_each\t$ded_each\tEq\n" \
-        > ${INWF}_FQ.tmp
-    cat ${INWF}_detail_FQ.$INF | awk 'NR>1' | awk 'BEGIN{}{
-      printf "%s\t%.f\t%s+%s\t%.1f\t%.f\t%.2f\t%.f\t%.f\t%.2f\t%.f\t%.1f\n",
-             $1, $2/(1024*1024), $3, $4, $2/$5, $2/(1024*1024*$6), $7/60, $8/1024,
-             $5/(1024*1024*$9), $10/60, $11/1024, $12;
-    }' >> ${INWF}_FQ.tmp
-
     for i in $FASTQ_DATASET; do
-        sed "2,$ d" ${INWF}_FQ.tmp > ${INWF}_${i}_FQ.$INF;
-        cat ${INWF}_FQ.tmp | awk 'NR>1' \
+        sed "2,$ d" ${INWF}_FQ.$INF > ${INWF}_${i}_FQ.$INF;
+        cat ${INWF}_FQ.$INF | awk 'NR>1' \
           | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_FQ.$INF;
 
         # Extract from cryfa
         cat $result/COMP_${i}_FQ.$INF | awk 'NR>1' \
           | awk 'BEGIN{}{if ($3=="cryfa") print;}' >> ${INWF}_${i}_FQ.$INF;
     done
-    rm -f ${INWF}_FQ.tmp
 
     # Total
-    printf "Size(MB)\tCEn_Method\t$cen_tot\t$ded_tot\tEq\n" \
-        > ${INWF}_tot_FQ.$INF;
-    cat ${INWF}_detail_FQ.$INF | awk 'NR>1' \
+    printf "Size(MB)\t$cen\t$ded\tEq\n" > ${INWF}_tot_FQ.$INF;
+    cat ${INWF}_FQ.$INF | awk 'NR>1' \
       | awk -v dsSize=$FASTQ_DATASET_SIZE 'BEGIN{}{
       s+=$2;  cenS+=$5;  cenTR+=$6;  cenTC+=$7;  dedTR+=$9; dedTC+=$10; eq+=$12;
       if (NR % dsSize==0) {
-          printf "%.f\t%s+%s\t%.1f\t%.f\t%.2f\t%.f\t%.2f\t%.1f\n",
-                 s/(1024*1024), $3, $4, s/cenS, s/(1024*1024*cenTR), cenTC/60,
-                 cenS/(1024*1024*dedTR), dedTC/60, eq;
-          s=0;cenS=0;    cenTR=0;    cenTC=0;    dedTR=0;   dedTC=0;    eq=0; }
+          printf "%.f\t%s\t%.1f\t%.f\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\n",
+                 s, $3, s/cenS, cenS, cenTR, cenTC, dedTR, dedTC, eq;
+          s=0;cenS=0;    cenTR=0;    cenTC=0;    dedTR=0;   dedTC=0;    eq=0;
+      }
     }' >> ${INWF}_tot_FQ.$INF
-
     # Extract from cryfa
     cat $result/COMP_tot_FQ.$INF | awk 'NR>1' \
       | awk 'BEGIN{}{if ($2=="cryfa") print;}' >> ${INWF}_tot_FQ.$INF
@@ -295,11 +274,11 @@ function compEncResHumanReadable
 OUT="$result/COMP_ENC.$RES"    # Output file name
 FAdsPath=$dataset/$FA
 FQdsPath=$dataset/$FQ
+methods="C_Method\tEn_Method"
 c="C_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)\tC_Mem(KB)"
 en="En_Size(B)\tEn_Time_real(s)\tEn_Time_user(s)\tEn_Time_sys(s)\tEn_Mem(KB)"
 de="De_Time_real(s)\tDe_Time_user(s)\tDe_Time_sys(s)\tDe_Mem(KB)"
 d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
-methods="C_Method\tEn_Method"
 
 printf "Dataset\tSize(B)\t$methods\t$c\t$en\t$de\t$d\tEq\n" > $OUT;
 

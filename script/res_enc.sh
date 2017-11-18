@@ -74,18 +74,20 @@ function encResHumanReadable
 {
     IN=$1              # Input file name
     INWF="${IN%.*}"    # Input file name without filetype
+    en="Method\tC_Ratio\tEn_Size(MB)\tEn_Time_real(m)\tEn_Time_cpu(m)"
+    de="De_Time_real(m)\tDe_Time_cpu(m)"
 
-    en="En_Size(B)\tEn_Time_real(s)\tEn_Time_cpu(s)\tEn_Mem(KB)"
-    de="De_Time_real(s)\tDe_Time_cpu(s)\tDe_Mem(KB)"
-
-    printf "Dataset\tSize(B)\tMethod\t$en\t$de\tEq\n" > $INWF.tmp
+    printf "Dataset\tSize(MB)\t$en\tEn_Mem(MB)\t$de\tDe_Mem(MB)\tEq\n" \
+        > $INWF.tmp
     cat $IN | awk 'NR>1' | tr ',' . | awk 'BEGIN {}{
-      printf "%s\t%.f\t%s\t%.f", $1, $2, $3, $4;
+      printf "%s\t%.f\t%s\t%.1f\t%.f",
+             $1, $2/(1024*1024), $3, $2/$4, $4/(1024*1024);
 
       split($5, en_arrMinReal, "m");                en_minReal=en_arrMinReal[1];
       split(en_arrMinReal[2], en_arrSecReal, "s");  en_secReal=en_arrSecReal[1];
       en_realTime=en_minReal*60+en_secReal;
-      printf "\t%.3f", en_realTime;
+
+      printf "\t%.1f", en_realTime/60;
 
       split($6, en_arrMinUser, "m");                en_minUser=en_arrMinUser[1];
       split(en_arrMinUser[2], en_arrSecUser, "s");  en_secUser=en_arrSecUser[1];
@@ -94,14 +96,14 @@ function encResHumanReadable
       split(en_arrMinSys[2], en_arrSecSys, "s");    en_secSys=en_arrSecSys[1];
       en_sysTime=en_minSys*60+en_secSys;
       en_cpuTime=en_userTime+en_sysTime;
-      printf "\t%.3f", en_cpuTime;
 
-      printf "\t%.f", $8;
+      printf "\t%.1f\t%.f", en_cpuTime/60, $8/1024;
 
       split($9, de_arrMinReal, "m");                de_minReal=de_arrMinReal[1];
       split(de_arrMinReal[2], de_arrSecReal, "s");  de_secReal=de_arrSecReal[1];
       de_realTime=de_minReal*60+de_secReal;
-      printf "\t%.3f", de_realTime;
+
+      printf "\t%.1f", de_realTime/60;
 
       split($10, de_arrMinUser, "m");               de_minUser=de_arrMinUser[1];
       split(de_arrMinUser[2], de_arrSecUser, "s");  de_secUser=de_arrSecUser[1];
@@ -110,53 +112,37 @@ function encResHumanReadable
       split(de_arrMinSys[2], de_arrSecSys, "s");    de_secSys=de_arrSecSys[1];
       de_sysTime=de_minSys*60+de_secSys;
       de_cpuTime=de_userTime+de_sysTime;
-      printf "\t%.3f", de_cpuTime;
 
-      printf "\t%.f\t%d\n", $12, $13;
+      printf "\t%.1f\t%.f\t%d\n", de_cpuTime/60, $12/1024, $13;
     }' >> $INWF.tmp
 
     ### FASTA
     # Details -- 1 row for headers and 1 row after all
-    removeFromRow=`echo $((FASTA_DATASET_SIZE+1+1))`
-    sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_detail_FA.$INF;
+    removeFromRow=`echo $((FASTA_DATASET_SIZE*ENC_METHODS_SIZE+1+1))`
+    sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_FA.$INF;
 
     # For each dataset
-    en_each="C_Ratio\tEn_Speed(MB/s)\tEn_Time_cpu(m)\tEn_Mem(MB)"
-    de_each="De_Speed(MB/s)\tDe_Time_cpu(m)\tDe_Mem(MB)"
-    printf "Dataset\tSize(MB)\tEn_Method\t$en_each\t$de_each\tEq\n" \
-        > ${INWF}_FA.tmp
-    cat ${INWF}_detail_FA.$INF | awk 'NR>1' | awk 'BEGIN{}{
-      printf "%s\t%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.f\t%.2f\t%.f\t%.1f\n",
-             $1, $2/(1024*1024), $3, $2/$4, $2/(1024*1024*$5), $6/60, $7/1024,
-             $4/(1024*1024*$8), $9/60, $10/1024, $11;
-    }' >> ${INWF}_FA.tmp
-
     for i in $FASTA_DATASET; do
-        sed "2,$ d" ${INWF}_FA.tmp > ${INWF}_${i}_FA.$INF;
-        cat ${INWF}_FA.tmp | awk 'NR>1' \
+        sed "2,$ d" ${INWF}_FA.$INF > ${INWF}_${i}_FA.$INF;
+        cat ${INWF}_FA.$INF | awk 'NR>1' \
           | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_FA.$INF;
 
-        # extract from cryfa
+        # Extract from cryfa
         cat $result/COMP_${i}_FA.$INF | awk 'NR>1' \
           | awk 'BEGIN{}{if ($3=="cryfa") print;}' >> ${INWF}_${i}_FA.$INF;
     done
-    rm -f ${INWF}_FA.tmp
 
     # Total
-    en_tot="C_Ratio\tEn_Speed(MB/s)\tEn_Time_cpu(m)"
-    de_tot="De_Speed(MB/s)\tDe_Time_cpu(m)"
-
-    printf "Size(MB)\tEn_Method\t$en_tot\t$de_tot\tEq\n" > ${INWF}_tot_FA.$INF;
-    cat ${INWF}_detail_FA.$INF | awk 'NR>1' \
+    printf "Size(MB)\t$en\t$de\tEq\n" > ${INWF}_tot_FA.$INF;
+    cat ${INWF}_FA.$INF | awk 'NR>1' \
       | awk -v dsSize=$FASTA_DATASET_SIZE 'BEGIN{}{
-      s+=$2;   cS+=$4;   cTR+=$5;   cTC+=$6;   dTR+=$8;   dTC+=$9;   eq+=$11;
+      s+=$2;   cS+=$5;   cTR+=$6;   cTC+=$7;   dTR+=$9;   dTC+=$10;   eq+=$12;
       if (NR % dsSize==0) {
-          printf "%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.2f\t%.1f\n",
-                 s/(1024*1024), $3, s/cS, s/(1024*1024*cTR), cTC/60,
-                 cS/(1024*1024*dTR), dTC/60, eq;
-          s=0; cS=0;     cTR=0;     cTC=0;     dTR=0;     dTC=0;     eq=0; }
+          printf "%.f\t%s\t%.1f\t%.f\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\n",
+                 s, $3, s/cS, cS, cTR, cTC, dTR, dTC, eq;
+          s=0; cS=0;     cTR=0;     cTC=0;     dTR=0;     dTC=0;      eq=0;
+      }
     }' >> ${INWF}_tot_FA.$INF
-
     # Extract from cryfa
     cat $result/COMP_tot_FA.$INF | awk 'NR>1' \
       | awk 'BEGIN{}{if ($2=="cryfa") print;}' >> ${INWF}_tot_FA.$INF
@@ -164,39 +150,30 @@ function encResHumanReadable
     ### FASTQ
     # Details -- 1 row for headers and 1 row after all
     removeUpToRow=`echo $((removeFromRow-1))`
-    sed "2,$removeUpToRow d" $INWF.tmp > ${INWF}_detail_FQ.$INF;
+    sed "2,$removeUpToRow d" $INWF.tmp > ${INWF}_FQ.$INF;
 
     # For each dataset
-    printf "Dataset\tSize(MB)\tMethod\t$en_each\t$de_each\tEq\n" >${INWF}_FQ.tmp
-    cat ${INWF}_detail_FQ.$INF | awk 'NR>1' | awk 'BEGIN{}{
-      printf "%s\t%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.f\t%.2f\t%.f\t%.1f\n",
-             $1, $2/(1024*1024), $3, $2/$4, $2/(1024*1024*$5), $6/60, $7/1024,
-             $4/(1024*1024*$8), $9/60, $10/1024, $11;
-    }' >> ${INWF}_FQ.tmp
-
     for i in $FASTQ_DATASET; do
-        sed "2,$ d" ${INWF}_FQ.tmp > ${INWF}_${i}_FQ.$INF;
-        cat ${INWF}_FQ.tmp | awk 'NR>1' \
+        sed "2,$ d" ${INWF}_FQ.$INF > ${INWF}_${i}_FQ.$INF;
+        cat ${INWF}_FQ.$INF | awk 'NR>1' \
           | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_FQ.$INF;
 
         # Extract from cryfa
         cat $result/COMP_${i}_FQ.$INF | awk 'NR>1' \
           | awk 'BEGIN{}{if ($3=="cryfa") print;}' >> ${INWF}_${i}_FQ.$INF;
     done
-    rm -f ${INWF}_FQ.tmp
 
     # Total
-    printf "Size(MB)\tMethod\t$en_tot\t$de_tot\tEq\n" > ${INWF}_tot_FQ.$INF;
-    cat ${INWF}_detail_FQ.$INF | awk 'NR>1' \
+    printf "Size(MB)\t$en\t$de\tEq\n" > ${INWF}_tot_FQ.$INF;
+    cat ${INWF}_FQ.$INF | awk 'NR>1' \
       | awk -v dsSize=$FASTQ_DATASET_SIZE 'BEGIN{}{
-      s+=$2;   cS+=$4;   cTR+=$5;   cTC+=$6;   dTR+=$8;   dTC+=$9;   eq+=$11;
+      s+=$2;   cS+=$5;   cTR+=$6;   cTC+=$7;   dTR+=$9;   dTC+=$10;   eq+=$12;
       if (NR % dsSize==0) {
-          printf "%.f\t%s\t%.1f\t%.f\t%.2f\t%.f\t%.2f\t%.1f\n",
-                 s/(1024*1024), $3, s/cS, s/(1024*1024*cTR), cTC/60,
-                 cS/(1024*1024*dTR), dTC/60, eq;
-          s=0; cS=0;     cTR=0;     cTC=0;     dTR=0;     dTC=0;     eq=0; }
+          printf "%.f\t%s\t%.1f\t%.f\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\n",
+                 s, $3, s/cS, cS, cTR, cTC, dTR, dTC, eq;
+          s=0; cS=0;     cTR=0;     cTC=0;     dTR=0;     dTC=0;      eq=0;
+      }
     }' >> ${INWF}_tot_FQ.$INF
-
     # Extract from cryfa
     cat $result/COMP_tot_FQ.$INF | awk 'NR>1' \
       | awk 'BEGIN{}{if ($2=="cryfa") print;}' >> ${INWF}_tot_FQ.$INF
@@ -211,10 +188,10 @@ function encResHumanReadable
 OUT="$result/ENC.$RES"    # Output file name
 FAdsPath=$dataset/$FA
 FQdsPath=$dataset/$FQ
-en="En_Size(B)\tEn_Time_real(s)\tEn_Time_user(s)\tEn_Time_sys(s)\tEn_Mem(KB)"
+en="Method\tEn_Size(B)\tEn_Time_real(s)\tEn_Time_user(s)\tEn_Time_sys(s)\tEn_Mem(KB)"
 de="De_Time_real(s)\tDe_Time_user(s)\tDe_Time_sys(s)\tDe_Mem(KB)"
 
-printf "Dataset\tSize(B)\tMethod\t$en\t$de\n" > $OUT;
+printf "Dataset\tSize(B)\t$en\t$de\n" > $OUT;
 
 for i in $ENC_METHODS; do
     ### FASTA -- human - viruses - synthetic
