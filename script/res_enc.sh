@@ -24,10 +24,7 @@ function encDecRes
 
     ### Encrypted file size
     ens_file="$result/${1}_EnS__${dName}_$ft"
-    if [[ -e $ens_file ]]; then
-        EnS=`cat $ens_file | awk '{ print $5; }'`;
-#        rm -f $ens_file;
-    fi
+    if [[ -e $ens_file ]]; then  EnS=`cat $ens_file | awk '{ print $5; }'`;  fi
 
     ### Encryption time -- real - user - system
     ent_file="$result/${1}_EnT__${dName}_$ft"
@@ -35,15 +32,11 @@ function encDecRes
         EnT_r=`cat $ent_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
         EnT_u=`cat $ent_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
         EnT_s=`cat $ent_file | tail -n 1 | awk '{ print $2;}'`;
-#        rm -f $ent_file;
     fi
 
     ### Encryption memory
     enm_file="$result/${1}_EnM__${dName}_$ft"
-    if [[ -e $enm_file ]]; then
-        EnM=`cat $enm_file`;
-#        rm -f $enm_file;
-    fi
+    if [[ -e $enm_file ]]; then  EnM=`cat $enm_file`;  fi
 
     ### Decryption time -- real - user - system
     det_file="$result/${1}_DeT__${dName}_$ft"
@@ -51,19 +44,28 @@ function encDecRes
         DeT_r=`cat $det_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
         DeT_u=`cat $det_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
         DeT_s=`cat $det_file | tail -n 1 | awk '{ print $2;}'`;
-#        rm -f $det_file;
     fi
 
     ### Decryption memory
     dem_file="$result/${1}_DeM__${dName}_$ft"
-    if [[ -e $dem_file ]]; then
-        DeM=`cat $dem_file`;
-#        rm -f $dem_file;
-    fi
+    if [[ -e $dem_file ]]; then  DeM=`cat $dem_file`;  fi
 
-    en="$EnS\t$EnT_r\t$EnT_u\t$EnT_s\t$EnM"    # Encryption results
-    de="$DeT_r\t$DeT_u\t$DeT_s\t$DeM"          # Decryption results
+    ### Remove extra files
+    for xf in $ens_file $enm_file $dem_file; do
+        if [[ -e $xf ]]; then  rm -f $xf;  fi
+    done
 
+    ### Move possible informative files to details folder
+    # Create a folder for details, if it doesn't already exist
+    if [[ ! -d $details ]]; then  mkdir -p $result/$details;  fi
+    # Move
+    for pif in $ent_file $det_file; do
+        if [[ -e $pif ]]; then  mv $pif  $result/$details;  fi
+    done
+
+    ### Print results
+    en="$EnS\t$EnT_r\t$EnT_u\t$EnT_s\t$EnM"    # Encryption
+    de="$DeT_r\t$DeT_u\t$DeT_s\t$DeM"          # Decryption
     printf "$dName\t$fsize\t$method\t$en\t$de\n";
 }
 
@@ -212,8 +214,6 @@ for i in $ENC_METHODS; do
         encDecRes $i $FQdsPath/$Synth/SynFQ-${j}.$fastq >> $OUT;
     done
 done
-
-rm -f mem_ps
 
 ### Make the result file human readable
 encResHumanReadable $OUT;

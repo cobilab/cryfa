@@ -24,10 +24,7 @@ function compDecompRes
 
     ### Compressed file size
     cs_file="$result/${1}_CS__${dName}_$ft"
-    if [[ -e $cs_file ]]; then
-        CS=`cat $cs_file | awk '{ print $5; }'`;
-#        rm -f $cs_file;
-    fi
+    if [[ -e $cs_file ]]; then  CS=`cat $cs_file | awk '{ print $5; }'`;  fi
 
     ### Compression time -- real - user - system
     ct_file="$result/${1}_CT__${dName}_$ft"
@@ -35,15 +32,11 @@ function compDecompRes
         CT_r=`cat $ct_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
         CT_u=`cat $ct_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
         CT_s=`cat $ct_file | tail -n 1 | awk '{ print $2;}'`;
-#        rm -f $ct_file;
     fi
 
     ### Compression memory
     cm_file="$result/${1}_CM__${dName}_$ft"
-    if [[ -e $cm_file ]]; then
-        CM=`cat $cm_file`;
-#        rm -f $cm_file;
-    fi
+    if [[ -e $cm_file ]]; then  CM=`cat $cm_file`;  fi
 
     ### Decompression time -- real - user - system
     dt_file="$result/${1}_DT__${dName}_$ft"
@@ -51,26 +44,33 @@ function compDecompRes
         DT_r=`cat $dt_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
         DT_u=`cat $dt_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
         DT_s=`cat $dt_file | tail -n 1 | awk '{ print $2;}'`;
-#        rm -f $dt_file;
     fi
 
     ### Decompression memory
     dm_file="$result/${1}_DM__${dName}_$ft"
-    if [[ -e $dm_file ]]; then
-        DM=`cat $dm_file`;
-#        rm -f $dm_file;
-    fi
+    if [[ -e $dm_file ]]; then  DM=`cat $dm_file`;  fi
 
     ### Verify if the decompressed and the original files are equal
     v_file="$result/${1}_V__${dName}_$ft"
-    if [[ -e $v_file ]]; then
-        V=`cat $v_file | wc -l`;
-#        rm -f $v_file;
-    fi
+    if [[ -e $v_file ]]; then  V=`cat $v_file | wc -l`;  fi
 
-    c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"    # Compression results
-    d="$DT_r\t$DT_u\t$DT_s\t$DM"         # Decompression results
+    ### Remove extra files
+    for xf in $cs_file $cm_file $dm_file; do
+        if [[ -e $xf ]]; then  rm -f $xf;  fi
+    done
+    if [[ $V -eq 0 ]]; then  rm -f $v_file;  fi
 
+    ### Move possible informative files to details folder
+    # Create a folder for details, if it doesn't already exist
+    if [[ ! -d $details ]]; then  mkdir -p $result/$details;  fi
+    # Move
+    for pif in $ct_file $dt_file $v_file; do
+        if [[ -e $pif ]]; then  mv $pif  $result/$details;  fi
+    done
+
+    ### Print results
+    c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"    # Compression
+    d="$DT_r\t$DT_u\t$DT_s\t$DM"         # Decompression
     printf "$dName\t$fsize\t$method\t$c\t$d\t$V\n";
 }
 

@@ -28,10 +28,7 @@ function compEncDecDecompRes
 
     ### Compressed file size
     cs_file="$result/${1}_${2}_CS__${dName}_$ft"
-    if [[ -e $cs_file ]]; then
-        CS=`cat $cs_file | awk '{ print $5; }'`;
-#        rm -f $cs_file;
-    fi
+    if [[ -e $cs_file ]]; then  CS=`cat $cs_file | awk '{ print $5; }'`;  fi
 
     ### Compression time -- real - user - system
     ct_file="$result/${1}_${2}_CT__${dName}_$ft"
@@ -39,22 +36,15 @@ function compEncDecDecompRes
         CT_r=`cat $ct_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
         CT_u=`cat $ct_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
         CT_s=`cat $ct_file | tail -n 1 | awk '{ print $2;}'`;
-#        rm -f $ct_file;
     fi
 
     ### Compression memory
     cm_file="$result/${1}_${2}_CM__${dName}_$ft"
-    if [[ -e $cm_file ]]; then
-        CM=`cat $cm_file`;
-#        rm -f $cm_file;
-    fi
+    if [[ -e $cm_file ]]; then  CM=`cat $cm_file`;  fi
 
     ### Encrypted file size
     ens_file="$result/${1}_${2}_EnS__${dName}_$ft"
-    if [[ -e $ens_file ]]; then
-        EnS=`cat $ens_file | awk '{ print $5; }'`;
-#        rm -f $ens_file;
-    fi
+    if [[ -e $ens_file ]]; then  EnS=`cat $ens_file | awk '{ print $5; }'`;  fi
 
     ### Encryption time -- real - user - system
     ent_file="$result/${1}_${2}_EnT__${dName}_$ft"
@@ -62,15 +52,11 @@ function compEncDecDecompRes
         EnT_r=`cat $ent_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
         EnT_u=`cat $ent_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
         EnT_s=`cat $ent_file | tail -n 1 | awk '{ print $2;}'`;
-#        rm -f $ent_file;
     fi
 
     ### Encryption memory
     enm_file="$result/${1}_${2}_EnM__${dName}_$ft"
-    if [[ -e $enm_file ]]; then
-        EnM=`cat $enm_file`;
-#        rm -f $enm_file;
-    fi
+    if [[ -e $enm_file ]]; then  EnM=`cat $enm_file`;  fi
 
     ### Decryption time -- real - user - system
     det_file="$result/${1}_${2}_DeT__${dName}_$ft"
@@ -78,15 +64,11 @@ function compEncDecDecompRes
         DeT_r=`cat $det_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
         DeT_u=`cat $det_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
         DeT_s=`cat $det_file | tail -n 1 | awk '{ print $2;}'`;
-#        rm -f $det_file;
     fi
 
     ### Decryption memory
     dem_file="$result/${1}_${2}_DeM__${dName}_$ft"
-    if [[ -e $dem_file ]]; then
-        DeM=`cat $dem_file`;
-#        rm -f $dem_file;
-    fi
+    if [[ -e $dem_file ]]; then  DeM=`cat $dem_file`;  fi
 
     ### Decompression time -- real - user - system
     dt_file="$result/${1}_${2}_DT__${dName}_$ft"
@@ -94,28 +76,41 @@ function compEncDecDecompRes
         DT_r=`cat $dt_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
         DT_u=`cat $dt_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
         DT_s=`cat $dt_file | tail -n 1 | awk '{ print $2;}'`;
-#        rm -f $dt_file;
     fi
 
     ### Decompression memory
     dm_file="$result/${1}_${2}_DM__${dName}_$ft"
-    if [[ -e $dm_file ]]; then
-        DM=`cat $dm_file`;
-#        rm -f $dm_file;
-    fi
+    if [[ -e $dm_file ]]; then  DM=`cat $dm_file`;  fi
 
     ### Verify if the decompressed and the original files are equal
     v_file="$result/${1}_${2}_V__${dName}_$ft"
-    if [[ -e $v_file ]]; then
-        V=`cat $v_file | wc -l`;
-#        rm -f $v_file;
-    fi
+    if [[ -e $v_file ]]; then  V=`cat $v_file | wc -l`;  fi
 
-    c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"          # Compression results
-    en="$EnS\t$EnT_r\t$EnT_u\t$EnT_s\t$EnM"    # Encryption results
-    de="$DeT_r\t$DeT_u\t$DeT_s\t$DeM"          # Decryption results
-    d="$DT_r\t$DT_u\t$DT_s\t$DM"               # Decompression results
+    ### Remove extra files
+    for xf in $cs_file $cm_file $dem_file $dm_file $enm_file $ens_file; do
+        if [[ -e $xf ]]; then  rm -f $xf;  fi
+    done
+    if [[ $V -eq 0 ]]; then  rm -f $v_file;  fi
 
+    ### Move possible informative files to details folder
+    # Create a folder for details, if it doesn't already exist
+    if [[ ! -d $details ]]; then  mkdir -p $result/$details;  fi
+    # Move
+    for pif in $ct_file $det_file $dt_file $ent_file $v_file; do
+        if [[ -e $pif ]]; then  mv $pif  $result/$details;  fi
+    done
+
+    ### Remove extra files
+    for xf in $cs_file $cm_file $dem_file $dm_file $enm_file $ens_file; do
+        rm -f $xf;
+    done
+    if [[ $V -eq 0 ]]; then  rm -f $v_file;  fi
+
+    ### Print results
+    c="$CS\t$CT_r\t$CT_u\t$CT_s\t$CM"          # Compression
+    en="$EnS\t$EnT_r\t$EnT_u\t$EnT_s\t$EnM"    # Encryption
+    de="$DeT_r\t$DeT_u\t$DeT_s\t$DeM"          # Decryption
+    d="$DT_r\t$DT_u\t$DT_s\t$DM"               # Decompression
     printf "$dName\t$fsize\t$methodComp\t$methodEnc\t$c\t$en\t$de\t$d\t$V\n";
 }
 
@@ -306,8 +301,6 @@ for i in $ENC_METHODS; do
        done
    done
 done
-
-rm -f mem_ps
 
 ### Make the result file human readable
 compEncResHumanReadable $OUT;

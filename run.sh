@@ -54,7 +54,7 @@ RUN_METHODS_COMP=0      # 350 GB free disk space
     RESULTS_COMP=1
 
 ### Run compression & encryption methods
-RUN_METHODS_COMP_ENC=1
+RUN_METHODS_COMP_ENC=0
     # FASTA -- 20 GB free disk space
     RUN_GZIP_FA_AESCRYPT=0       # gzip       + AES Crypt
     RUN_BZIP2_FA_AESCRYPT=0      # bzip2      + AES Crypt
