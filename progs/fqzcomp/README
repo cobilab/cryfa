@@ -1,0 +1,502 @@
+fqz_comp v4.6
+=============
+
+James Bonfield, Wellcome Trust Sanger Institute 2011 - 2013.
+
+This is the 4th variant of an experimental code to compress fastq
+data.  It has a number of caveats.
+
+1) The fastq must consist of [ACGTN], or [0123.]. Anything else is
+considered as an "N" or ".".
+
+2) Sequence and quality should be on one line only.
+
+3) All bases called as N will be assumed to have quality 0. This can
+   disagreements after decompression. Arguably this is a feature as
+   how can you have anything other than zero confidence that "N" is
+   the correct call?
+
+Although the program usage and documentation refer to .fqz files, this
+is not compatible with the previous two variants using that format
+extension. (However the magic number has been amended to include the
+appropriate format version code so they can detect which files are
+which.)
+
+It has been tested on Illumina, 454 data, PacBio and SOLiD data files.
+However there may be specific caveats with this formats as some break
+the assumptions listed above. See below for suggested compression
+parameters for each machine type.
+
+
+Usage
+=====
+
+The program reads from stdin and writes to stdout, so it can be used
+as part of a pipeline. 
+
+To compress:
+    fastq_comp [options] < a.fasta > a.fqz
+
+To uncompress
+    fastq_comp -d < a.fqz > a.fasta
+
+Additionally in v4.0 onwards it can read/write to files instead.
+
+    fastq_comp -s5 -q3 a.fasta a.fqz
+    fastq_comp -d a.fqz a.fasta
+
+
+Options
+=======
+
+Compression options are as follows.
+
+-s <level>
+    Specifies the size of the sequence context. Increasing this will
+    improve compression on large data sets, but each increment in
+    level will quadruple the memory used by the sequence compression
+    steps. Further more increasing it too high may harm compression on
+    small files.
+
+    Specifying a "+" after level will use two context sizes (eg -s5+);
+    a small fixed size and the <level> specified. This greatly helps
+    compression of small files and also slightly helps compression of
+    larger files.
+
+    Defaults to -s3.
+
+-b
+    Use both strands when updating sequence contexts. This has no
+    memory issues, but it slows down the compression and has only a
+    small gain in compression ratios. Off by default.
+
+    Do not use this with SOLiD data files.
+
+-e
+    By default the sequence contexts use 8-bit counters for memory
+    efficiency. This forces 16-bit counters. It has a very small gain
+    in compression ratio, but doubles sequence compression memory usage.
+
+-q <level>
+    Specifies the degree of quality compression, with a value from -q1
+    to -q3.
+
+    -q1
+        Uses the previous quality value and the maximum of the two
+        previous to that as a context for predicting the next value.
+        Combined this adds 12 bits of context.
+
+    -q2
+        In addition to -q1, this extends the context by adding a
+        single bit to indicate if the 2nd and 3rd previous qualities
+        are identical to each other, as well as using 3 bits of
+        context for the running-delta. (A measure of how variable a
+	string of quality values are.) This is the default level.
+
+     -q3
+        As per -q2, but also adds 4 bits worth of context holding the
+        position each the sequence.
+
+-Q <distance>
+    Requests that quality values should be stored in an approximate
+    fashion. This is a lossy compressor.
+
+    All quality values are stored within +/- <distance> from their
+    actual value, but not necessarily always the same distance.
+
+    Defaults to -Q0 (lossless).
+
+-n <level>
+    Controls the name compression level, from -n1 to -n2.
+
+    -n1 uses a very simple string based compressor that takes into
+    account the previous byte on this name and the same byte position
+    in the previous name, with some basic logic to try and keep
+    current and previous names approximately in alignment.
+
+    -n2 breaks the name down into tokens based on non alpha-numeric
+    characters and attempts to encode using numeric deltas where
+    appropriate. It typically compresses better on regular names
+    produced by (for example) Illumina machines, but may behave poorly
+    on other data. You should test which performs best for your data
+    set.
+
+    Defaults to -n2.
+
+-P
+    Disables all multi-threading. This has no impact on the data
+    format produced.
+
+    The default threading used is very minor, typically using under
+    200% of cpu usage, and considerably less on high -s levels.
+
+
+To uncompress, simply use -d. The compression parameters are saved in
+the output file so the decompression program knows what options to
+repeat during decompression.
+
+
+Caveats
+=======
+
+The decompression may not perfectly match the original data. Sometimes
+this can generate checksum failures too (intentionally), although
+these can be glossed over by using -X on the decompressor.
+
+Known issues are:
+
+1) Names in the "+" line are ignored. Eg:
+
+@SRR1234
+ACGTACGTACGTGGGA
++SRR1234
+%^$&^!*&((&*&&&&
+
+becomes
+
+@SRR1234
+ACGTACGTACGTGGGA
++
+%^$&^!*&((&*&&&&
+
+(This does not generate a checksum failure.)
+
+2) A strict policy is applied on the meaning of quality value 0.
+Specifically any non-N base call must have a quality >0 and any N base
+call must have a quality of 0. These rules are enforced during
+compression, giving checksum failures on decompression. (Community
+question: should I do the checksum after enforcing the rule to make
+the changes silent?)
+
+For example:
+
+@SRR1234
+ACGTACGTACGTNGGA
++SRR1234
+^%%%$%%^!%%$$$"&
+
+becomes
+
+@SRR1234
+ACGTACGTACGTNGGA
++SRR1234
+^%%%$%%^"%%$!$"&
+
+The quality for base 9 (A) has been changed from !(0) to "(1). The
+quality for base 13(N) has been changed from $ to !(0).
+
+
+
+Algorithms
+==========
+
+Many of the algorithms are derived from fqzcomp-3.0 and in turn from
+fqzcomp-2.1, although the primary parsing code has been completely
+rewritten since version 2. Each type of data gets encoded using its
+own model.
+
+Names are compared against the previous name, with a certain amount of
+wobble to match up colons and spaces where the intervening text is of
+different length (essentially a poor mans name alignment). This
+essentially means the context for encoding a name symbol is the
+character at the same position within the previous name. There is also
+dedicated prefix and suffix matching to help speed up encoding and
+reduce space further.
+
+Sequences are converted into 2-bit values and the last N bases are
+used as the context for encoding the next base. The length of this
+context is the primary affect of changing the level with -s1 to -s9.
+Note it is not expected that you will have sufficient memory to cope
+with -s9. Practically going beyond -s6 may pose difficulties.
+
+N bases are replaced with the most likely of A,C,G,T - whichever takes
+the least space to encode - and are replaced by Ns during decoding by
+noting that the quality is zero. (This is enforced.)
+
+Qualities use an Order-2 model based on the previous two quality
+values. This can be augmented (-q1) with an additional context holding
+the approximate amount of variance along the sequence. By summing the
+differences between each quality and the next we can arrive at a
+figure indicating whether this sequence has smooth behaviour - a
+gradual reduction in quality along the length of the read - or highly
+variable behaviour with lots of dips in quality.
+
+It was found that this delta summation had better discrimination of
+quality distributions than purely the position along the
+sequence. However on very large data sets the approximate position
+along the sequence can also be added in to the context by specifying
+-q3. Note that this uses memory memory and is slower.
+
+Normally quality is encoded losslessly, but the -Q option permits
+encoding approximate qualities. With -Q 2 we could encode quality 35
+as 33, 34, 35, 36 or 37. We choose (with approximations for speed) the
+quality value from that set which requires the fewest bits to encode
+and emit that instead. This was found to be significantly better at
+reducing storage volumes than simply degrading the quality into a
+series of N-wide bins, while still closely approximating the shape of
+a quality profile and preserving any dips and spikes.
+
+The entropy encoding is based on a range coder taken from coders6c2
+from http://ctxmodel.net/rem.pl?-37. This range coder was written by
+Eugene Shelwien, but it looks probable that it derived from Dmitry
+Subbotin's range coder in PPMd.  The modelling code is API compatible
+with the copy from Eugene Shelwien's coders6c2 (which looks in turn to
+be derived from Dmitry Shkarin's PPMd code), but the functions
+themselves have been completely rewritten to better fit the stationary
+probability models used in this data.
+
+
+Platform recommendations
+========================
+
+Different platforms give very different profiles of qualities and
+sequences. While all the compression parameters are valid, you may
+find that attempting to overcompress gives no gains (or even
+marginally harms compression) while still incurring additional CPU
+time. The space/time tradeoff will therefore differ per platform.
+
+Illumina: -n2 -s7+ -b -q3,   or for small files -n2 -s5 -q2
+
+    The bulk of development was done against Illumina files as these
+    were the test set for the SequenceSqueeze competition. It should
+    work fine with the defaults.
+
+454: -n1 -s7+ -b -q2, or -n1 -s5 -b -q2 for smaller filers
+
+    Tested to work OK, but -n1 gives a better name compression ratio
+    than -n2. (I have more work to do with -n2 it seems.)  For large
+    files try "-n1 -s7+ -b -q3", with smaller -s for small files.
+
+PacBio: -n2 -s4+ -q1,  or -n2 -s3 -q1 for smaller files
+
+    Tested to work mostly fine, but various non-N bases get turned
+    into Ns due to them having quality 0. Solution: replace quality 0
+    by quality 1 to prevent this. (tr '!' '"') How to fix in this
+    code?
+
+    PacBIO doesn't compress too well due to significantly higher
+    variability in the quality values (close to 3.7bit per).
+    Increasing -q has no real gains and infact harms compression as it
+    takes longer to train the model, so stick with -q1 for speed. Also
+    high order sequence models do not do too well due to the high
+    error rate. If you use a high -s, be sure to mix it with a low
+    order model too by adding '+'.
+
+SOLiD: -S -n2 -s5+ -q1
+
+    SOLiD support is available in a rudamentary form. It is not
+    auto-detected so you must currently specify -S when encoding. (The
+    decoder does not need this option.)
+
+    I do correctly deal with the latest NCBI SRA download format which
+    has sequences starting with the last primer base [ACGT] followed
+    by a series of [0123.] characters. The quality is one character
+    shorter. Eg SRR402768 encodes and decodes correctly.
+
+    However I have seen SOLiD fastq formats where the quality string
+    includes a dummy character for the un-measured primer base, and
+    also seen fastq files that have no primer base listed at all or
+    have one listed at each end. These formats are not supported
+    currently as I cannot find any definitive statement on what the
+    SOLiD fastq format is. It appears to change with wind direction!
+
+    In terms of compression, SOLiD quality values are far more
+    variable and have only minor dependance on position or context. So
+    -q1 is the most sensible option.
+
+    At present the complementary strand detection has not been
+    implemented for SOLiD, so do not use the -b parameter.
+
+
+Changes between 4.5 and 4.6
+===========================
+
+(Compatible with 4.5 and 4.4)
+
+- Cope with Fastq files containing windows style carriage-return
+  newline rather than unix newline only.
+
+- No longer generates checksum errors when encoding/decoding files
+  containing data after the "+" line (eg the read name).
+
+
+Changes between 4.4 and 4.5
+===========================
+
+- Bug fix to the arithmetic coder, which occasionally caused crashes.
+
+- Now treats non IUPAC ambiguity codes as N.
+
+- Improvements to reading/writing from pipes; flushing blocks when
+  they're full (as we do from a file) rather than when the pipe stalls.
+
+
+Changes between 4.3 and 4.4
+===========================
+
+- Improved memory prefetching, particularly of sequence models. This
+  speeds up high order sequence encoding by 30-40%. Decoding speeds
+  have only improved by less, but overall the program is around 20%
+  faster.
+
+- Adjusted the sequence model to use 20% less memory.
+
+- Support for more SOLiD formats. We now cope with the primer base
+  having a dummy quality (or not as the case may be). Standards? What
+  are they?
+
+
+Changes between 4.2 and 4.3
+===========================
+
+- Bug fix to name parsing containing long strings of numbers.
+
+- Added -X option to ignore checksum failures (eg due to N vs !
+  issues). It seems quite commmon to have broken fastq files with
+  impossible quality values. Eg calling an A,C,G or T with quality 0
+  (meaning it's 100% incorrect, so why call it?) or calling an N with
+  a non-zero quality (meaning we believe the N call may actually be
+  correct).
+
+- Checksum failures now properly return a valid exit code.
+
+- Basic support for SOLiD sequence files added. There appear to be
+  multiple conflicting ideas of what SOLiD fastq files look like
+  though so mileage may vary.
+
+- Code tidyup of argument passing.
+
+
+Changes between 4.1 and 4.2
+===========================
+
+- Using -Q<num> mode for approximate quality no longer causes checksum
+  failures. (Although it now simply disables checksums.)
+
+- Minor tweaks to -q2 quality contexts.
+
+
+Changes between 4.0 and 4.1
+===========================
+
+- I have added a fast checksum system to spot any potential errors in
+  decoding. It's still more likely that a corrupted file will yield a
+  crash in the decompression code than emitting data that looks like
+  valid fastq, but this is for safety.
+
+- Further improvements to the sequence model (-s5 vs -s5+) by
+  combining multiple models. This only really helps on small data
+  sets.
+
+- Completely reimplemented the various order-0 models upon which the
+  other models are built. This was previous Eugene Shelwien's tidy up
+  of code from Dmitry Shkarin's PPMd (I think).  This means the only
+  code not entirely mine now is the rangecoder itself.
+
+- Implemented a new name encoder, -n2. This is typically smaller than
+  the old -n1 encoding on Illumina data, but has not been extensively
+  tested on other naming schemes yet.
+
+- Minor tweaks to the quality encoding on -q3.
+
+- Improved reporting of results. It now reports how many bytes are
+  taken up by sequences, qualities and names. (Sequence lengths are
+  also stored, but not reported. They are typically tiny.)
+
+
+Changes between 3.0 and 4.0
+===========================
+
+- There are no globals or static variables now. All data used by the
+  fqz class is held internal to it. I still need to improve on the I/O
+  mechanisms so it can compress and decompress blocks to memory rather
+  than stdin/stdout, but this is most of the way there.
+
+- Split -1 to -N compression levels into explicit -s and -q for
+  sequence and quality compression metrics. Added a new quality
+  compression level for large datasets where we use the position along
+  sequence too. Default of -q2 was old behaviour. -q1 does less
+  compression than before, but is faster.
+
+- Added additional levels of sequence compression, up to -s9 if you
+  have the memory.
+
+- Changed from 16-bit to 8-bit counters for sequence compression by
+  default. This is significant memory reduction and for some sizes a
+  big speed up too if it makes the difference of in/out of cache.
+
+  The -e option switches back to 16-bit mode.
+
+- Reworking of the models. Sequence and binary models have been sped
+  up considerably, exploiting their smaller alphabet. The more general
+  purpose 8-bit and 7-bit variants are now one model controlled by
+  templates for the alphabet size.
+
+
+File format
+===========
+
+The format consists of a header and a series of data blocks. The size
+of the data blocks is controlled by BLK_SIZE in the source code.
+Increasing the size may give files that cannot be uncompressed with
+existing fqzcomp builds.
+
+The header has 8 bytes.
+
+0: '.' (4 bytes of magic number)
+1: 'f'
+2: 'q'
+3: 'z'
+
+4: MAJOR_VERS (version numbers, encoded in the source)
+5: MINOR_VERS
+
+6: 4-bits -s level, 2 bits -q level, 2 bits -n level.
+   (slevel<<0) | (qlevel << 4) | (nlevel << 6).
+
+7: flags:
+   bit 0: both_strands
+   bit 1: extreme_seq (16-bit seq models)
+   bit 2: multi_seq_model
+   bit 3: SOLiD mode
+   bits 4+ are reserved for future use, set to zero for now.
+
+Additionally, if SOLiD mode is set, the first base type is appended to
+the header (typically T), as this does not appear in the actual
+quality strings. (Sometimes - NCBI seem to prefer it that way at least.)
+
+Each block consists of a series of little endian 32-bit words followed
+by the compressed data streams:
+
+Byte	Value
+ 0- 3	Total compressed size of this block
+ 4- 7	32-bit checksum
+ 8-11	Uncompressed size
+12-15	Number of sequences
+16-19	Size of compressed length data
+20-23	Size of compressed name data
+24-27	Size of compressed seq data
+28-31   Size of compressed qual data
+32+	Length data
+?	Name data
+?	Seq data
+?	Qual data
+
+Each of the 4 blocks of data - length, name, seq and qualities - are
+all compressed using their own range coders to permit compression
+within independent threads if desired.
+
+
+To do
+=====
+
+1) Investigate the impact of resetting the fqz class per block.
+This simulates efficiency of allowing random access. What block size
+is needed?  (Need to move rc from global to a parameter of the models.)
+
+2) Once we reset compression per block, we can perform multi-threaded
+compression.
+
+Alternatively with 4 threads simply slice file into 4 and have a flag
+to indicate block-continue vs block-reset.
+

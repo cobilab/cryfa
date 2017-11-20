@@ -1,0 +1,8 @@
+
+#ifndef QUIP_VERSION_H
+#define QUIP_VERSION_H
+
+#define QUIP_VERSION "@VERSION@"
+
+#endif
+
