@@ -51,7 +51,7 @@ RUN_METHODS_COMP=0      # 350 GB free disk space
     # FASTQ
     RUN_CRYFA_FQ=0      # cryfa
     # Results
-    RESULTS_COMP=0
+    RESULTS_COMP=1
 
 ### Run compression & encryption methods
 RUN_METHODS_COMP_ENC=0
@@ -68,23 +68,23 @@ RUN_METHODS_COMP_ENC=0
     RUN_DSRC_AESCRYPT=0          # DSRC       + AES Crypt
     RUN_FQC_AESCRYPT=0           # FQC        + AES Crypt
     # Results
-    RESULTS_COMP_ENC=0
+    RESULTS_COMP_ENC=1
 
 ### Run encryption methods
 RUN_METHODS_ENC=0       # 430 GB free disk space
     RUN_AESCRYPT=0      # AES Crypt
     # Results
-    RESULTS_ENC=0
+    RESULTS_ENC=1
 
 ### Run cryfa with different number of threads
-RUN_CRYFA_THREADS=1
+RUN_CRYFA_THREADS=0
     MAX_N_THR=8         # Max number of threads
-#    CRYFA_THR_DATASET="dataset/FA/HS/HS.fasta"
-    CRYFA_THR_DATASET="dataset/FQ/DS/DS-SL3003_SR.fastq"
+    CRYFA_THR_DATASET="dataset/FA/HS/HS.fasta"
+#    CRYFA_THR_DATASET="dataset/FQ/DS/DS-SL3003_SR.fastq"
     # Run
     RUN_CRYFA_THR=0
     # Results
-    RESULTS_CRYFA_THR=0
+    RESULTS_CRYFA_THR=1
 
 
 
