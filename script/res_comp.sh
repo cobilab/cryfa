@@ -75,6 +75,44 @@ function compDecompRes
 }
 
 
+### Results of compress/decompress on datasets. $1: output file
+function compDecompResOnDataset
+{
+    FAdsPath=$dataset/$FA
+    FQdsPath=$dataset/$FQ
+    OUT_FILE=$1
+    c="Method\tC_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)"
+    c+="\tC_Mem(KB)"
+    d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
+
+    printf "Dataset\tSize(B)\t$c\t$d\tEq\n" > $OUT_FILE;
+
+    ### FASTA -- human - viruses - synthetic
+    #for i in CRYFA $FASTA_METHODS; do
+    for i in CRYFA; do
+        compDecompRes $i $FAdsPath/$HUMAN/HS.$fasta >> $OUT_FILE;
+        compDecompRes $i $FAdsPath/$VIRUSES/viruses.$fasta >> $OUT_FILE;
+        for j in 1 2; do
+            compDecompRes $i $FAdsPath/$Synth/SynFA-${j}.$fasta >> $OUT_FILE;
+        done
+    done
+
+    ### FASTQ -- human - Denisova - synthetic
+    #for i in CRYFA $FASTQ_METHODS; do
+    for i in CRYFA; do
+        for j in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 SRR707196_1; do
+            compDecompRes $i $FQdsPath/$HUMAN/HS-${j}.$fastq >> $OUT_FILE;
+        done
+        for j in B1087 B1088 B1110 B1128 SL3003; do
+            compDecompRes $i $FQdsPath/$DENISOVA/DS-${j}_SR.$fastq >> $OUT_FILE
+        done
+        for j in 1 2; do
+            compDecompRes $i $FQdsPath/$Synth/SynFQ-${j}.$fastq >> $OUT_FILE;
+        done
+    done
+}
+
+
 ### Convert memory numbers scale to MB and times to fractional minutes in
 ### result files. $1: input file name
 function compResHumanReadable
@@ -179,36 +217,9 @@ function compResHumanReadable
 #   Print compression results
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 OUT="$result/COMP.$RES"    # Output file name
-FAdsPath=$dataset/$FA
-FQdsPath=$dataset/$FQ
-c="Method\tC_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)\tC_Mem(KB)"
-d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
 
-printf "Dataset\tSize(B)\t$c\t$d\tEq\n" > $OUT;
-
-### FASTA -- human - viruses - synthetic
-#for i in CRYFA $FASTA_METHODS; do
-for i in CRYFA; do
-    compDecompRes $i $FAdsPath/$HUMAN/HS.$fasta >> $OUT;
-    compDecompRes $i $FAdsPath/$VIRUSES/viruses.$fasta >> $OUT;
-    for j in 1 2; do
-        compDecompRes $i $FAdsPath/$Synth/SynFA-${j}.$fasta >> $OUT;
-    done
-done
-
-### FASTQ -- human - Denisova - synthetic
-#for i in CRYFA $FASTQ_METHODS; do
-for i in CRYFA; do
-    for j in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 SRR707196_1; do
-        compDecompRes $i $FQdsPath/$HUMAN/HS-${j}.$fastq >> $OUT;
-    done
-    for j in B1087 B1088 B1110 B1128 SL3003; do
-        compDecompRes $i $FQdsPath/$DENISOVA/DS-${j}_SR.$fastq >> $OUT
-    done
-    for j in 1 2; do
-        compDecompRes $i $FQdsPath/$Synth/SynFQ-${j}.$fastq >> $OUT;
-    done
-done
+### Results on datasets
+compDecompResOnDataset $OUT;
 
 ### Make the result file human readable
 compResHumanReadable $OUT;

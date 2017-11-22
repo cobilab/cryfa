@@ -30,7 +30,7 @@ INSTALL_DEPENDENCIES=0
     INS_ZLIB=0          # Zlib
 
 ### Install methods
-INSTALL_METHODS=0
+INSTALL_METHODS=1
     # FASTA/FASTQ
     INS_CRYFA=1         # cryfa
     # FASTA
@@ -77,14 +77,15 @@ RUN_METHODS_ENC=0       # 430 GB free disk space
     RESULTS_ENC=1
 
 ### Run cryfa with different number of threads
-RUN_CRYFA_THREADS=0
+RUN_CRYFA_THREADS=1
     MAX_N_THR=8         # Max number of threads
-    CRYFA_THR_DATASET="dataset/FA/HS/HS.fasta"
+#    CRYFA_THR_DATASET="dataset/FA/HS/HS.fasta"
 #    CRYFA_THR_DATASET="dataset/FQ/DS/DS-SL3003_SR.fastq"
+    CRYFA_THR_DATASET="dataset/FQ/DS/DS-B1110_SR.fastq"
     # Run
-    RUN_CRYFA_THR=0
+    RUN_CRYFA_THR=1
     # Results
-    RESULTS_CRYFA_THR=1
+    RESULTS_CRYFA_THR=0
 
 
 

@@ -115,6 +115,54 @@ function compEncDecDecompRes
 }
 
 
+### Results of compression+encryption and decryption+decompression on datasets.
+### $1: output file
+function compDecompResOnDataset
+{
+    FAdsPath=$dataset/$FA
+    FQdsPath=$dataset/$FQ
+    OUT_FILE=$1
+    methods="C_Method\tEn_Method"
+    c="C_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)\tC_Mem(KB)"
+    en="En_Size(B)\tEn_Time_real(s)\tEn_Time_user(s)\tEn_Time_sys(s)"
+    en+="\tEn_Mem(KB)"
+    de="De_Time_real(s)\tDe_Time_user(s)\tDe_Time_sys(s)\tDe_Mem(KB)"
+    d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
+
+    printf "Dataset\tSize(B)\t$methods\t$c\t$en\t$de\t$d\tEq\n" > $OUT_FILE;
+
+    for i in $ENC_METHODS; do
+       ### FASTA -- human - viruses - synthetic
+       for j in $FASTA_METHODS; do
+           compEncDecDecompRes $j $i $FAdsPath/$HUMAN/HS.$fasta >> $OUT_FILE;
+           compEncDecDecompRes $j $i \
+                               $FAdsPath/$VIRUSES/viruses.$fasta >> $OUT_FILE;
+           for k in 1 2; do
+               compEncDecDecompRes $j $i \
+                               $FAdsPath/$Synth/SynFA-${k}.$fasta >> $OUT_FILE;
+           done
+       done
+
+       ### FASTQ -- human - Denisova - synthetic
+       for j in $FASTQ_METHODS; do
+           for k in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 \
+                    SRR707196_1; do
+               compEncDecDecompRes $j $i \
+                             $FQdsPath/$HUMAN/HS-${k}.$fastq >> $OUT_FILE;
+           done
+           for k in B1087 B1088 B1110 B1128 SL3003; do
+               compEncDecDecompRes $j $i \
+                             $FQdsPath/$DENISOVA/DS-${k}_SR.$fastq >> $OUT_FILE;
+           done
+           for k in 1 2; do
+               compEncDecDecompRes $j $i \
+                             $FQdsPath/$Synth/SynFQ-${k}.$fastq >> $OUT_FILE;
+           done
+       done
+    done
+}
+
+
 ### Convert memory numbers scale to MB and times to fractional minutes in
 ### result files. $1: input file name
 function compEncResHumanReadable
@@ -267,6 +315,13 @@ function compEncResHumanReadable
 #   Print compression+encryption results
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 OUT="$result/COMP_ENC.$RES"    # Output file name
+
+
+### Results on datasets
+compEncDecDecompResOnDataset $OUT;
+
+
+
 FAdsPath=$dataset/$FA
 FQdsPath=$dataset/$FQ
 methods="C_Method\tEn_Method"

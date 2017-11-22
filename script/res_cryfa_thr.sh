@@ -74,6 +74,19 @@ function cryfaThrRes
 }
 
 
+### Results of compression/decompression on datasets. $1: output file
+function cryfaThrResOnDataset
+{
+    OUT_FILE=$1
+    c="C_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)\tC_Mem(KB)"
+    d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
+
+    printf "Dataset\tSize(B)\tThread\t$c\t$d\tEq\n" > $OUT_FILE;
+
+    cryfaThrRes "CRYFA_THR" $inDataWF $ft >> $OUT_FILE;
+}
+
+
 ### Convert memory numbers scale to MB and times to fractional minutes in
 ### result files. $1: input file name
 function cryfaThrResHumanReadable
@@ -131,11 +144,9 @@ in="${inData##*/}"                            # Input file name
 inDataWF="${in%.*}"                           # Input file name without filetype
 ft="${in##*.}"                                # Input filetype
 OUT="$result/CRYFA_THR__${inDataWF}_$ft.$RES" # Output file name
-c="C_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)\tC_Mem(KB)"
-d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
 
-printf "Dataset\tSize(B)\tThread\t$c\t$d\tEq\n" > $OUT;
-cryfaThrRes "CRYFA_THR" $inDataWF $ft >> $OUT;
+### Results on datasets
+cryfaThrResOnDataset $OUT;
 
 ### Make the result file human readable
 cryfaThrResHumanReadable $OUT;
