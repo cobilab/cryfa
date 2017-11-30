@@ -105,7 +105,7 @@ function cryfaThrResHumanReadable
       split(c_arrMinReal[2], c_arrSecReal, "s");    c_secReal=c_arrSecReal[1];
       c_realTime=c_minReal*60+c_secReal;
 
-      printf "\t%.1f", c_realTime/60;
+      printf "\t%.2f", c_realTime/60;
 
       split($6, c_arrMinUser, "m");                 c_minUser=c_arrMinUser[1];
       split(c_arrMinUser[2], c_arrSecUser, "s");    c_secUser=c_arrSecUser[1];
@@ -115,13 +115,13 @@ function cryfaThrResHumanReadable
       c_sysTime=c_minSys*60+c_secSys;
       c_cpuTime=c_userTime+c_sysTime;
 
-      printf "\t%.1f\t%.f", c_cpuTime/60, $8/1024;
+      printf "\t%.2f\t%.f", c_cpuTime/60, $8/1024;
 
       split($9, d_arrMinReal, "m");                 d_minReal=d_arrMinReal[1];
       split(d_arrMinReal[2], d_arrSecReal, "s");    d_secReal=d_arrSecReal[1];
       d_realTime=d_minReal*60+d_secReal;
 
-      printf "\t%.1f", d_realTime/60;
+      printf "\t%.2f", d_realTime/60;
 
       split($10, d_arrMinUser, "m");                d_minUser=d_arrMinUser[1];
       split(d_arrMinUser[2], d_arrSecUser, "s");    d_secUser=d_arrSecUser[1];
@@ -131,7 +131,7 @@ function cryfaThrResHumanReadable
       d_sysTime=d_minSys*60+d_secSys;
       d_cpuTime=d_userTime+d_sysTime;
 
-      printf "\t%.1f\t%.f\t%d\n", d_cpuTime/60, $12/1024, $13;
+      printf "\t%.2f\t%.f\t%d\n", d_cpuTime/60, $12/1024, $13;
     }' >> $INWF.$INF
 }
 

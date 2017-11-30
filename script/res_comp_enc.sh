@@ -117,7 +117,7 @@ function compEncDecDecompRes
 
 ### Results of compression+encryption and decryption+decompression on datasets.
 ### $1: output file
-function compDecompResOnDataset
+function compEncDecDecompResOnDataset
 {
     FAdsPath=$dataset/$FA
     FQdsPath=$dataset/$FQ
@@ -263,7 +263,7 @@ function compEncResHumanReadable
 
     # Total
     printf "Size(MB)\t$cen\t$ded\tEq\n" > ${INWF}_tot_FA.$INF;
-    cat ${INWF}_FA.$INF | awk 'NR>1' \
+    cat ${INWF}_FA.$INF | tr ',' '.' | awk 'NR>1' \
       | awk -v dsSize=$FASTA_DATASET_SIZE 'BEGIN{}{
       s+=$2;  cenS+=$5;  cenTR+=$6;  cenTC+=$7;  dedTR+=$9; dedTC+=$10; eq+=$12;
       if (NR % dsSize==0) {
@@ -294,7 +294,7 @@ function compEncResHumanReadable
 
     # Total
     printf "Size(MB)\t$cen\t$ded\tEq\n" > ${INWF}_tot_FQ.$INF;
-    cat ${INWF}_FQ.$INF | awk 'NR>1' \
+    cat ${INWF}_FQ.$INF | tr ',' '.' | awk 'NR>1' \
       | awk -v dsSize=$FASTQ_DATASET_SIZE 'BEGIN{}{
       s+=$2;  cenS+=$5;  cenTR+=$6;  cenTC+=$7;  dedTR+=$9; dedTC+=$10; eq+=$12;
       if (NR % dsSize==0) {
@@ -316,46 +316,8 @@ function compEncResHumanReadable
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 OUT="$result/COMP_ENC.$RES"    # Output file name
 
-
 ### Results on datasets
 compEncDecDecompResOnDataset $OUT;
-
-
-
-FAdsPath=$dataset/$FA
-FQdsPath=$dataset/$FQ
-methods="C_Method\tEn_Method"
-c="C_Size(B)\tC_Time_real(s)\tC_Time_user(s)\tC_Time_sys(s)\tC_Mem(KB)"
-en="En_Size(B)\tEn_Time_real(s)\tEn_Time_user(s)\tEn_Time_sys(s)\tEn_Mem(KB)"
-de="De_Time_real(s)\tDe_Time_user(s)\tDe_Time_sys(s)\tDe_Mem(KB)"
-d="D_Time_real(s)\tD_Time_user(s)\tD_Time_sys(s)\tD_Mem(KB)"
-
-printf "Dataset\tSize(B)\t$methods\t$c\t$en\t$de\t$d\tEq\n" > $OUT;
-
-for i in $ENC_METHODS; do
-   ### FASTA -- human - viruses - synthetic
-   for j in $FASTA_METHODS; do
-       compEncDecDecompRes $j $i $FAdsPath/$HUMAN/HS.$fasta >> $OUT;
-       compEncDecDecompRes $j $i $FAdsPath/$VIRUSES/viruses.$fasta >> $OUT;
-       for k in 1 2; do
-           compEncDecDecompRes $j $i $FAdsPath/$Synth/SynFA-${k}.$fasta >> $OUT;
-       done
-   done
-
-   ### FASTQ -- human - Denisova - synthetic
-   for j in $FASTQ_METHODS; do
-       for k in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 SRR707196_1; do
-           compEncDecDecompRes $j $i $FQdsPath/$HUMAN/HS-${k}.$fastq >> $OUT;
-       done
-       for k in B1087 B1088 B1110 B1128 SL3003; do
-           compEncDecDecompRes $j $i \
-                                  $FQdsPath/$DENISOVA/DS-${k}_SR.$fastq >> $OUT;
-       done
-       for k in 1 2; do
-           compEncDecDecompRes $j $i $FQdsPath/$Synth/SynFQ-${k}.$fastq >> $OUT;
-       done
-   done
-done
 
 ### Make the result file human readable
 compEncResHumanReadable $OUT;

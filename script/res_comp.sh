@@ -175,7 +175,7 @@ function compResHumanReadable
 
     # Total
     printf "Size(MB)\t$c\t$d\tEq\n" > ${INWF}_tot_FA.$INF;
-    cat ${INWF}_FA.$INF | awk 'NR>1' \
+    cat ${INWF}_FA.$INF | tr ',' '.' | awk 'NR>1' \
       | awk -v dsSize=$FASTA_DATASET_SIZE 'BEGIN{}{
       s+=$2;   cS+=$5;   cTR+=$6;   cTC+=$7;   dTR+=$9;   dTC+=$10;   eq+=$12;
       if (NR % dsSize==0) {
@@ -199,7 +199,7 @@ function compResHumanReadable
 
     # Total
     printf "Size(MB)\t$c\t$d\tEq\n" > ${INWF}_tot_FQ.$INF;
-    cat ${INWF}_FQ.$INF | awk 'NR>1' \
+    cat ${INWF}_FQ.$INF | tr ',' '.' | awk 'NR>1' \
       | awk -v dsSize=$FASTQ_DATASET_SIZE 'BEGIN{}{
       s+=$2;   cS+=$5;   cTR+=$6;   cTC+=$7;   dTR+=$9;   dTC+=$10;   eq+=$12;
       if (NR % dsSize==0) {

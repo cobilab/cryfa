@@ -30,7 +30,7 @@ INSTALL_DEPENDENCIES=0
     INS_ZLIB=0          # Zlib
 
 ### Install methods
-INSTALL_METHODS=1
+INSTALL_METHODS=0
     # FASTA/FASTQ
     INS_CRYFA=1         # cryfa
     # FASTA
@@ -77,11 +77,11 @@ RUN_METHODS_ENC=0       # 430 GB free disk space
     RESULTS_ENC=1
 
 ### Run cryfa with different number of threads
-RUN_CRYFA_THREADS=1
+RUN_CRYFA_THREADS=0
     MAX_N_THR=8         # Max number of threads
 #    CRYFA_THR_DATASET="dataset/FA/HS/HS.fasta"
 #    CRYFA_THR_DATASET="dataset/FA/Synth/SynFA-1.fasta"
-    CRYFA_THR_DATASET="dataset/FA/Synth/SynFA-2.fasta"
+#    CRYFA_THR_DATASET="dataset/FA/Synth/SynFA-2.fasta"
 #    CRYFA_THR_DATASET="dataset/FQ/DS/DS-SL3003_SR.fastq"
 #    CRYFA_THR_DATASET="dataset/FQ/DS/DS-B1110_SR.fastq"
 #    CRYFA_THR_DATASET="dataset/FQ/HS/HS-ERR015767_2.fastq"
@@ -89,10 +89,13 @@ RUN_CRYFA_THREADS=1
 #    CRYFA_THR_DATASET="dataset/FQ/Synth/SynFQ-1.fastq"
 #    CRYFA_THR_DATASET="dataset/FQ/DS/DS-B1087_SR.fastq"
 #    CRYFA_THR_DATASET="dataset/FQ/DS/DS-B1128_SR.fastq"
+#    CRYFA_THR_DATASET="dataset/FQ/HS/HS-SRR442469_1.fastq"
+#    CRYFA_THR_DATASET="dataset/FA/V/viruses.fasta"
+    CRYFA_THR_DATASET="dataset/FQ/DS/DS-B1088_SR.fastq"
     # Run
-    RUN_CRYFA_THR=1
+    RUN_CRYFA_THR=0
     # Results
-    RESULTS_CRYFA_THR=0
+    RESULTS_CRYFA_THR=1
 
 
 
