@@ -85,7 +85,8 @@ const   string PCKD_FILENAME = "CRYFA_PCKD"; /**< @brief Pckd f name - joined */
 const   string DEC_FILENAME  = "CRYFA_DEC";  /**< @brief Decrypted file name */
 const   string UPK_FILENAME  = "CRYFA_UPK";  /**< @brief Unpacked file name */
 constexpr byte DEFAULT_N_THR = 8;   /**< @brief Default number of threads */
-constexpr u64  BLOCK_SIZE    = 8 * 1024;  /**< @brief To read from input file */
+constexpr u64  BLOCK_SIZE    = 102400 * 1024;  /**< @brief To read from input file */
+//constexpr u64  BLOCK_SIZE    = 8 * 1024;  /**< @brief To read from input file */
 constexpr byte C1            = 2;   /**< @brief       Cat 1  =  2 */
 constexpr byte C2            = 3;   /**< @brief       Cat 2  =  3 */
 constexpr byte MIN_C3        = 4;   /**< @brief  4 <= Cat 3 <=  6 */
