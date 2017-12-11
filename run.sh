@@ -88,10 +88,11 @@ RUN_CRYFA_THREADS=1
 #    CRYFA_THR_DATASET="dataset/FQ/HS/HS-ERR031905_2.fastq"
 #    CRYFA_THR_DATASET="dataset/FQ/Synth/SynFQ-1.fastq"
 #    CRYFA_THR_DATASET="dataset/FQ/DS/DS-B1087_SR.fastq"
-    CRYFA_THR_DATASET="dataset/FQ/DS/DS-B1128_SR.fastq"
+#    CRYFA_THR_DATASET="dataset/FQ/DS/DS-B1128_SR.fastq"
 #    CRYFA_THR_DATASET="dataset/FQ/HS/HS-SRR442469_1.fastq"
 #    CRYFA_THR_DATASET="dataset/FA/V/viruses.fasta"
 #    CRYFA_THR_DATASET="dataset/FQ/DS/DS-B1088_SR.fastq"
+    CRYFA_THR_DATASET="dataset/FQ/Synth/SynFQ-1.fastq"
     # Run
     RUN_CRYFA_THR=1
     # Results
