@@ -79,7 +79,7 @@ RUN_METHODS_ENC=0       # 430 GB free disk space
 ### Run cryfa with different number of threads
 RUN_CRYFA_THREADS=1
     MAX_N_THR=8         # Max number of threads
-#    CRYFA_THR_DATASET="dataset/FA/HS/HS.fasta"
+    CRYFA_THR_DATASET="dataset/FA/HS/HS.fasta"
 #    CRYFA_THR_DATASET="dataset/FA/Synth/SynFA-1.fasta"
 #    CRYFA_THR_DATASET="dataset/FA/Synth/SynFA-2.fasta"
 #    CRYFA_THR_DATASET="dataset/FQ/DS/DS-SL3003_SR.fastq"
@@ -92,7 +92,7 @@ RUN_CRYFA_THREADS=1
 #    CRYFA_THR_DATASET="dataset/FQ/HS/HS-SRR442469_1.fastq"
 #    CRYFA_THR_DATASET="dataset/FA/V/viruses.fasta"
 #    CRYFA_THR_DATASET="dataset/FQ/DS/DS-B1088_SR.fastq"
-    CRYFA_THR_DATASET="dataset/FQ/Synth/SynFQ-1.fastq"
+#    CRYFA_THR_DATASET="dataset/FQ/Synth/SynFQ-1.fastq"
     # Run
     RUN_CRYFA_THR=1
     # Results
