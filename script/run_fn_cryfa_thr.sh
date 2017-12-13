@@ -18,7 +18,7 @@ inDataWF="${in%.*}"                           # Input file name without filetype
 ft="${in##*.}"                                # Input filetype
 fsize=`stat --printf="%s" $CRYFA_THR_DATASET` # File size (bytes)
 #CRYFA_THR_RUN=`seq -s' ' 1 $MAX_N_THR`;       # 1 2 3 ... $MAX_N_THR
-CRYFA_THR_RUN=3;       # 1 2 3 ... $MAX_N_THR
+CRYFA_THR_RUN=8;       # 1 2 3 ... $MAX_N_THR
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
