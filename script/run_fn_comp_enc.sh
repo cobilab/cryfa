@@ -200,7 +200,7 @@ function compEncDecDecompOnDataset
               compEncDecDecompress \
                   $methodComp $dsPath/$FQ/$HUMAN/$HUMAN-$i.$fastq $methodEnc
           done
-          for i in B1087 B1088 B1110 B1128 SL3003; do
+          for i in B1087 B1088; do
               compEncDecDecompress $methodComp \
                   $dsPath/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq $methodEnc
           done

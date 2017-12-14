@@ -75,7 +75,7 @@ function encDecOnDataset
                    SRR707196_1; do
               encDecrypt $method $dsPath/$FQ/$HUMAN/$HUMAN-$i.$fastq
           done
-          for i in B1087 B1088 B1110 B1128 SL3003; do
+          for i in B1087 B1088; do
               encDecrypt $method $dsPath/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq
           done
           for i in 1 2; do

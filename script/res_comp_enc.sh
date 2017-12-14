@@ -150,7 +150,7 @@ function compEncDecDecompResOnDataset
                compEncDecDecompRes $j $i \
                              $FQdsPath/$HUMAN/HS-${k}.$fastq >> $OUT_FILE;
            done
-           for k in B1087 B1088 B1110 B1128 SL3003; do
+           for k in B1087 B1088; do
                compEncDecDecompRes $j $i \
                              $FQdsPath/$DENISOVA/DS-${k}_SR.$fastq >> $OUT_FILE;
            done

@@ -103,7 +103,7 @@ function compDecompResOnDataset
         for j in ERR013103_1 ERR015767_2 ERR031905_2 SRR442469_1 SRR707196_1; do
             compDecompRes $i $FQdsPath/$HUMAN/HS-${j}.$fastq >> $OUT_FILE;
         done
-        for j in B1087 B1088 B1110 B1128 SL3003; do
+        for j in B1087 B1088; do
             compDecompRes $i $FQdsPath/$DENISOVA/DS-${j}_SR.$fastq >> $OUT_FILE
         done
         for j in 1 2; do

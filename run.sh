@@ -51,7 +51,7 @@ RUN_METHODS_COMP=1      # 350 GB free disk space
     # FASTQ
     RUN_CRYFA_FQ=1      # cryfa
     # Results
-    RESULTS_COMP=0
+    RESULTS_COMP=1
 
 ### Run compression & encryption methods
 RUN_METHODS_COMP_ENC=0
