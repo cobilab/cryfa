@@ -17,7 +17,7 @@ GET_DATASET=0           # 215 GB free disk space
     DL_VIRUSES_FA=1     # Download Viruses           (FASTA) -- 0.3 GB
     GEN_SYNTH_FA=1      # Generate synthetic dataset (FASTA) -- 4   GB
     DL_HUMAN_FQ=1       # Download Human             (FASTQ) -- 27  GB
-    DL_DENISOVA_FQ=1    # Download Denisova          (FASTQ) -- 172 GB
+    DL_DENISOVA_FQ=1    # Download Denisova          (FASTQ) -- 2.9 GB
     GEN_SYNTH_FQ=1      # Generate synthetic dataset (FASTQ) -- 6.7 GB
 
 ### Dependencies
