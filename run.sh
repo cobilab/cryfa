@@ -12,7 +12,7 @@
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ### Dataset
-GET_DATASET=0           # 215 GB free disk space
+GET_DATASET=0           # 44 GB free disk space
     DL_HUMAN_FA=1       # Download Human             (FASTA) -- 3.1 GB
     DL_VIRUSES_FA=1     # Download Viruses           (FASTA) -- 0.3 GB
     GEN_SYNTH_FA=1      # Generate synthetic dataset (FASTA) -- 4   GB
@@ -45,7 +45,7 @@ INSTALL_METHODS=1
     INS_AESCRYPT=0      # AES Crypt
 
 ### Run compression methods
-RUN_METHODS_COMP=1      # 350 GB free disk space
+RUN_METHODS_COMP=1      # 75 GB free disk space
     # FASTA
     RUN_CRYFA_FA=1      # cryfa
     # FASTQ
@@ -55,12 +55,12 @@ RUN_METHODS_COMP=1      # 350 GB free disk space
 
 ### Run compression & encryption methods
 RUN_METHODS_COMP_ENC=0
-    # FASTA -- 20 GB free disk space
+    # FASTA -- 10 GB free disk space
     RUN_GZIP_FA_AESCRYPT=0       # gzip       + AES Crypt
     RUN_BZIP2_FA_AESCRYPT=0      # bzip2      + AES Crypt
     RUN_MFCOMPRESS_AESCRYPT=0    # MFCompress + AES Crypt
     RUN_DELIMINATE_AESCRYPT=0    # DELIMINATE + AES Crypt
-    # FASTQ -- 600 GB free disk space
+    # FASTQ -- 50 GB free disk space
     RUN_GZIP_FQ_AESCRYPT=0       # gzip       + AES Crypt
     RUN_BZIP2_FQ_AESCRYPT=0      # bzip2      + AES Crypt
     RUN_FQZCOMP_AESCRYPT=0       # fqzcomp    + AES Crypt
@@ -71,7 +71,7 @@ RUN_METHODS_COMP_ENC=0
     RESULTS_COMP_ENC=1
 
 ### Run encryption methods
-RUN_METHODS_ENC=0       # 430 GB free disk space
+RUN_METHODS_ENC=0       # 90 GB free disk space
     RUN_AESCRYPT=0      # AES Crypt
     # Results
     RESULTS_ENC=1
