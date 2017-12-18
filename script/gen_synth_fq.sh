@@ -21,8 +21,9 @@ if [[ $INSTALL_XS -eq 1 ]]; then
     cd ..
 fi
 
-### Generate dataset -- 4.6 GB - 2.1 GB
-XS/XS -t 1 -n 16000000 -ld 70:100 -o \
-      -f 0.2,0.2,0.2,0.2,0.2       $dataset/$FQ/$Synth/SynFQ-1.$fastq
-XS/XS -t 2 -n 10000000 -ls 70 -qt 2 \
-      -f 0.23,0.23,0.23,0.23,0.08  $dataset/$FQ/$Synth/SynFQ-2.$fastq
+### Generate dataset -- 9.7 GB - 512 MB
+XS/XS -t 4 -n 40000000 -ld 70:150 -qc 63:70 -o -f 0.23,0.23,0.23,0.23,0.08  A
+XS/XS -t 2 -n 2180000  -ld 70:120 -qc 56:70    -f 0.2,0.2,0.2,0.2,0.2       B
+
+mv A $dataset/$FQ/$Synth/SynFQ-1.$fastq
+mv B $dataset/$FQ/$Synth/SynFQ-2.$fastq
