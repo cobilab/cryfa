@@ -163,15 +163,15 @@ function compResHumanReadable
     ### FASTA
     # Details -- 1 row for headers and 1 row after all
     FASTA_METHODS_SIZE=0    # Just when cryfa is the only compression method run
-    removeFromRow=`echo $((FASTA_DATASET_SIZE*(FASTA_METHODS_SIZE+1)+1+1))`
+    removeFromRow=`echo $((FASTA_DATASET_SIZE*(FASTA_METHODS_SIZE+1)+1+1))`;
     sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_FA.$INF;
 
-    # For each dataset
-    for i in $FASTA_DATASET; do
-        sed "2,$ d" ${INWF}_FA.$INF > ${INWF}_${i}_FA.$INF;
-        cat ${INWF}_FA.$INF | awk 'NR>1' \
-         | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_FA.$INF;
-    done
+#    # For each dataset
+#    for i in $FASTA_DATASET; do
+#        sed "2,$ d" ${INWF}_FA.$INF > ${INWF}_${i}_FA.$INF;
+#        cat ${INWF}_FA.$INF | awk 'NR>1' \
+#         | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_FA.$INF;
+#    done
 
     # Total
     printf "Size(MB)\t$c\t$d\tEq\n" > ${INWF}_tot_FA.$INF;
@@ -190,12 +190,12 @@ function compResHumanReadable
     removeUpToRow=`echo $((removeFromRow-1))`
     sed "2,$removeUpToRow d" $INWF.tmp > ${INWF}_FQ.$INF;
 
-    # For each dataset
-    for i in $FASTQ_DATASET; do
-        sed "2,$ d" ${INWF}_FQ.$INF > ${INWF}_${i}_FQ.$INF;
-        cat ${INWF}_FQ.$INF | awk 'NR>1' \
-          | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_FQ.$INF;
-    done
+#    # For each dataset
+#    for i in $FASTQ_DATASET; do
+#        sed "2,$ d" ${INWF}_FQ.$INF > ${INWF}_${i}_FQ.$INF;
+#        cat ${INWF}_FQ.$INF | awk 'NR>1' \
+#          | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_FQ.$INF;
+#    done
 
     # Total
     printf "Size(MB)\t$c\t$d\tEq\n" > ${INWF}_tot_FQ.$INF;

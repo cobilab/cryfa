@@ -12,13 +12,13 @@
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ### Dataset
-GET_DATASET=0           # 44 GB free disk space
-    DL_HUMAN_FA=1       # Download Human             (FASTA) -- 3.1 GB
-    DL_VIRUSES_FA=1     # Download Viruses           (FASTA) -- 0.3 GB
-    GEN_SYNTH_FA=1      # Generate synthetic dataset (FASTA) -- 4   GB
-    DL_HUMAN_FQ=1       # Download Human             (FASTQ) -- 27  GB
-    DL_DENISOVA_FQ=1    # Download Denisova          (FASTQ) -- 2.9 GB
-    GEN_SYNTH_FQ=1      # Generate synthetic dataset (FASTQ) -- 6.7 GB
+GET_DATASET=0           # 42 GB free disk space
+    DL_HUMAN_FA=0       # Download Human             (FASTA) -- 3.1 GB
+    DL_VIRUSES_FA=0     # Download Viruses           (FASTA) -- 0.3 GB
+    GEN_SYNTH_FA=0      # Generate synthetic dataset (FASTA) -- 2.8 GB
+    DL_HUMAN_FQ=0       # Download Human             (FASTQ) -- 27  GB
+    DL_DENISOVA_FQ=0    # Download Denisova          (FASTQ) -- 2.9 GB
+    GEN_SYNTH_FQ=0      # Generate synthetic dataset (FASTQ) -- 6.1 GB
 
 ### Dependencies
 INSTALL_DEPENDENCIES=0
@@ -30,7 +30,7 @@ INSTALL_DEPENDENCIES=0
     INS_ZLIB=0          # Zlib
 
 ### Install methods
-INSTALL_METHODS=1
+INSTALL_METHODS=0
     # FASTA/FASTQ
     INS_CRYFA=1         # cryfa
     # FASTA
@@ -45,13 +45,13 @@ INSTALL_METHODS=1
     INS_AESCRYPT=0      # AES Crypt
 
 ### Run compression methods
-RUN_METHODS_COMP=1      # 75 GB free disk space
+RUN_METHODS_COMP=0      # 75 GB free disk space
     # FASTA
-    RUN_CRYFA_FA=1      # cryfa
+    RUN_CRYFA_FA=0      # cryfa
     # FASTQ
-    RUN_CRYFA_FQ=1      # cryfa
+    RUN_CRYFA_FQ=0      # cryfa
     # Results
-    RESULTS_COMP=1
+    RESULTS_COMP=0
 
 ### Run compression & encryption methods
 RUN_METHODS_COMP_ENC=0
@@ -68,32 +68,19 @@ RUN_METHODS_COMP_ENC=0
     RUN_DSRC_AESCRYPT=0          # DSRC       + AES Crypt
     RUN_FQC_AESCRYPT=0           # FQC        + AES Crypt
     # Results
-    RESULTS_COMP_ENC=1
+    RESULTS_COMP_ENC=0
 
 ### Run encryption methods
 RUN_METHODS_ENC=0       # 90 GB free disk space
     RUN_AESCRYPT=0      # AES Crypt
     # Results
-    RESULTS_ENC=1
+    RESULTS_ENC=0
 
 ### Run cryfa with different number of threads
 RUN_CRYFA_THREADS=0
     MAX_N_THR=8         # Max number of threads
-#    CRYFA_THR_DATASET="dataset/FA/HS/HS.fasta"
-#    CRYFA_THR_DATASET="dataset/FA/Synth/SynFA-1.fasta"
-#    CRYFA_THR_DATASET="dataset/FA/Synth/SynFA-2.fasta"
-#    CRYFA_THR_DATASET="dataset/FQ/DS/DS-SL3003_SR.fastq"
-#    CRYFA_THR_DATASET="dataset/FQ/DS/DS-B1110_SR.fastq"
-#    CRYFA_THR_DATASET="dataset/FQ/HS/HS-SRR707196_1.fastq"
-#    CRYFA_THR_DATASET="dataset/FQ/HS/HS-ERR015767_2.fastq"
-#    CRYFA_THR_DATASET="dataset/FQ/HS/HS-ERR031905_2.fastq"
-#    CRYFA_THR_DATASET="dataset/FQ/DS/DS-B1087_SR.fastq"
-#    CRYFA_THR_DATASET="dataset/FQ/DS/DS-B1128_SR.fastq"
-#    CRYFA_THR_DATASET="dataset/FQ/HS/HS-SRR442469_1.fastq"
-#    CRYFA_THR_DATASET="dataset/FA/V/viruses.fasta"
+    CRYFA_THR_DATASET="dataset/FA/V/viruses.fasta"
 #    CRYFA_THR_DATASET="dataset/FQ/DS/DS-B1088_SR.fastq"
-    CRYFA_THR_DATASET="dataset/FQ/Synth/SynFQ-1.fastq"
-#    CRYFA_THR_DATASET="dataset/FQ/Synth/SynFQ-2.fastq"
     # Run
     RUN_CRYFA_THR=1
     # Results

@@ -40,6 +40,9 @@ function encDecrypt
     ls -la $in.$enFT > $result_FLD/${upIn}_EnS__${inwf}_$ft        # Size
     progMemoryStop $MEMPID $result_FLD/${upIn}_EnM__${inwf}_$ft    # Memory
 
+    # Wait 2 seconds
+    sleep 2s
+
     ### Decrypt
     progMemoryStart $deProg &
     MEMPID=$!
@@ -50,6 +53,9 @@ function encDecrypt
     esac
 
     progMemoryStop $MEMPID $result_FLD/${upIn}_DeM__${inwf}_$ft    # Memory
+
+    # Wait 2 seconds
+    sleep 2s
 }
 
 

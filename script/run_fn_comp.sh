@@ -90,6 +90,9 @@ function compDecomp
     ls -la $in.$cFT > $result_FLD/${upIn}_CS__${inwf}_$ft         # Size
     progMemoryStop $MEMPID $result_FLD/${upIn}_CM__${inwf}_$ft    # Memory
 
+    # Wait 2 seconds
+    sleep 2s
+
     ### Decompress
     progMemoryStart $dProg &
     MEMPID=$!
@@ -112,6 +115,9 @@ function compDecomp
     esac
 
     progMemoryStop $MEMPID $result_FLD/${upIn}_DM__${inwf}_$ft    # Memory
+
+    # Wait 2 seconds
+    sleep 2s
 
     ### Verify if input and decompressed files are the same
     cmp $2 $in &> $result_FLD/${upIn}_V__${inwf}_$ft;

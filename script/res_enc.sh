@@ -157,16 +157,16 @@ function encResHumanReadable
     removeFromRow=`echo $((FASTA_DATASET_SIZE*ENC_METHODS_SIZE+1+1))`
     sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_FA.$INF;
 
-    # For each dataset
-    for i in $FASTA_DATASET; do
-        sed "2,$ d" ${INWF}_FA.$INF > ${INWF}_${i}_FA.$INF;
-        cat ${INWF}_FA.$INF | awk 'NR>1' \
-          | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_FA.$INF;
-
-        # Extract from cryfa
-        cat $result/COMP_${i}_FA.$INF | awk 'NR>1' \
-          | awk 'BEGIN{}{if ($3=="cryfa") print;}' >> ${INWF}_${i}_FA.$INF;
-    done
+#    # For each dataset
+#    for i in $FASTA_DATASET; do
+#        sed "2,$ d" ${INWF}_FA.$INF > ${INWF}_${i}_FA.$INF;
+#        cat ${INWF}_FA.$INF | awk 'NR>1' \
+#          | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_FA.$INF;
+#
+#        # Extract from cryfa
+#        cat $result/COMP_${i}_FA.$INF | awk 'NR>1' \
+#          | awk 'BEGIN{}{if ($3=="cryfa") print;}' >> ${INWF}_${i}_FA.$INF;
+#    done
 
     # Total
     printf "Size(MB)\t$en\t$de\tEq\n" > ${INWF}_tot_FA.$INF;
@@ -188,16 +188,16 @@ function encResHumanReadable
     removeUpToRow=`echo $((removeFromRow-1))`
     sed "2,$removeUpToRow d" $INWF.tmp > ${INWF}_FQ.$INF;
 
-    # For each dataset
-    for i in $FASTQ_DATASET; do
-        sed "2,$ d" ${INWF}_FQ.$INF > ${INWF}_${i}_FQ.$INF;
-        cat ${INWF}_FQ.$INF | awk 'NR>1' \
-          | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_FQ.$INF;
-
-        # Extract from cryfa
-        cat $result/COMP_${i}_FQ.$INF | awk 'NR>1' \
-          | awk 'BEGIN{}{if ($3=="cryfa") print;}' >> ${INWF}_${i}_FQ.$INF;
-    done
+#    # For each dataset
+#    for i in $FASTQ_DATASET; do
+#        sed "2,$ d" ${INWF}_FQ.$INF > ${INWF}_${i}_FQ.$INF;
+#        cat ${INWF}_FQ.$INF | awk 'NR>1' \
+#          | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_FQ.$INF;
+#
+#        # Extract from cryfa
+#        cat $result/COMP_${i}_FQ.$INF | awk 'NR>1' \
+#          | awk 'BEGIN{}{if ($3=="cryfa") print;}' >> ${INWF}_${i}_FQ.$INF;
+#    done
 
     # Total
     printf "Size(MB)\t$en\t$de\tEq\n" > ${INWF}_tot_FQ.$INF;

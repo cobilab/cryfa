@@ -105,6 +105,9 @@ function compEncDecDecompress
     progMemoryStop $MEMPID \
                    $result_FLD/${upInComp}_${upInEnc}_CM__${inwf}_$ft    # Mem
 
+    # Wait 2 seconds
+    sleep 2s
+
     ### Encrypt
     cd ../$3
     compPath="../$1"    # Path of compressed file
@@ -123,6 +126,9 @@ function compEncDecDecompress
     progMemoryStop $MEMPID \
                    $result_FLD/${upInComp}_${upInEnc}_EnM__${inwf}_$ft   # Mem
 
+    # Wait 2 seconds
+    sleep 2s
+
     ### Decrypt
     progMemoryStart $deProg &
     MEMPID=$!
@@ -135,6 +141,9 @@ function compEncDecDecompress
 
     progMemoryStop $MEMPID \
                    $result_FLD/${upInComp}_${upInEnc}_DeM__${inwf}_$ft   # Mem
+
+    # Wait 2 seconds
+    sleep 2s
 
     ### Decompress
     cd ../$1
@@ -167,6 +176,9 @@ function compEncDecDecompress
 
     progMemoryStop $MEMPID \
                    $result_FLD/${upInComp}_${upInEnc}_DM__${inwf}_$ft    # Mem
+
+    # Wait 2 seconds
+    sleep 2s
 
     ### Verify if input and decompressed files are the same
     cmp $2 $in &> $result_FLD/${upInComp}_${upInEnc}_V__${inwf}_$ft;
