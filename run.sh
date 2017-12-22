@@ -86,10 +86,12 @@ RUN_CRYFA_THREADS=0
     # Results
     RESULTS_CRYFA_THR=0
 
+### Run different methods to check if they explore redundancy
+RUN_REDUNDANCY=0        # MFCompress, DELIMINATE, cryfa
 
 
 ################################################################################
-#################          D O   N O T   C H A N G E          ##################
+##################         D O   N O T   C H A N G E         ###################
 ################################################################################
 . script/par.sh    # Parameters
 
@@ -276,4 +278,17 @@ then
 
     ### Results
     if [[ $RESULTS_CRYFA_THR -eq 1 ]]; then  . $script/res_cryfa_thr.sh;  fi
+fi
+
+
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+#   Run different methods to check exploring redundancy
+#%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+if [[ $RUN_REDUNDANCY -eq 1 ]];
+then
+    ### Create a folder for results, if it doesn't already exist
+    if [[ ! -d $result  ]]; then  mkdir -p $result;  fi
+
+    ### Run & Results
+    . $script/run_res_redun.sh;
 fi

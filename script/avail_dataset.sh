@@ -14,7 +14,8 @@
 function isAvail
 {
     if [[ ! -e $1 ]]; then
-        echo "Warning: The file \"$1\" is not available.";
+        echo "Warning: The file \"$1\" is not available in" \
+             "\"$dataset/\" directory.";
         return;
     fi
 }
