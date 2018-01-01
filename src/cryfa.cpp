@@ -126,6 +126,8 @@ string InArgs::KEY_FILE_NAME   = "";
  */
 int main (int argc, char* argv[])
 {
+    std::ios::sync_with_stdio(false); // Turn off synchronizing C++ to C streams
+    
     InArgs     inArgsObj;
     Security   secObj;
     EnDecrypto cryptObj;
