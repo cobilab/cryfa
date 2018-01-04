@@ -7,58 +7,82 @@
           #######################################################
 #!/bin/bash
 
-RES="$result/REDUNDANCY.$INF"
-printf "Method\tSpecies\tStrain\t{C. Ratio}\n" > $RES
+CRYFA=1
+MFCOMPRESS=1
+DELIMINATE=1
 
-for s in E.coli; do
 
-for f in 13E0725; do
+#DATA_SET="A B F V P";
+DATA_SET="A B F V";
+printf "Method;Dataset;Size;CompSize;CRatio;1/CRatio\n" > red
 
-#for f in E.coli.strain.13E0725 E.coli.strain.13E0767 E.coli.strain.13E0780 \
-#         E.coli.sum0; do
-#
-#    if [[ ! -e $dataset/$redun/$f.$fasta ]]; then
-#        echo "Warning: The file \"$f.$fasta\" is not available in" \
-#             "\"$dataset/$redun/\" directory.";
-#        return;
-#    fi
-
-    inName="$s.strain.$f.$fasta"
-    in="../../$dataset/$redun/$inName"
-
-    # MFCompress
-    cd $progs/mfcompress
-    rm -f $f.mfc
-
-#    ./MFCompressC -o $inName.mfc  $in
-
-    origFilesize=`stat --printf="%s" $in`         # Original file size   (bytes)
-    compFileSize=`stat --printf="%s" $inName.mfc` # Compressed file size (bytes)
-#    ratio=`echo $origFilesize/$compFileSize | bc -l`
-
-#awk '{ print "mori"; }' > s
-
-ratio=`awk "BEGIN { printf "%s", $origFilesize/$compFileSize; }"`
-echo $ratio
-
-#    printf "MFCompress\t%s\t%s\t%s" "$s" "$f" "`awk 'BEGIN { print $origFilesize/$compFileSize; }'`" >> ../../$RES;
-#
-#      printf "MFCompress\t%s\t%s\t%.1f", $s, $f, $origFilesize;
-#    cat "../../$RES" | awk '{
-#      echo "MFCompress";
-#    }' > s
-
+### cryfa
+if [[ $CRYFA -eq 1 ]];
+then
+    cd progs/cryfa
+    echo "              %%%%%%%%%%%%%"
+    echo "%%%%%%%%%%%%%%%   CRYFA   %%%%%%%%%%%%%%%"
+    echo "              %%%%%%%%%%%%%"
+    for d in $DATA_SET; do
+        for i in ../../dataset/Redundancy/$d/*.fa; do
+            ./cryfa -k pass.txt -t 8 $i > $i.cryfa
+            in="${i##*/}"      # Input file name
+            inwf="${in%.*}"    # Input file name without filetype
+            origSize=`stat --printf="%s" $i`
+            compSize=`stat --printf="%s" $i.cryfa`
+            printf "cryfa;$d/$inwf;$origSize;$compSize;%s;%s\n" \
+                   "`echo "scale=5; $origSize/$compSize" | bc -l`" \
+                   "`echo "scale=5; $compSize/$origSize" | bc -l`" >> ../../red
+            rm -f $i.cryfa
+        done
+    done
     cd ../..
+fi
 
-#    # DELIMINATE
-#    cd $progs/delim
-#    rm -f $f.dlim
-#
-#    ./delim a ../../$dataset/$redun/$f.$fasta
-#
-#    mv ../../$dataset/$redun/$f.$fasta.dlim  .
-#
-#    cd ../..
-done
 
-done
+### MFCompress
+if [[ $MFCOMPRESS -eq 1 ]];
+then
+    cd progs/mfcompress
+    echo "            %%%%%%%%%%%%%%%%%%"
+    echo "%%%%%%%%%%%%%   MFCOMPRESS   %%%%%%%%%%%%%%%"
+    echo "            %%%%%%%%%%%%%%%%%%"
+    for d in $DATA_SET; do
+        for i in ../../dataset/Redundancy/$d/*.fa; do
+            ./MFCompressC -o $i.mfc $i;
+            in="${i##*/}"      # Input file name
+            inwf="${in%.*}"    # Input file name without filetype
+            origSize=`stat --printf="%s" $i`
+            compSize=`stat --printf="%s" $i.mfc`
+            printf "MFCompress;$d/$inwf;$origSize;$compSize;%s;%s\n" \
+                   "`echo "scale=5; $origSize/$compSize" | bc -l`" \
+                   "`echo "scale=5; $compSize/$origSize" | bc -l`" >> ../../red
+            rm -f $i.mfc
+        done
+    done
+    cd ../..
+fi
+
+
+### DELIMINATE
+if [[ $DELIMINATE -eq 1 ]];
+then
+    cd progs/delim
+    echo "            %%%%%%%%%%%%%%%%%%"
+    echo "%%%%%%%%%%%%%   DELIMINATE   %%%%%%%%%%%%%%%"
+    echo "            %%%%%%%%%%%%%%%%%%"
+    for d in $DATA_SET; do
+        for i in ../../dataset/Redundancy/$d/*.fa; do
+            ./delim a $i;
+            in="${i##*/}"      # Input file name
+            inwf="${in%.*}"    # Input file name without filetype
+            origSize=`stat --printf="%s" $i`
+            compSize=`stat --printf="%s" $i.dlim`
+            printf "DELIMINATE;$d/$inwf;$origSize;$compSize;%s;%s\n" \
+                   "`echo "scale=5; $origSize/$compSize" | bc -l`" \
+                   "`echo "scale=5; $compSize/$origSize" | bc -l`" >> ../../red
+            rm -f $i.dlim
+        done
+    done
+    cd ../..
+fi
