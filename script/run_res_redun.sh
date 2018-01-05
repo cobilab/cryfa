@@ -88,27 +88,3 @@ then
     done
     cd ../..
 fi
-
-
-
-
-
-#if [[ GECO -eq 1 ]];
-#then
-#    echo "            %%%%%%%%%%%%%%%%%%"
-#    echo "%%%%%%%%%%%%%   GECO   %%%%%%%%%%%%%%%"
-#    echo "            %%%%%%%%%%%%%%%%%%"
-#    for d in $DATA_SET; do
-#        for i in dataset/Redundancy/$d/*.fa; do
-#            ./GeCo -tm 6:1:0:0/0 -tm 13:10:1:0/0 -g 0.8 $i;
-#            in="${i##*/}"      # Input file name
-#            inwf="${in%.*}"    # Input file name without filetype
-#            origSize=`stat --printf="%s" $i`
-#            compSize=`stat --printf="%s" $i.co`
-#            printf "GECO\t$d\t$inwf\t$origSize\t$compSize\t%s\t%s\n" \
-#                   "`echo "scale=5; $origSize/$compSize" | bc -l`" \
-#                   "`echo "scale=5; $compSize/$origSize" | bc -l`" >> red
-#            rm -f $i.co
-#        done
-#    done
-#fi
