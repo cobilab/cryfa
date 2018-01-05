@@ -8,13 +8,13 @@
 #!/bin/bash
 
 CRYFA=1
-MFCOMPRESS=1
-DELIMINATE=1
+MFCOMPRESS=0
+DELIMINATE=0
 
 
 #DATA_SET="A B F V P";
-DATA_SET="A B F V";
-printf "Method;Dataset;Size;CompSize;CRatio;1/CRatio\n" > red
+DATA_SET="A";
+printf "Method;Category;Dataset;Size;CompSize;CRatio;CRatioRev\n" > red
 
 ### cryfa
 if [[ $CRYFA -eq 1 ]];
@@ -30,7 +30,7 @@ then
             inwf="${in%.*}"    # Input file name without filetype
             origSize=`stat --printf="%s" $i`
             compSize=`stat --printf="%s" $i.cryfa`
-            printf "cryfa;$d/$inwf;$origSize;$compSize;%s;%s\n" \
+            printf "cryfa;$d;$inwf;$origSize;$compSize;%s;%s\n" \
                    "`echo "scale=5; $origSize/$compSize" | bc -l`" \
                    "`echo "scale=5; $compSize/$origSize" | bc -l`" >> ../../red
             rm -f $i.cryfa
@@ -54,7 +54,7 @@ then
             inwf="${in%.*}"    # Input file name without filetype
             origSize=`stat --printf="%s" $i`
             compSize=`stat --printf="%s" $i.mfc`
-            printf "MFCompress;$d/$inwf;$origSize;$compSize;%s;%s\n" \
+            printf "MFCompress;$d;$inwf;$origSize;$compSize;%s;%s\n" \
                    "`echo "scale=5; $origSize/$compSize" | bc -l`" \
                    "`echo "scale=5; $compSize/$origSize" | bc -l`" >> ../../red
             rm -f $i.mfc
@@ -78,7 +78,7 @@ then
             inwf="${in%.*}"    # Input file name without filetype
             origSize=`stat --printf="%s" $i`
             compSize=`stat --printf="%s" $i.dlim`
-            printf "DELIMINATE;$d/$inwf;$origSize;$compSize;%s;%s\n" \
+            printf "DELIMINATE;$d;$inwf;$origSize;$compSize;%s;%s\n" \
                    "`echo "scale=5; $origSize/$compSize" | bc -l`" \
                    "`echo "scale=5; $compSize/$origSize" | bc -l`" >> ../../red
             rm -f $i.dlim
