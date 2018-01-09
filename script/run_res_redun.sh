@@ -38,6 +38,14 @@ then
         done
     done
     cd ../..
+
+    ### Split the results for A, B, F, V, P
+    for d in $DATA_SET; do
+        cd $result
+        cat REDUN-CRYFA.$INF | grep Method   > REDUN-CRYFA-$d;
+        cat REDUN-CRYFA.$INF | grep $'\t'$d >> REDUN-CRYFA-$d;
+        cd ..
+    done
 fi
 
 
@@ -66,6 +74,14 @@ then
         done
     done
     cd ../..
+
+    ### Split the results for A, B, F, V, P
+    for d in $DATA_SET; do
+        cd $result
+        cat REDUN-MFCOMPRESS.$INF | grep Method   > REDUN-MFCOMPRESS-$d;
+        cat REDUN-MFCOMPRESS.$INF | grep $'\t'$d >> REDUN-MFCOMPRESS-$d;
+        cd ..
+    done
 fi
 
 
@@ -94,4 +110,12 @@ then
         done
     done
     cd ../..
+
+    ### Split the results for A, B, F, V, P
+    for d in $DATA_SET; do
+        cd $result
+        cat REDUN-DELIMINATE.$INF | grep Method   > REDUN-DELIMINATE-$d;
+        cat REDUN-DELIMINATE.$INF | grep $'\t'$d >> REDUN-DELIMINATE-$d;
+        cd ..
+    done
 fi
