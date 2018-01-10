@@ -32,7 +32,7 @@ then
             origSize=`stat --printf="%s" $i`
             compSize=`stat --printf="%s" $i.cryfa`
             printf "cryfa\t$d\t$inwf\t$origSize\t$compSize\t%s\n"      \
-                   "`echo "scale=5; $compSize/($origSize*2)" | bc -l`" \
+                   "`echo "scale=5; ($compSize*8)/($origSize*2)" | bc -l`" \
                    >> ../../$result/REDUN-CRYFA.$INF
             rm -f $i.cryfa
         done
@@ -68,7 +68,7 @@ then
             origSize=`stat --printf="%s" $i`
             compSize=`stat --printf="%s" $i.mfc`
             printf "MFCompress\t$d\t$inwf\t$origSize\t$compSize\t%s\n" \
-                   "`echo "scale=5; $compSize/($origSize*2)" | bc -l`" \
+                   "`echo "scale=5; ($compSize*8)/($origSize*2)" | bc -l`" \
                    >> ../../$result/REDUN-MFCOMPRESS.$INF
             rm -f $i.mfc
         done
@@ -104,7 +104,7 @@ then
             origSize=`stat --printf="%s" $i`
             compSize=`stat --printf="%s" $i.dlim`
             printf "DELIMINATE\t$d\t$inwf\t$origSize\t$compSize\t%s\n" \
-                   "`echo "scale=5; $compSize/($origSize*2)" | bc -l`" \
+                   "`echo "scale=5; ($compSize*8)/($origSize*2)" | bc -l`" \
                    >> ../../$result/REDUN-DELIMINATE.$INF
             rm -f $i.dlim
         done
