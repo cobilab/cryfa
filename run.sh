@@ -86,8 +86,8 @@ RUN_CRYFA_THREADS=0
     # Results
     RESULTS_CRYFA_THR=0
 
-### Run different methods to check if they explore redundancy
-RUN_REDUNDANCY=1        # MFCompress, DELIMINATE, cryfa
+### Run different methods to explore redundancy
+RUN_REDUNDANCY=1        # cryfa, DELIMINATE, MFCompress
 
 
 ################################################################################
