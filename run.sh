@@ -88,6 +88,10 @@ RUN_CRYFA_THREADS=0
 
 ### Run different methods to explore redundancy
 RUN_REDUNDANCY=1        # cryfa, DELIMINATE, MFCompress
+    # Dataset (FASTA)
+    GET_DATASET_REDUN=1 #  GB free disk space
+    # Run & Results
+    RUN_RES_REDUN=0
 
 
 ################################################################################
@@ -289,6 +293,9 @@ then
     ### Create a folder for results, if it doesn't already exist
     if [[ ! -d $result  ]]; then  mkdir -p $result;  fi
 
+    ### Download datasets
+    if [[ $GET_DATASET_REDUN -eq 1 ]]; then  . $script/dl_dataset_redun.sh;  fi
+
     ### Run & Results
-    . $script/run_res_redun.sh;
+    if [[ $RUN_RES_REDUN -eq 1 ]];     then  . $script/run_res_redun.sh;     fi
 fi

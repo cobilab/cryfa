@@ -34,6 +34,10 @@ DENISOVA_FQ_URL="http://cdna.eva.mpg.de/denisova/raw_reads"
 #   Abbreviated names
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 HUMAN="HS"
+ARCHAEA="A"
+BACTERIA="B"
+FUNGI="F"
+PLANTS="P"
 VIRUSES="V"
 DENISOVA="DS"
 Synth="Synth"

@@ -11,7 +11,8 @@ CRYFA=1
 MFCOMPRESS=1
 DELIMINATE=1
 
-DATA_SET="A B F V P";
+
+DATA_SET="$ARCHAEA $BACTERIA $FUNGI $PLANTS $VIRUSES"
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #   cryfa
