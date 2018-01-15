@@ -22,7 +22,7 @@ then
     cd ../..
 fi
 
-### Download
+### Downloa
 for d in "$ARCHAEA Archaea" "$BACTERIA Bacteria" "$FUNGI Fungi" \
          "$PLANTS  Plants"  "$VIRUSES  Viruses"; do
     set $d
