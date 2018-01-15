@@ -45,8 +45,8 @@ for d in "$ARCHAEA Archaea" "$BACTERIA Bacteria" "$FUNGI Fungi" \
 
     rm -f Download$2.pl  goose-extractreadbypattern  goose-splitreads
 
-    # If you want to keep the original file, comment the command below. Take care of
-    # the disk space needed to save this file.
+    # If you want to keep the original file, comment the command below.
+    # Take care of disk space.
     rm -f $smallCapsD.fasta
 
     cd ../../..

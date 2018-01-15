@@ -88,7 +88,7 @@ RUN_CRYFA_THREADS=0
 
 ### Run different methods to explore redundancy
 RUN_REDUNDANCY=1        # cryfa, DELIMINATE, MFCompress
-    # Dataset (FASTA)
+    # Dataset (FASTA) -- archaea, bacteria, fungi, plants, viruses
     GET_DATASET_REDUN=1 # 12 GB free disk space
     # Run & Results
     RUN_RES_REDUN=1
