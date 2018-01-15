@@ -1,5 +1,5 @@
           #######################################################
-          #  Download Datasets for redundancy (FASTA) --  GB #
+          # Download Datasets to redundancy check (FASTA)--12 GB#
           #       - - - - - - - - - - - - - - - - - - - -       #
           #        Morteza Hosseini    seyedmorteza@ua.pt       #
           #        Diogo Pratas        pratas@ua.pt             #
@@ -7,35 +7,47 @@
           #######################################################
 #!/bin/bash
 
+DS_PATH="$dataset/$redun"    # Path of datasets
+GET_GOOSE=1
+
 ### Create a folder for redundancy exploration datasets
-if [[ ! -d $dataset/$redun ]]; then  mkdir -p $dataset/$redun;  fi
+if [[ ! -d $DS_PATH ]]; then  mkdir -p $DS_PATH;  fi
 
 ### Get 'goose' for splitting reads
-git clone https://github.com/pratas/goose.git
-cd goose/src/
-make
-cd ../..
-
-### Download
-# Archaea
-if [[ ! -d $dataset/$redun/$ARCHAEA ]];
+if [[ $GET_GOOSE -eq 1 ]];
 then
-    mkdir -p $dataset/$redun/$ARCHAEA;
+    git clone https://github.com/pratas/goose.git
+    cd goose/src/
+    make
+    cd ../..
 fi
 
-perl ./$script/DownloadArchaea.pl
+### Download
+for d in "$ARCHAEA Archaea" "$BACTERIA Bacteria" "$FUNGI Fungi" \
+         "$PLANTS  Plants"  "$VIRUSES  Viruses"; do
+    set $d
+    smallCapsD=`echo $2 | tr A-Z a-z`
 
-### Remove blank lines and move it to dataset folder
-cat archaea.fa | grep -Ev "^$" | ./goose/src/goose-splitreads "complete genome" \
-    > $dataset/$redun/$ARCHAEA
-rm -f archaea.fa
+    if [[ ! -d $DS_PATH/$1 ]]; then  mkdir -p $DS_PATH/$1;  fi
+    cd $DS_PATH/$1
+    cp ../../../$script/Download$2.pl \
+       ../../../$goose/src/goose-extractreadbypattern \
+       ../../../$goose/src/goose-splitreads .
 
-# Bacteria
-# Fungi
-# Plants
-# Viruses
-#perl ./$script/DownloadViruses.pl
+    perl ./Download$2.pl
 
-### Remove blank lines in downloaded file and move it to dataset folder
-#cat viruses.fa | grep -Ev "^$" > $dataset/$FA/$VIRUSES/viruses.$fasta
-#rm -f viruses.fa
+    # Remove blank lines and split reads by complete genomes
+    cat $smallCapsD.fa | grep -Ev "^$" \
+        | ./goose-extractreadbypattern "complete genome" | ./goose-splitreads
+
+    # Rename *.fa to *.fasta
+    for i in *.fa; do  mv $i ${i}sta;  done
+
+    rm -f Download$2.pl  goose-extractreadbypattern  goose-splitreads
+
+    # If you want to keep the original file, comment the command below. Take care of
+    # the disk space needed to save this file.
+    rm -f $smallCapsD.fasta
+
+    cd ../../..
+done

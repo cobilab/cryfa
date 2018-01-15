@@ -89,9 +89,9 @@ RUN_CRYFA_THREADS=0
 ### Run different methods to explore redundancy
 RUN_REDUNDANCY=1        # cryfa, DELIMINATE, MFCompress
     # Dataset (FASTA)
-    GET_DATASET_REDUN=1 #  GB free disk space
+    GET_DATASET_REDUN=1 # 12 GB free disk space
     # Run & Results
-    RUN_RES_REDUN=0
+    RUN_RES_REDUN=1
 
 
 ################################################################################
