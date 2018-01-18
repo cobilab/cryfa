@@ -214,7 +214,7 @@ void FASTQ::pack (const packfq_s &pkStruct, byte threadID)
     string   context;       // Output string
     string   line;
     ofstream pkfile(PK_FILENAME+to_string(threadID), std::ios_base::app);
-
+    
     // Lines ignored at the beginning
     for (u64 l = (u64) threadID*BlockLine; l--;)    IGNORE_THIS_LINE(in);
 

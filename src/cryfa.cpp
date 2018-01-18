@@ -183,7 +183,7 @@ int main (int argc, char* argv[])
                 cerr << "Option '" << (char) optopt << "' is invalid.\n"; break;
         }
     }
-
+    
     // Check password file
     if (!h_flag)    checkPass(inArgsObj.KEY_FILE_NAME, k_flag);
     
@@ -194,7 +194,7 @@ int main (int argc, char* argv[])
     if (d_flag)
     {
         cryptObj.decrypt();                                         // Decrypt
-
+        
         ifstream in(DEC_FILENAME);
         cerr << "Decompressing...\n";
         switch (in.peek())

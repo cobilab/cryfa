@@ -15,6 +15,7 @@
 #include "cryptopp/aes.h"
 #include "cryptopp/eax.h"
 #include "cryptopp/files.h"
+#include "cryptopp/gcm.h"
 
 using std::ifstream;
 using std::cerr;
@@ -28,6 +29,10 @@ using CryptoPP::CBC_Mode;
 using CryptoPP::StreamTransformationFilter;
 using CryptoPP::FileSource;
 using CryptoPP::FileSink;
+using CryptoPP::Redirector;
+using CryptoPP::AuthenticatedEncryptionFilter;
+using CryptoPP::AuthenticatedDecryptionFilter;
+using CryptoPP::GCM;
 
 std::mutex mutxSec;    /**< @brief Mutex */
 
@@ -59,31 +64,41 @@ string Security::extractPass () const
 void Security::encrypt ()
 {
     cerr << "Encrypting...\n";
-    
     auto startTime = high_resolution_clock::now();      // Start timer
+    
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
     memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
+//    const int TAG_SIZE = 12;
     
     const string pass = extractPass();
     buildKey(key, pass);
     buildIV(iv, pass);
-//    printIV(iv);      // Debug
-//    printKey(key);    // Debug
     
-    // Encrypt
-    const char* inFile = PCKD_FILENAME.c_str();
-    CBC_Mode<CryptoPP::AES>::Encryption
-            cbcEnc(key, (size_t) AES::DEFAULT_KEYLENGTH, iv);
-    FileSource(inFile, true,
-               new StreamTransformationFilter(cbcEnc, new FileSink(cout)));
+    try
+    {
+        const char* inFile = PCKD_FILENAME.c_str();
+        
+        GCM<AES>::Encryption e;
+        e.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
+        
+        FileSource(inFile, true, new AuthenticatedEncryptionFilter(e,
+                                          new FileSink(cout), false, TAG_SIZE));
+    }
+    catch (CryptoPP::InvalidArgument &e)
+    {
+        cerr << "Caught InvalidArgument...\n" << e.what() << "\n";
+    }
+    catch (CryptoPP::Exception &e)
+    {
+        cerr << "Caught Exception...\n" << e.what() << "\n";
+    }
     
     auto finishTime = high_resolution_clock::now();                 //Stop timer
     std::chrono::duration<double> elapsed = finishTime - startTime; //Dur. (sec)
-    
     cerr << (VERBOSE ? "Encryption done," : "Done,") << " in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
-    
+
     // Delete packed file
     const string pkdFileName = PCKD_FILENAME;
     std::remove(pkdFileName.c_str());
@@ -101,27 +116,16 @@ void Security::decrypt ()
 {
     ifstream in(IN_FILE_NAME);
     if (!in.good())
-    { cerr << "Error: failed opening \"" << IN_FILE_NAME << "\".\n";    exit(1); }
-    
-    // Watermark
-    string watermark = "#cryfa v" + VERSION + "\n";
-    
-    // Invalid encrypted file
-    string line;    getline(in, line);
-    if ((line + "\n") != watermark)
-    {
-        cerr << "Error: \"" << IN_FILE_NAME << "\" "
-             << "is not a valid file encrypted by cryfa.\n";
-        exit(1);
-    }
-    
+    { cerr << "Error: failed opening \"" << IN_FILE_NAME << "\".\n";  exit(1); }
+
     cerr << "Decrypting...\n";
-    
     auto startTime = high_resolution_clock::now();      // Start timer
+    
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
     memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
-    
+//    const int TAG_SIZE = 12;
+
     const string pass = extractPass();
     buildKey(key, pass);
     buildIV(iv, pass);
@@ -137,15 +141,32 @@ void Security::decrypt ()
 //        cerr << " block size: " << AES::BLOCKSIZE        << '\n';
 //    }
     
-    const char* outFile = DEC_FILENAME.c_str();
-    CBC_Mode<CryptoPP::AES>::Decryption
-            cbcDec(key, (size_t) AES::DEFAULT_KEYLENGTH, iv);
-    FileSource(in, true,
-               new StreamTransformationFilter(cbcDec, new FileSink(outFile)));
+    try
+    {
+        const char* outFile = DEC_FILENAME.c_str();
+        
+        GCM<AES>::Decryption d;
+        d.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
+        
+        AuthenticatedDecryptionFilter df(d, new FileSink(outFile),
+                        AuthenticatedDecryptionFilter::DEFAULT_FLAGS, TAG_SIZE);
+        FileSource(in, true, new Redirector(df /*, PASS_EVERYTHING */ ));
+    }
+    catch (CryptoPP::HashVerificationFilter::HashVerificationFailed &e)
+    {
+        cerr << "Caught HashVerificationFailed...\n" << e.what() << "\n";
+    }
+    catch (CryptoPP::InvalidArgument &e)
+    {
+        cerr << "Caught InvalidArgument...\n" << e.what() << "\n";
+    }
+    catch (CryptoPP::Exception &e)
+    {
+        cerr << "Caught Exception...\n" << e.what() << "\n";
+    }
     
     auto finishTime = high_resolution_clock::now();                 //Stop timer
     std::chrono::duration<double> elapsed = finishTime - startTime; //Dur. (sec)
-    
     cerr << (VERBOSE ? "Decryption done," : "Done,") << " in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
     

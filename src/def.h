@@ -21,10 +21,10 @@ using std::vector;
 
 
 // Version
-const string MONTH     = "11";
-const string YEAR      = "17";
+const string MONTH     = "01";
+const string YEAR      = "18";
 const string VERSION   = YEAR + "." + MONTH;
-const string DEV_YEARS = "2017";
+const string DEV_YEARS = "2017-2018";
 
 
 // Typedefs

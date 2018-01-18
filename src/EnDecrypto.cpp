@@ -767,9 +767,6 @@ void EnDecrypto::joinPackedFiles (const string &headers, const string &qscores,
     byte     t;                            // For threads
     ifstream pkFile[N_THREADS];
     
-    // Watermark for encrypted file
-    cout << "#cryfa v" + VERSION + "\n";
-    
     // Open packed file
     ofstream pckdFile(PCKD_FILENAME);
     switch (fT)
