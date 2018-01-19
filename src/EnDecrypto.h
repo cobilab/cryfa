@@ -42,6 +42,13 @@ public:
     void unpack_2B         (string&, string::iterator&, const vector<string>&);
     void unpack_1B         (string&, string::iterator&, const vector<string>&);
     
+    
+    
+    void shuffleFile ();
+    
+    void unshuffleFile ();
+    
+    
 protected:
     string Hdrs;           /**< @brief Max: 39 values */
     string QSs;            /**< @brief Max: 39 values */
@@ -61,10 +68,22 @@ protected:
                             const vector<string>&);
     void joinPackedFiles   (const string&, const string&, char, bool)     const;
     void joinUnpackedFiles ()                                             const;
+    
+    
+    
+    void joinShuffledFiles ()     const;
+    void joinUnshuffledFiles ()     const;
 
 private:
     inline void packLarge  (string&,const string&,const string&,const htbl_t&);
     char penaltySym        (char);
+    
+    
+    
+    
+    void shuffleBlock (byte);
+    
+    void unshuffleBlock     (byte);
 };
 
 #endif //CRYFA_ENDECRYPTO_H

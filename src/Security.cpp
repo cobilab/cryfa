@@ -77,7 +77,7 @@ void Security::encrypt ()
     try
     {
         const char* inFile = PCKD_FILENAME.c_str();
-
+        
         GCM<AES>::Encryption e;
         e.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
 
@@ -100,7 +100,7 @@ void Security::encrypt ()
 
     // Delete packed file
     const string pkdFileName = PCKD_FILENAME;
-    std::remove(pkdFileName.c_str());
+//    std::remove(pkdFileName.c_str());
 }
 
 /**
@@ -259,8 +259,8 @@ void Security::unshuffle (string::iterator &i, u64 size)
  */
 void Security::buildIV (byte *iv, const string &pass)
 {
-    std::uniform_int_distribution<rng_type::result_type> udist(0, 255);
-    rng_type rng;
+    std::uniform_int_distribution<rng_t::result_type> udist(0, 255);
+    rng_t rng;
     
     u32 sumEvenPass=0, sumOddPass=0;
     for (auto i=pass.begin(), j=pass.begin()+1;
@@ -276,7 +276,7 @@ void Security::buildIV (byte *iv, const string &pass)
     u64 seed=0;    for(char c : pass)  seed += c*newRand() + newRand();
 //    seed %= 2<<64;
     
-    const rng_type::result_type seedval = seed;
+    const rng_t::result_type seedval = seed;
     rng.seed(seedval);
     
     int i = AES::BLOCKSIZE;
@@ -295,8 +295,8 @@ void Security::buildIV (byte *iv, const string &pass)
  */
 void Security::buildKey (byte *key, const string &pwd)
 {
-    std::uniform_int_distribution<rng_type::result_type> udist(0, 255);
-    rng_type rng;
+    std::uniform_int_distribution<rng_t::result_type> udist(0, 255);
+    rng_t rng;
     
     u32 sumEvenPwd=0, sumOddPwd=0;
     for (auto i=pwd.begin(), j=pwd.begin()+1;
@@ -312,7 +312,7 @@ void Security::buildKey (byte *key, const string &pwd)
     u64 seed=0;    for(char c : pwd)  seed += c*newRand() + newRand();
 //    seed %= 2<<64;
     
-    const rng_type::result_type seedval = seed;
+    const rng_t::result_type seedval = seed;
     rng.seed(seedval);
     
     int i = AES::DEFAULT_KEYLENGTH;

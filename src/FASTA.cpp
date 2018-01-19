@@ -55,7 +55,7 @@ void FASTA::compress ()
     
     if (VERBOSE)    cerr << "Shuffling done!\n";
     
-    // Join partially packed files
+    // Join partially packed and/or shuffled files
     joinPackedFiles(headers, "", 'A', false);
     
     auto finishTime = high_resolution_clock::now();                 //Stop timer

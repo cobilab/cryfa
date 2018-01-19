@@ -61,12 +61,12 @@ inline char fileType (const string& inFileName)
 
     if (in.peek() == '+') { in.close();    return 'Q'; }            // FASTQ
 
-    // FASTA/Not valid
+    // FASTA or Not FASTA/FASTQ
     in.clear();   in.seekg(0, std::ios::beg); // Return to beginning of the file
     while (in.peek()!='>' && in.peek()!=EOF)    IGNORE_THIS_LINE(in);
 
     if (in.peek() == '>') { in.close();    return 'A'; }            // FASTA
-    else                  { in.close();    return 'n'; }            // Not valid
+    else                  { in.close();    return 'n'; }            // Not FASTA/FASTQ
 }
 
 /**
@@ -135,11 +135,11 @@ int main (int argc, char* argv[])
     FASTQ      fastqObj;
     
     inArgsObj.IN_FILE_NAME = argv[argc-1];    // Input file name
-
+    
     static int h_flag, v_flag, d_flag, s_flag;
     bool       k_flag = false;
-    int        c;                      // Deal with getopt_long()
-    int        option_index;           // Option index stored by getopt_long()
+    int        c;                     // Deal with getopt_long()
+    int        option_index;          // Option index stored by getopt_long()
     opterr = 0;  // Force getopt_long() to remain silent when it finds a problem
 
     static struct option long_options[] =
@@ -194,28 +194,31 @@ int main (int argc, char* argv[])
     if (d_flag)
     {
         cryptObj.decrypt();                                         // Decrypt
-        
+    
         ifstream in(DEC_FILENAME);
-        cerr << "Decompressing...\n";
         switch (in.peek())
         {
-            case (char) 127:    fastaObj.decompress();    break;    // FASTA
-            case (char) 126:    fastqObj.decompress();    break;    // FASTQ
-            default:                                      break;
+            case (char) 127:
+                cerr << "Decompressing...\n"; fastaObj.decompress(); break; //FA
+            case (char) 126:
+                cerr << "Decompressing...\n"; fastqObj.decompress(); break; //FQ
+            case (char) 125:                                        // NOT FA/FQ
+                cryptObj.unshuffleFile();                            break;
+            default:                                                 break;
         }
         in.close();
         
         return 0;
     }
     
-    // Compress + encrypt
+    // Compress and/or shuffle + encrypt
     if (!h_flag)
     {
         switch (fileType(inArgsObj.IN_FILE_NAME))
         {
             case 'A':  cerr<<"Compacting...\n";   fastaObj.compress();    break;
             case 'Q':  cerr<<"Compacting...\n";   fastqObj.compress();    break;
-            case 'n':
+            case 'n':                             cryptObj.shuffleFile(); break;
             default :  cerr<<"Error: \"" << inArgsObj.IN_FILE_NAME << "\" "
                            <<"is not a valid FASTA or FASTQ file.\n";
                        return 0;                                          break;

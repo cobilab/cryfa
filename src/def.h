@@ -33,7 +33,7 @@ typedef unsigned short                    u16;
 typedef unsigned int                      u32;
 typedef unsigned long long                u64;
 typedef long long                         i64;
-typedef std::mt19937                      rng_type;
+typedef std::mt19937                      rng_t;
 typedef std::unordered_map<string, u64>   htbl_t;
 typedef std::char_traits<char>::pos_type  pos_t; /**< @brief tellg(), tellp() */
 
@@ -82,8 +82,11 @@ struct POWER<B, 0> { static const u64 val = 1; };
 const   string THR_ID_HDR    = "THRD=";      /**< @brief Thread ID header */
 const   string PK_FILENAME   = "CRYFA_PK";   /**< @brief Packed file name */
 const   string PCKD_FILENAME = "CRYFA_PCKD"; /**< @brief Pckd f name - joined */
+const   string SH_FILENAME   = "CRYFA_SH";   /**< @brief Shuffed file name */
+const   string SHD_FILENAME  = "CRYFA_SHD";  /**< @brief Sh'ed f name -joined */
 const   string DEC_FILENAME  = "CRYFA_DEC";  /**< @brief Decrypted file name */
 const   string UPK_FILENAME  = "CRYFA_UPK";  /**< @brief Unpacked file name */
+const   string USH_FILENAME  = "CRYFA_USH";  /**< @brief Unshuffled file name */
 constexpr byte DEFAULT_N_THR = 8;   /**< @brief Default number of threads */
 constexpr u64  BLOCK_SIZE    = 8 * 1024;  /**< @brief To read from input file */
 constexpr byte C1            = 2;   /**< @brief       Cat 1  =  2 */
@@ -100,6 +103,7 @@ constexpr byte KEYLEN_C2     = 5;   /**< @brief 5 to 1 byte */
 constexpr byte KEYLEN_C3     = 3;   /**< @brief 3 to 1 byte */
 constexpr byte KEYLEN_C4     = 2;   /**< @brief 2 to 1 byte */
 constexpr byte KEYLEN_C5     = 3;   /**< @brief 3 to 2 byte */
+constexpr int  TAG_SIZE      = 12;  /**< @brief GCC mode auth enc */
 
 
 /**

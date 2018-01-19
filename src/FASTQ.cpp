@@ -83,7 +83,7 @@ void FASTQ::compress ()
 
     if (VERBOSE)    cerr << "Shuffling done!\n";
     
-    // Join partially packed files
+    // Join partially packed and/or shuffled files
     joinPackedFiles(headers, qscores, 'Q', hasJustPlus());
 
     auto finishTime = high_resolution_clock::now();                 //Stop timer

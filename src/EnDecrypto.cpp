@@ -7,11 +7,16 @@
  * @copyright The GNU General Public License v3.0
  */
 
+#include <thread>
 #include <fstream>
+#include <mutex>
+#include <iomanip>      // setw, setprecision
 #include <functional>
 #include <algorithm>
 #include "EnDecrypto.h"
 
+using std::chrono::high_resolution_clock;
+using std::thread;
 using std::vector;
 using std::cout;
 using std::cerr;
@@ -20,7 +25,9 @@ using std::ofstream;
 using std::getline;
 using std::to_string;
 using std::stoull;
+using std::setprecision;
 
+std::mutex mutxEnDe;    /**< @brief Mutex */
 
 /**
  * @brief      Build a hash table
@@ -754,6 +761,204 @@ void EnDecrypto::unpackSeq (string &out, string::iterator &i)
     }
 }
 
+
+
+
+
+
+
+/**
+ * @brief Shuffle the contents of input file with not FASTA/FASTQ format
+ */
+void EnDecrypto::shuffleFile ()
+{
+    cerr << "SURPRISE!\n"
+         << "This is not a FASTA/FASTQ file, but we encrypt it.\n";
+    
+    auto     startTime = high_resolution_clock::now();            // Start timer
+    thread   arrThread[N_THREADS];
+    byte     t;           // For threads
+
+    // Distribute file among threads, for reading and packing
+    for (t = 0; t != N_THREADS; ++t)
+        arrThread[t] = thread(&EnDecrypto::shuffleBlock, this,
+                              t);
+    for (t = 0; t != N_THREADS; ++t)
+        if (arrThread[t].joinable())    arrThread[t].join();
+    
+    // Join partially packed and/or shuffled files
+    joinShuffledFiles();
+
+    auto finishTime = high_resolution_clock::now();                 //Stop timer
+    std::chrono::duration<double> elapsed = finishTime - startTime; //Dur. (sec)
+    
+    cerr << (VERBOSE ? "Shuffling done" : "Done") << ", in "
+         << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
+
+    // Cout encrypted content
+    encrypt();
+}
+
+
+/**
+ * @brief Pack. '>' at the beginning of headers is not packed
+ * @param pkStruct  Pack structure
+ * @param threadID  Thread ID
+ */
+void EnDecrypto::shuffleBlock (byte threadID)
+{
+    ifstream in(IN_FILE_NAME);
+
+    string context;
+    char c;
+    
+    ofstream shfile(SH_FILENAME+to_string(threadID), std::ios_base::app);
+
+    // Characters ignored at the beginning
+    in.ignore((std::streamsize) (threadID*BLOCK_SIZE));
+
+    while (in.peek() != EOF)
+    {
+        context.clear();
+    
+        u64 bs = BLOCK_SIZE;
+        while (in.get(c) && bs--)
+        {
+            context += c;
+        }
+//        context += (char) 254;
+//cerr<<context;
+        
+        // Shuffle
+        if (!DISABLE_SHUFFLE)
+        {
+            mutxEnDe.lock();//----------------------------------------------------
+            if (shuffInProgress)    cerr << "Shuffling...\n";
+            shuffInProgress = false;
+            mutxEnDe.unlock();//--------------------------------------------------
+
+            shuffle(context);
+        }
+//        cerr<<'_'<<context;
+
+//        // For unshuffling: insert the size of packed context in the beginning
+//        string contextSize;
+//        contextSize += (char) 253;
+//        contextSize += to_string(context.size());
+//        contextSize += (char) 254;
+//        context.insert(0, contextSize);
+
+        // Write header containing threadID for each partially shuffled file
+        shfile << THR_ID_HDR << to_string(threadID) << '\n';
+        shfile << context << '\n';
+
+        // Ignore to go to the next related chunk
+        in.ignore((std::streamsize) ((N_THREADS-1)*BLOCK_SIZE));
+//
+//        for (u64 l = (u64) (N_THREADS-1)*BlockLine; l--;)  IGNORE_THIS_LINE(in);
+    }
+
+    shfile.close();
+    in.close();
+}
+
+
+
+
+/**
+ * @brief Unshuffle
+ */
+void EnDecrypto::unshuffleFile ()
+{
+    auto     startTime = high_resolution_clock::now();            // Start timer
+    thread   arrThread[N_THREADS];
+    byte     t;           // For threads
+    
+    // Distribute file among threads, for reading and packing
+    for (t = 0; t != N_THREADS; ++t)
+        arrThread[t] = thread(&EnDecrypto::unshuffleBlock, this,
+                              t);
+    for (t = 0; t != N_THREADS; ++t)
+        if (arrThread[t].joinable())    arrThread[t].join();
+    
+//    // Delete decrypted file
+////    std::remove(DEC_FILENAME.c_str());
+//
+//    // Join partially packed and/or shuffled files
+//    joinUnshuffledFiles();
+//
+//    auto finishTime = high_resolution_clock::now();                 //Stop timer
+//    std::chrono::duration<double> elapsed = finishTime - startTime; //Dur. (sec)
+//
+//    cerr << (VERBOSE ? "Unshuffling done" : "Done") << ", in "
+//         << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
+}
+
+
+
+/**
+ * @brief Pack. '>' at the beginning of headers is not packed
+ * @param pkStruct  Pack structure
+ * @param threadID  Thread ID
+ */
+void EnDecrypto::unshuffleBlock (byte threadID)
+{
+    ifstream in(DEC_FILENAME);
+    string unshText;
+    char c;
+    string::iterator i;
+//    u64 chunkSize;
+
+    ofstream ushfile(USH_FILENAME+to_string(threadID), std::ios_base::app);
+
+    // Characters ignored at the beginning + filetype char (125) + shuffed (128)
+    in.ignore((std::streamsize) (2 + threadID*BLOCK_SIZE));
+
+    while (in.peek() != EOF)
+    {
+        unshText.clear();
+
+        u64 bs = BLOCK_SIZE;
+        while (in.get(c) && bs--)
+        {
+            unshText += c;
+        }
+
+        i = unshText.begin();
+//        chunkSize = unshText.size();
+//        unshText += (char) 254;
+
+        // Unshuffle
+        if (shuffled)
+        {
+            mutxEnDe.lock();//----------------------------------------------------
+            if (shuffInProgress)    cerr << "Unshuffling...\n";
+            shuffInProgress = false;
+            mutxEnDe.unlock();//--------------------------------------------------
+        
+            unshuffle(i, unshText.size());
+        }
+
+
+        ushfile << THR_ID_HDR + to_string(threadID) << '\n';
+//
+//
+//        // Write header containing threadID for each partially shuffled file
+//        shfile << THR_ID_HDR << to_string(threadID) << '\n';
+        ushfile << unshText << '\n';
+
+        // Ignore to go to the next related chunk
+        in.ignore((std::streamsize) ((N_THREADS-1)*BLOCK_SIZE));
+////
+////        for (u64 l = (u64) (N_THREADS-1)*BlockLine; l--;)  IGNORE_THIS_LINE(in);
+    }
+
+    ushfile.close();
+    in.close();
+}
+
+
+
 /**
  * @brief Join partially packed files
  * @param headers   Headers
@@ -766,14 +971,13 @@ void EnDecrypto::joinPackedFiles (const string &headers, const string &qscores,
 {
     byte     t;                            // For threads
     ifstream pkFile[N_THREADS];
+    ofstream pckdFile(PCKD_FILENAME);      // Packed file
     
-    // Open packed file
-    ofstream pckdFile(PCKD_FILENAME);
     switch (fT)
     {
-        case 'A':   pckdFile << (char) 127;                   break;    // FASTA
-        case 'Q':   pckdFile << (char) 126;                   break;    // FASTQ
-        default :                                             break;
+        case 'A':   pckdFile << (char) 127;         break;    // FASTA
+        case 'Q':   pckdFile << (char) 126;         break;    // FASTQ
+        default :                                   break;
     }
     pckdFile << (!DISABLE_SHUFFLE ? (char) 128 : (char) 129);
     pckdFile << headers;
@@ -784,7 +988,7 @@ void EnDecrypto::joinPackedFiles (const string &headers, const string &qscores,
         pckdFile << (justPlus ? (char) 253 : '\n');
     }
     
-    // Open input files
+    // Input files
     for (t = 0; t != N_THREADS; ++t)   pkFile[t].open(PK_FILENAME+to_string(t));
     
     string line;
@@ -857,4 +1061,146 @@ void EnDecrypto::joinUnpackedFiles ()  const
         upkdFileName=UPK_FILENAME;    upkdFileName+=to_string(t);
         std::remove(upkdFileName.c_str());
     }
+}
+
+
+
+
+
+
+
+
+
+/**
+ * @brief Join partially shuffled files
+ * @param headers   Headers
+ * @param qscores   Quality scores
+ * @param fT        File type
+ * @param justPlus  If the third line of FASTQ contains only the '+' char
+ */
+void EnDecrypto::joinShuffledFiles () const
+{
+    byte     t;                            // For threads
+    ifstream shFile[N_THREADS];
+    ofstream shdFile(PCKD_FILENAME);       // Output Shuffled file
+    
+    shdFile  << (char) 125;
+    shdFile  << (!DISABLE_SHUFFLE ? (char) 128 : (char) 129);
+    
+    // Input files
+    for (t = 0; t != N_THREADS; ++t)   shFile[t].open(SH_FILENAME+to_string(t));
+    
+    string line;
+    bool   prevLineNotThrID;               // If previous line was "THR=" or not
+    while (!shFile[0].eof())
+    {
+        for (t = 0; t != N_THREADS; ++t)
+        {
+            prevLineNotThrID = false;
+            
+            while (getline(shFile[t], line).good() &&
+                   line != THR_ID_HDR+to_string(t))
+            {
+                if (prevLineNotThrID)   shdFile << '\n';
+                shdFile << line;
+                
+                prevLineNotThrID = true;
+            }
+            
+//            if (prevLineNotThrID)    shdFile << '\n';
+        }
+    }
+//    shdFile << (char) 252;
+    
+    // Close/delete input/output files
+    shdFile.close();
+    string shFileName;
+    for (t = 0; t != N_THREADS; ++t)
+    {
+        shFile[t].close();
+        shFileName=SH_FILENAME;    shFileName+=to_string(t);
+//        std::remove(shFileName.c_str());
+    }
+}
+
+/**
+ * @brief Join partially shuffled files
+ * @param headers   Headers
+ * @param qscores   Quality scores
+ * @param fT        File type
+ * @param justPlus  If the third line of FASTQ contains only the '+' char
+ */
+void EnDecrypto::joinUnshuffledFiles () const
+{
+    byte     t;                            // For threads
+    ifstream ushdFile[N_THREADS];
+    string   line;
+    for (t = N_THREADS; t--;)   ushdFile[t].open(USH_FILENAME+to_string(t));
+    
+    bool prevLineNotThrID;               // If previous line was "THR=" or not
+    while (!ushdFile[0].eof())
+    {
+        for (t = 0; t != N_THREADS; ++t)
+        {
+            prevLineNotThrID = false;
+            
+            while (getline(ushdFile[t], line).good() &&
+                   line != THR_ID_HDR+to_string(t))
+            {
+                if (prevLineNotThrID)
+                    cout << '\n';
+                cout << line;
+                
+                prevLineNotThrID = true;
+            }
+            
+            if (prevLineNotThrID)    cout << '\n';
+        }
+    }
+    
+    // Close/delete input/output files
+    string ushdFileName;
+    for (t = N_THREADS; t--;)
+    {
+        ushdFile[t].close();
+        ushdFileName=USH_FILENAME;    ushdFileName+=to_string(t);
+//        std::remove(ushdFileName.c_str());
+    }
+    
+    
+    
+//    byte     t;                           // For threads
+//    ifstream ushFile[N_THREADS];
+//    string   line;
+//    for (t = N_THREADS; t--;)    ushFile[t].open(UPK_FILENAME+to_string(t));
+//
+//    bool prevLineNotThrID;                // If previous line was "THRD=" or not
+//    while (!upkdFile[0].eof())
+//    {
+//        for (t = 0; t != N_THREADS; ++t)
+//        {
+//            prevLineNotThrID = false;
+//
+//            while (getline(upkdFile[t], line).good() &&
+//                   line != THR_ID_HDR+to_string(t))
+//            {
+//                if (prevLineNotThrID)
+//                    cout << '\n';
+//                cout << line;
+//
+//                prevLineNotThrID = true;
+//            }
+//
+//            if (prevLineNotThrID)    cout << '\n';
+//        }
+//    }
+//
+//    // Close/delete input/output files
+//    string upkdFileName;
+//    for (t = N_THREADS; t--;)
+//    {
+//        upkdFile[t].close();
+//        upkdFileName=UPK_FILENAME;    upkdFileName+=to_string(t);
+//        std::remove(upkdFileName.c_str());
+//    }
 }
