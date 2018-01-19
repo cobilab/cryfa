@@ -69,7 +69,6 @@ void Security::encrypt ()
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
     memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
-//    const int TAG_SIZE = 12;
     
     const string pass = extractPass();
     buildKey(key, pass);
@@ -78,10 +77,10 @@ void Security::encrypt ()
     try
     {
         const char* inFile = PCKD_FILENAME.c_str();
-        
+
         GCM<AES>::Encryption e;
         e.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
-        
+
         FileSource(inFile, true, new AuthenticatedEncryptionFilter(e,
                                           new FileSink(cout), false, TAG_SIZE));
     }
@@ -93,7 +92,7 @@ void Security::encrypt ()
     {
         cerr << "Caught Exception...\n" << e.what() << "\n";
     }
-    
+
     auto finishTime = high_resolution_clock::now();                 //Stop timer
     std::chrono::duration<double> elapsed = finishTime - startTime; //Dur. (sec)
     cerr << (VERBOSE ? "Encryption done," : "Done,") << " in "
@@ -124,7 +123,6 @@ void Security::decrypt ()
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
     memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
-//    const int TAG_SIZE = 12;
 
     const string pass = extractPass();
     buildKey(key, pass);
@@ -208,16 +206,15 @@ void Security::shuffSeedGen ()
 {
     const string pass = extractPass();
     
-    u64 passDigitsMult = 1;    // Multiplication of all pass digits
-    for (auto i = (u32) pass.size(); i--;)    passDigitsMult *= pass[i];
+    u32 passDigitsSum = 0;
+    for (char c : pass)    passDigitsSum += c;
     
     // Using old rand to generate the new rand seed
     u64 seed = 0;
     
     mutxSec.lock();//-----------------------------------------------------------
-    newSrand(20543 * (u32) passDigitsMult + 81647);
-    for (auto i = (byte) pass.size(); i--;)
-        seed += (u64) pass[i] * newRand();
+    newSrand(681493*passDigitsSum + 9148693);
+    for (char c : pass)    seed += (u64) (c*newRand());
     mutxSec.unlock();//---------------------------------------------------------
     
     seed_shared = seed;
@@ -241,7 +238,7 @@ void Security::shuffle (string &str)
 void Security::unshuffle (string::iterator &i, u64 size)
 {
     string shuffledStr;     // Copy of shuffled string
-    for (u64 j = 0; j != size; ++j, ++i)    shuffledStr += *i;
+    for (u64 j=0; j!=size; ++j, ++i)    shuffledStr += *i;
     string::iterator shIt = shuffledStr.begin();
     i -= size;
     
@@ -265,19 +262,30 @@ void Security::buildIV (byte *iv, const string &pass)
     std::uniform_int_distribution<rng_type::result_type> udist(0, 255);
     rng_type rng;
     
-    // Using old rand to generate the new rand seed
-    newSrand((u32) 7919 * pass[2] * pass[5] + 75653);
+    u32 sumEvenPass=0, sumOddPass=0;
+    for (auto i=pass.begin(), j=pass.begin()+1;
+         i<pass.end(), j<pass.end(); i+=2, j+=2)
+    {
+        sumEvenPass += *i;
+        sumOddPass  += *j;
+    }
     
-    u64 seed = 0;
-    for (auto i = (byte) pass.size(); i--;)
-        seed += ((u64) pass[i] * newRand()) + newRand();
-    seed %= 4294967295;
+    // Using old rand to generate the new rand seed
+    newSrand((u32) (459229*sumEvenPass + 3175661*sumOddPass + 15483683));
+    
+    u64 seed=0;    for(char c : pass)  seed += c*newRand() + newRand();
+//    seed %= 2<<64;
     
     const rng_type::result_type seedval = seed;
     rng.seed(seedval);
     
-    for (auto i = (u32) AES::BLOCKSIZE; i--;)
-        iv[i] = (byte) (udist(rng) % 255);
+    int i = AES::BLOCKSIZE;
+    u64 j = pass.size()-1;
+    while (i--)
+    {
+        iv[i] = (byte) ((udist(rng)*pass[j]) % 255);
+        if (j--==0)    j=pass.size()-1;
+    }
 }
 
 /**
@@ -290,19 +298,30 @@ void Security::buildKey (byte *key, const string &pwd)
     std::uniform_int_distribution<rng_type::result_type> udist(0, 255);
     rng_type rng;
     
+    u32 sumEvenPwd=0, sumOddPwd=0;
+    for (auto i=pwd.begin(), j=pwd.begin()+1;
+         i<pwd.end(), j<pwd.end(); i+=2, j+=2)
+    {
+        sumEvenPwd += *i;
+        sumOddPwd  += *j;
+    }
+    
     // Using old rand to generate the new rand seed
-    newSrand((u32) 24593 * (pwd[0] * pwd[2]) + 49157);
+    newSrand((u32) 24593 * (9819241*sumEvenPwd + 2597591*sumOddPwd + 648649));
 
-    u64 seed = 0;
-    for (auto i = (byte) pwd.size(); i--;)
-        seed += ((u64) pwd[i] * newRand()) + newRand();
-    seed %= 4294967295;
+    u64 seed=0;    for(char c : pwd)  seed += c*newRand() + newRand();
+//    seed %= 2<<64;
     
     const rng_type::result_type seedval = seed;
     rng.seed(seedval);
     
-    for (auto i = (u32) AES::DEFAULT_KEYLENGTH; i--;)
-        key[i] = (byte) (udist(rng) % 255);
+    int i = AES::DEFAULT_KEYLENGTH;
+    u64 j = pwd.size()-1;
+    while (i--)
+    {
+        key[i] = (byte) ((udist(rng)*pwd[j]) % 255);
+        if (j--==0)    j=pwd.size()-1;
+    }
 }
 
 /**
