@@ -100,7 +100,7 @@ void Security::encrypt ()
 
     // Delete packed file
     const string pkdFileName = PCKD_FILENAME;
-//    std::remove(pkdFileName.c_str());
+    std::remove(pkdFileName.c_str());
 }
 
 /**

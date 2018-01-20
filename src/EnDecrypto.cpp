@@ -820,14 +820,8 @@ void EnDecrypto::shuffleBlock (byte threadID)
     while (in.peek() != EOF)
     {
         context.clear();
-    
-        u64 bs = BLOCK_SIZE;
-        while (in.get(c) && bs--)
-        {
-            context += c;
-        }
-//        context += (char) 254;
-//cerr<<context;
+        for (u64 bs = BLOCK_SIZE; bs--;)
+            if (in.get(c))    context += c;
         
         // Shuffle
         if (!DISABLE_SHUFFLE)
@@ -839,14 +833,6 @@ void EnDecrypto::shuffleBlock (byte threadID)
 
             shuffle(context);
         }
-//        cerr<<'_'<<context;
-
-//        // For unshuffling: insert the size of packed context in the beginning
-//        string contextSize;
-//        contextSize += (char) 253;
-//        contextSize += to_string(context.size());
-//        contextSize += (char) 254;
-//        context.insert(0, contextSize);
 
         // Write header containing threadID for each partially shuffled file
         shfile << THR_ID_HDR << to_string(threadID) << '\n';
@@ -854,8 +840,6 @@ void EnDecrypto::shuffleBlock (byte threadID)
 
         // Ignore to go to the next related chunk
         in.ignore((std::streamsize) ((N_THREADS-1)*BLOCK_SIZE));
-//
-//        for (u64 l = (u64) (N_THREADS-1)*BlockLine; l--;)  IGNORE_THIS_LINE(in);
     }
 
     shfile.close();
@@ -881,17 +865,17 @@ void EnDecrypto::unshuffleFile ()
     for (t = 0; t != N_THREADS; ++t)
         if (arrThread[t].joinable())    arrThread[t].join();
     
-//    // Delete decrypted file
-////    std::remove(DEC_FILENAME.c_str());
-//
-//    // Join partially packed and/or shuffled files
-//    joinUnshuffledFiles();
-//
-//    auto finishTime = high_resolution_clock::now();                 //Stop timer
-//    std::chrono::duration<double> elapsed = finishTime - startTime; //Dur. (sec)
-//
-//    cerr << (VERBOSE ? "Unshuffling done" : "Done") << ", in "
-//         << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
+    // Delete decrypted file
+    std::remove(DEC_FILENAME.c_str());
+
+    // Join partially packed and/or shuffled files
+    joinUnshuffledFiles();
+
+    auto finishTime = high_resolution_clock::now();                 //Stop timer
+    std::chrono::duration<double> elapsed = finishTime - startTime; //Dur. (sec)
+
+    cerr << (VERBOSE ? "Unshuffling done" : "Done") << ", in "
+         << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
 }
 
 
@@ -907,26 +891,19 @@ void EnDecrypto::unshuffleBlock (byte threadID)
     string unshText;
     char c;
     string::iterator i;
-//    u64 chunkSize;
 
     ofstream ushfile(USH_FILENAME+to_string(threadID), std::ios_base::app);
 
     // Characters ignored at the beginning + filetype char (125) + shuffed (128)
     in.ignore((std::streamsize) (2 + threadID*BLOCK_SIZE));
-
+    
     while (in.peek() != EOF)
     {
         unshText.clear();
-
-        u64 bs = BLOCK_SIZE;
-        while (in.get(c) && bs--)
-        {
-            unshText += c;
-        }
-
+        for (u64 bs = BLOCK_SIZE; bs--;)
+            if (in.get(c))    unshText += c;
+        
         i = unshText.begin();
-//        chunkSize = unshText.size();
-//        unshText += (char) 254;
 
         // Unshuffle
         if (shuffled)
@@ -938,19 +915,14 @@ void EnDecrypto::unshuffleBlock (byte threadID)
         
             unshuffle(i, unshText.size());
         }
-
-
+        
+        // Write header containing threadID for each partially shuffled file
         ushfile << THR_ID_HDR + to_string(threadID) << '\n';
-//
-//
-//        // Write header containing threadID for each partially shuffled file
-//        shfile << THR_ID_HDR << to_string(threadID) << '\n';
+        
         ushfile << unshText << '\n';
 
         // Ignore to go to the next related chunk
         in.ignore((std::streamsize) ((N_THREADS-1)*BLOCK_SIZE));
-////
-////        for (u64 l = (u64) (N_THREADS-1)*BlockLine; l--;)  IGNORE_THIS_LINE(in);
     }
 
     ushfile.close();
@@ -1106,11 +1078,8 @@ void EnDecrypto::joinShuffledFiles () const
                 
                 prevLineNotThrID = true;
             }
-            
-//            if (prevLineNotThrID)    shdFile << '\n';
         }
     }
-//    shdFile << (char) 252;
     
     // Close/delete input/output files
     shdFile.close();
@@ -1119,7 +1088,7 @@ void EnDecrypto::joinShuffledFiles () const
     {
         shFile[t].close();
         shFileName=SH_FILENAME;    shFileName+=to_string(t);
-//        std::remove(shFileName.c_str());
+        std::remove(shFileName.c_str());
     }
 }
 
@@ -1153,8 +1122,6 @@ void EnDecrypto::joinUnshuffledFiles () const
                 
                 prevLineNotThrID = true;
             }
-            
-            if (prevLineNotThrID)    cout << '\n';
         }
     }
     
@@ -1164,43 +1131,6 @@ void EnDecrypto::joinUnshuffledFiles () const
     {
         ushdFile[t].close();
         ushdFileName=USH_FILENAME;    ushdFileName+=to_string(t);
-//        std::remove(ushdFileName.c_str());
+        std::remove(ushdFileName.c_str());
     }
-    
-    
-    
-//    byte     t;                           // For threads
-//    ifstream ushFile[N_THREADS];
-//    string   line;
-//    for (t = N_THREADS; t--;)    ushFile[t].open(UPK_FILENAME+to_string(t));
-//
-//    bool prevLineNotThrID;                // If previous line was "THRD=" or not
-//    while (!upkdFile[0].eof())
-//    {
-//        for (t = 0; t != N_THREADS; ++t)
-//        {
-//            prevLineNotThrID = false;
-//
-//            while (getline(upkdFile[t], line).good() &&
-//                   line != THR_ID_HDR+to_string(t))
-//            {
-//                if (prevLineNotThrID)
-//                    cout << '\n';
-//                cout << line;
-//
-//                prevLineNotThrID = true;
-//            }
-//
-//            if (prevLineNotThrID)    cout << '\n';
-//        }
-//    }
-//
-//    // Close/delete input/output files
-//    string upkdFileName;
-//    for (t = N_THREADS; t--;)
-//    {
-//        upkdFile[t].close();
-//        upkdFileName=UPK_FILENAME;    upkdFileName+=to_string(t);
-//        std::remove(upkdFileName.c_str());
-//    }
 }
