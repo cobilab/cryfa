@@ -83,7 +83,6 @@ const   string THR_ID_HDR    = "THRD=";      /**< @brief Thread ID header */
 const   string PK_FILENAME   = "CRYFA_PK";   /**< @brief Packed file name */
 const   string PCKD_FILENAME = "CRYFA_PCKD"; /**< @brief Pckd f name - joined */
 const   string SH_FILENAME   = "CRYFA_SH";   /**< @brief Shuffed file name */
-const   string SHD_FILENAME  = "CRYFA_SHD";  /**< @brief Sh'ed f name -joined */
 const   string DEC_FILENAME  = "CRYFA_DEC";  /**< @brief Decrypted file name */
 const   string UPK_FILENAME  = "CRYFA_UPK";  /**< @brief Unpacked file name */
 const   string USH_FILENAME  = "CRYFA_USH";  /**< @brief Unshuffled file name */

@@ -146,7 +146,7 @@ int main (int argc, char* argv[])
     {
         {"help",            no_argument, &h_flag, (int) 'h'},   // Help
         {"verbose",         no_argument, &v_flag, (int) 'v'},   // Verbose
-        {"disableShuffle",  no_argument, &s_flag, (int) 's'},   // D (un)shuffle
+        {"disable_shuffle", no_argument, &s_flag, (int) 's'},   // D (un)shuffle
         {"dec",             no_argument, &d_flag, (int) 'd'},   // Decomp mode
         {"key",       required_argument,       0,       'k'},   // Key file
         {"thread",    required_argument,       0,       't'},   // #threads >= 1
@@ -190,21 +190,20 @@ int main (int argc, char* argv[])
     // Verbose mode
     if (v_flag)     cerr << "Verbose mode on.\n";
     
-    // Decrypt + decompress
+    // Decrypt and/or unshuffle + decompress
     if (d_flag)
     {
         cryptObj.decrypt();                                         // Decrypt
-    
+        
         ifstream in(DEC_FILENAME);
         switch (in.peek())
         {
             case (char) 127:
-                cerr << "Decompressing...\n"; fastaObj.decompress(); break; //FA
+                cerr<<"Decompressing...\n";    fastaObj.decompress();     break;
             case (char) 126:
-                cerr << "Decompressing...\n"; fastqObj.decompress(); break; //FQ
-            case (char) 125:                                        // NOT FA/FQ
-                cryptObj.unshuffleFile();                            break;
-            default:                                                 break;
+                cerr<<"Decompressing...\n";    fastqObj.decompress();     break;
+            case (char) 125:                   cryptObj.unshuffleFile();  break;
+            default:                                                      break;
         }
         in.close();
         
