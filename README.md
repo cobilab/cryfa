@@ -1,5 +1,4 @@
-<p align="center"><img src="img/logo.png" alt="Cryfa" width="150" 
-border="0" /></p>
+<p align="center"><img src="img/logo.png" alt="Cryfa" width="150" border="0" /></p>
 <br>
 
 cryfa is a FASTA/FASTQ compression and encryption tool.
