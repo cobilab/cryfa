@@ -76,15 +76,12 @@ void Security::encrypt ()
     
     try
     {
-        const char* inFile = PCKD_FILENAME.c_str();
-//        const char* inFile =
-//                (DISABLE_SHUFFLE ? IN_FILE_NAME.c_str() : PCKD_FILENAME.c_str());
-    
         GCM<AES>::Encryption e;
         e.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
-
-        FileSource(inFile, true, new AuthenticatedEncryptionFilter(e,
-                                          new FileSink(cout), false, TAG_SIZE));
+    
+        FileSource(PCKD_FILENAME.c_str(), true,
+                   new AuthenticatedEncryptionFilter(e, new FileSink(cout),
+                                                     false, TAG_SIZE));
     }
     catch (CryptoPP::InvalidArgument &e)
     {

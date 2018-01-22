@@ -42,19 +42,20 @@ using std::string;
 using std::cout;
 using std::cerr;
 using std::ifstream;
+using std::wifstream;
 using std::setprecision;
 using std::chrono::high_resolution_clock;
 
 
 /**
- * @brief  Find file type: FASTA (A), FASTQ (Q), none (n)
+ * @brief  Find file type: FASTA (A), FASTQ (Q), not FASTA/FASTQ (n)
  * @param  inFileName  Input file name
  * @return A, Q or n
  */
 inline char fileType (const string& inFileName)
 {
-    char     c;
-    ifstream in(inFileName);
+    wchar_t c;
+    wifstream in(inFileName);
     
     if (!in.good())
     { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
@@ -71,7 +72,7 @@ inline char fileType (const string& inFileName)
     // FASTA or Not FASTA/FASTQ
     in.clear();   in.seekg(0, std::ios::beg); // Return to beginning of the file
     while (in.peek()!='>' && in.peek()!=EOF)    IGNORE_THIS_LINE(in);
-
+    
     if (in.peek() == '>') { in.close();    return 'A'; }            // FASTA
     else                  { in.close();    return 'n'; }            // Not FASTA/FASTQ
 }
@@ -86,7 +87,7 @@ inline void checkPass (const string& keyFileName, const bool k_flag)
     if (!k_flag) { cerr<< "Error: no password file has been set.\n";  exit(1); }
     else
     {
-        ifstream in(keyFileName);
+        wifstream in(keyFileName);
         
         if (in.peek() == EOF)
         {
@@ -103,9 +104,8 @@ inline void checkPass (const string& keyFileName, const bool k_flag)
         else
         {
             // Extract the password
-            char c;
-            string pass;
-            pass.clear();
+            wchar_t c;
+            string  pass;    pass.clear();
             while (in.get(c))    pass += c;
     
             if (pass.size() < 8)
@@ -216,7 +216,7 @@ int main (int argc, char* argv[])
 
         return 0;
     }
-
+    
     // Compress and/or shuffle + encrypt
     if (!h_flag)
     {

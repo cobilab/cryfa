@@ -602,7 +602,7 @@ void EnDecrypto::pack_1to1 (string &packed, const string &strIn,
  * @param  c  Input char
  * @return Input char or (char)10='\\n'
  */
-char EnDecrypto::penaltySym (char c)
+char EnDecrypto::penaltySym (char c) const
 {
     const char lookupTable[2] = {c, (char) 10};
     return lookupTable[c==(char) 254 || c==(char) 252];

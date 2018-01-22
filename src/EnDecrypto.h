@@ -67,7 +67,7 @@ protected:
 
 private:
     inline void packLarge (string&, const string&, const string&,const htbl_t&);
-    inline char penaltySym     (char);
+    inline char penaltySym     (char)                                     const;
     inline void shuffleBlock   (byte);
     inline void unshuffleBlock (byte);
 };
