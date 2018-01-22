@@ -817,7 +817,7 @@ void EnDecrypto::shuffleBlock (byte threadID)
     ofstream shfile(SH_FILENAME+to_string(threadID), std::ios_base::app);
     string   context;
     char     c;
-
+    
     // Characters ignored at the beginning
     in.ignore((std::streamsize) (threadID * BLOCK_SIZE));
 

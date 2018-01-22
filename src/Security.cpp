@@ -265,8 +265,8 @@ void Security::buildIV (byte *iv, const string &pass)
     rng_t rng;
     
     u32 sumEvenPass=0, sumOddPass=0;
-    for (auto i=pass.begin(), j=pass.begin()+1;
-         i<pass.end(), j<pass.end(); i+=2, j+=2)
+    for (auto i = pass.begin(), j = pass.begin()+1;
+         i < pass.end(), j < pass.end(); i+=2, j+=2)
     {
         sumEvenPass += *i;
         sumOddPass  += *j;
@@ -275,14 +275,15 @@ void Security::buildIV (byte *iv, const string &pass)
     // Using old rand to generate the new rand seed
     newSrand((u32) (459229*sumEvenPass + 3175661*sumOddPass + 15483683));
     
-    u64 seed=0;    for(char c : pass)  seed += c*newRand() + newRand();
-//    seed %= 2<<64;
+    u64 seed = 0;
+    for (auto i = pass.begin(); i < pass.end(); ++i)
+        seed += *i * newRand() + newRand();
     
     const rng_t::result_type seedval = seed;
     rng.seed(seedval);
     
     int i = AES::BLOCKSIZE;
-    u64 j = pass.size()-1;
+    u64 j = pass.size() - 1;
     while (i--)
     {
         iv[i] = (byte) ((udist(rng)*pass[j]) % 255);
@@ -310,9 +311,10 @@ void Security::buildKey (byte *key, const string &pwd)
     
     // Using old rand to generate the new rand seed
     newSrand((u32) 24593 * (9819241*sumEvenPwd + 2597591*sumOddPwd + 648649));
-
-    u64 seed=0;    for(char c : pwd)  seed += c*newRand() + newRand();
-//    seed %= 2<<64;
+    
+    u64 seed = 0;
+    for (auto i = pwd.begin(); i < pwd.end(); ++i)
+        seed += *i * newRand() + newRand();
     
     const rng_t::result_type seedval = seed;
     rng.seed(seedval);
