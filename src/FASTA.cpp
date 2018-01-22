@@ -46,24 +46,24 @@ void FASTA::compress ()
     
     // Set Hash table and pack function
     set_hashTbl_packFn(pkStruct, headers);
-    
+
     // Distribute file among threads, for reading and packing
     for (t = 0; t != N_THREADS; ++t)
         arrThread[t] = thread(&FASTA::pack, this, pkStruct, t);
     for (t = 0; t != N_THREADS; ++t)
         if (arrThread[t].joinable())    arrThread[t].join();
-    
+
     if (VERBOSE)    cerr << "Shuffling done!\n";
-    
+
     // Join partially packed and/or shuffled files
     joinPackedFiles(headers, "", 'A', false);
-    
+
     auto finishTime = high_resolution_clock::now();                 //Stop timer
     std::chrono::duration<double> elapsed = finishTime - startTime; //Dur. (sec)
-    
+
     cerr << (VERBOSE ? "Compaction done" : "Done") << ", in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
-    
+
     // Cout encrypted content
     encrypt();
 }
@@ -224,7 +224,7 @@ void FASTA::gatherHdrBs (string &headers)
     u32  maxBLen=0;           // Max length of each line of bases
     bool hChars[127];
     memset(hChars+32, false, 95);
-
+    
     ifstream in(IN_FILE_NAME);
     string   line;
     while (getline(in, line).good())
@@ -232,7 +232,7 @@ void FASTA::gatherHdrBs (string &headers)
         if (line[0] == '>')
             for (const char &c : line)    hChars[c] = true;
         else
-        if (line.size() > maxBLen)    maxBLen = (u32) line.size();
+            if (line.size() > maxBLen)    maxBLen = (u32) line.size();
     }
     in.close();
 

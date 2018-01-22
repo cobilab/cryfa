@@ -1,14 +1,16 @@
-<p align="center"><img src="img/logo.png" alt="Cryfa" width="150" border="0" /></p>
+<p align="center">
+<img src="img/logo.png" alt="Cryfa" width="150" border="0" /></p>
 <br>
 
 cryfa is a FASTA/FASTQ compression and encryption tool.
-It uses AES (Advanced Encryption Standard) for the purpose of encryption.
-cryfa can be applied to any FASTA or FASTQ file (DNA sequences, headers and
-quality-scores).
-Compacting 3 DNA bases into 1 char, it uses a fixed block size packing.
-Compared with general compression tools, it allows to decrease the file size by
-a factor of 3, without creating security problems such as those derived from 
-CRIME or BREACH attacks.
+It performs a fixed block size compression, by packing 3 DNA bases into
+1 char.
+For the purpose of encryption, it employs AES (Advanced Encryption Standard).
+cryfa is able to decrease the file size by a factor of 3, without creating 
+security problems such as those derived from CRIME or BREACH attacks.
+
+Although cryfa is specialized to FASTA/FASTQ files, but it is able to shuffle
+and encrypt, and not compress, other file types.
 
 
 ## INSTALL
@@ -42,7 +44,8 @@ If you want to compare cryfa with other methods, set the parameters in
 ./run.sh
 ```
 With this script, you can download the datasets, install the dependencies, 
-install the compression and encryption tools, run these tools, and finally, print the results.
+install the compression and encryption tools, run these tools, and finally,
+print the results.
 
 
 ### OPTIONS
@@ -59,9 +62,13 @@ SYNOPSIS
 SAMPLE
       Compress   & Encrypt:   ./cryfa -k pass.txt in.fq > comp     
       Decompress & Decrypt:   ./cryfa -k pass.txt -d comp > orig.fq
+      
+      Shuffle    & Encrypt:   ./cryfa -k pass.txt in.vcf > enc
+      Unshuffle  & Decrypt:   ./cryfa -k pass.txt -d enc > orig.vcf
 
 DESCRIPTION
       Compress and encrypt FASTA/FASTQ files.
+      Shuffle and encrypt any other file types.
 
       The KEY_FILE specifies a file including the password.
 
@@ -99,6 +106,7 @@ Computational Biology & Bioinformatics* (PACBB), Springer, June 2017.
 * [Release](https://github.com/pratas/cryfa/releases) 2: FASTA and FASTQ 
 handling.
 * [Release](https://github.com/pratas/cryfa/releases) 1: FASTA handling.
+
 
 ## ISSUES
 Please let us know if there is any 

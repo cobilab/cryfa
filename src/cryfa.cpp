@@ -31,6 +31,13 @@
 #include "FASTA.h"
 #include "FASTQ.h"
 
+#define __STDC_FORMAT_MACROS
+#if defined(_MSC_VER)
+#    include <io.h>
+#else
+#    include <unistd.h>
+#endif
+
 using std::string;
 using std::cout;
 using std::cerr;
@@ -108,7 +115,7 @@ inline void checkPass (const string& keyFileName, const bool k_flag)
                 in.close();
                 exit(1);
             }
-    
+            
             in.close();
         }
     }
@@ -127,15 +134,15 @@ string InArgs::KEY_FILE_NAME   = "";
 int main (int argc, char* argv[])
 {
     std::ios::sync_with_stdio(false); // Turn off synchronizing C++ to C streams
-    
+
     InArgs     inArgsObj;
     Security   secObj;
     EnDecrypto cryptObj;
     FASTA      fastaObj;
     FASTQ      fastqObj;
-    
+
     inArgsObj.IN_FILE_NAME = argv[argc-1];    // Input file name
-    
+
     static int h_flag, v_flag, d_flag, s_flag;
     bool       k_flag = false;
     int        c;                     // Deal with getopt_long()
@@ -172,7 +179,7 @@ int main (int argc, char* argv[])
                 k_flag = true;
                 inArgsObj.KEY_FILE_NAME = string(optarg);
                 break;
-                
+
             case 'h':  h_flag=1;    Help();                               break;
             case 'v':  v_flag=1;    inArgsObj.VERBOSE = true;             break;
             case 's':  s_flag=1;    inArgsObj.DISABLE_SHUFFLE = true;     break;
@@ -183,18 +190,18 @@ int main (int argc, char* argv[])
                 cerr << "Option '" << (char) optopt << "' is invalid.\n"; break;
         }
     }
-    
+
     // Check password file
     if (!h_flag)    checkPass(inArgsObj.KEY_FILE_NAME, k_flag);
-    
+
     // Verbose mode
     if (v_flag)     cerr << "Verbose mode on.\n";
-    
+
     // Decrypt and/or unshuffle + decompress
     if (d_flag)
     {
         cryptObj.decrypt();                                         // Decrypt
-        
+
         ifstream in(DEC_FILENAME);
         switch (in.peek())
         {
@@ -206,10 +213,10 @@ int main (int argc, char* argv[])
             default:                                                      break;
         }
         in.close();
-        
+
         return 0;
     }
-    
+
     // Compress and/or shuffle + encrypt
     if (!h_flag)
     {

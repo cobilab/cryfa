@@ -206,12 +206,18 @@ inline void Help ()
                                                                         << '\n'
        << "SAMPLE"                                                      << '\n'
        << "      Compress   & Encrypt:   ./cryfa -k pass.txt in.fq "
-       <<                                                      "> comp" << '\n'
+       <<                                                  "> comp"     << '\n'
        << "      Decompress & Decrypt:   ./cryfa -k pass.txt -d comp "
-       <<                                                   "> orig.fq" << '\n'
+       <<                                                  "> orig.fq"  << '\n'
+                                                                        << '\n'
+       << "      Shuffle    & Encrypt:   ./cryfa -k pass.txt in.vcf "
+       <<                                                  "> enc"      << '\n'
+       << "      Unshuffle  & Decrypt:   ./cryfa -k pass.txt -d enc "
+       <<                                                  "> orig.vcf" << '\n'
                                                                         << '\n'
        << "DESCRIPTION"                                                 << '\n'
        << "      Compress and encrypt FASTA/FASTQ files."               << '\n'
+       << "      Shuffle and encrypt any other file types."             << '\n'
                                                                         << '\n'
        << "      The KEY_FILE specifies a file including the password." << '\n'
                                                                         << '\n'
