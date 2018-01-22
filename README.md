@@ -9,8 +9,8 @@ For the purpose of encryption, it employs AES (Advanced Encryption Standard).
 cryfa is able to decrease the file size by a factor of 3, without creating 
 security problems such as those derived from CRIME or BREACH attacks.
 
-Although cryfa is specialized to FASTA/FASTQ files, but it is able to shuffle
-and encrypt, and not compress, other file types.
+Although cryfa is specialized to FASTA/FASTQ files, it is able to shuffle
+and encrypt any other text-based files.
 
 
 ## INSTALL
