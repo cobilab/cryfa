@@ -18,6 +18,7 @@
 #include "cryptopp/gcm.h"
 
 using std::ifstream;
+using std::wifstream;
 using std::cerr;
 using std::to_string;
 using std::chrono::high_resolution_clock;
@@ -43,9 +44,9 @@ std::mutex mutxSec;    /**< @brief Mutex */
  */
 string Security::extractPass () const
 {
-    ifstream in(KEY_FILE_NAME);
-    char     c;
-    string   pass;
+    wifstream in(KEY_FILE_NAME);
+    wchar_t   c;
+    string    pass;
     
     pass.clear();    while (in.get(c))  pass += c;
     
