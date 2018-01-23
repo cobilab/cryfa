@@ -192,8 +192,8 @@ inline void Help ()
 {
     cout                                                                << '\n'
        << "NAME"                                                        << '\n'
-       << "      cryfa v" << VERSION << " - FASTA/FASTQ compression "
-       <<                                              "and encryption" << '\n'
+       << "      cryfa v" << VERSION << " - FASTA/FASTQ encryption and "
+       <<                                                 "compression" << '\n'
                                                                         << '\n'
        << "AUTHORS"                                                     << '\n'
        << "      Morteza Hosseini    seyedmorteza@ua.pt"                << '\n'
@@ -210,14 +210,13 @@ inline void Help ()
        << "      Decompress & Decrypt:   ./cryfa -k pass.txt -d comp "
        <<                                                  "> orig.fq"  << '\n'
                                                                         << '\n'
-       << "      Shuffle    & Encrypt:   ./cryfa -k pass.txt in.vcf "
-       <<                                                  "> enc"      << '\n'
-       << "      Unshuffle  & Decrypt:   ./cryfa -k pass.txt -d enc "
-       <<                                                  "> orig.vcf" << '\n'
+       << "      Shuffle    & Encrypt:   ./cryfa -k pass.txt in > enc"  << '\n'
+       << "      Unshuffle  & Decrypt:   ./cryfa -k pass.txt -d enc > "
+       <<                                                        "orig" << '\n'
                                                                         << '\n'
        << "DESCRIPTION"                                                 << '\n'
        << "      Compress and encrypt FASTA/FASTQ files."               << '\n'
-       << "      Shuffle and encrypt any other file types."             << '\n'
+       << "      Shuffle and encrypt any other text-based files."       << '\n'
                                                                         << '\n'
        << "      The KEY_FILE specifies a file including the password." << '\n'
                                                                         << '\n'
