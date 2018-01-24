@@ -44,8 +44,8 @@ std::mutex mutxSec;    /**< @brief Mutex */
  */
 string Security::extractPass () const
 {
-    wifstream in(KEY_FILE_NAME);
-    wchar_t   c;
+    ifstream in(KEY_FILE_NAME);
+    char     c;
     string    pass;
     
     pass.clear();    while (in.get(c))  pass += c;

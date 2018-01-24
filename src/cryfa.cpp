@@ -87,7 +87,7 @@ inline void checkPass (const string& keyFileName, const bool k_flag)
     if (!k_flag) { cerr<< "Error: no password file has been set.\n";  exit(1); }
     else
     {
-        wifstream in(keyFileName);
+        ifstream in(keyFileName);
         
         if (in.peek() == EOF)
         {
@@ -104,8 +104,8 @@ inline void checkPass (const string& keyFileName, const bool k_flag)
         else
         {
             // Extract the password
-            wchar_t c;
-            string  pass;    pass.clear();
+            char   c;
+            string pass;    pass.clear();
             while (in.get(c))    pass += c;
     
             if (pass.size() < 8)
@@ -216,7 +216,7 @@ int main (int argc, char* argv[])
 
         return 0;
     }
-    
+
     // Compress and/or shuffle + encrypt
     if (!h_flag)
     {
@@ -230,6 +230,6 @@ int main (int argc, char* argv[])
                        return 0;                                          break;
         }
     }
-    
+
     return 0;
 }
