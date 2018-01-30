@@ -2,15 +2,14 @@
 <img src="img/logo.png" alt="Cryfa" width="150" border="0" /></p>
 <br>
 
-cryfa is a FASTA/FASTQ compression and encryption tool.
-It performs a fixed block size compression, by packing 3 DNA bases into
-1 char.
-For the purpose of encryption, it employs AES (Advanced Encryption Standard).
-cryfa is able to decrease the file size by a factor of 3, without creating 
-security problems such as those derived from CRIME or BREACH attacks.
-
-Although cryfa is specialized to FASTA/FASTQ files, it is able to shuffle
-and encrypt any other text-based files.
+cryfa is a secure encryptor of genomic data, and is also capable of 
+compressing FASTA and FASTQ sequences. For the purpose of authenticated 
+encryption, it employs AES (Advanced Encryption Standard) algorithm in GCM 
+mode (Galois/counter mode) of operation. In order to compress FASTA/FASTQ 
+files, It performs a fixed block size compression, by packing e.g. 3 DNA 
+bases into 1 char. cryfa is able to decrease the file size by a factor of 3,
+without creating security problems such as those derived from CRIME or BREACH
+attacks.
 
 
 ## INSTALL
