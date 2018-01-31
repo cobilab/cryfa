@@ -766,7 +766,7 @@ void EnDecrypto::unpackSeq (string &out, string::iterator &i)
  */
 void EnDecrypto::shuffleFile ()
 {
-    cerr << "This is not a FASTA/FASTQ file, but we encrypt it. :)\n";
+    cerr << "This is not a FASTA/FASTQ file and we just encrypt it.\n";
     
     if (!DISABLE_SHUFFLE)
     {
