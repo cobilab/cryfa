@@ -196,7 +196,7 @@ int main (int argc, char* argv[])
 
     // Verbose mode
     if (v_flag)     cerr << "Verbose mode on.\n";
-
+    
     // Decrypt and/or unshuffle + decompress
     if (d_flag)
     {
@@ -216,7 +216,7 @@ int main (int argc, char* argv[])
 
         return 0;
     }
-
+    
     // Compress and/or shuffle + encrypt
     if (!h_flag)
     {

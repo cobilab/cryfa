@@ -18,6 +18,8 @@ cd cryfa
 cmake .
 make
 ```
+Note, an already compiled version of cryfa is available for 64 bit Linux OS
+in the `bin/` directory.
 
 
 ## RUN
