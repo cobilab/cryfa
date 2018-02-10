@@ -21,7 +21,7 @@ using std::vector;
 
 
 // Version
-const string MONTH     = "01";
+const string MONTH     = "02";
 const string YEAR      = "18";
 const string VERSION   = YEAR + "." + MONTH;
 const string DEV_YEARS = "2017-2018";
@@ -192,8 +192,8 @@ inline void Help ()
 {
     cout                                                                << '\n'
        << "NAME"                                                        << '\n'
-       << "      cryfa v" << VERSION << " - FASTA/FASTQ encryption and "
-       <<                                                 "compression" << '\n'
+       << "      Cryfa v" << VERSION << " - "
+       <<                    "A secure encryption tool for genomic data"<< '\n'
                                                                         << '\n'
        << "AUTHORS"                                                     << '\n'
        << "      Morteza Hosseini    seyedmorteza@ua.pt"                << '\n'
@@ -210,13 +210,13 @@ inline void Help ()
        << "      Decompress & Decrypt:   ./cryfa -k pass.txt -d comp "
        <<                                                  "> orig.fq"  << '\n'
                                                                         << '\n'
-       << "      Shuffle    & Encrypt:   ./cryfa -k pass.txt in > enc"  << '\n'
-       << "      Unshuffle  & Decrypt:   ./cryfa -k pass.txt -d enc > "
+       << "      Encrypt:                ./cryfa -k pass.txt in > enc"  << '\n'
+       << "      Decrypt:                ./cryfa -k pass.txt -d enc > "
        <<                                                        "orig" << '\n'
                                                                         << '\n'
        << "DESCRIPTION"                                                 << '\n'
        << "      Compress and encrypt FASTA/FASTQ files."               << '\n'
-       << "      Shuffle and encrypt any other text-based files."       << '\n'
+       << "      Encrypt any text-based genomic data."                  << '\n'
                                                                         << '\n'
        << "      The KEY_FILE specifies a file including the password." << '\n'
                                                                         << '\n'

@@ -1,13 +1,13 @@
 /*%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
           <<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-          <     CRYFA :: FASTA/FASTQ compaction plus encryption     >
+          <    Cryfa :: A secure encryption tool for genomic data   >
           <<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
           <          Morteza Hosseini    seyedmorteza@ua.pt         >
           <          Diogo Pratas        pratas@ua.pt               >
           <          Armando J. Pinho    ap@ua.pt                   >
           <<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-          <     Copyright (C) 2017, IEETA, University of Aveiro     >
+          <   Copyright (C) 2017-2018, IEETA, University of Aveiro  >
           <<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
           
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -80,7 +80,7 @@ inline char fileType (const string& inFileName)
 /**
  * @brief  Check password taken from a file
  * @param  keyFileName  Name of the file containing the password
- * @param  k_flag       If '-k' is written in the command to run cryfa
+ * @param  k_flag       If '-k' is written in the command to run Cryfa
  */
 inline void checkPass (const string& keyFileName, const bool k_flag)
 {

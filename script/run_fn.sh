@@ -55,7 +55,7 @@ function printMethodName
       "BZIP2")                 echo "bzip2";;
       "MFCOMPRESS")            echo "MFCompress";;
       "DELIM"|"DELIMINATE")    echo "DELIMINATE";;
-      "CRYFA")                 echo "cryfa";;
+      "CRYFA")                 echo "Cryfa";;
       "FQZCOMP")               echo "fqzcomp";;
       "QUIP")                  echo "Quip";;
       "DSRC")                  echo "DSRC";;

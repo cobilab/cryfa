@@ -256,9 +256,9 @@ function compEncResHumanReadable
 #        cat ${INWF}_FA.$INF | awk 'NR>1' \
 #          | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_FA.$INF;
 #
-#        # Extract from cryfa
+#        # Extract from Cryfa
 #        cat $result/COMP_${i}_FA.$INF | awk 'NR>1' \
-#          | awk 'BEGIN{}{if ($3=="cryfa") print;}' >> ${INWF}_${i}_FA.$INF;
+#          | awk 'BEGIN{}{if ($3=="Cryfa") print;}' >> ${INWF}_${i}_FA.$INF;
 #    done
 
     # Total
@@ -272,9 +272,9 @@ function compEncResHumanReadable
           s=0;cenS=0;    cenTR=0;    cenTC=0;    dedTR=0;   dedTC=0;    eq=0;
       }
     }' >> ${INWF}_tot_FA.$INF
-    # Extract from cryfa
+    # Extract from Cryfa
     cat $result/COMP_tot_FA.$INF | awk 'NR>1' \
-      | awk 'BEGIN{}{if ($2=="cryfa") print;}' >> ${INWF}_tot_FA.$INF
+      | awk 'BEGIN{}{if ($2=="Cryfa") print;}' >> ${INWF}_tot_FA.$INF
 
     ### FASTQ
     # Details -- 1 row for headers and 1 row after all
@@ -287,9 +287,9 @@ function compEncResHumanReadable
 #        cat ${INWF}_FQ.$INF | awk 'NR>1' \
 #          | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_FQ.$INF;
 #
-#        # Extract from cryfa
+#        # Extract from Cryfa
 #        cat $result/COMP_${i}_FQ.$INF | awk 'NR>1' \
-#          | awk 'BEGIN{}{if ($3=="cryfa") print;}' >> ${INWF}_${i}_FQ.$INF;
+#          | awk 'BEGIN{}{if ($3=="Cryfa") print;}' >> ${INWF}_${i}_FQ.$INF;
 #    done
 
     # Total
@@ -303,9 +303,9 @@ function compEncResHumanReadable
           s=0;cenS=0;    cenTR=0;    cenTC=0;    dedTR=0;   dedTC=0;    eq=0;
       }
     }' >> ${INWF}_tot_FQ.$INF
-    # Extract from cryfa
+    # Extract from Cryfa
     cat $result/COMP_tot_FQ.$INF | awk 'NR>1' \
-      | awk 'BEGIN{}{if ($2=="cryfa") print;}' >> ${INWF}_tot_FQ.$INF
+      | awk 'BEGIN{}{if ($2=="Cryfa") print;}' >> ${INWF}_tot_FQ.$INF
 
     rm -f $INWF.tmp
 }

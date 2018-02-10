@@ -162,7 +162,7 @@ function compResHumanReadable
 
     ### FASTA
     # Details -- 1 row for headers and 1 row after all
-    FASTA_METHODS_SIZE=0    # Just when cryfa is the only compression method run
+    FASTA_METHODS_SIZE=0    # Just when Cryfa is the only compression method run
     removeFromRow=`echo $((FASTA_DATASET_SIZE*(FASTA_METHODS_SIZE+1)+1+1))`;
     sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_FA.$INF;
 

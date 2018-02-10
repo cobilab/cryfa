@@ -1,5 +1,5 @@
           #######################################################
-          #      Run cryfa with different number of threads     #
+          #      Run Cryfa with different number of threads     #
           #       - - - - - - - - - - - - - - - - - - - -       #
           #        Morteza Hosseini    seyedmorteza@ua.pt       #
           #        Diogo Pratas        pratas@ua.pt             #
@@ -23,7 +23,7 @@ CRYFA_THR_RUN=`seq -s' ' 1 $MAX_N_THR`;       # 1 2 3 ... $MAX_N_THR
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 #   Functions
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-### Run cryfa
+### Run Cryfa
 function runCryfa
 {
     result_FLD="../../$result"

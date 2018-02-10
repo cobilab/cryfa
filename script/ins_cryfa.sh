@@ -1,5 +1,5 @@
           #######################################################
-          #             Install cryfa -- FASTA/FASTQ            #
+          #                    Install Cryfa                    #
           #       - - - - - - - - - - - - - - - - - - - -       #
           #        Morteza Hosseini    seyedmorteza@ua.pt       #
           #        Diogo Pratas        pratas@ua.pt             #
