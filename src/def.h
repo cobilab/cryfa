@@ -21,7 +21,7 @@ using std::vector;
 
 
 // Version
-const string MONTH     = "02";
+const string MONTH     = "03";
 const string YEAR      = "18";
 const string VERSION   = YEAR + "." + MONTH;
 const string DEV_YEARS = "2017-2018";
@@ -205,9 +205,9 @@ inline void Help ()
        <<                                                "> [OUT_FILE]" << '\n'
                                                                         << '\n'
        << "SAMPLE"                                                      << '\n'
-       << "      Compress   & Encrypt:   ./cryfa -k pass.txt in.fq "
+       << "      Encrypt and Compact:    ./cryfa -k pass.txt in.fq "
        <<                                                  "> comp"     << '\n'
-       << "      Decompress & Decrypt:   ./cryfa -k pass.txt -d comp "
+       << "      Decrypt and Unpack:     ./cryfa -k pass.txt -d comp "
        <<                                                  "> orig.fq"  << '\n'
                                                                         << '\n'
        << "      Encrypt:                ./cryfa -k pass.txt in > enc"  << '\n'
@@ -215,7 +215,7 @@ inline void Help ()
        <<                                                        "orig" << '\n'
                                                                         << '\n'
        << "DESCRIPTION"                                                 << '\n'
-       << "      Compress and encrypt FASTA/FASTQ files."               << '\n'
+       << "      Compact & encrypt FASTA/FASTQ files."                  << '\n'
        << "      Encrypt any text-based genomic data."                  << '\n'
                                                                         << '\n'
        << "      The KEY_FILE specifies a file including the password." << '\n'
@@ -227,7 +227,7 @@ inline void Help ()
        << "           key file name -- MANDATORY"                       << '\n'
                                                                         << '\n'
        << "      -d,  --dec"                                            << '\n'
-       << "           decompress & decrypt"                             << '\n'
+       << "           decrypt & unpack"                                 << '\n'
                                                                         << '\n'
        << "      -v,  --verbose"                                        << '\n'
        << "           verbose mode (more information)"                  << '\n'
