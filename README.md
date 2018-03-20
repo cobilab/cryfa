@@ -102,9 +102,8 @@ Computational Biology & Bioinformatics* (PACBB), Springer, June 2017.
 
 
 ## RELEASES
-* [Release](https://github.com/pratas/cryfa/releases) 2: FASTA and FASTQ 
-handling.
-* [Release](https://github.com/pratas/cryfa/releases) 1: FASTA handling.
+* [Release](https://github.com/pratas/cryfa/releases) 2: Secure encryption of FASTA, FASTQ, VCF, SAM and BAM PLUS compacting FASTA and FASTQ.
+* [Release](https://github.com/pratas/cryfa/releases) 1: Encryption PLUS compacting FASTA.
 
 
 ## ISSUES
