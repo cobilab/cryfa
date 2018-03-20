@@ -5,7 +5,7 @@
 Cryfa is a secure encryption tool for genomic data, and is also capable of 
 compacting FASTA and FASTQ sequences. For the purpose of authenticated 
 encryption, it employs AES (Advanced Encryption Standard) algorithm in GCM 
-mode (Galois/counter mode) of operation. Cryfa is able to decrease the file 
+mode (Galois / counter mode) of operation. Cryfa is able to decrease the file 
 sizes by a factor of 3, without creating security problems such as those 
 derived from CRIME or BREACH attacks.
 
