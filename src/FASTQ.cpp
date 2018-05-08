@@ -12,7 +12,7 @@
 #include <mutex>
 #include <iomanip>      // setw, setprecision
 #include <cstring>
-#include "FASTQ.h"
+#include "FASTQ.hpp"
 
 using std::chrono::high_resolution_clock;
 using std::thread;

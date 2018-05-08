@@ -1,5 +1,5 @@
 /**
- * @file      Security.h
+ * @file      Security.hpp
  * @brief     Security
  * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
  * @author    Diogo Pratas      (pratas@ua.pt)
@@ -10,7 +10,7 @@
 #ifndef CRYFA_SECURITY_H
 #define CRYFA_SECURITY_H
 
-#include "def.h"
+#include "def.hpp"
 
 
 /**

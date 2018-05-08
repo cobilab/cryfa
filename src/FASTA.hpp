@@ -1,5 +1,5 @@
 /**
- * @file      FASTA.h
+ * @file      FASTA.hpp
  * @brief     Compression/Decompression of FASTA
  * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
  * @author    Diogo Pratas      (pratas@ua.pt)
@@ -10,8 +10,8 @@
 #ifndef CRYFA_FASTA_H
 #define CRYFA_FASTA_H
 
-#include "EnDecrypto.h"
-#include "Security.h"
+#include "EnDecrypto.hpp"
+#include "Security.hpp"
 
 
 /** @brief Packing FASTA */

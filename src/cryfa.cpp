@@ -25,11 +25,11 @@
 #include <getopt.h>
 #include <chrono>       // time
 #include <iomanip>      // setw, setprecision
-#include "def.h"
-#include "Security.h"
-#include "EnDecrypto.h"
-#include "FASTA.h"
-#include "FASTQ.h"
+#include "def.hpp"
+#include "Security.hpp"
+#include "EnDecrypto.hpp"
+#include "FASTA.hpp"
+#include "FASTQ.hpp"
 
 #define __STDC_FORMAT_MACROS
 #if defined(_MSC_VER)

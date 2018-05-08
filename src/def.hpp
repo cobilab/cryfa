@@ -1,5 +1,5 @@
 /**
- * @file      def.h
+ * @file      def.hpp
  * @brief     Definitions
  * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
  * @author    Diogo Pratas      (pratas@ua.pt)

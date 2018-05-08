@@ -1,5 +1,5 @@
 /**
- * @file      FASTQ.h
+ * @file      FASTQ.hpp
  * @brief     Compression/Decompression of FASTQ
  * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
  * @author    Diogo Pratas      (pratas@ua.pt)
@@ -10,8 +10,8 @@
 #ifndef CRYFA_FASTQ_H
 #define CRYFA_FASTQ_H
 
-#include "EnDecrypto.h"
-#include "Security.h"
+#include "EnDecrypto.hpp"
+#include "Security.hpp"
 
 
 /** @brief Packing FASTQ */

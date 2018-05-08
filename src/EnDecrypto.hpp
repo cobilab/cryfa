@@ -1,5 +1,5 @@
 /**
- * @file      EnDecrypto.h
+ * @file      EnDecrypto.hpp
  * @brief     Encryption/Decryption
  * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
  * @author    Diogo Pratas      (pratas@ua.pt)
@@ -10,8 +10,8 @@
 #ifndef CRYFA_ENDECRYPTO_H
 #define CRYFA_ENDECRYPTO_H
 
-#include "def.h"
-#include "Security.h"
+#include "def.hpp"
+#include "Security.hpp"
 
 using std::string;
 using std::vector;

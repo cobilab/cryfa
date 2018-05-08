@@ -13,7 +13,7 @@
 #include <iomanip>      // setw, setprecision
 #include <functional>
 #include <algorithm>
-#include "EnDecrypto.h"
+#include "EnDecrypto.hpp"
 
 using std::chrono::high_resolution_clock;
 using std::thread;

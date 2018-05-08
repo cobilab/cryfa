@@ -4,5 +4,8 @@ cmake_minimum_required(VERSION 3.3.2)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
 
-file(GLOB SOURCE_FILES "src/*.h" "src/*.hpp" "src/*.cpp" "src/cryptopp/*.cpp")
+file(GLOB SOURCE_FILES src/cryfa.cpp src/EnDecrypto.cpp src/FASTA.cpp
+                       src/FASTQ.cpp src/Security.cpp src/def.hpp
+                       "src/cryptopp/*.cpp")
+
 add_executable(cryfa ${SOURCE_FILES})
