@@ -21,21 +21,21 @@ using std::vector;
 
 
 // Version
-const string MONTH     = "03";
-const string YEAR      = "18";
-const string VERSION   = YEAR + "." + MONTH;
-const string DEV_YEARS = "2017-2018";
+static const string MONTH     = "05";
+static const string YEAR      = "18";
+static const string VERSION   = YEAR + "." + MONTH;
+static const string DEV_YEARS = "2017-2018";
 
 
 // Typedefs
-typedef unsigned char                     byte;
-typedef unsigned short                    u16;
-typedef unsigned int                      u32;
-typedef unsigned long long                u64;
-typedef long long                         i64;
-typedef std::mt19937                      rng_t;
-typedef std::unordered_map<string, u64>   htbl_t;
-typedef std::char_traits<char>::pos_type  pos_t; /**< @brief tellg(), tellp() */
+using byte   = unsigned char;
+using u16    = unsigned short;
+using u32    = unsigned int;
+using u64    = unsigned long long;
+using i64    = long long;
+using rng_t  = std::mt19937;
+using htbl_t = std::unordered_map<string, u64>;
+using pos_t  = std::char_traits<char>::pos_type; /**< @brief tellg(), tellp() */
 
 
 /** @brief Command line input arguments */
