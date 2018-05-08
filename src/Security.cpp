@@ -80,7 +80,7 @@ void Security::encrypt ()
         GCM<AES>::Encryption e;
         e.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
     
-        FileSource(PCKD_FILENAME.c_str(), true,
+        FileSource(PCKD_FNAME.c_str(), true,
                    new AuthenticatedEncryptionFilter(e, new FileSink(cout),
                                                      false, TAG_SIZE));
     }
@@ -99,7 +99,7 @@ void Security::encrypt ()
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
 
     // Delete packed file
-    const string pkdFileName = PCKD_FILENAME;
+    const string pkdFileName = PCKD_FNAME;
     std::remove(pkdFileName.c_str());
 }
 
@@ -141,7 +141,7 @@ void Security::decrypt ()
     
     try
     {
-        const char* outFile = DEC_FILENAME.c_str();
+        const char* outFile = DEC_FNAME.c_str();
         
         GCM<AES>::Decryption d;
         d.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));

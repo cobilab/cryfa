@@ -793,7 +793,7 @@ void EnDecrypto::shuffleFile ()
     else
     {
         ifstream inFile(IN_FILE_NAME);
-        ofstream pckdFile(PCKD_FILENAME);
+        ofstream pckdFile(PCKD_FNAME);
         
         pckdFile << (char) 125
                  << (!DISABLE_SHUFFLE ? (char) 128 : (char) 129);
@@ -814,7 +814,7 @@ void EnDecrypto::shuffleFile ()
 void EnDecrypto::shuffleBlock (byte threadID)
 {
     ifstream in(IN_FILE_NAME);
-    ofstream shfile(SH_FILENAME+to_string(threadID), std::ios_base::app);
+    ofstream shfile(SH_FNAME+to_string(threadID), std::ios_base::app);
     string   context;
     char     c;
     
@@ -856,7 +856,7 @@ void EnDecrypto::shuffleBlock (byte threadID)
  */
 void EnDecrypto::unshuffleFile ()
 {
-    ifstream in(DEC_FILENAME);
+    ifstream in(DEC_FNAME);
     in.ignore(1);    char c;  in.get(c);
     if (c == (char) 128)
     {
@@ -873,7 +873,7 @@ void EnDecrypto::unshuffleFile ()
             if (arrThread[t].joinable())  arrThread[t].join();
 
         // Delete decrypted file
-        std::remove(DEC_FILENAME.c_str());
+        std::remove(DEC_FNAME.c_str());
 
         // Join partially unshuffled files
         joinUnshuffledFiles();
@@ -890,7 +890,7 @@ void EnDecrypto::unshuffleFile ()
         cout << in.rdbuf();
         
         in.close();
-        std::remove(DEC_FILENAME.c_str());
+        std::remove(DEC_FNAME.c_str());
     }
     else
     {
@@ -905,8 +905,8 @@ void EnDecrypto::unshuffleFile ()
  */
 void EnDecrypto::unshuffleBlock (byte threadID)
 {
-    ifstream in(DEC_FILENAME);
-    ofstream ushfile(USH_FILENAME+to_string(threadID), std::ios_base::app);
+    ifstream in(DEC_FNAME);
+    ofstream ushfile(USH_FNAME+to_string(threadID), std::ios_base::app);
     string   unshText;
     char     c;
     string::iterator i;
@@ -958,7 +958,7 @@ void EnDecrypto::joinPackedFiles (const string &headers, const string &qscores,
 {
     byte     t;                            // For threads
     ifstream pkFile[N_THREADS];
-    ofstream pckdFile(PCKD_FILENAME);      // Packed file
+    ofstream pckdFile(PCKD_FNAME);      // Packed file
     
     switch (fT)
     {
@@ -976,7 +976,7 @@ void EnDecrypto::joinPackedFiles (const string &headers, const string &qscores,
     }
     
     // Input files
-    for (t = N_THREADS; t--;)    pkFile[t].open(PK_FILENAME+to_string(t));
+    for (t = N_THREADS; t--;)    pkFile[t].open(PK_FNAME+to_string(t));
     
     string line;
     bool   prevLineNotThrID;               // If previous line was "THR=" or not
@@ -1004,7 +1004,7 @@ void EnDecrypto::joinPackedFiles (const string &headers, const string &qscores,
     for (t = N_THREADS; t--;)
     {
         pkFile[t].close();
-        pkFileName=PK_FILENAME;    pkFileName+=to_string(t);
+        pkFileName=PK_FNAME;    pkFileName+=to_string(t);
         std::remove(pkFileName.c_str());
     }
 }
@@ -1017,7 +1017,7 @@ void EnDecrypto::joinUnpackedFiles ()  const
     byte     t;                           // For threads
     ifstream upkdFile[N_THREADS];
     string   line;
-    for (t = N_THREADS; t--;)    upkdFile[t].open(UPK_FILENAME+to_string(t));
+    for (t = N_THREADS; t--;)    upkdFile[t].open(UPK_FNAME+to_string(t));
     
     bool prevLineNotThrID;                // If previous line was "THRD=" or not
     while (!upkdFile[0].eof())
@@ -1045,7 +1045,7 @@ void EnDecrypto::joinUnpackedFiles ()  const
     for (t = N_THREADS; t--;)
     {
         upkdFile[t].close();
-        upkdFileName=UPK_FILENAME;    upkdFileName+=to_string(t);
+        upkdFileName=UPK_FNAME;    upkdFileName+=to_string(t);
         std::remove(upkdFileName.c_str());
     }
 }
@@ -1057,13 +1057,13 @@ void EnDecrypto::joinShuffledFiles () const
 {
     byte     t;                            // For threads
     ifstream shFile[N_THREADS];
-    ofstream shdFile(PCKD_FILENAME);       // Output Shuffled file
+    ofstream shdFile(PCKD_FNAME);       // Output Shuffled file
     
     shdFile << (char) 125;
     shdFile << (!DISABLE_SHUFFLE ? (char) 128 : (char) 129);
     
     // Input files
-    for (t = N_THREADS; t--;)    shFile[t].open(SH_FILENAME+to_string(t));
+    for (t = N_THREADS; t--;)    shFile[t].open(SH_FNAME+to_string(t));
     
     string line;
     bool   prevLineNotThrID;               // If previous line was "THR=" or not
@@ -1091,7 +1091,7 @@ void EnDecrypto::joinShuffledFiles () const
     for (t = N_THREADS; t--;)
     {
         shFile[t].close();
-        shFileName=SH_FILENAME;    shFileName+=to_string(t);
+        shFileName=SH_FNAME;    shFileName+=to_string(t);
         std::remove(shFileName.c_str());
     }
 }
@@ -1104,7 +1104,7 @@ void EnDecrypto::joinUnshuffledFiles () const
     byte     t;                          // For threads
     ifstream ushdFile[N_THREADS];
     string   line;
-    for (t = N_THREADS; t--;)    ushdFile[t].open(USH_FILENAME+to_string(t));
+    for (t = N_THREADS; t--;)    ushdFile[t].open(USH_FNAME+to_string(t));
     
     bool prevLineNotThrID;               // If previous line was "THR=" or not
     while (!ushdFile[0].eof())
@@ -1130,7 +1130,7 @@ void EnDecrypto::joinUnshuffledFiles () const
     for (t = N_THREADS; t--;)
     {
         ushdFile[t].close();
-        ushdFileName=USH_FILENAME;    ushdFileName+=to_string(t);
+        ushdFileName=USH_FNAME;    ushdFileName+=to_string(t);
         std::remove(ushdFileName.c_str());
     }
 }

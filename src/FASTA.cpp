@@ -134,7 +134,7 @@ void FASTA::pack (const packfa_s &pkStruct, byte threadID)
     packFP_t packHdr = pkStruct.packHdrFP;    // Function pointer
     ifstream in(IN_FILE_NAME);
     string   line, context, seq;
-    ofstream pkfile(PK_FILENAME+to_string(threadID), std::ios_base::app);
+    ofstream pkfile(PK_FNAME+to_string(threadID), std::ios_base::app);
 
     // Lines ignored at the beginning
     for (u64 l = (u64) threadID*BlockLine; l--;)    IGNORE_THIS_LINE(in);
@@ -258,7 +258,7 @@ void FASTA::decompress ()
     thread     arrThread[N_THREADS];// Array of threads
     byte       t;                   // For threads
     u64        offset;              // To traverse decompressed file
-    ifstream   in(DEC_FILENAME);
+    ifstream   in(DEC_FNAME);
     
     in.ignore(1);                   // Jump over decText[0]==(char) 127
     in.get(c);    shuffled = (c==(char) 128); // Check if file had been shuffled
@@ -303,7 +303,7 @@ void FASTA::decompress ()
     
     // Close/delete decrypted file
     in.close();
-    const string decFileName = DEC_FILENAME;
+    const string decFileName = DEC_FNAME;
     std::remove(decFileName.c_str());
     
     // Join partially unpacked files
@@ -368,12 +368,12 @@ void FASTA::unpackHS (const unpackfa_s &upkStruct, byte threadID)
     unpackFP_t unpackHdr = upkStruct.unpackHdrFP;    // Function pointer
     pos_t      begPos    = upkStruct.begPos;
     u64        chunkSize = upkStruct.chunkSize;
-    ifstream   in(DEC_FILENAME);
+    ifstream   in(DEC_FNAME);
     string     decText, chunkSizeStr;
     string::iterator i;
     char       c;
     pos_t      endPos;
-    ofstream   upkfile(UPK_FILENAME+to_string(threadID), std::ios_base::app);
+    ofstream   upkfile(UPK_FNAME+to_string(threadID), std::ios_base::app);
     string     upkhdrOut, upkSeqOut;
     
     while (in.peek() != EOF)
@@ -440,12 +440,12 @@ void FASTA::unpackHL (const unpackfa_s &upkStruct, byte threadID)
 {
     pos_t    begPos    = upkStruct.begPos;
     u64      chunkSize = upkStruct.chunkSize;
-    ifstream in(DEC_FILENAME);
+    ifstream in(DEC_FNAME);
     string   decText, chunkSizeStr;
     string::iterator i;
     char     c;
     pos_t    endPos;
-    ofstream upkfile(UPK_FILENAME+to_string(threadID), std::ios_base::app);
+    ofstream upkfile(UPK_FNAME+to_string(threadID), std::ios_base::app);
     string   upkHdrOut, upkSeqOut;
 
     while (in.peek() != EOF)

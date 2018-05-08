@@ -79,37 +79,37 @@ struct POWER<B, 0> { static const u64 val = 1; };
 
 
 // Constants
-const   string THR_ID_HDR    = "THRD=";      /**< @brief Thread ID header */
-const   string PK_FILENAME   = "CRYFA_PK";   /**< @brief Packed file name */
-const   string PCKD_FILENAME = "CRYFA_PCKD"; /**< @brief Pckd f name - joined */
-const   string SH_FILENAME   = "CRYFA_SH";   /**< @brief Shuffed file name */
-const   string DEC_FILENAME  = "CRYFA_DEC";  /**< @brief Decrypted file name */
-const   string UPK_FILENAME  = "CRYFA_UPK";  /**< @brief Unpacked file name */
-const   string USH_FILENAME  = "CRYFA_USH";  /**< @brief Unshuffled file name */
-constexpr byte DEFAULT_N_THR = 8;   /**< @brief Default number of threads */
-constexpr u64  BLOCK_SIZE    = 8 * 1024;  /**< @brief To read from input file */
-constexpr byte C1            = 2;   /**< @brief       Cat 1  =  2 */
-constexpr byte C2            = 3;   /**< @brief       Cat 2  =  3 */
-constexpr byte MIN_C3        = 4;   /**< @brief  4 <= Cat 3 <=  6 */
-constexpr byte MID_C3        = 5;
-constexpr byte MAX_C3        = 6;
-constexpr byte MIN_C4        = 7;   /**< @brief  7 <= Cat 4 <= 15 */
-constexpr byte MAX_C4        = 15;
-constexpr byte MIN_C5        = 16;  /**< @brief 16 <= Cat 5 <= 39 */
-constexpr byte MAX_C5        = 39;
-constexpr byte KEYLEN_C1     = 7;   /**< @brief 7 to 1 byte. Build hash table */
-constexpr byte KEYLEN_C2     = 5;   /**< @brief 5 to 1 byte */
-constexpr byte KEYLEN_C3     = 3;   /**< @brief 3 to 1 byte */
-constexpr byte KEYLEN_C4     = 2;   /**< @brief 2 to 1 byte */
-constexpr byte KEYLEN_C5     = 3;   /**< @brief 3 to 2 byte */
-constexpr int  TAG_SIZE      = 12;  /**< @brief GCC mode auth enc */
+static const string THR_ID_HDR = "THRD=";     /**< @brief Thread ID header */
+static const string PK_FNAME   = "CRYFA_PK";  /**< @brief Packed file name */
+static const string PCKD_FNAME = "CRYFA_PCKD";/**< @brief Pckd f name - joined*/
+static const string SH_FNAME   = "CRYFA_SH";  /**< @brief Shuffed file name */
+static const string DEC_FNAME  = "CRYFA_DEC"; /**< @brief Decrypted file name */
+static const string UPK_FNAME  = "CRYFA_UPK"; /**< @brief Unpacked file name */
+static const string USH_FNAME  = "CRYFA_USH"; /**< @brief Unshuffled file name*/
+constexpr byte DEFAULT_N_THR   = 8;   /**< @brief Default number of threads */
+constexpr u64  BLOCK_SIZE      = 8 * 1024; /**< @brief To read from input file*/
+constexpr byte C1              = 2;   /**< @brief       Cat 1  =  2 */
+constexpr byte C2              = 3;   /**< @brief       Cat 2  =  3 */
+constexpr byte MIN_C3          = 4;   /**< @brief  4 <= Cat 3 <=  6 */
+constexpr byte MID_C3          = 5;
+constexpr byte MAX_C3          = 6;
+constexpr byte MIN_C4          = 7;   /**< @brief  7 <= Cat 4 <= 15 */
+constexpr byte MAX_C4          = 15;
+constexpr byte MIN_C5          = 16;  /**< @brief 16 <= Cat 5 <= 39 */
+constexpr byte MAX_C5          = 39;
+constexpr byte KEYLEN_C1       = 7;   /**< @brief 7 to 1 byte. Build hash table */
+constexpr byte KEYLEN_C2       = 5;   /**< @brief 5 to 1 byte */
+constexpr byte KEYLEN_C3       = 3;   /**< @brief 3 to 1 byte */
+constexpr byte KEYLEN_C4       = 2;   /**< @brief 2 to 1 byte */
+constexpr byte KEYLEN_C5       = 3;   /**< @brief 3 to 2 byte */
+constexpr int  TAG_SIZE        = 12;  /**< @brief GCC mode auth enc */
 
 
 /**
  * @brief Lookup table for unpacking -- 216 elements
  * @hideinitializer
  */
-const vector<string> DNA_UNPACK =
+static const vector<string> DNA_UNPACK
 {
     "AAA", "AAC", "AAG", "AAT", "AAN", "AAX", "ACA", "ACC", "ACG", "ACT", "ACN",
     "ACX", "AGA", "AGC", "AGG", "AGT", "AGN", "AGX", "ATA", "ATC", "ATG", "ATT",
@@ -137,7 +137,7 @@ const vector<string> DNA_UNPACK =
  * @brief Hash table for packing
  * @hideinitializer
  */
-const htbl_t DNA_MAP =
+static const htbl_t DNA_MAP
 {
     {"AAA",   0}, {"AAC",   1}, {"AAG",   2}, {"AAT",   3}, {"AAN",   4},
     {"AAX",   5}, {"ACA",   6}, {"ACC",   7}, {"ACG",   8}, {"ACT",   9},

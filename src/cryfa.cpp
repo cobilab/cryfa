@@ -52,7 +52,7 @@ using std::chrono::high_resolution_clock;
  * @param  inFileName  Input file name
  * @return A, Q or n
  */
-inline char fileType (const string& inFileName)
+inline char file_type (const string &inFileName)
 {
     wchar_t c;
     wifstream in(inFileName);
@@ -80,9 +80,9 @@ inline char fileType (const string& inFileName)
 /**
  * @brief  Check password taken from a file
  * @param  keyFileName  Name of the file containing the password
- * @param  k_flag       If '-k' is written in the command to run Cryfa
+ * @param  k_flag       If '-k' is entered by the user, for running Cryfa
  */
-inline void checkPass (const string& keyFileName, const bool k_flag)
+inline void check_pass (const string &keyFileName, const bool k_flag)
 {
     if (!k_flag) { cerr<< "Error: no password file has been set.\n";  exit(1); }
     else
@@ -192,7 +192,8 @@ int main (int argc, char* argv[])
     }
 
     // Check password file
-    if (!h_flag)    checkPass(inArgsObj.KEY_FILE_NAME, k_flag);
+    if (!h_flag)
+      check_pass(inArgsObj.KEY_FILE_NAME, k_flag);
 
     // Verbose mode
     if (v_flag)     cerr << "Verbose mode on.\n";
@@ -202,7 +203,7 @@ int main (int argc, char* argv[])
     {
         cryptObj.decrypt();                                         // Decrypt
 
-        ifstream in(DEC_FILENAME);
+        ifstream in(DEC_FNAME);
         switch (in.peek())
         {
             case (char) 127:
@@ -220,7 +221,7 @@ int main (int argc, char* argv[])
     // Compress and/or shuffle + encrypt
     if (!h_flag)
     {
-        switch (fileType(inArgsObj.IN_FILE_NAME))
+        switch (file_type(inArgsObj.IN_FILE_NAME))
         {
             case 'A':  cerr<<"Compacting...\n";   fastaObj.compress();    break;
             case 'Q':  cerr<<"Compacting...\n";   fastqObj.compress();    break;
