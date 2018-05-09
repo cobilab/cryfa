@@ -46,9 +46,9 @@ string Security::extractPass () const
 {
     ifstream in(KEY_FILE_NAME);
     char     c;
-    string    pass;
+    string   pass;
     
-    pass.clear();    while (in.get(c))  pass += c;
+    while (in.get(c))  pass += c;
     
     in.close();
     return pass;
