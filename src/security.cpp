@@ -11,7 +11,7 @@
 #include <mutex>
 #include <cstring>
 #include <iomanip>      // setw, setprecision
-#include "Security.hpp"
+#include "security.hpp"
 #include "cryptopp/aes.h"
 #include "cryptopp/eax.h"
 #include "cryptopp/files.h"
@@ -283,37 +283,83 @@ void Security::buildIV (byte *iv, const string &pass)
  * @param key  Key
  * @param pwd  password
  */
+template <typename T, typename Iter>
+T accum_even (Iter first, Iter last, T init) {
+  for (; first < last; first+=2)
+    init += *first;
+  return init;
+};
+
+template <typename T, typename Iter>
+T accum_odd (Iter first, Iter last, T init) {
+  for (++first; first < last; first+=2)
+    init += *first;
+  return init;
+};
+
+
 void Security::buildKey (byte *key, const string &pwd)
 {
-    std::uniform_int_distribution<rng_t::result_type> udist(0, 255);
-    rng_t rng;
-    
-    u32 sumEvenPwd=0, sumOddPwd=0;
-    for (auto i=pwd.begin(), j=pwd.begin()+1;
-         i<pwd.end(), j<pwd.end(); i+=2, j+=2)
-    {
-        sumEvenPwd += *i;
-        sumOddPwd  += *j;
-    }
-    
-    // Using old rand to generate the new rand seed
-    newSrand((u32) 24593 * (9819241*sumEvenPwd + 2597591*sumOddPwd + 648649));
-    
-    u64 seed = 0;
-    for (auto i = pwd.begin(); i < pwd.end(); ++i)
-        seed += *i * newRand() + newRand();
-    
-    const rng_t::result_type seedval = seed;
-    rng.seed(seedval);
-    
-    int i = AES::DEFAULT_KEYLENGTH;
-    u64 j = pwd.size()-1;
-    while (i--)
-    {
-        key[i] = (byte) ((udist(rng)*pwd[j]) % 255);
-        if (j--==0)    j=pwd.size()-1;
-    }
+  std::uniform_int_distribution<rng_t::result_type> udist(0, 255);
+  rng_t rng;
+  
+//  u32 sumEvenPwd=0, sumOddPwd=0;
+//  for (auto i = pwd.begin(), j = pwd.begin()+1;
+//       i<pwd.end(), j<pwd.end(); i += 2, j += 2) {
+//    sumEvenPwd += *i;
+//    sumOddPwd += *j;
+//  }
+  const auto sumEvenPwd = accum_even(pwd.begin(), pwd.end(), u32(0));
+  const auto sumOddPwd  = accum_odd(pwd.begin(), pwd.end(), u32(0));
+  
+  // Using old rand to generate the new rand seed
+  newSrand((u32) 24593*(9819241*sumEvenPwd+2597591*sumOddPwd+648649));
+  
+  u64 seed = 0;
+  for (char c : pwd)
+    seed += c*newRand()+newRand();
+  
+  rng.seed(static_cast<rng_t::result_type>(seed));
+  
+  int i = AES::DEFAULT_KEYLENGTH;
+  u64 j = pwd.size()-1;
+  while (i--) {
+    key[i] = (byte) ((udist(rng)*pwd[j])%255);
+    if (j-- == 0)
+      j = pwd.size()-1;
+  }
 }
+
+//void Security::buildKey (byte *key, const string &pwd)
+//{
+//    std::uniform_int_distribution<rng_t::result_type> udist(0, 255);
+//    rng_t rng;
+//
+//    u32 sumEvenPwd=0, sumOddPwd=0;
+//    for (auto i=pwd.begin(), j=pwd.begin()+1;
+//         i<pwd.end(), j<pwd.end(); i+=2, j+=2)
+//    {
+//        sumEvenPwd += *i;
+//        sumOddPwd  += *j;
+//    }
+//
+//    // Using old rand to generate the new rand seed
+//    newSrand((u32) 24593 * (9819241*sumEvenPwd + 2597591*sumOddPwd + 648649));
+//
+//    u64 seed = 0;
+//    for (char c : pwd)
+//        seed += c * newRand() + newRand();
+//
+//    rng.seed(static_cast<rng_t::result_type>(seed));
+//
+//    int i = AES::DEFAULT_KEYLENGTH;
+//    u64 j = pwd.size()-1;
+//    while (i--)
+//    {
+//        key[i] = (byte) ((udist(rng)*pwd[j]) % 255);
+//        if (j--==0)    j=pwd.size()-1;
+//    }
+//}
 
 #ifdef DEBUG
 /**

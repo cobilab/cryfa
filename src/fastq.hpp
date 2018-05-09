@@ -10,8 +10,8 @@
 #ifndef CRYFA_FASTQ_H
 #define CRYFA_FASTQ_H
 
-#include "EnDecrypto.hpp"
-#include "Security.hpp"
+#include "endecrypto.hpp"
+#include "security.hpp"
 
 
 /** @brief Packing FASTQ */
@@ -37,7 +37,7 @@ struct unpackfq_s
 /**
  * @brief Compression/Decompression of FASTQ
  */
-class FASTQ : public EnDecrypto
+class FASTQ : public endecrypto
 {
 public:
     FASTQ                       () = default;

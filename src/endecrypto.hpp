@@ -1,5 +1,5 @@
 /**
- * @file      EnDecrypto.hpp
+ * @file      endecrypto.hpp
  * @brief     Encryption/Decryption
  * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
  * @author    Diogo Pratas      (pratas@ua.pt)
@@ -11,26 +11,26 @@
 #define CRYFA_ENDECRYPTO_H
 
 #include "def.hpp"
-#include "Security.hpp"
+#include "security.hpp"
 
 using std::string;
 using std::vector;
 
 
-class EnDecrypto;
+class endecrypto;
 
 // Type define
-typedef void (EnDecrypto::*packFP_t) (string&, const string&, const htbl_t&);
-typedef void (EnDecrypto::*unpackFP_t)
+typedef void (endecrypto::*packFP_t) (string&, const string&, const htbl_t&);
+typedef void (endecrypto::*unpackFP_t)
              (string&, string::iterator&, const vector<string>&);
 
 /**
  * @brief Encryption/Decryption
  */
-class EnDecrypto : public Security
+class endecrypto : public Security
 {
 public:
-    EnDecrypto          () = default;
+    endecrypto          () = default;
     void packLHdrFaFq   (string&, const string&, const htbl_t&);
     void packLQsFq      (string&, const string&, const htbl_t&);
     void pack_3to2      (string&, const string&, const htbl_t&);

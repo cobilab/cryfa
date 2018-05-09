@@ -1,5 +1,5 @@
 /**
- * @file      FASTA.hpp
+ * @file      fasta.hpp
  * @brief     Compression/Decompression of FASTA
  * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
  * @author    Diogo Pratas      (pratas@ua.pt)
@@ -10,8 +10,8 @@
 #ifndef CRYFA_FASTA_H
 #define CRYFA_FASTA_H
 
-#include "EnDecrypto.hpp"
-#include "Security.hpp"
+#include "endecrypto.hpp"
+#include "security.hpp"
 
 
 /** @brief Packing FASTA */
@@ -33,7 +33,7 @@ struct unpackfa_s
 /**
  * @brief Compression/Decompression of FASTA
  */
-class FASTA : public EnDecrypto
+class FASTA : public endecrypto
 {
 public:
     FASTA                       () = default;

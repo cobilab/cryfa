@@ -1,5 +1,5 @@
 /**
- * @file      EnDecrypto.cpp
+ * @file      endecrypto.cpp
  * @brief     Encryption/Decryption
  * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
  * @author    Diogo Pratas      (pratas@ua.pt)
@@ -13,7 +13,7 @@
 #include <iomanip>      // setw, setprecision
 #include <functional>
 #include <algorithm>
-#include "EnDecrypto.hpp"
+#include "endecrypto.hpp"
 
 using std::chrono::high_resolution_clock;
 using std::thread;
@@ -35,7 +35,7 @@ std::mutex mutxEnDe;    /**< @brief Mutex */
  * @param[in]  strIn   The string including the keys
  * @param[in]  keyLen  Length of the keys
  */
-void EnDecrypto::buildHashTbl (htbl_t &map, const string &strIn, short keyLen)
+void endecrypto::buildHashTbl (htbl_t &map, const string &strIn, short keyLen)
 {
     u64 elementNo = 0;
     string element;    element.reserve((unsigned long) keyLen);
@@ -122,7 +122,7 @@ void EnDecrypto::buildHashTbl (htbl_t &map, const string &strIn, short keyLen)
  * @param[in]  strIn   The string including the keys
  * @param[in]  keyLen  Length of the keys
  */
-void EnDecrypto::buildUnpackTbl (vector<string> &unpack, const string &strIn,
+void endecrypto::buildUnpackTbl (vector<string> &unpack, const string &strIn,
                                  u16 keyLen)
 {
     string element;    element.reserve(keyLen);
@@ -212,7 +212,7 @@ void EnDecrypto::buildUnpackTbl (vector<string> &unpack, const string &strIn,
  * @param  key  Key
  * @return Value (based on the idea of key-value in a hash table)
  */
-byte EnDecrypto::dnaPackIndex (const string &key)
+byte endecrypto::dnaPackIndex (const string &key)
 {
     const auto got = DNA_MAP.find(key);
     if (got == DNA_MAP.end())
@@ -227,7 +227,7 @@ byte EnDecrypto::dnaPackIndex (const string &key)
  * @param  map  Hash table
  * @return Value (based on the idea of key-value in a hash table)
  */
-u16 EnDecrypto::largePackIndex (const string &key, const htbl_t &map)
+u16 endecrypto::largePackIndex (const string &key, const htbl_t &map)
 {
     const auto got = map.find(key);
     if (got == map.end())
@@ -241,7 +241,7 @@ u16 EnDecrypto::largePackIndex (const string &key, const htbl_t &map)
  * @param[out] packedSeq  Packed sequence
  * @param[in]  seq        Sequence
  */
-void EnDecrypto::packSeq (string &packedSeq, const string &seq)
+void endecrypto::packSeq (string &packedSeq, const string &seq)
 {
     bool   firstNotIn, secondNotIn, thirdNotIn;
     char   s0, s1, s2;
@@ -292,7 +292,7 @@ void EnDecrypto::packSeq (string &packedSeq, const string &seq)
  * @param[in]  strIn   Header
  * @param[in]  map     Hash table
  */
-void EnDecrypto::packLHdrFaFq (string &packed, const string &strIn,
+void endecrypto::packLHdrFaFq (string &packed, const string &strIn,
                                const htbl_t &map)
 {
     packLarge(packed, strIn, Hdrs, map);
@@ -305,7 +305,7 @@ void EnDecrypto::packLHdrFaFq (string &packed, const string &strIn,
  * @param[in]  strIn   Quality scores
  * @param[in]  map     Hash table
  */
-void EnDecrypto::packLQsFq (string &packed, const string &strIn,
+void endecrypto::packLQsFq (string &packed, const string &strIn,
                             const htbl_t &map)
 {
     packLarge(packed, strIn, QSs, map);
@@ -319,7 +319,7 @@ void EnDecrypto::packLQsFq (string &packed, const string &strIn,
  * @param[in]  hdrQs   Collection of headers/quality scores
  * @param[in]  map     Hash table
  */
-inline void EnDecrypto::packLarge (string &packed, const string &strIn,
+inline void endecrypto::packLarge (string &packed, const string &strIn,
                                    const string &hdrQs, const htbl_t &map)
 {
     string tuple;    tuple.reserve(3);
@@ -372,7 +372,7 @@ inline void EnDecrypto::packLarge (string &packed, const string &strIn,
  * @param[in]  strIn   Input string
  * @param[in]  map     Hash table
  */
-void EnDecrypto::pack_3to2 (string &packed, const string &strIn,
+void endecrypto::pack_3to2 (string &packed, const string &strIn,
                             const htbl_t &map)
 {
     string tuple;    tuple.reserve(3);
@@ -410,7 +410,7 @@ void EnDecrypto::pack_3to2 (string &packed, const string &strIn,
  * @param[in]  strIn   Input string
  * @param[in]  map     Hash table
  */
-void EnDecrypto::pack_2to1 (string &packed, const string &strIn,
+void endecrypto::pack_2to1 (string &packed, const string &strIn,
                             const htbl_t &map)
 {
     string tuple;    tuple.reserve(2);
@@ -433,7 +433,7 @@ void EnDecrypto::pack_2to1 (string &packed, const string &strIn,
  * @param strIn   Input string
  * @param map     Hash table
  */
-void EnDecrypto::pack_3to1 (string &packed, const string &strIn,
+void endecrypto::pack_3to1 (string &packed, const string &strIn,
                             const htbl_t &map)
 {
     string tuple;    tuple.reserve(3);
@@ -467,7 +467,7 @@ void EnDecrypto::pack_3to1 (string &packed, const string &strIn,
  * @param[in]  strIn   Input string
  * @param[in]  map     Hash table
  */
-void EnDecrypto::pack_5to1 (string &packed, const string &strIn,
+void endecrypto::pack_5to1 (string &packed, const string &strIn,
                             const htbl_t &map)
 {
     string tuple;    tuple.reserve(5);
@@ -515,7 +515,7 @@ void EnDecrypto::pack_5to1 (string &packed, const string &strIn,
  * @param[in]  strIn   Input string
  * @param[in]  map     Hash table
  */
-void EnDecrypto::pack_7to1 (string &packed, const string &strIn,
+void endecrypto::pack_7to1 (string &packed, const string &strIn,
                             const htbl_t &map)
 {
     string tuple;    tuple.reserve(7);
@@ -580,7 +580,7 @@ void EnDecrypto::pack_7to1 (string &packed, const string &strIn,
  * @param[in]  strIn   Input string
  * @param[in]  map     Hash table
  */
-void EnDecrypto::pack_1to1 (string &packed, const string &strIn,
+void endecrypto::pack_1to1 (string &packed, const string &strIn,
                             const htbl_t &map)
 {
     string single;    single.reserve(1);
@@ -598,7 +598,7 @@ void EnDecrypto::pack_1to1 (string &packed, const string &strIn,
  * @param  c  Input char
  * @return Input char or (char)10='\\n'
  */
-char EnDecrypto::penaltySym (char c) const
+char endecrypto::penaltySym (char c) const
 {
     const char lookupTable[2] = {c, (char) 10};
     return lookupTable[c==(char) 254 || c==(char) 252];
@@ -614,7 +614,7 @@ char EnDecrypto::penaltySym (char c) const
  * @param[in]  XChar   Extra character for unpacking
  * @param[in]  unpack  Table for unpacking
  */
-void EnDecrypto::unpackLarge (string &out, string::iterator &i,
+void endecrypto::unpackLarge (string &out, string::iterator &i,
                               char XChar, const vector<string> &unpack)
 {
     byte   leftB, rightB;
@@ -670,7 +670,7 @@ void EnDecrypto::unpackLarge (string &out, string::iterator &i,
  * @param[in]  i       Input string iterator
  * @param[in]  unpack  Table for unpacking
  */
-void EnDecrypto::unpack_2B (string &out, string::iterator &i,
+void endecrypto::unpack_2B (string &out, string::iterator &i,
                             const vector<string> &unpack)
 {
     byte leftB, rightB;
@@ -699,7 +699,7 @@ void EnDecrypto::unpack_2B (string &out, string::iterator &i,
  * @param[in]  i       Input string iterator
  * @param[in]  unpack  Table for unpacking
  */
-void EnDecrypto::unpack_1B (string &out, string::iterator &i,
+void endecrypto::unpack_1B (string &out, string::iterator &i,
                             const vector<string> &unpack)
 {
     out.clear();
@@ -717,7 +717,7 @@ void EnDecrypto::unpack_1B (string &out, string::iterator &i,
  * @param[out] out  DNA bases
  * @param[in]  i    Input string iterator
  */
-void EnDecrypto::unpackSeq (string &out, string::iterator &i)
+void endecrypto::unpackSeq (string &out, string::iterator &i)
 {
     string tpl;    tpl.reserve(3);     // Tuplet
     out.clear();
@@ -760,7 +760,7 @@ void EnDecrypto::unpackSeq (string &out, string::iterator &i)
 /**
  * @brief Shuffle a file (not FASTA/FASTQ)
  */
-void EnDecrypto::shuffleFile ()
+void endecrypto::shuffleFile ()
 {
     cerr << "This is not a FASTA/FASTQ file and we just encrypt it.\n";
     
@@ -772,7 +772,7 @@ void EnDecrypto::shuffleFile ()
         
         // Distribute file among threads, for shuffling
         for (t = 0; t != N_THREADS; ++t)
-            arrThread[t] = thread(&EnDecrypto::shuffleBlock, this, t);
+            arrThread[t] = thread(&endecrypto::shuffleBlock, this, t);
         for (auto& thr : arrThread)
             if (thr.joinable())  thr.join();
         
@@ -807,7 +807,7 @@ void EnDecrypto::shuffleFile ()
  * @brief Shuffle a block of file
  * @param threadID  Thread ID
  */
-void EnDecrypto::shuffleBlock (byte threadID)
+void endecrypto::shuffleBlock (byte threadID)
 {
     ifstream in(IN_FILE_NAME);
     ofstream shfile(SH_FNAME+to_string(threadID), std::ios_base::app);
@@ -850,7 +850,7 @@ void EnDecrypto::shuffleBlock (byte threadID)
 /**
  * @brief Unshuffle a file (not FASTA/FASTQ)
  */
-void EnDecrypto::unshuffleFile ()
+void endecrypto::unshuffleFile ()
 {
     ifstream in(DEC_FNAME);
     in.ignore(1);    char c;  in.get(c);
@@ -864,7 +864,7 @@ void EnDecrypto::unshuffleFile ()
 
         // Distribute file among threads, for unshuffling
         for (t = 0; t != N_THREADS; ++t)
-            arrThread[t] = thread(&EnDecrypto::unshuffleBlock, this, t);
+            arrThread[t] = thread(&endecrypto::unshuffleBlock, this, t);
         for (auto& thr : arrThread)
             if (thr.joinable())  thr.join();
 
@@ -899,7 +899,7 @@ void EnDecrypto::unshuffleFile ()
  * @brief Unshuffle a block of file
  * @param threadID  Thread ID
  */
-void EnDecrypto::unshuffleBlock (byte threadID)
+void endecrypto::unshuffleBlock (byte threadID)
 {
     ifstream in(DEC_FNAME);
     ofstream ushfile(USH_FNAME+to_string(threadID), std::ios_base::app);
@@ -949,7 +949,7 @@ void EnDecrypto::unshuffleBlock (byte threadID)
  * @param fT        File type
  * @param justPlus  If the third line of FASTQ contains only the '+' char
  */
-void EnDecrypto::joinPackedFiles (const string &headers, const string &qscores,
+void endecrypto::joinPackedFiles (const string &headers, const string &qscores,
                                   char fT, bool justPlus) const
 {
     byte     t;                            // For threads
@@ -1008,7 +1008,7 @@ void EnDecrypto::joinPackedFiles (const string &headers, const string &qscores,
 /**
  * @brief Join partially unpacked files
  */
-void EnDecrypto::joinUnpackedFiles ()  const
+void endecrypto::joinUnpackedFiles ()  const
 {
     byte     t;                           // For threads
     ifstream upkdFile[N_THREADS];
@@ -1049,7 +1049,7 @@ void EnDecrypto::joinUnpackedFiles ()  const
 /**
  * @brief Join partially shuffled files
  */
-void EnDecrypto::joinShuffledFiles () const
+void endecrypto::joinShuffledFiles () const
 {
     byte     t;                            // For threads
     ifstream shFile[N_THREADS];
@@ -1095,7 +1095,7 @@ void EnDecrypto::joinShuffledFiles () const
 /**
  * @brief Join partially unshuffled files
  */
-void EnDecrypto::joinUnshuffledFiles () const
+void endecrypto::joinUnshuffledFiles () const
 {
     byte     t;                          // For threads
     ifstream ushdFile[N_THREADS];

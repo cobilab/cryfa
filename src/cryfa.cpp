@@ -26,10 +26,10 @@
 #include <chrono>       // time
 #include <iomanip>      // setw, setprecision
 #include "def.hpp"
-#include "Security.hpp"
-#include "EnDecrypto.hpp"
-#include "FASTA.hpp"
-#include "FASTQ.hpp"
+#include "security.hpp"
+#include "endecrypto.hpp"
+#include "fasta.hpp"
+#include "fastq.hpp"
 
 #define __STDC_FORMAT_MACROS
 #if defined(_MSC_VER)
@@ -138,7 +138,7 @@ int main (int argc, char* argv[])
 
     InArgs     inArgsObj;
     Security   secObj;
-    EnDecrypto cryptObj;
+    endecrypto cryptObj;
     FASTA      fastaObj;
     FASTQ      fastqObj;
 

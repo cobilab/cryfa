@@ -12,7 +12,7 @@
 #include <mutex>
 #include <iomanip>      // setw, setprecision
 #include <cstring>
-#include "FASTQ.hpp"
+#include "fastq.hpp"
 
 using std::chrono::high_resolution_clock;
 using std::thread;
@@ -115,7 +115,7 @@ void FASTQ::set_hashTbl_packFn (packfq_s &pkStruct, const string &headers,
         // ASCII char after the last char in Hdrs -- Always <= (char) 127
         HdrsX = Hdrs;    HdrsX += (char) (Hdrs.back() + 1);
         buildHashTbl(HdrMap, HdrsX, KEYLEN_C5);
-        pkStruct.packHdrFPtr= &EnDecrypto::packLHdrFaFq;
+        pkStruct.packHdrFPtr= &endecrypto::packLHdrFaFq;
     }
     else
     {
@@ -124,33 +124,33 @@ void FASTQ::set_hashTbl_packFn (packfq_s &pkStruct, const string &headers,
         if (headersLen > MAX_C4)                            // 16 <= cat 5 <= 39
         {
             buildHashTbl(HdrMap, Hdrs, KEYLEN_C5);
-            pkStruct.packHdrFPtr = &EnDecrypto::pack_3to2;
+            pkStruct.packHdrFPtr = &endecrypto::pack_3to2;
         }
         else if (headersLen > MAX_C3)                       // 7 <= cat 4 <= 15
         {
             buildHashTbl(HdrMap, Hdrs, KEYLEN_C4);
-            pkStruct.packHdrFPtr = &EnDecrypto::pack_2to1;
+            pkStruct.packHdrFPtr = &endecrypto::pack_2to1;
         }
         else if (headersLen==MAX_C3 || headersLen==MID_C3   // 4 <= cat 3 <= 6
                  || headersLen==MIN_C3)
         {
             buildHashTbl(HdrMap, Hdrs, KEYLEN_C3);
-            pkStruct.packHdrFPtr = &EnDecrypto::pack_3to1;
+            pkStruct.packHdrFPtr = &endecrypto::pack_3to1;
         }
         else if (headersLen == C2)                          // cat 2 = 3
         {
             buildHashTbl(HdrMap, Hdrs, KEYLEN_C2);
-            pkStruct.packHdrFPtr = &EnDecrypto::pack_5to1;
+            pkStruct.packHdrFPtr = &endecrypto::pack_5to1;
         }
         else if (headersLen == C1)                          // cat 1 = 2
         {
             buildHashTbl(HdrMap, Hdrs, KEYLEN_C1);
-            pkStruct.packHdrFPtr = &EnDecrypto::pack_7to1;
+            pkStruct.packHdrFPtr = &endecrypto::pack_7to1;
         }
         else                                                // headersLen = 1
         {
             buildHashTbl(HdrMap, Hdrs, 1);
-            pkStruct.packHdrFPtr = &EnDecrypto::pack_1to1;
+            pkStruct.packHdrFPtr = &endecrypto::pack_1to1;
         }
     }
     
@@ -161,7 +161,7 @@ void FASTQ::set_hashTbl_packFn (packfq_s &pkStruct, const string &headers,
         // ASCII char after last char in QUALITY_SCORES
         QSsX = QSs;     QSsX += (char) (QSs.back() + 1);
         buildHashTbl(QsMap, QSsX, KEYLEN_C5);
-        pkStruct.packQSFPtr = &EnDecrypto::packLQsFq;
+        pkStruct.packQSFPtr = &endecrypto::packLQsFq;
     }
     else
     {
@@ -170,33 +170,33 @@ void FASTQ::set_hashTbl_packFn (packfq_s &pkStruct, const string &headers,
         if (qscoresLen > MAX_C4)                            // 16 <= cat 5 <= 39
         {
             buildHashTbl(QsMap, QSs, KEYLEN_C5);
-            pkStruct.packQSFPtr = &EnDecrypto::pack_3to2;
+            pkStruct.packQSFPtr = &endecrypto::pack_3to2;
         }
         else if (qscoresLen > MAX_C3)                       // 7 <= cat 4 <= 15
         {
             buildHashTbl(QsMap, QSs, KEYLEN_C4);
-            pkStruct.packQSFPtr = &EnDecrypto::pack_2to1;
+            pkStruct.packQSFPtr = &endecrypto::pack_2to1;
         }
         else if (qscoresLen==MAX_C3 || qscoresLen==MID_C3   // 4 <= cat 3 <= 6
                  || qscoresLen==MIN_C3)
         {
             buildHashTbl(QsMap, QSs, KEYLEN_C3);
-            pkStruct.packQSFPtr = &EnDecrypto::pack_3to1;
+            pkStruct.packQSFPtr = &endecrypto::pack_3to1;
         }
         else if (qscoresLen == C2)                          // cat 2 = 3
         {
             buildHashTbl(QsMap, QSs, KEYLEN_C2);
-            pkStruct.packQSFPtr = &EnDecrypto::pack_5to1;
+            pkStruct.packQSFPtr = &endecrypto::pack_5to1;
         }
         else if (qscoresLen == C1)                          // cat 1 = 2
         {
             buildHashTbl(QsMap, QSs, KEYLEN_C1);
-            pkStruct.packQSFPtr = &EnDecrypto::pack_7to1;
+            pkStruct.packQSFPtr = &endecrypto::pack_7to1;
         }
         else                                                // qscoresLen = 1
         {
             buildHashTbl(QsMap, QSs, 1);
-            pkStruct.packQSFPtr = &EnDecrypto::pack_1to1;
+            pkStruct.packQSFPtr = &endecrypto::pack_1to1;
         }
     }
 }
@@ -410,12 +410,12 @@ void FASTQ::set_unpackTbl_unpackFn(unpackfq_s &upkStruct, const string &headers,
     if (headersLen > MAX_C5)                keyLen_hdr = KEYLEN_C5;
     else if (headersLen > MAX_C4)                                       // Cat 5
     {
-        upkStruct.unpackHdrFPtr = &EnDecrypto::unpack_2B;
+        upkStruct.unpackHdrFPtr = &endecrypto::unpack_2B;
         keyLen_hdr = KEYLEN_C5;
     }
     else
     {
-        upkStruct.unpackHdrFPtr = &EnDecrypto::unpack_1B;
+        upkStruct.unpackHdrFPtr = &endecrypto::unpack_1B;
 
         if (headersLen > MAX_C3)            keyLen_hdr = KEYLEN_C4;     // Cat 4
         else if (headersLen==MAX_C3 || headersLen==MID_C3 || headersLen==MIN_C3)
@@ -429,12 +429,12 @@ void FASTQ::set_unpackTbl_unpackFn(unpackfq_s &upkStruct, const string &headers,
     if (qscoresLen > MAX_C5)                keyLen_qs = KEYLEN_C5;
     else if (qscoresLen > MAX_C4)                                   // Cat 5
     {
-        upkStruct.unpackQSFPtr = &EnDecrypto::unpack_2B;
+        upkStruct.unpackQSFPtr = &endecrypto::unpack_2B;
         keyLen_qs = KEYLEN_C5;
     }
     else
     {
-        upkStruct.unpackQSFPtr = &EnDecrypto::unpack_1B;
+        upkStruct.unpackQSFPtr = &endecrypto::unpack_1B;
 
         if (qscoresLen > MAX_C3)            keyLen_qs = KEYLEN_C4;      // Cat 4
         else if (qscoresLen==MAX_C3 || qscoresLen==MID_C3 || qscoresLen==MIN_C3)

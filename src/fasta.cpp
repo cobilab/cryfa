@@ -1,5 +1,5 @@
 /**
- * @file      FASTA.cpp
+ * @file      fasta.cpp
  * @brief     Compression/Decompression of FASTA
  * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
  * @author    Diogo Pratas      (pratas@ua.pt)
@@ -12,7 +12,7 @@
 #include <mutex>
 #include <iomanip>      // setw, setprecision
 #include <cstring>
-#include "FASTA.hpp"
+#include "fasta.hpp"
 
 using std::chrono::high_resolution_clock;
 using std::thread;
@@ -84,7 +84,7 @@ void FASTA::set_hashTbl_packFn (packfa_s &pkStruct, const string &headers)
         // ASCII char after the last char in Hdrs -- always <= (char) 127
         HdrsX = Hdrs;    HdrsX += (char) (Hdrs.back() + 1);
         buildHashTbl(HdrMap, HdrsX, KEYLEN_C5);
-        pkStruct.packHdrFP = &EnDecrypto::packLHdrFaFq;
+        pkStruct.packHdrFP = &endecrypto::packLHdrFaFq;
     }
     else
     {
@@ -93,33 +93,33 @@ void FASTA::set_hashTbl_packFn (packfa_s &pkStruct, const string &headers)
         if (headersLen > MAX_C4)                            // 16 <= cat 5 <= 39
         {
             buildHashTbl(HdrMap, Hdrs, KEYLEN_C5);
-            pkStruct.packHdrFP = &EnDecrypto::pack_3to2;
+            pkStruct.packHdrFP = &endecrypto::pack_3to2;
         }
         else if (headersLen > MAX_C3)                       // 7 <= cat 4 <= 15
         {
             buildHashTbl(HdrMap, Hdrs, KEYLEN_C4);
-            pkStruct.packHdrFP = &EnDecrypto::pack_2to1;
+            pkStruct.packHdrFP = &endecrypto::pack_2to1;
         }
         else if (headersLen==MAX_C3 || headersLen==MID_C3   // 4 <= cat 3 <= 6
                  || headersLen==MIN_C3)
         {
             buildHashTbl(HdrMap, Hdrs, KEYLEN_C3);
-            pkStruct.packHdrFP = &EnDecrypto::pack_3to1;
+            pkStruct.packHdrFP = &endecrypto::pack_3to1;
         }
         else if (headersLen == C2)                          // cat 2 = 3
         {
             buildHashTbl(HdrMap, Hdrs, KEYLEN_C2);
-            pkStruct.packHdrFP = &EnDecrypto::pack_5to1;
+            pkStruct.packHdrFP = &endecrypto::pack_5to1;
         }
         else if (headersLen == C1)                          // cat 1 = 2
         {
             buildHashTbl(HdrMap, Hdrs, KEYLEN_C1);
-            pkStruct.packHdrFP = &EnDecrypto::pack_7to1;
+            pkStruct.packHdrFP = &endecrypto::pack_7to1;
         }
         else                                                // headersLen = 1
         {
             buildHashTbl(HdrMap, Hdrs, 1);
-            pkStruct.packHdrFP = &EnDecrypto::pack_1to1;
+            pkStruct.packHdrFP = &endecrypto::pack_1to1;
         }
     }
 }
@@ -329,12 +329,12 @@ void FASTA::set_unpackTbl_unpackFn(unpackfa_s &upkStruct, const string &headers)
     if (headersLen > MAX_C5)                keyLen_hdr = KEYLEN_C5;
     else if (headersLen > MAX_C4)                                       // Cat 5
     {
-        upkStruct.unpackHdrFP = &EnDecrypto::unpack_2B;
+        upkStruct.unpackHdrFP = &endecrypto::unpack_2B;
         keyLen_hdr = KEYLEN_C5;
     }
     else
     {
-        upkStruct.unpackHdrFP = &EnDecrypto::unpack_1B;
+        upkStruct.unpackHdrFP = &endecrypto::unpack_1B;
     
         if (headersLen > MAX_C3)            keyLen_hdr = KEYLEN_C4;     // Cat 4
         else if (headersLen==MAX_C3 || headersLen==MID_C3 || headersLen==MIN_C3)
