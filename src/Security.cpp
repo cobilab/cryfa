@@ -65,7 +65,7 @@ string Security::extractPass () const
 void Security::encrypt ()
 {
     cerr << "Encrypting...\n";
-    auto startTime = high_resolution_clock::now();      // Start timer
+    const auto startTime = high_resolution_clock::now();// Start timer
     
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
@@ -93,7 +93,7 @@ void Security::encrypt ()
         cerr << "Caught Exception...\n" << e.what() << "\n";
     }
 
-    auto finishTime = high_resolution_clock::now();                 //Stop timer
+    const auto finishTime = high_resolution_clock::now();           //Stop timer
     std::chrono::duration<double> elapsed = finishTime - startTime; //Dur. (sec)
     cerr << (VERBOSE ? "Encryption done," : "Done,") << " in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
@@ -115,10 +115,10 @@ void Security::decrypt ()
 {
     ifstream in(IN_FILE_NAME);
     if (!in.good())
-    { cerr << "Error: failed opening \"" << IN_FILE_NAME << "\".\n";  exit(1); }
+        std::runtime_error("Error: failed opening \"" + IN_FILE_NAME + "\".\n");
 
     cerr << "Decrypting...\n";
-    auto startTime = high_resolution_clock::now();      // Start timer
+    const auto startTime = high_resolution_clock::now();// Start timer
     
     byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
     memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
@@ -127,18 +127,7 @@ void Security::decrypt ()
     const string pass = extractPass();
     buildKey(key, pass);
     buildIV(iv, pass);
-//    printIV(iv);      // Debug
-//    printKey(key);    // Debug
 
-//    string cipherText( (std::istreambuf_iterator<char> (in)),
-//                       std::istreambuf_iterator<char> () );
-
-//    if (VERBOSE)
-//    {
-//        cerr << "cipher size: " << cipherText.size()-1 << '\n';
-//        cerr << " block size: " << AES::BLOCKSIZE        << '\n';
-//    }
-    
     try
     {
         const char* outFile = DEC_FNAME.c_str();
@@ -163,7 +152,7 @@ void Security::decrypt ()
         cerr << "Caught Exception...\n" << e.what() << "\n";
     }
     
-    auto finishTime = high_resolution_clock::now();                 //Stop timer
+    const auto finishTime = high_resolution_clock::now();           //Stop timer
     std::chrono::duration<double> elapsed = finishTime - startTime; //Dur. (sec)
     cerr << (VERBOSE ? "Decryption done," : "Done,") << " in "
          << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
@@ -326,6 +315,7 @@ void Security::buildKey (byte *key, const string &pwd)
     }
 }
 
+#ifdef DEBUG
 /**
  * @brief Print IV
  * @param iv  IV
@@ -349,3 +339,4 @@ void Security::printKey (byte *key) const
         cerr << " " << (int) key[i];
     cerr << "]\n";
 }
+#endif

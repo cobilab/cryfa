@@ -45,6 +45,7 @@ using std::ifstream;
 using std::wifstream;
 using std::setprecision;
 using std::chrono::high_resolution_clock;
+using std::to_string;
 
 
 /**
@@ -52,13 +53,13 @@ using std::chrono::high_resolution_clock;
  * @param  inFileName  Input file name
  * @return A, Q or n
  */
-inline char file_type (const string &inFileName)
+inline char fileType (const string &inFileName)
 {
     wchar_t c;
     wifstream in(inFileName);
     
     if (!in.good())
-    { cerr << "Error: failed opening '" << inFileName << "'.\n";    exit(1); }
+      std::runtime_error("Error: failed opening '" + inFileName + "'.\n");
     
     // Skip leading blank lines or spaces
     while (in.peek()=='\n' || in.peek()==' ')    in.get(c);
@@ -73,8 +74,8 @@ inline char file_type (const string &inFileName)
     in.clear();   in.seekg(0, std::ios::beg); // Return to beginning of the file
     while (in.peek()!='>' && in.peek()!=EOF)    IGNORE_THIS_LINE(in);
     
-    if (in.peek() == '>') { in.close();    return 'A'; }            // FASTA
-    else                  { in.close();    return 'n'; }            // Not FASTA/FASTQ
+    if (in.peek() == '>') { in.close();    return 'A'; }      // FASTA
+    else                  { in.close();    return 'n'; }      // Not FASTA/FASTQ
 }
 
 /**
@@ -82,24 +83,23 @@ inline char file_type (const string &inFileName)
  * @param  keyFileName  Name of the file containing the password
  * @param  k_flag       If '-k' is entered by the user, for running Cryfa
  */
-inline void check_pass (const string &keyFileName, const bool k_flag)
+inline void checkPass (const string &keyFileName, const bool k_flag)
 {
-    if (!k_flag) { cerr<< "Error: no password file has been set.\n";  exit(1); }
+    if (!k_flag)
+      std::runtime_error("Error: no password file has been set.\n");
     else
     {
         ifstream in(keyFileName);
         
         if (in.peek() == EOF)
         {
-            cerr << "Error: password file is empty.\n";
             in.close();
-            exit(1);
+            std::runtime_error("Error: password file is empty.\n");
         }
         else if (!in.good())
         {
-            cerr << "Error opening \"" << keyFileName << "\".\n";
             in.close();
-            exit(1);
+            std::runtime_error("Error opening \"" + keyFileName + "\".\n");
         }
         else
         {
@@ -107,13 +107,12 @@ inline void check_pass (const string &keyFileName, const bool k_flag)
             char   c;
             string pass;    pass.clear();
             while (in.get(c))    pass += c;
-    
+            
             if (pass.size() < 8)
             {
-                cerr << "Error: password size is " << pass.size()
-                     << ". It must be at least 8.\n";
                 in.close();
-                exit(1);
+                std::runtime_error("Error: the password size is " +
+                    to_string(pass.size()) + ". It must be at least 8.\n");
             }
             
             in.close();
@@ -133,6 +132,8 @@ string InArgs::KEY_FILE_NAME   = "";
  */
 int main (int argc, char* argv[])
 {
+    try
+    {
     std::ios::sync_with_stdio(false); // Turn off synchronizing C++ to C streams
 
     InArgs     inArgsObj;
@@ -171,8 +172,8 @@ int main (int argc, char* argv[])
             case 0:
                 // If this option set a flag, do nothing else now.
                 if (long_options[option_index].flag != 0)                 break;
-                cout << "option '" << long_options[option_index].name << "'\n";
-                if (optarg)    cout << " with arg " << optarg << '\n';
+                cerr << "option '" << long_options[option_index].name << "'\n";
+                if (optarg)    cerr << " with arg " << optarg << '\n';
                 break;
 
             case 'k':
@@ -193,7 +194,7 @@ int main (int argc, char* argv[])
 
     // Check password file
     if (!h_flag)
-      check_pass(inArgsObj.KEY_FILE_NAME, k_flag);
+      checkPass(inArgsObj.KEY_FILE_NAME, k_flag);
 
     // Verbose mode
     if (v_flag)     cerr << "Verbose mode on.\n";
@@ -221,7 +222,7 @@ int main (int argc, char* argv[])
     // Compress and/or shuffle + encrypt
     if (!h_flag)
     {
-        switch (file_type(inArgsObj.IN_FILE_NAME))
+        switch (fileType(inArgsObj.IN_FILE_NAME))
         {
             case 'A':  cerr<<"Compacting...\n";   fastaObj.compress();    break;
             case 'Q':  cerr<<"Compacting...\n";   fastqObj.compress();    break;
@@ -231,6 +232,9 @@ int main (int argc, char* argv[])
                        return 0;                                          break;
         }
     }
+    }
+    catch (std::exception& e) { cerr << e.what(); }
+    catch (...) { return EXIT_FAILURE; }
 
     return 0;
 }

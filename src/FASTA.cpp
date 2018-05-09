@@ -50,8 +50,8 @@ void FASTA::compress ()
     // Distribute file among threads, for reading and packing
     for (t = 0; t != N_THREADS; ++t)
         arrThread[t] = thread(&FASTA::pack, this, pkStruct, t);
-    for (t = 0; t != N_THREADS; ++t)
-        if (arrThread[t].joinable())    arrThread[t].join();
+    for (auto& thr : arrThread)
+        if (thr.joinable())    thr.join();
 
     if (VERBOSE)    cerr << "Shuffling done!\n";
 
@@ -296,8 +296,8 @@ void FASTA::decompress ()
         if (in.peek() == 252)    break;
     }
     // Join threads
-    for (t = 0; t != N_THREADS; ++t)
-        if (arrThread[t].joinable())    arrThread[t].join();
+    for (auto& thr : arrThread)
+        if (thr.joinable())    thr.join();
     
     if (VERBOSE)    cerr << "Unshuffling done!\n";
     

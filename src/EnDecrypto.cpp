@@ -114,12 +114,6 @@ void EnDecrypto::buildHashTbl (htbl_t &map, const string &strIn, short keyLen)
             
         default: break;
     }
-    
-    
-    // Test
-//    for (htbl_t::iterator i = map.begin(); i != map.end(); ++i)
-//        cerr << i->first << "\t" << i->second << '\n';
-//    cerr << "elementNo = " << elementNo << '\n';
 }
 
 /**
@@ -220,10 +214,11 @@ void EnDecrypto::buildUnpackTbl (vector<string> &unpack, const string &strIn,
  */
 byte EnDecrypto::dnaPackIndex (const string &key)
 {
-    htbl_t::const_iterator got = DNA_MAP.find(key);
+    const auto got = DNA_MAP.find(key);
     if (got == DNA_MAP.end())
-    { cerr << "Error: key '" << key << "'not found!\n";    return 0; }
-    else  return (byte) got->second;
+        std::runtime_error("Error: key '" + key + "'not found!\n");
+    else
+        return (byte) got->second;
 }
 
 /**
@@ -234,10 +229,11 @@ byte EnDecrypto::dnaPackIndex (const string &key)
  */
 u16 EnDecrypto::largePackIndex (const string &key, const htbl_t &map)
 {
-    htbl_t::const_iterator got = map.find(key);
+    const auto got = map.find(key);
     if (got == map.end())
-    { cerr << "Error: key '" << key << "' not found!\n";    return 0; }
-    else  return (u16) got->second;
+        std::runtime_error("Error: key '" + key + "' not found!\n");
+    else
+        return (u16) got->second;
 }
 
 /**
@@ -777,8 +773,8 @@ void EnDecrypto::shuffleFile ()
         // Distribute file among threads, for shuffling
         for (t = 0; t != N_THREADS; ++t)
             arrThread[t] = thread(&EnDecrypto::shuffleBlock, this, t);
-        for (t = 0; t != N_THREADS; ++t)
-            if (arrThread[t].joinable())  arrThread[t].join();
+        for (auto& thr : arrThread)
+            if (thr.joinable())  thr.join();
         
         // Join partially shuffled files
         joinShuffledFiles();
@@ -869,8 +865,8 @@ void EnDecrypto::unshuffleFile ()
         // Distribute file among threads, for unshuffling
         for (t = 0; t != N_THREADS; ++t)
             arrThread[t] = thread(&EnDecrypto::unshuffleBlock, this, t);
-        for (t = 0; t != N_THREADS; ++t)
-            if (arrThread[t].joinable())  arrThread[t].join();
+        for (auto& thr : arrThread)
+            if (thr.joinable())  thr.join();
 
         // Delete decrypted file
         std::remove(DEC_FNAME.c_str());

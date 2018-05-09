@@ -37,12 +37,14 @@ private:
     void newSrand      (u32);
     int  newRand       ();
     std::minstd_rand0 &randomEngine ();
-//    inline u64 shuffSeedGen (const u32);
     void shuffSeedGen  ();
     void buildIV       (byte*, const string&);
     void buildKey      (byte*, const string&);
+
+#ifdef DEBUG
     void printIV       (byte*)                  const;
     void printKey      (byte*)                  const;
+#endif
 };
 
 #endif //CRYFA_SECURITY_H
