@@ -817,52 +817,48 @@ void endecrypto::unshuffle_file () {
   }
 }
 
-//todo
 /**
  * @brief Unshuffle a block of file
  * @param threadID  Thread ID
  */
-void endecrypto::unshuffle_block (byte threadID)
-{
-    ifstream in(DEC_FNAME);
-    ofstream ushfile(USH_FNAME+to_string(threadID), std::ios_base::app);
-    string   unshText;
-    char     c;
-    string::iterator i;
+void endecrypto::unshuffle_block (byte threadID) {
+  ifstream in(DEC_FNAME);
+  ofstream ushfile(USH_FNAME+to_string(threadID), std::ios_base::app);
+  string   unshText;
+  char     c;
+  string::iterator i;
+  
+  // filetype char (125) + shuffed (128) + characters ignored at the beginning
+  in.ignore((std::streamsize) (2 + threadID*BLOCK_SIZE));
+  
+  while (in.peek() != EOF) {
+    unshText.clear();
+    for (u64 bs = BLOCK_SIZE; bs--;)
+      if (in.get(c))    unshText += c;
     
-    // filetype char (125) + shuffed (128) + characters ignored at the beginning
-    in.ignore((std::streamsize) (2 + threadID*BLOCK_SIZE));
+    i = unshText.begin();
+
+    // Unshuffle
+    if (shuffled) {
+      mutxEnDe.lock();//--------------------------------------------------
+      if (shuffInProg)    cerr << "Unshuffling...\n";
+      shuffInProg = false;
+      mutxEnDe.unlock();//------------------------------------------------
     
-    while (in.peek() != EOF)
-    {
-        unshText.clear();
-        for (u64 bs = BLOCK_SIZE; bs--;)
-            if (in.get(c))    unshText += c;
-        
-        i = unshText.begin();
-
-        // Unshuffle
-        if (shuffled)
-        {
-            mutxEnDe.lock();//--------------------------------------------------
-            if (shuffInProg)    cerr << "Unshuffling...\n";
-            shuffInProg = false;
-            mutxEnDe.unlock();//------------------------------------------------
-        
-            unshuffle(i, unshText.size());
-        }
-        
-        // Write header containing threadID for each partially unshuffled file
-        ushfile << THR_ID_HDR + to_string(threadID) << '\n';
-        
-        ushfile << unshText << '\n';
-
-        // Ignore to go to the next related chunk
-        in.ignore((std::streamsize) ((N_THREADS-1)*BLOCK_SIZE));
+      unshuffle(i, unshText.size());
     }
+    
+    // Write header containing threadID for each partially unshuffled file
+    ushfile << THR_ID_HDR + to_string(threadID) << '\n';
+    
+    ushfile << unshText << '\n';
 
-    ushfile.close();
-    in.close();
+    // Ignore to go to the next related chunk
+    in.ignore((std::streamsize) ((N_THREADS-1)*BLOCK_SIZE));
+  }
+
+  ushfile.close();
+  in.close();
 }
 
 /**
@@ -873,183 +869,161 @@ void endecrypto::unshuffle_block (byte threadID)
  * @param justPlus  If the third line of FASTQ contains only the '+' char
  */
 void endecrypto::join_packed_files (const string& headers, const string& qscores,
-                                    char fT, bool justPlus) const
-{
-    byte     t;                            // For threads
-    ifstream pkFile[N_THREADS];
-    ofstream pckdFile(PCKD_FNAME);      // Packed file
-    
-    switch (fT)
-    {
-        case 'A':   pckdFile << (char) 127;         break;    // FASTA
-        case 'Q':   pckdFile << (char) 126;         break;    // FASTQ
-        default :                                   break;
+                                    char fT, bool justPlus) const {
+  byte     t;                            // For threads
+  ifstream pkFile[N_THREADS];
+  ofstream pckdFile(PCKD_FNAME);      // Packed file
+  
+  switch (fT) {
+      case 'A':   pckdFile << (char) 127;         break;    // FASTA
+      case 'Q':   pckdFile << (char) 126;         break;    // FASTQ
+      default :                                   break;
+  }
+  pckdFile << (!DISABLE_SHUFFLE ? (char) 128 : (char) 129);
+  pckdFile << headers;
+  pckdFile << (char) 254;                // To detect headers in decryptor
+  if (fT == 'Q') {
+      pckdFile << qscores;
+      pckdFile << (justPlus ? (char) 253 : '\n');
+  }
+  
+  // Input files
+  for (t = N_THREADS; t--;)    pkFile[t].open(PK_FNAME+to_string(t));
+  
+  string line;
+  bool   prevLineNotThrID;               // If previous line was "THR=" or not
+  while (!pkFile[0].eof()) {
+    for (t = 0; t != N_THREADS; ++t) {
+      prevLineNotThrID = false;
+      
+      while (getline(pkFile[t],line).good() && line!=THR_ID_HDR+to_string(t)) {
+        if (prevLineNotThrID)
+          pckdFile << '\n';
+        pckdFile << line;
+        
+        prevLineNotThrID = true;
+      }
     }
-    pckdFile << (!DISABLE_SHUFFLE ? (char) 128 : (char) 129);
-    pckdFile << headers;
-    pckdFile << (char) 254;                // To detect headers in decryptor
-    if (fT == 'Q')
-    {
-        pckdFile << qscores;
-        pckdFile << (justPlus ? (char) 253 : '\n');
-    }
-    
-    // Input files
-    for (t = N_THREADS; t--;)    pkFile[t].open(PK_FNAME+to_string(t));
-    
-    string line;
-    bool   prevLineNotThrID;               // If previous line was "THR=" or not
-    while (!pkFile[0].eof())
-    {
-        for (t = 0; t != N_THREADS; ++t)
-        {
-            prevLineNotThrID = false;
-            
-            while (getline(pkFile[t], line).good() &&
-                   line != THR_ID_HDR+to_string(t))
-            {
-                if (prevLineNotThrID)   pckdFile << '\n';
-                pckdFile << line;
-                
-                prevLineNotThrID = true;
-            }
-        }
-    }
-    pckdFile << (char) 252;
-    
-    // Close/delete input/output files
-    pckdFile.close();
-    string pkFileName;
-    for (t = N_THREADS; t--;)
-    {
-        pkFile[t].close();
-        pkFileName=PK_FNAME;    pkFileName+=to_string(t);
-        std::remove(pkFileName.c_str());
-    }
+  }
+  pckdFile << (char) 252;
+  
+  // Close/delete input/output files
+  pckdFile.close();
+  string pkFileName;
+  for (t = N_THREADS; t--;) {
+    pkFile[t].close();
+    pkFileName=PK_FNAME;    pkFileName+=to_string(t);
+    std::remove(pkFileName.c_str());
+  }
 }
 
 /**
  * @brief Join partially unpacked files
  */
-void endecrypto::join_unpacked_files ()  const
-{
-    byte     t;                           // For threads
-    ifstream upkdFile[N_THREADS];
-    string   line;
-    for (t = N_THREADS; t--;)    upkdFile[t].open(UPK_FNAME+to_string(t));
-    
-    bool prevLineNotThrID;                // If previous line was "THRD=" or not
-    while (!upkdFile[0].eof())
-    {
-        for (t = 0; t != N_THREADS; ++t)
-        {
-            prevLineNotThrID = false;
-            
-            while (getline(upkdFile[t], line).good() &&
-                   line != THR_ID_HDR+to_string(t))
-            {
-                if (prevLineNotThrID)
-                    cout << '\n';
-                cout << line;
-                
-                prevLineNotThrID = true;
-            }
-            
-            if (prevLineNotThrID)    cout << '\n';
-        }
+void endecrypto::join_unpacked_files () const {
+  byte     t;                           // For threads
+  ifstream upkdFile[N_THREADS];
+  string   line;
+  for (t = N_THREADS; t--;)    upkdFile[t].open(UPK_FNAME+to_string(t));
+  
+  bool prevLineNotThrID;                // If previous line was "THRD=" or not
+  while (!upkdFile[0].eof()) {
+    for (t = 0; t != N_THREADS; ++t) {
+      prevLineNotThrID = false;
+      
+      while (getline(upkdFile[t], line).good() &&
+             line != THR_ID_HDR+to_string(t)) {
+        if (prevLineNotThrID)
+          cout << '\n';
+        cout << line;
+        
+        prevLineNotThrID = true;
+      }
+      
+      if (prevLineNotThrID)    cout << '\n';
     }
-    
-    // Close/delete input/output files
-    string upkdFileName;
-    for (t = N_THREADS; t--;)
-    {
-        upkdFile[t].close();
-        upkdFileName=UPK_FNAME;    upkdFileName+=to_string(t);
-        std::remove(upkdFileName.c_str());
-    }
+  }
+  
+  // Close/delete input/output files
+  string upkdFileName;
+  for (t = N_THREADS; t--;) {
+    upkdFile[t].close();
+    upkdFileName=UPK_FNAME;    upkdFileName+=to_string(t);
+    std::remove(upkdFileName.c_str());
+  }
 }
 
 /**
  * @brief Join partially shuffled files
  */
-void endecrypto::join_shuffled_files () const
-{
-    byte     t;                            // For threads
-    ifstream shFile[N_THREADS];
-    ofstream shdFile(PCKD_FNAME);       // Output Shuffled file
-    
-    shdFile << (char) 125;
-    shdFile << (!DISABLE_SHUFFLE ? (char) 128 : (char) 129);
-    
-    // Input files
-    for (t = N_THREADS; t--;)    shFile[t].open(SH_FNAME+to_string(t));
-    
-    string line;
-    bool   prevLineNotThrID;               // If previous line was "THR=" or not
-    while (!shFile[0].eof())
-    {
-        for (t = 0; t != N_THREADS; ++t)
-        {
-            prevLineNotThrID = false;
-            
-            while (getline(shFile[t], line).good() &&
-                   line != THR_ID_HDR+to_string(t))
-            {
-                if (prevLineNotThrID)
-                    shdFile << '\n';
-                shdFile << line;
-                
-                prevLineNotThrID = true;
-            }
-        }
+void endecrypto::join_shuffled_files () const {
+  byte     t;                            // For threads
+  ifstream shFile[N_THREADS];
+  ofstream shdFile(PCKD_FNAME);       // Output Shuffled file
+  
+  shdFile << (char) 125;
+  shdFile << (!DISABLE_SHUFFLE ? (char) 128 : (char) 129);
+  
+  // Input files
+  for (t = N_THREADS; t--;)    shFile[t].open(SH_FNAME+to_string(t));
+  
+  string line;
+  bool   prevLineNotThrID;               // If previous line was "THR=" or not
+  while (!shFile[0].eof()) {
+    for (t = 0; t != N_THREADS; ++t) {
+      prevLineNotThrID = false;
+      
+      while (getline(shFile[t], line).good() &&
+             line != THR_ID_HDR+to_string(t)) {
+        if (prevLineNotThrID)
+          shdFile << '\n';
+        shdFile << line;
+        
+        prevLineNotThrID = true;
+      }
     }
-    
-    // Close/delete input/output files
-    shdFile.close();
-    string shFileName;
-    for (t = N_THREADS; t--;)
-    {
-        shFile[t].close();
-        shFileName=SH_FNAME;    shFileName+=to_string(t);
-        std::remove(shFileName.c_str());
-    }
+  }
+  
+  // Close/delete input/output files
+  shdFile.close();
+  string shFileName;
+  for (t = N_THREADS; t--;) {
+    shFile[t].close();
+    shFileName=SH_FNAME;    shFileName+=to_string(t);
+    std::remove(shFileName.c_str());
+  }
 }
 
 /**
  * @brief Join partially unshuffled files
  */
-void endecrypto::join_unshuffled_files () const
-{
-    byte     t;                          // For threads
-    ifstream ushdFile[N_THREADS];
-    string   line;
-    for (t = N_THREADS; t--;)    ushdFile[t].open(USH_FNAME+to_string(t));
-    
-    bool prevLineNotThrID;               // If previous line was "THR=" or not
-    while (!ushdFile[0].eof())
-    {
-        for (t = 0; t != N_THREADS; ++t)
-        {
-            prevLineNotThrID = false;
-            
-            while (getline(ushdFile[t], line).good() &&
-                   line != THR_ID_HDR+to_string(t))
-            {
-                if (prevLineNotThrID)
-                    cout << '\n';
-                cout << line;
-                
-                prevLineNotThrID = true;
-            }
-        }
+void endecrypto::join_unshuffled_files () const {
+  byte     t;                          // For threads
+  ifstream ushdFile[N_THREADS];
+  string   line;
+  for (t = N_THREADS; t--;)    ushdFile[t].open(USH_FNAME+to_string(t));
+  
+  bool prevLineNotThrID;               // If previous line was "THR=" or not
+  while (!ushdFile[0].eof()) {
+    for (t = 0; t != N_THREADS; ++t) {
+      prevLineNotThrID = false;
+      
+      while (getline(ushdFile[t], line).good() &&
+             line != THR_ID_HDR+to_string(t)) {
+        if (prevLineNotThrID)
+          cout << '\n';
+        cout << line;
+        
+        prevLineNotThrID = true;
+      }
     }
-    
-    // Close/delete input/output files
-    string ushdFileName;
-    for (t = N_THREADS; t--;)
-    {
-        ushdFile[t].close();
-        ushdFileName=USH_FNAME;    ushdFileName+=to_string(t);
-        std::remove(ushdFileName.c_str());
-    }
+  }
+  
+  // Close/delete input/output files
+  string ushdFileName;
+  for (t = N_THREADS; t--;) {
+    ushdFile[t].close();
+    ushdFileName=USH_FNAME;    ushdFileName+=to_string(t);
+    std::remove(ushdFileName.c_str());
+  }
 }
