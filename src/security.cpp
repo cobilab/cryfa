@@ -196,14 +196,11 @@ void Security::shuffSeedGen ()
 {
     const string pass = extractPass();
     
-    u32 passDigitsSum = 0;
-    for (char c : pass)    passDigitsSum += c;
-    
     // Using old rand to generate the new rand seed
     u64 seed = 0;
     
     mutxSec.lock();//-----------------------------------------------------------
-    newSrand(681493*passDigitsSum + 9148693);
+    newSrand(681493*std::accumulate(pass.begin(),pass.end(),u32(0)) + 9148693);
     for (char c : pass)    seed += (u64) (c*newRand());
     mutxSec.unlock();//---------------------------------------------------------
     
