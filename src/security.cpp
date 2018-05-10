@@ -12,6 +12,7 @@
 #include <cstring>
 #include <iomanip>      // setw, setprecision
 #include "security.hpp"
+#include "fn.hpp"
 #include "cryptopp/aes.h"
 #include "cryptopp/eax.h"
 #include "cryptopp/files.h"
@@ -251,115 +252,45 @@ void Security::buildIV (byte *iv, const string &pass)
     std::uniform_int_distribution<rng_t::result_type> udist(0, 255);
     rng_t rng;
     
-    u32 sumEvenPass=0, sumOddPass=0;
-    for (auto i = pass.begin(), j = pass.begin()+1;
-         i < pass.end(), j < pass.end(); i+=2, j+=2)
-    {
-        sumEvenPass += *i;
-        sumOddPass  += *j;
-    }
-    
     // Using old rand to generate the new rand seed
-    newSrand((u32) (459229*sumEvenPass + 3175661*sumOddPass + 15483683));
-    
+    newSrand(static_cast<u32>(44701 *
+             (459229  * accum_even(pass.begin(), pass.end(), 0ul)  +
+              3175661 * accum_odd (pass.begin(), pass.end(), 0ul)) + 499397));
     u64 seed = 0;
-    for (auto i = pass.begin(); i < pass.end(); ++i)
-        seed += *i * newRand() + newRand();
+    for (char c : pass)
+        seed += c*newRand() + newRand();
     
-    const rng_t::result_type seedval = seed;
-    rng.seed(seedval);
+    rng.seed(static_cast<rng_t::result_type>(seed));
     
-    int i = AES::BLOCKSIZE;
-    u64 j = pass.size() - 1;
-    while (i--)
-    {
-        iv[i] = (byte) ((udist(rng)*pass[j]) % 255);
-        if (j--==0)    j=pass.size()-1;
-    }
+    for (int i=AES::BLOCKSIZE; i--;)
+        iv[i] = static_cast<byte>(
+            (udist(rng) * accum_hops(pass.begin(), pass.end(), 0u, i+1)) % 255);
 }
 
 /**
  * @brief Build key for cryption
- * @param key  Key
- * @param pwd  password
+ * @param key   Key
+ * @param pass  password
  */
-template <typename T, typename Iter>
-T accum_even (Iter first, Iter last, T init) {
-  for (; first < last; first+=2)
-    init += *first;
-  return init;
-};
-
-template <typename T, typename Iter>
-T accum_odd (Iter first, Iter last, T init) {
-  for (++first; first < last; first+=2)
-    init += *first;
-  return init;
-};
-
-
-void Security::buildKey (byte *key, const string &pwd)
+void Security::buildKey (byte *key, const string &pass)
 {
-  std::uniform_int_distribution<rng_t::result_type> udist(0, 255);
-  rng_t rng;
-  
-//  u32 sumEvenPwd=0, sumOddPwd=0;
-//  for (auto i = pwd.begin(), j = pwd.begin()+1;
-//       i<pwd.end(), j<pwd.end(); i += 2, j += 2) {
-//    sumEvenPwd += *i;
-//    sumOddPwd += *j;
-//  }
-  const auto sumEvenPwd = accum_even(pwd.begin(), pwd.end(), u32(0));
-  const auto sumOddPwd  = accum_odd(pwd.begin(), pwd.end(), u32(0));
-  
-  // Using old rand to generate the new rand seed
-  newSrand((u32) 24593*(9819241*sumEvenPwd+2597591*sumOddPwd+648649));
-  
-  u64 seed = 0;
-  for (char c : pwd)
-    seed += c*newRand()+newRand();
-  
-  rng.seed(static_cast<rng_t::result_type>(seed));
-  
-  int i = AES::DEFAULT_KEYLENGTH;
-  u64 j = pwd.size()-1;
-  while (i--) {
-    key[i] = (byte) ((udist(rng)*pwd[j])%255);
-    if (j-- == 0)
-      j = pwd.size()-1;
-  }
+    std::uniform_int_distribution<rng_t::result_type> udist(0, 255);
+    rng_t rng;
+    
+    // Using old rand to generate the new rand seed
+    newSrand(static_cast<u32>(24593 *
+             (9819241 * accum_even(pass.begin(), pass.end(), 0ul) +
+              2597591 * accum_odd (pass.begin(), pass.end(), 0ul)) + 648649));
+    u64 seed = 0;
+    for (char c : pass)
+        seed += c*newRand() + newRand();
+    
+    rng.seed(static_cast<rng_t::result_type>(seed));
+    
+    for (int i=AES::DEFAULT_KEYLENGTH; i--;)
+        key[i] = static_cast<byte>(
+            (udist(rng) * accum_hops(pass.begin(), pass.end(), 0u, i+1)) % 255);
 }
-
-//void Security::buildKey (byte *key, const string &pwd)
-//{
-//    std::uniform_int_distribution<rng_t::result_type> udist(0, 255);
-//    rng_t rng;
-//
-//    u32 sumEvenPwd=0, sumOddPwd=0;
-//    for (auto i=pwd.begin(), j=pwd.begin()+1;
-//         i<pwd.end(), j<pwd.end(); i+=2, j+=2)
-//    {
-//        sumEvenPwd += *i;
-//        sumOddPwd  += *j;
-//    }
-//
-//    // Using old rand to generate the new rand seed
-//    newSrand((u32) 24593 * (9819241*sumEvenPwd + 2597591*sumOddPwd + 648649));
-//
-//    u64 seed = 0;
-//    for (char c : pwd)
-//        seed += c * newRand() + newRand();
-//
-//    rng.seed(static_cast<rng_t::result_type>(seed));
-//
-//    int i = AES::DEFAULT_KEYLENGTH;
-//    u64 j = pwd.size()-1;
-//    while (i--)
-//    {
-//        key[i] = (byte) ((udist(rng)*pwd[j]) % 255);
-//        if (j--==0)    j=pwd.size()-1;
-//    }
-//}
 
 #ifdef DEBUG
 /**
