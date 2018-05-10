@@ -211,7 +211,7 @@ int main (int argc, char* argv[]) {
         case 'n':                          cryptObj.shuffle_file();    break;
         default :  cerr<<"Error: \"" << inArgsObj.IN_FILE_NAME << "\" "
                        <<"is not a valid FASTA or FASTQ file.\n";
-                   return 0;                                          break;
+                   return 0;                                           break;
       }
     }
   }
