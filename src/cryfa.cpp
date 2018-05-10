@@ -211,7 +211,8 @@ int main (int argc, char* argv[])
                 cerr<<"Decompressing...\n";    fastaObj.decompress();     break;
             case (char) 126:
                 cerr<<"Decompressing...\n";    fastqObj.decompress();     break;
-            case (char) 125:                   cryptObj.unshuffleFile();  break;
+            case (char) 125:
+              cryptObj.unshuffle_file();  break;
             default:                                                      break;
         }
         in.close();
@@ -226,7 +227,8 @@ int main (int argc, char* argv[])
         {
             case 'A':  cerr<<"Compacting...\n";   fastaObj.compress();    break;
             case 'Q':  cerr<<"Compacting...\n";   fastqObj.compress();    break;
-            case 'n':                             cryptObj.shuffleFile(); break;
+            case 'n':
+              cryptObj.shuffle_file(); break;
             default :  cerr<<"Error: \"" << inArgsObj.IN_FILE_NAME << "\" "
                            <<"is not a valid FASTA or FASTQ file.\n";
                        return 0;                                          break;

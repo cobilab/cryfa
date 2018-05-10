@@ -12,10 +12,8 @@
 
 #include "def.hpp"
 #include "security.hpp"
-
 using std::string;
 using std::vector;
-
 
 class endecrypto;
 
@@ -29,47 +27,48 @@ typedef void (endecrypto::*unpackFP_t)
  */
 class endecrypto : public Security
 {
-public:
-    endecrypto          () = default;
-    void packLHdrFaFq   (string&, const string&, const htbl_t&);
-    void packLQsFq      (string&, const string&, const htbl_t&);
-    void pack_3to2      (string&, const string&, const htbl_t&);
-    void pack_2to1      (string&, const string&, const htbl_t&);
-    void pack_3to1      (string&, const string&, const htbl_t&);
-    void pack_5to1      (string&, const string&, const htbl_t&);
-    void pack_7to1      (string&, const string&, const htbl_t&);
-    void pack_1to1      (string&, const string&, const htbl_t&);
-    void unpack_2B      (string&, string::iterator&, const vector<string>&);
-    void unpack_1B      (string&, string::iterator&, const vector<string>&);
-    void shuffleFile    ();
-    void unshuffleFile  ();
+ public:
+  endecrypto () = default;
+  
+  auto pack_Lhdr_fa_fq (string&, const string&, const htbl_t&) -> void;
+  auto pack_Lqs_fq (string&, const string&, const htbl_t&) -> void;
+  auto pack_3to2 (string&, const string&, const htbl_t&) -> void;
+  auto pack_2to1 (string&, const string&, const htbl_t&) -> void;
+  auto pack_3to1 (string&, const string&, const htbl_t&) -> void;
+  auto pack_5to1 (string&, const string&, const htbl_t&) -> void;
+  auto pack_7to1 (string&, const string&, const htbl_t&) -> void;
+  auto pack_1to1 (string&, const string&, const htbl_t&) -> void;
+  auto unpack_2B (string&, string::iterator&, const vector<string>&) -> void;
+  auto unpack_1B (string&, string::iterator&, const vector<string>&) -> void;
+  auto shuffle_file () -> void;
+  auto unshuffle_file () -> void;
     
-protected:
-    string Hdrs;        /**< @brief Max: 39 values */
-    string QSs;         /**< @brief Max: 39 values */
-    string HdrsX;       /**< @brief Extended Hdrs */
-    string QSsX;        /**< @brief Extended QSs */
-    htbl_t HdrMap;      /**< @brief Hdrs hash table */
-    htbl_t QsMap;       /**< @brief QSs hash table */
-    u32    BlockLine;   /**< @brief Max block lines */
-    
-    void buildHashTbl   (htbl_t&, const string&, short);
-    void buildUnpackTbl (vector<string>&, const string&, u16);
-    byte dnaPackIndex   (const string&);
-    u16  largePackIndex (const string&, const htbl_t&);
-    void packSeq        (string&, const string&);
-    void unpackSeq      (string&, string::iterator&);
-    void unpackLarge    (string&, string::iterator&,char,const vector<string>&);
-    void joinPackedFiles     (const string&, const string&, char, bool)   const;
-    void joinUnpackedFiles   ()                                           const;
-    void joinShuffledFiles   ()                                           const;
-    void joinUnshuffledFiles ()                                           const;
+ protected:
+  string Hdrs;        /**< @brief Max: 39 values */
+  string QSs;         /**< @brief Max: 39 values */
+  string HdrsX;       /**< @brief Extended Hdrs */
+  string QSsX;        /**< @brief Extended QSs */
+  htbl_t HdrMap;      /**< @brief Hdrs hash table */
+  htbl_t QsMap;       /**< @brief QSs hash table */
+  u32    BlockLine;   /**< @brief Max block lines */
+  
+  auto build_hash_tbl (htbl_t&, const string&, short) -> void;
+  auto build_unpack_tbl (vector<string>&, const string&, u16) -> void;
+  auto dna_pack_index (const string&) -> byte;
+  auto large_pack_index (const string&, const htbl_t&) -> u16;
+  auto pack_seq (string&, const string&) -> void;
+  auto unpack_seq (string&, string::iterator&) -> void;
+  auto unpack_large (string&, string::iterator&, char, const vector<string>&) -> void;
+  auto join_packed_files (const string&, const string&, char, bool) const -> void;
+  auto join_unpacked_files () const -> void;
+  auto join_shuffled_files () const -> void;
+  auto join_unshuffled_files () const -> void;
 
-private:
-    inline void packLarge (string&, const string&, const string&,const htbl_t&);
-    inline char penaltySym     (char)                                     const;
-    inline void shuffleBlock   (byte);
-    inline void unshuffleBlock (byte);
+ private:
+  auto pack_large (string&, const string&, const string&, const htbl_t&) -> void;
+  auto penalty_sym (char) const -> char;
+  auto shuffle_block (byte) -> void;
+  auto unshuffle_block (byte) -> void;
 };
 
 #endif //CRYFA_ENDECRYPTO_H
