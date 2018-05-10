@@ -246,8 +246,8 @@ void FASTQ::pack (const packfq_s &pkStruct, byte threadID)
         if (!DISABLE_SHUFFLE)
         {
             mutxFQ.lock();//----------------------------------------------------
-            if (VERBOSE && shuffInProgress)    cerr << "Shuffling...\n";
-            shuffInProgress = false;
+            if (VERBOSE && shuffInProg)    cerr << "Shuffling...\n";
+            shuffInProg = false;
             mutxFQ.unlock();//--------------------------------------------------
 
             shuffle(context);
@@ -518,8 +518,8 @@ void FASTQ::unpackHSQS (const unpackfq_s &upkStruct, byte threadID)
         if (shuffled)
         {
             mutxFQ.lock();//----------------------------------------------------
-            if (VERBOSE && shuffInProgress)    cerr << "Unshuffling...\n";
-            shuffInProgress = false;
+            if (VERBOSE && shuffInProg)    cerr << "Unshuffling...\n";
+            shuffInProg = false;
             mutxFQ.unlock();//--------------------------------------------------
 
             unshuffle(i, chunkSize);
@@ -594,8 +594,8 @@ void FASTQ::unpackHSQL (const unpackfq_s &upkStruct, byte threadID)
         if (shuffled)
         {
             mutxFQ.lock();//----------------------------------------------------
-            if (VERBOSE && shuffInProgress)    cerr << "Unshuffling...\n";
-            shuffInProgress = false;
+            if (VERBOSE && shuffInProg)    cerr << "Unshuffling...\n";
+            shuffInProg = false;
             mutxFQ.unlock();//--------------------------------------------------
 
             unshuffle(i, chunkSize);
@@ -670,8 +670,8 @@ void FASTQ::unpackHLQS (const unpackfq_s &upkStruct, byte threadID)
         if (shuffled)
         {
             mutxFQ.lock();//----------------------------------------------------
-            if (VERBOSE && shuffInProgress)    cerr << "Unshuffling...\n";
-            shuffInProgress = false;
+            if (VERBOSE && shuffInProg)    cerr << "Unshuffling...\n";
+            shuffInProg = false;
             mutxFQ.unlock();//--------------------------------------------------
 
             unshuffle(i, chunkSize);
@@ -745,8 +745,8 @@ void FASTQ::unpackHLQL (const unpackfq_s &upkStruct, byte threadID)
         if (shuffled)
         {
             mutxFQ.lock();//----------------------------------------------------
-            if (VERBOSE && shuffInProgress)    cerr << "Unshuffling...\n";
-            shuffInProgress = false;
+            if (VERBOSE && shuffInProg)    cerr << "Unshuffling...\n";
+            shuffInProg = false;
             mutxFQ.unlock();//--------------------------------------------------
 
             unshuffle(i, chunkSize);

@@ -188,8 +188,8 @@ void FASTA::pack (const packfa_s &pkStruct, byte threadID)
         if (!DISABLE_SHUFFLE)
         {
             mutxFA.lock();//----------------------------------------------------
-            if (VERBOSE && shuffInProgress)    cerr << "Shuffling...\n";
-            shuffInProgress = false;
+            if (VERBOSE && shuffInProg)    cerr << "Shuffling...\n";
+            shuffInProg = false;
             mutxFA.unlock();//--------------------------------------------------
     
             shuffle(context);
@@ -389,8 +389,8 @@ void FASTA::unpackHS (const unpackfa_s &upkStruct, byte threadID)
         if (shuffled)
         {
             mutxFA.lock();//----------------------------------------------------
-            if (VERBOSE && shuffInProgress)    cerr << "Unshuffling...\n";
-            shuffInProgress = false;
+            if (VERBOSE && shuffInProg)    cerr << "Unshuffling...\n";
+            shuffInProg = false;
             mutxFA.unlock();//--------------------------------------------------
     
             unshuffle(i, chunkSize);
@@ -461,8 +461,8 @@ void FASTA::unpackHL (const unpackfa_s &upkStruct, byte threadID)
         if (shuffled)
         {
             mutxFA.lock();//----------------------------------------------------
-            if (VERBOSE && shuffInProgress)    cerr << "Unshuffling...\n";
-            shuffInProgress = false;
+            if (VERBOSE && shuffInProg)    cerr << "Unshuffling...\n";
+            shuffInProg = false;
             mutxFA.unlock();//--------------------------------------------------
     
             unshuffle(i, chunkSize);

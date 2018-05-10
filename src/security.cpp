@@ -1,5 +1,5 @@
 /**
- * @file      Security.cpp
+ * @file      security.cpp
  * @brief     Security
  * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
  * @author    Diogo Pratas      (pratas@ua.pt)
@@ -17,7 +17,6 @@
 #include "cryptopp/eax.h"
 #include "cryptopp/files.h"
 #include "cryptopp/gcm.h"
-
 using std::ifstream;
 using std::wifstream;
 using std::cerr;
@@ -38,70 +37,59 @@ using CryptoPP::GCM;
 
 std::mutex mutxSec;    /**< @brief Mutex */
 
-
 /**
  * @brief  Get password from a file
  * @return Password (string)
  */
-string Security::extractPass () const
-{
-    ifstream in(KEY_FILE_NAME);
-    char     c;
-    string   pass;
-    
-    while (in.get(c))  pass += c;
-    
-    in.close();
-    return pass;
+string Security::read_pass () const {
+  string pass;
+  file_to_string(KEY_FILE_NAME, pass.begin());
+  return pass;
 }
 
 /**
  * @brief   Encrypt
- * @details AES encryption uses a secret key of a variable length (128, 196
- *          or 256 bit). This key is secretly exchanged between two parties
- *          before communication begins.
+ * @details AES encryption uses a secret key of a variable length (128, 196 or
+ *          256 bit). This key is secretly exchanged between two parties before
+ *          communication begins.
  *
  *          DEFAULT_KEYLENGTH = 16 bytes.
  */
-void Security::encrypt ()
-{
-    cerr << "Encrypting...\n";
-    const auto startTime = high_resolution_clock::now();// Start timer
-    
-    byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
-    memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
-    memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
-    
-    const string pass = extractPass();
-    buildKey(key, pass);
-    buildIV(iv, pass);
-    
-    try
-    {
-        GCM<AES>::Encryption e;
-        e.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
-    
-        FileSource(PCKD_FNAME.c_str(), true,
-                   new AuthenticatedEncryptionFilter(e, new FileSink(cout),
-                                                     false, TAG_SIZE));
-    }
-    catch (CryptoPP::InvalidArgument &e)
-    {
-        cerr << "Caught InvalidArgument...\n" << e.what() << "\n";
-    }
-    catch (CryptoPP::Exception &e)
-    {
-        cerr << "Caught Exception...\n" << e.what() << "\n";
-    }
+void Security::encrypt () {
+  cerr << "Encrypting...\n";
+  const auto startTime = high_resolution_clock::now();  // Start timer
+  
+  byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
+  memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH);   // AES key
+  memset(iv,  0x00, (size_t) AES::BLOCKSIZE);           // Initialization Vector
+  
+  const string pass = read_pass();
+  build_key(key, pass);
+  build_iv(iv, pass);
+  
+  try {
+    GCM<AES>::Encryption e;
+    e.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
+  
+    FileSource(PCKD_FNAME.c_str(), true,
+               new AuthenticatedEncryptionFilter(e, new FileSink(cout),
+                                                 false, TAG_SIZE));
+  }
+  catch (CryptoPP::InvalidArgument& e) {
+    cerr << "Caught InvalidArgument...\n" << e.what() << "\n";
+  }
+  catch (CryptoPP::Exception& e) {
+    cerr << "Caught Exception...\n" << e.what() << "\n";
+  }
 
-    const auto finishTime = high_resolution_clock::now();           //Stop timer
-    std::chrono::duration<double> elapsed = finishTime - startTime; //Dur. (sec)
-    cerr << (VERBOSE ? "Encryption done," : "Done,") << " in "
-         << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
+  const auto finishTime = high_resolution_clock::now();            // Stop timer
+  std::chrono::duration<double> elapsed = finishTime - startTime;  // Dur. (sec)
+  cerr << (VERBOSE ? "Encryption done," : "Done,") << " in "
+       << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
 
-    // Delete packed file
-    const string pkdFileName = PCKD_FNAME;
-    std::remove(pkdFileName.c_str());
+  // Delete packed file
+  const string pkdFileName = PCKD_FNAME;
+  std::remove(pkdFileName.c_str());
 }
 
 /**
@@ -114,129 +102,119 @@ void Security::encrypt ()
  */
 void Security::decrypt ()
 {
-    ifstream in(IN_FILE_NAME);
-    if (!in.good())
-        std::runtime_error("Error: failed opening \"" + IN_FILE_NAME + "\".\n");
+  ifstream in(IN_FILE_NAME);
+  if (!in.good())
+    std::runtime_error("Error: failed opening \"" + IN_FILE_NAME + "\".\n");
 
-    cerr << "Decrypting...\n";
-    const auto startTime = high_resolution_clock::now();// Start timer
-    
-    byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
-    memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
-    memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
+  cerr << "Decrypting...\n";
+  const auto startTime = high_resolution_clock::now();// Start timer
+  
+  byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
+  memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
+  memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
 
-    const string pass = extractPass();
-    buildKey(key, pass);
-    buildIV(iv, pass);
+  const string pass = read_pass();
+  build_key(key, pass);
+  build_iv(iv, pass);
 
-    try
-    {
-        const char* outFile = DEC_FNAME.c_str();
-        
-        GCM<AES>::Decryption d;
-        d.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
-        
-        AuthenticatedDecryptionFilter df(d, new FileSink(outFile),
-                        AuthenticatedDecryptionFilter::DEFAULT_FLAGS, TAG_SIZE);
-        FileSource(in, true, new Redirector(df /*, PASS_EVERYTHING */ ));
-    }
-    catch (CryptoPP::HashVerificationFilter::HashVerificationFailed &e)
-    {
-        cerr << "Caught HashVerificationFailed...\n" << e.what() << "\n";
-    }
-    catch (CryptoPP::InvalidArgument &e)
-    {
-        cerr << "Caught InvalidArgument...\n" << e.what() << "\n";
-    }
-    catch (CryptoPP::Exception &e)
-    {
-        cerr << "Caught Exception...\n" << e.what() << "\n";
-    }
+  try {
+    const char* outFile = DEC_FNAME.c_str();
     
-    const auto finishTime = high_resolution_clock::now();           //Stop timer
-    std::chrono::duration<double> elapsed = finishTime - startTime; //Dur. (sec)
-    cerr << (VERBOSE ? "Decryption done," : "Done,") << " in "
-         << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
+    GCM<AES>::Decryption d;
+    d.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
     
-    in.close();
+    AuthenticatedDecryptionFilter df(d, new FileSink(outFile),
+                    AuthenticatedDecryptionFilter::DEFAULT_FLAGS, TAG_SIZE);
+    FileSource(in, true, new Redirector(df /*, PASS_EVERYTHING */ ));
+  }
+  catch (CryptoPP::HashVerificationFilter::HashVerificationFailed& e) {
+    cerr << "Caught HashVerificationFailed...\n" << e.what() << "\n";
+  }
+  catch (CryptoPP::InvalidArgument& e) {
+    cerr << "Caught InvalidArgument...\n" << e.what() << "\n";
+  }
+  catch (CryptoPP::Exception& e) {
+    cerr << "Caught Exception...\n" << e.what() << "\n";
+  }
+  
+  const auto finishTime = high_resolution_clock::now();           //Stop timer
+  std::chrono::duration<double> elapsed = finishTime - startTime; //Dur. (sec)
+  cerr << (VERBOSE ? "Decryption done," : "Done,") << " in "
+       << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
+  
+  in.close();
 }
 
 /**
- * @brief    Random number seed -- Emulate C srand()
+ * @brief Random number seed -- Emulate C srand()
  * @param s  Seed
  */
-void Security::newSrand (u32 s)
-{
-    randomEngine().seed(s);
+void Security::srand (u32 s) {
+  rand_engine().seed(s);
 }
 
 /**
  * @brief  Random number generate -- Emulate C rand()
  * @return Random number
  */
-int Security::newRand ()
-{
-    return (int) (randomEngine()() - randomEngine().min());
+int Security::rand () {
+  return (int) (rand_engine()() -rand_engine().min());
 }
 
 /**
  * @brief  Random number engine
  * @return The classic Minimum Standard rand0
  */
-std::minstd_rand0 &Security::randomEngine ()
-{
-    static std::minstd_rand0 e{};
-    return e;
+std::minstd_rand0 &Security::rand_engine () {
+  static std::minstd_rand0 e{};
+  return e;
 }
 
 /**
  * @brief Shuffle/unshuffle seed generator -- For each chunk
  */
-void Security::shuffSeedGen ()
-{
-    const string pass = extractPass();
-    
-    // Using old rand to generate the new rand seed
-    u64 seed = 0;
-    
-    mutxSec.lock();//-----------------------------------------------------------
-    newSrand(681493*std::accumulate(pass.begin(),pass.end(),u32(0)) + 9148693);
-    for (char c : pass)    seed += (u64) (c*newRand());
-    mutxSec.unlock();//---------------------------------------------------------
-    
-    seed_shared = seed;
+void Security::gen_shuff_seed () {
+  const string pass = read_pass();
+  
+  // Using old rand to generate the new rand seed
+  u64 seed = 0;
+  
+  mutxSec.lock();//-----------------------------------------------------------
+  srand(681493*std::accumulate(pass.begin(), pass.end(), u32(0))+9148693);
+  for (char c : pass)    seed += (u64) (c*rand());
+  mutxSec.unlock();//---------------------------------------------------------
+  
+  seed_shared = seed;
 }
 
 /**
- * @brief          Shuffle
+ * @brief Shuffle
  * @param[in, out] str  String to be shuffled
  */
-void Security::shuffle (string &str)
-{
-    shuffSeedGen();    // shuffling seed
-    std::shuffle(str.begin(), str.end(), std::mt19937(seed_shared));
+void Security::shuffle (string& str) {
+  gen_shuff_seed();    // shuffling seed
+  std::shuffle(str.begin(), str.end(), std::mt19937(seed_shared));
 }
 
 /**
- * @brief       Unshuffle
+ * @brief Unshuffle
  * @param i     Shuffled string iterator
  * @param size  Size of shuffled string
  */
-void Security::unshuffle (string::iterator &i, u64 size)
-{
-    string shuffledStr;     // Copy of shuffled string
-    for (u64 j=0; j!=size; ++j, ++i)    shuffledStr += *i;
-    string::iterator shIt = shuffledStr.begin();
-    i -= size;
-    
-    // Shuffle vector of positions
-    vector<u64> vPos(size);
-    std::iota(vPos.begin(), vPos.end(), 0);     // Insert 0 .. N-1
-    shuffSeedGen();
-    std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed_shared));
-    
-    // Insert unshuffled data
-    for (const u64& vI : vPos)  *(i + vI) = *shIt++;       // *shIt, then ++shIt
+void Security::unshuffle (string::iterator& i, u64 size) {
+  string shuffledStr;     // Copy of shuffled string
+  for (u64 j=0; j!=size; ++j, ++i)    shuffledStr += *i;
+  string::iterator shIt = shuffledStr.begin();
+  i -= size;
+  
+  // Shuffle vector of positions
+  vector<u64> vPos(size);
+  std::iota(vPos.begin(), vPos.end(), 0);     // Insert 0 .. N-1
+  gen_shuff_seed();
+  std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed_shared));
+  
+  // Insert unshuffled data
+  for (const u64& vI : vPos)  *(i + vI) = *shIt++;       // *shIt, then ++shIt
 }
 
 /**
@@ -244,24 +222,23 @@ void Security::unshuffle (string::iterator &i, u64 size)
  * @param iv    IV
  * @param pass  Password
  */
-void Security::buildIV (byte *iv, const string &pass)
-{
-    std::uniform_int_distribution<rng_t::result_type> udist(0, 255);
-    rng_t rng;
-    
-    // Using old rand to generate the new rand seed
-    newSrand(static_cast<u32>(44701 *
-             (459229  * accum_even(pass.begin(), pass.end(), 0ul)  +
-              3175661 * accum_odd (pass.begin(), pass.end(), 0ul)) + 499397));
-    u64 seed = 0;
-    for (char c : pass)
-        seed += c*newRand() + newRand();
-    
-    rng.seed(static_cast<rng_t::result_type>(seed));
-    
-    for (int i=AES::BLOCKSIZE; i--;)
-        iv[i] = static_cast<byte>(
-            (udist(rng) * accum_hops(pass.begin(), pass.end(), 0u, i+1)) % 255);
+void Security::build_iv (byte* iv, const string& pass) {
+  std::uniform_int_distribution<rng_t::result_type> udist(0, 255);
+  rng_t rng;
+  
+  // Using old rand to generate the new rand seed
+  srand(static_cast<u32>(44701 *
+        (459229  * accum_even(pass.begin(), pass.end(), 0ul) +
+         3175661 * accum_odd(pass.begin(), pass.end(), 0ul)) + 499397));
+  u64 seed = 0;
+  for (char c : pass)
+    seed += c*rand() +rand();
+  
+  rng.seed(static_cast<rng_t::result_type>(seed));
+  
+  for (int i=AES::BLOCKSIZE; i--;)
+    iv[i] = static_cast<byte>(
+      (udist(rng) * accum_hops(pass.begin(), pass.end(), 0u, i+1)) % 255);
 }
 
 /**
@@ -269,24 +246,23 @@ void Security::buildIV (byte *iv, const string &pass)
  * @param key   Key
  * @param pass  password
  */
-void Security::buildKey (byte *key, const string &pass)
-{
-    std::uniform_int_distribution<rng_t::result_type> udist(0, 255);
-    rng_t rng;
-    
-    // Using old rand to generate the new rand seed
-    newSrand(static_cast<u32>(24593 *
-             (9819241 * accum_even(pass.begin(), pass.end(), 0ul) +
-              2597591 * accum_odd (pass.begin(), pass.end(), 0ul)) + 648649));
-    u64 seed = 0;
-    for (char c : pass)
-        seed += c*newRand() + newRand();
-    
-    rng.seed(static_cast<rng_t::result_type>(seed));
-    
-    for (int i=AES::DEFAULT_KEYLENGTH; i--;)
-        key[i] = static_cast<byte>(
-            (udist(rng) * accum_hops(pass.begin(), pass.end(), 0u, i+1)) % 255);
+void Security::build_key (byte*key, const string& pass) {
+  std::uniform_int_distribution<rng_t::result_type> udist(0, 255);
+  rng_t rng;
+  
+  // Using old rand to generate the new rand seed
+  srand(static_cast<u32>(24593 *
+        (9819241 * accum_even(pass.begin(), pass.end(), 0ul) +
+         2597591 * accum_odd(pass.begin(), pass.end(), 0ul)) + 648649));
+  u64 seed = 0;
+  for (char c : pass)
+    seed += c*rand() +rand();
+  
+  rng.seed(static_cast<rng_t::result_type>(seed));
+  
+  for (int i=AES::DEFAULT_KEYLENGTH; i--;)
+    key[i] = static_cast<byte>(
+      (udist(rng) * accum_hops(pass.begin(), pass.end(), 0u, i+1)) % 255);
 }
 
 #ifdef DEBUG
@@ -294,23 +270,21 @@ void Security::buildKey (byte *key, const string &pass)
  * @brief Print IV
  * @param iv  IV
  */
-void Security::printIV (byte *iv) const
-{
-    cerr << "IV = [" << (int) iv[0];
-    for (u32 i = 1; i != AES::BLOCKSIZE; ++i)
-        cerr << " " << (int) iv[i];
-    cerr << "]\n";
+void Security::print_iv (byte* iv) const {
+  cerr << "IV = [" << (int) *iv++;
+  for (auto i=AES::BLOCKSIZE-1; i--;)
+    cerr << " " << (int) *iv++;
+  cerr << "]\n";
 }
 
 /**
  * @brief Print key
  * @param key  Key
  */
-void Security::printKey (byte *key) const
-{
-    cerr << "KEY: [" << (int) key[0];
-    for (u32 i = 1; i != AES::DEFAULT_KEYLENGTH; ++i)
-        cerr << " " << (int) key[i];
-    cerr << "]\n";
+void Security::print_key (byte* key) const {
+  cerr << "Key: [" << (int) *key++;
+  for (auto i=AES::DEFAULT_KEYLENGTH-1; i--;)
+    cerr << " " << (int) *key++;
+  cerr << "]\n";
 }
 #endif

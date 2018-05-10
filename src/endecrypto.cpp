@@ -827,8 +827,8 @@ void endecrypto::shuffleBlock (byte threadID)
         if (!DISABLE_SHUFFLE)
         {
             mutxEnDe.lock();//--------------------------------------------------
-            if (shuffInProgress)    cerr << "Shuffling...\n";
-            shuffInProgress = false;
+            if (shuffInProg)    cerr << "Shuffling...\n";
+            shuffInProg = false;
             mutxEnDe.unlock();//------------------------------------------------
 
             shuffle(context);
@@ -922,8 +922,8 @@ void endecrypto::unshuffleBlock (byte threadID)
         if (shuffled)
         {
             mutxEnDe.lock();//--------------------------------------------------
-            if (shuffInProgress)    cerr << "Unshuffling...\n";
-            shuffInProgress = false;
+            if (shuffInProg)    cerr << "Unshuffling...\n";
+            shuffInProg = false;
             mutxEnDe.unlock();//------------------------------------------------
         
             unshuffle(i, unshText.size());

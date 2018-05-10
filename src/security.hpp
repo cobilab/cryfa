@@ -1,5 +1,5 @@
 /**
- * @file      Security.hpp
+ * @file      security.hpp
  * @brief     Security
  * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
  * @author    Diogo Pratas      (pratas@ua.pt)
@@ -12,38 +12,37 @@
 
 #include "def.hpp"
 
-
 /**
  * @brief Security
  */
 class Security : public InArgs
 {
-public:
-    void decrypt       ();
-    
-protected:
-    bool shuffInProgress=true;/**< @brief Shuffle in progress @hideinitializer*/
-    bool shuffled       =true;/**< @hideinitializer */
-
-    void encrypt       ();
-    void shuffle       (string&);
-    void unshuffle     (string::iterator&, u64);
-    
-private:
-    u64  seed_shared;         /**< @brief Shared seed */
+ public:
+  auto decrypt () -> void;
+  
+ protected:
+  bool shuffInProg = true;  /**< @brief Shuffle in progress @hideinitializer */
+  bool shuffled    = true;  /**< @hideinitializer */
+  
+  auto encrypt () -> void;
+  auto shuffle (string&) -> void;
+  auto unshuffle (string::iterator&, u64) -> void;
+  
+ private:
+  u64  seed_shared;         /**< @brief Shared seed */
 //    const int TAG_SIZE = 12;  /**< @brief Tag size used in GCC mode auth enc */
   
-    string extractPass ()                       const;
-    void newSrand      (u32);
-    int  newRand       ();
-    std::minstd_rand0 &randomEngine ();
-    void shuffSeedGen  ();
-    void buildIV       (byte*, const string&);
-    void buildKey      (byte*, const string&);
+  auto read_pass () const -> string;
+  auto srand (u32) -> void;
+  auto rand () -> int;
+  auto rand_engine () -> std::minstd_rand0&;
+  auto gen_shuff_seed () -> void;
+  auto build_iv (byte*, const string&) -> void;
+  auto build_key (byte*, const string&) -> void;
 
 #ifdef DEBUG
-    void printIV       (byte*)                  const;
-    void printKey      (byte*)                  const;
+  auto print_iv (byte*) const -> void;
+  auto print_key (byte*) const -> void;
 #endif
 };
 
