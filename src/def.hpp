@@ -34,16 +34,6 @@ using rng_t  = std::mt19937;
 using htbl_t = std::unordered_map<string, u64>;
 using pos_t  = std::char_traits<char>::pos_type; /**< @brief tellg(), tellp() */
 
-/** @brief Command line input arguments */
-struct InArgs {
-  static bool   VERBOSE;            /**< @brief Verbose mode */
-  static bool   DISABLE_SHUFFLE;    /**< @brief Disable shuffle */
-  static byte   N_THREADS;          /**< @brief Number of threads */
-  static string IN_FILE_NAME;       /**< @brief Input file name */
-  static string KEY_FILE_NAME;      /**< @brief Password file name */
-};
-
-
 // Metaprograms
 /**
  * Power (B^E). Usage: "cerr << POWER<3,2>::val;" which yields 9
@@ -58,7 +48,6 @@ struct POWER { static const u64 val = B * POWER<B, E-1>::val; };
 template<u32 B>
 struct POWER<B, 0> { static const u64 val = 1; };
 /** @endcond */
-
 
 // Macros
 #define LOOP(i,S)                 for(const char& (i) : (S))
@@ -98,6 +87,16 @@ constexpr byte KEYLEN_C4       = 2;   /**< @brief 2 to 1 byte */
 constexpr byte KEYLEN_C5       = 3;   /**< @brief 3 to 2 byte */
 constexpr int  TAG_SIZE        = 12;  /**< @brief GCC mode auth enc */
 
+/** @brief Command line input arguments */
+struct Param {
+  static bool   verbose;          /**< @brief Verbose mode */
+  static bool   disable_shuffle;  /**< @brief Disable shuffle */
+  static byte   n_threads;        /**< @brief Number of threads */
+  static string in_file;          /**< @brief Input file name */
+  static string key_file;         /**< @brief Password file name */
+  static char   format;           /**< @brief Format of the input file */
+};
+
 /**
  * @brief Usage guide
  */
@@ -113,7 +112,7 @@ inline void Help () {
        << "      Armando J. Pinho    ap@ua.pt"                          << '\n'
                                                                         << '\n'
        << "SYNOPSIS"                                                    << '\n'
-       << "      ./cryfa [OPTION]... -k [KEY_FILE] [-d] [IN_FILE] "
+       << "      ./cryfa [OPTION]... -k [key_file] [-d] [in_file] "
        <<                                                "> [OUT_FILE]" << '\n'
                                                                         << '\n'
        << "SAMPLE"                                                      << '\n'
@@ -130,16 +129,20 @@ inline void Help () {
        << "      Compact & encrypt FASTA/FASTQ files."                  << '\n'
        << "      Encrypt any text-based genomic data."                  << '\n'
                                                                         << '\n'
-       << "      The KEY_FILE specifies a file including the password." << '\n'
+       << "      The key_file specifies a file including the password." << '\n'
                                                                         << '\n'
        << "      -h,  --help"                                           << '\n'
        << "           usage guide"                                      << '\n'
                                                                         << '\n'
-       << "      -k [KEY_FILE],  --key [KEY_FILE]"                      << '\n'
+       << "      -k [key_file],  --key [key_file]"                      << '\n'
        << "           key file name -- MANDATORY"                       << '\n'
                                                                         << '\n'
        << "      -d,  --dec"                                            << '\n'
        << "           decrypt & unpack"                                 << '\n'
+                                                                        << '\n'
+       << "      -f,  --format"                                         << '\n'
+       << "           force specified format "
+                                   "('a':FASTA, 'q':FASTQ, 'n':others)" << '\n'
                                                                         << '\n'
        << "      -v,  --verbose"                                        << '\n'
        << "           verbose mode (more information)"                  << '\n'

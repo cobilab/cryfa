@@ -77,18 +77,18 @@ inline char format (const string& inFileName) {
   // Skip leading blank lines or spaces
   while (in.peek()=='\n' || in.peek()==' ')    in.get(c);
   
-  // FASTQ
+  // Fastq
   while (in.peek() == '@')     IGNORE_THIS_LINE(in);
   byte nTabs=0;    while (in.get(c) && c!='\n')  if (c=='\t') ++nTabs;
   
-  if (in.peek() == '+') { in.close();    return 'Q'; }            // FASTQ
+  if (in.peek() == '+') { in.close();    return 'Q'; }            // Fastq
   
-  // FASTA or Not FASTA/FASTQ
+  // Fasta or Not Fasta/Fastq
   in.clear();   in.seekg(0, std::ios::beg); // Return to beginning of the file
   while (in.peek()!='>' && in.peek()!=EOF)    IGNORE_THIS_LINE(in);
   
-  if (in.peek() == '>') { in.close();    return 'A'; }      // FASTA
-  else                  { in.close();    return 'n'; }      // Not FASTA/FASTQ
+  if (in.peek() == '>') { in.close();    return 'A'; }      // Fasta
+  else                  { in.close();    return 'n'; }      // Not Fasta/Fastq
 }
 
 /**

@@ -15,7 +15,7 @@
 /**
  * @brief Security
  */
-class Security : public InArgs
+class Security : public Param
 {
  public:
   auto decrypt () -> void;

@@ -15,20 +15,20 @@
 using std::string;
 using std::vector;
 
-class endecrypto;
+class EnDecrypto;
 
 // Type define
-typedef void (endecrypto::*packFP_t) (string&, const string&, const htbl_t&);
-typedef void (endecrypto::*unpackFP_t)
+typedef void (EnDecrypto::*packFP_t) (string&, const string&, const htbl_t&);
+typedef void (EnDecrypto::*unpackFP_t)
              (string&, string::iterator&, const vector<string>&);
 
 /**
  * @brief Encryption/Decryption
  */
-class endecrypto : public Security
+class EnDecrypto : public Security
 {
  public:
-  endecrypto () = default;
+  EnDecrypto () = default;
   
   auto pack_Lhdr_fa_fq (string&, const string&, const htbl_t&) -> void;
   auto pack_Lqs_fq (string&, const string&, const htbl_t&) -> void;

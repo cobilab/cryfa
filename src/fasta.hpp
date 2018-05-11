@@ -30,10 +30,10 @@ struct unpackfa_s {
 /**
  * @brief Compression/Decompression of FASTA
  */
-class FASTA : public endecrypto
+class Fasta : public EnDecrypto
 {
  public:
-  FASTA () = default;
+  Fasta () = default;
   auto compress () -> void;
   auto decompress () -> void;
 

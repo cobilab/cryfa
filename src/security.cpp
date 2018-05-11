@@ -43,7 +43,7 @@ std::mutex mutxSec;    /**< @brief Mutex */
  */
 string Security::read_pass () const {
   string pass;
-  file_to_string(KEY_FILE_NAME, pass.begin());
+  file_to_string(key_file, pass.begin());
   return pass;
 }
 
@@ -84,7 +84,7 @@ void Security::encrypt () {
 
   const auto finishTime = high_resolution_clock::now();            // Stop timer
   std::chrono::duration<double> elapsed = finishTime - startTime;  // Dur. (sec)
-  cerr << (VERBOSE ? "Encryption done," : "Done,") << " in "
+  cerr << (verbose ? "Encryption done," : "Done,") << " in "
        << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
 
   // Delete packed file
@@ -102,9 +102,9 @@ void Security::encrypt () {
  */
 void Security::decrypt ()
 {
-  ifstream in(IN_FILE_NAME);
+  ifstream in(in_file);
   if (!in.good())
-    std::runtime_error("Error: failed opening \"" + IN_FILE_NAME + "\".\n");
+    std::runtime_error("Error: failed opening \"" + in_file + "\".\n");
 
   cerr << "Decrypting...\n";
   const auto startTime = high_resolution_clock::now();// Start timer
@@ -139,7 +139,7 @@ void Security::decrypt ()
   
   const auto finishTime = high_resolution_clock::now();           //Stop timer
   std::chrono::duration<double> elapsed = finishTime - startTime; //Dur. (sec)
-  cerr << (VERBOSE ? "Decryption done," : "Done,") << " in "
+  cerr << (verbose ? "Decryption done," : "Done,") << " in "
        << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
   
   in.close();

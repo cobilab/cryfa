@@ -34,10 +34,10 @@ struct unpackfq_s {
 /**
  * @brief Compression/Decompression of FASTQ
  */
-class FASTQ : public endecrypto
+class Fastq : public EnDecrypto
 {
  public:
-  FASTQ  () = default;
+  Fastq  () = default;
   auto compress () -> void;
   auto decompress () -> void;
   
