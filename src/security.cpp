@@ -124,7 +124,7 @@ void Security::decrypt ()
     d.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
     
     AuthenticatedDecryptionFilter df(d, new FileSink(outFile),
-                    AuthenticatedDecryptionFilter::DEFAULT_FLAGS, TAG_SIZE);
+                        AuthenticatedDecryptionFilter::DEFAULT_FLAGS, TAG_SIZE);
     FileSource(in, true, new Redirector(df /*, PASS_EVERYTHING */ ));
   }
   catch (CryptoPP::HashVerificationFilter::HashVerificationFailed& e) {
