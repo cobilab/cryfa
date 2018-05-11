@@ -53,16 +53,14 @@ bool Fastq::has_just_plus ()  const {
  * @brief Compress
  */
 void Fastq::compress () {
-  auto     startTime = high_resolution_clock::now();            // Start timer
-  string   line;
-  thread   arrThread[n_threads];
-  byte     t;                   // For threads
-  string   headers, qscores;
-  packfq_s pkStruct;            // Collection of inputs to pass to pack...
+  const auto start = high_resolution_clock::now();            // Start timer
+  thread     arrThread[n_threads];
+  string     headers, qscores;
+  packfq_s   pkStruct;            // Collection of inputs to pass to pack...
 
   if (verbose)    cerr << "Calculating number of different characters...\n";
   // Gather different chars and max length in all headers and quality scores
-  gather_hdr_qs(headers, qscores);
+  gather_h_q(headers, qscores);
   // Show number of different chars in headers and qs -- Ignore '@'=64 in hdr
   if (verbose)
     cerr << "In headers, they are " << headers.length() << ".\n"
@@ -72,7 +70,7 @@ void Fastq::compress () {
   set_hashTbl_packFn(pkStruct, headers, qscores);
 
   // Distribute file among threads, for reading and packing
-  for (t = 0; t != n_threads; ++t)
+  for (byte t=0; t != n_threads; ++t)
     arrThread[t] = thread(&Fastq::pack, this, pkStruct, t);
   for (auto& thr : arrThread)
     if (thr.joinable())    thr.join();
@@ -82,8 +80,8 @@ void Fastq::compress () {
   // Join partially packed and/or shuffled files
   join_packed_files(headers, qscores, 'Q', has_just_plus());
 
-  auto finishTime = high_resolution_clock::now();                 //Stop timer
-  std::chrono::duration<double> elapsed = finishTime - startTime; //Dur. (sec)
+  const auto finish = high_resolution_clock::now();        // Stop timer
+  std::chrono::duration<double> elapsed = finish - start;  // Dur. (sec)
 
   cerr << (verbose ? "Compaction done" : "Done") << ", in "
        << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
@@ -100,8 +98,8 @@ void Fastq::compress () {
  */
 void Fastq::set_hashTbl_packFn (packfq_s& pkStruct, const string& headers,
                                 const string& qscores) {
-  const size_t headersLen = headers.length();
-  const size_t qscoresLen = qscores.length();
+  const auto headersLen = headers.length();
+  const auto qscoresLen = qscores.length();
   
   // Header
   if (headersLen > MAX_C5) {         // If len > 39 filter the last 39 ones
@@ -109,7 +107,7 @@ void Fastq::set_hashTbl_packFn (packfq_s& pkStruct, const string& headers,
     // ASCII char after the last char in Hdrs -- Always <= (char) 127
     HdrsX = Hdrs;    HdrsX += (char) (Hdrs.back() + 1);
     build_hash_tbl(HdrMap, HdrsX, KEYLEN_C5);
-    pkStruct.packHdrFPtr= &EnDecrypto::pack_Lhdr_fa_fq;
+    pkStruct.packHdrFPtr= &EnDecrypto::pack_hL_fa_fq;
   }
   else {
     Hdrs = headers;
@@ -147,7 +145,7 @@ void Fastq::set_hashTbl_packFn (packfq_s& pkStruct, const string& headers,
     // ASCII char after last char in QUALITY_SCORES
     QSsX = QSs;     QSsX += (char) (QSs.back() + 1);
     build_hash_tbl(QsMap, QSsX, KEYLEN_C5);
-    pkStruct.packQSFPtr = &EnDecrypto::pack_Lqs_fq;
+    pkStruct.packQSFPtr = &EnDecrypto::pack_qL_fq;
   }
   else {
     QSs = qscores;
@@ -189,29 +187,28 @@ void Fastq::pack (const packfq_s &pkStruct, byte threadID) {
   packFP_t packHdr = pkStruct.packHdrFPtr;    // Function pointer
   packFP_t packQS  = pkStruct.packQSFPtr;     // Function pointer
   ifstream in(in_file);
-  string   context;       // Output string
-  string   line;
   ofstream pkfile(PK_FNAME+to_string(threadID), std::ios_base::app);
   
   // Lines ignored at the beginning
   for (u64 l = (u64) threadID*BlockLine; l--;)    IGNORE_THIS_LINE(in);
 
   while (in.peek() != EOF) {
-    context.clear();
-
+    string context;  // Output string
+  
+    string line;
     for (u64 l = 0; l != BlockLine; l += 4) {  // Process 4 lines by 4 lines
       if (getline(in, line).good()) {        // Header -- Ignore '@'
           (this->*packHdr) (context, line.substr(1), HdrMap);
-          context+=(char) 254;
+          context += (char) 254;
       }
       if (getline(in, line).good()) {        // Sequence
         pack_seq(context, line);
-          context+=(char) 254;
+          context += (char) 254;
       }
       IGNORE_THIS_LINE(in);                  // +. ignore
       if (getline(in, line).good()) {        // Quality score
           (this->*packQS) (context, line, QsMap);
-          context+=(char) 254;
+          context += (char) 254;
       }
     }
 
@@ -249,28 +246,24 @@ void Fastq::pack (const packfq_s &pkStruct, byte threadID) {
  * @param[out] headers  Chars of all headers
  * @param[out] qscores  Chars of all quality scores
  */
-void Fastq::gather_hdr_qs (string& headers, string& qscores) {
+void Fastq::gather_h_q (string& headers, string& qscores) {
   u32  maxHLen=0,   maxQLen=0;       // Max length of headers & quality scores
   bool hChars[127], qChars[127];
   memset(hChars+32, false, 95);
   memset(qChars+32, false, 95);
 
   ifstream in(in_file);
-  string   line;
-  while (!in.eof())
-  {
-    if (getline(in, line).good())
-    {
-      for (const char &c : line)    hChars[c] = true;
+  for (string line; !in.eof();) {
+    if (getline(in, line).good()) {
+      for (char c : line)           hChars[c] = true;
       if (line.size() > maxHLen)    maxHLen = (u32) line.size();
     }
 
     IGNORE_THIS_LINE(in);    // Ignore sequence
     IGNORE_THIS_LINE(in);    // Ignore +
 
-    if (getline(in, line).good())
-    {
-      for (const char &c : line)    qChars[c] = true;
+    if (getline(in, line).good()) {
+      for (char c : line)           qChars[c] = true;
       if (line.size() > maxQLen)    maxQLen = (u32) line.size();
     }
   }
@@ -290,14 +283,11 @@ void Fastq::gather_hdr_qs (string& headers, string& qscores) {
  * @brief Decompress
  */
 void Fastq::decompress () {
-  auto       startTime = high_resolution_clock::now();          // Start timer
+  const auto start = high_resolution_clock::now();          // Start timer
   char       c;                   // Chars in file
   string     headers, qscores;
   unpackfq_s upkStruct;           // Collection of inputs to pass to unpack...
-  string     chunkSizeStr;        // Chunk size (string) -- For unshuffling
   thread     arrThread[n_threads];// Array of threads
-  byte       t;                   // For threads
-  u64        offset;              // To traverse decompressed file
   ifstream   in(DEC_FNAME);
 
   in.ignore(1);                   // Jump over decText[0]==(char) 126
@@ -320,12 +310,12 @@ void Fastq::decompress () {
     ?(qscores.length() <= MAX_C5 ? &Fastq::unpack_hS_qS : &Fastq::unpack_hS_qL)
     :(qscores.length() >  MAX_C5 ? &Fastq::unpack_hL_qL : &Fastq::unpack_hL_qS);
   
-  for (t = 0; t != n_threads; ++t) {
+  for (byte t=0; t != n_threads; ++t) {
     in.get(c);
     if (c == (char) 253) {
-      chunkSizeStr.clear();   // Chunk size
+      string chunkSizeStr;   // Chunk size (string) -- For unshuffling
       while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
-      offset = stoull(chunkSizeStr);
+      const u64 offset = stoull(chunkSizeStr);  // To traverse decompressed file
       
       upkStruct.begPos    = in.tellg();
       upkStruct.chunkSize = offset;
@@ -352,8 +342,8 @@ void Fastq::decompress () {
   // Join partially unpacked files
   join_unpacked_files();
   
-  auto finishTime = high_resolution_clock::now();                  // Stop timer
-  std::chrono::duration<double> elapsed = finishTime - startTime;  // Dur. (sec)
+  const auto finish = high_resolution_clock::now();        // Stop timer
+  std::chrono::duration<double> elapsed = finish - start;  // Dur. (sec)
 
   cerr << (verbose ? "Decompression done," : "Done,") << " in "
        << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
@@ -367,8 +357,8 @@ void Fastq::decompress () {
  */
 void Fastq::set_unpackTbl_unpackFn (unpackfq_s& upkStruct, const string& headers,
                                     const string& qscores) {
-  const size_t headersLen = headers.length();
-  const size_t qscoresLen = qscores.length();
+  const auto headersLen = headers.length();
+  const auto qscoresLen = qscores.length();
   u16 keyLen_hdr=0,  keyLen_qs=0;
   
   // Header
@@ -454,20 +444,17 @@ void Fastq::unpack_hS_qS (const unpackfq_s& upkStruct, byte threadID) {
   pos_t      begPos    = upkStruct.begPos;
   u64        chunkSize = upkStruct.chunkSize;
   ifstream   in(DEC_FNAME);
-  string     decText, plusMore, chunkSizeStr;
-  char       c;
-  pos_t      endPos;
   ofstream   upkfile(UPK_FNAME+to_string(threadID), std::ios_base::app);
   string     upkHdrOut, upkSeqOut, upkQsOut;
-  string::iterator i;
 
   while (in.peek() != EOF) {
+    char c;
     in.seekg(begPos);      // Read the file from this position
     // Take a chunk of decrypted file
-    decText.clear();
+    string decText;
     for (u64 u = chunkSize; u--;) { in.get(c);    decText += c; }
-    i = decText.begin();
-    endPos = in.tellg();   // Set the end position
+    auto i = decText.begin();
+    pos_t endPos = in.tellg();   // Set the end position
 
     // Unshuffle
     if (shuffled) {
@@ -482,6 +469,7 @@ void Fastq::unpack_hS_qS (const unpackfq_s& upkStruct, byte threadID) {
     upkfile << THR_ID_HDR + to_string(threadID) << '\n';
     do {
       upkfile << '@';
+      string plusMore;
 
       (this->*unpackHdr) (upkHdrOut, i, upkStruct.hdrUnpack);
       upkfile << (plusMore = upkHdrOut) << '\n';              ++i;  // Hdr
@@ -500,7 +488,7 @@ void Fastq::unpack_hS_qS (const unpackfq_s& upkStruct, byte threadID) {
       in.seekg(endPos);
       in.get(c);
       if (c == (char) 253) {
-        chunkSizeStr.clear();
+        string chunkSizeStr;
         while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
 
         chunkSize = stoull(chunkSizeStr);
@@ -525,20 +513,17 @@ void Fastq::unpack_hS_qL (const unpackfq_s& upkStruct, byte threadID) {
   pos_t      begPos    = upkStruct.begPos;
   u64        chunkSize = upkStruct.chunkSize;
   ifstream   in(DEC_FNAME);
-  string     decText, plusMore, chunkSizeStr;
-  char       c;
-  pos_t      endPos;
   ofstream   upkfile(UPK_FNAME+to_string(threadID), std::ios_base::app);
   string     upkHdrOut, upkSeqOut, upkQsOut;
-  string::iterator i;
 
   while (in.peek() != EOF) {
+    char c;
     in.seekg(begPos);       // Read file from this position
     // Take a chunk of decrypted file
-    decText.clear();
+    string decText;
     for (u64 u = chunkSize; u--;) { in.get(c);    decText += c; }
-    i = decText.begin();
-    endPos = in.tellg();    // Set the end position
+    auto i = decText.begin();
+    pos_t endPos = in.tellg();    // Set the end position
 
     // Unshuffle
     if (shuffled) {
@@ -553,6 +538,7 @@ void Fastq::unpack_hS_qL (const unpackfq_s& upkStruct, byte threadID) {
     upkfile << THR_ID_HDR + to_string(threadID) << '\n';
     do {
       upkfile << '@';
+      string plusMore;
 
       (this->*unpackHdr) (upkHdrOut, i, upkStruct.hdrUnpack);
       upkfile << (plusMore = upkHdrOut) << '\n';               ++i; // Hdr
@@ -571,7 +557,7 @@ void Fastq::unpack_hS_qL (const unpackfq_s& upkStruct, byte threadID) {
       in.seekg(endPos);
       in.get(c);
       if (c == (char) 253) {
-        chunkSizeStr.clear();
+        string chunkSizeStr;
         while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
 
         chunkSize = stoull(chunkSizeStr);
@@ -596,20 +582,17 @@ void Fastq::unpack_hL_qS (const unpackfq_s& upkStruct, byte threadID) {
   pos_t      begPos    = upkStruct.begPos;
   u64        chunkSize = upkStruct.chunkSize;
   ifstream   in(DEC_FNAME);
-  string     decText, plusMore, chunkSizeStr;
-  char       c;
-  pos_t      endPos;
   ofstream   upkfile(UPK_FNAME+to_string(threadID), std::ios_base::app);
   string     upkHdrOut, upkSeqOut, upkQsOut;
-  string::iterator i;
 
   while (in.peek() != EOF) {
+    char c;
     in.seekg(begPos);       // Read file from this position
     // Take a chunk of decrypted file
-    decText.clear();
+    string decText;
     for (u64 u = chunkSize; u--;) { in.get(c);    decText += c; }
-    i = decText.begin();
-    endPos = in.tellg();    // Set the end position
+    auto i = decText.begin();
+    pos_t endPos = in.tellg();    // Set the end position
 
     // Unshuffle
     if (shuffled) {
@@ -624,6 +607,7 @@ void Fastq::unpack_hL_qS (const unpackfq_s& upkStruct, byte threadID) {
     upkfile << THR_ID_HDR + to_string(threadID) << '\n';
     do {
       upkfile << '@';
+      string plusMore;
   
       unpack_large(upkHdrOut, i, upkStruct.XChar_hdr, upkStruct.hdrUnpack);
       upkfile << (plusMore = upkHdrOut) << '\n';              ++i;  // Hdr
@@ -642,7 +626,7 @@ void Fastq::unpack_hL_qS (const unpackfq_s& upkStruct, byte threadID) {
       in.seekg(endPos);
       in.get(c);
       if (c == (char) 253) {
-        chunkSizeStr.clear();
+        string chunkSizeStr;
         while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
 
         chunkSize = stoull(chunkSizeStr);
@@ -666,20 +650,17 @@ void Fastq::unpack_hL_qL (const unpackfq_s& upkStruct, byte threadID) {
   pos_t    begPos    = upkStruct.begPos;
   u64      chunkSize = upkStruct.chunkSize;
   ifstream in(DEC_FNAME);
-  string   decText, plusMore, chunkSizeStr;
-  char     c;
-  pos_t    endPos;
   ofstream upkfile(UPK_FNAME+to_string(threadID), std::ios_base::app);
   string   upkHdrOut, upkSeqOut, upkQsOut;
-  string::iterator i;
 
   while (in.peek() != EOF) {
+    char c;
     in.seekg(begPos);       // Read file from this position
     // Take a chunk of decrypted file
-    decText.clear();
+    string decText;
     for (u64 u = chunkSize; u--;) { in.get(c);    decText += c; }
-    i = decText.begin();
-    endPos = in.tellg();    // Set the end position
+    auto i = decText.begin();
+    pos_t endPos = in.tellg();    // Set the end position
 
     // Unshuffle
     if (shuffled) {
@@ -694,6 +675,7 @@ void Fastq::unpack_hL_qL (const unpackfq_s& upkStruct, byte threadID) {
     upkfile << THR_ID_HDR + to_string(threadID) << '\n';
     do {
       upkfile << '@';
+      string plusMore;
   
       unpack_large(upkHdrOut, i, upkStruct.XChar_hdr, upkStruct.hdrUnpack);
       upkfile << (plusMore = upkHdrOut) << '\n';              ++i;  // Hdr
@@ -712,7 +694,7 @@ void Fastq::unpack_hL_qL (const unpackfq_s& upkStruct, byte threadID) {
       in.seekg(endPos);
       in.get(c);
       if (c == (char) 253) {
-        chunkSizeStr.clear();
+        string chunkSizeStr;
         while (in.get(c) && c != (char) 254)    chunkSizeStr += c;
 
         chunkSize = stoull(chunkSizeStr);

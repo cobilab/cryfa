@@ -68,9 +68,7 @@ int main (int argc, char* argv[]) {
 
     par.in_file = argv[argc-1];    // Input file name
 
-    static int h_flag, v_flag, d_flag, s_flag
-    , f_flag
-    ;
+    static int h_flag, v_flag, d_flag, s_flag, f_flag;
     bool       k_flag = false;
     int        c;                     // Deal with getopt_long()
     int        option_index;          // Option index stored by getopt_long()
@@ -81,36 +79,36 @@ int main (int argc, char* argv[]) {
       {"dec",             no_argument, &d_flag, (int) 'd'},   // Decomp mode
       {"verbose",         no_argument, &v_flag, (int) 'v'},   // Verbose
       {"disable_shuffle", no_argument, &s_flag, (int) 's'},   // Dis (un)shuffle
-      {"format",    required_argument,       0,       'f'},   // Input format
-      {"key",       required_argument,       0,       'k'},   // Key file
-      {"thread",    required_argument,       0,       't'},   // #threads >= 1
-      {0,                           0,       0,         0}
+      {"format",    required_argument, nullptr,       'f'},   // Input format
+      {"key",       required_argument, nullptr,       'k'},   // Key file
+      {"thread",    required_argument, nullptr,       't'},   // #threads >= 1
+      {nullptr,                     0, nullptr,         0}
     };
 
     while (true) {
       option_index = 0;
       if ((c = getopt_long(argc, argv, ":hdvsf:k:t:",
-                           long_options, &option_index)) == -1)         break;
+                           long_options, &option_index)) == -1)           break;
 
       switch (c) {
         case 0:
           // If this option set a flag, do nothing else now.
-          if (long_options[option_index].flag != 0)                     break;
+          if (long_options[option_index].flag != 0)                       break;
           cerr << "option '" << long_options[option_index].name << "'\n";
           if (optarg)    cerr << " with arg " << optarg << '\n';
           break;
-        case 'h':  h_flag=1;       Help();                              break;
-        case 'd':  d_flag=1;                                            break;
-        case 'v':  v_flag=1;       par.verbose = true;                  break;
-        case 's':  s_flag=1;       par.disable_shuffle = true;          break;
-        case 'f':  f_flag=1;
+        case 'h':    h_flag=1;       Help();                              break;
+        case 'd':    d_flag=1;                                            break;
+        case 'v':    v_flag=1;       par.verbose = true;                  break;
+        case 's':    s_flag=1;       par.disable_shuffle = true;          break;
+        case 'f':    f_flag=1;
           if      (string(optarg)=="a")  par.format = 'A';
           else if (string(optarg)=="q")  par.format = 'Q';
           else if (string(optarg)=="n")  par.format = 'n';
           break;
-        case 'k':  k_flag = true;  par.key_file = string(optarg);       break;
-        case 't':  par.n_threads = (byte) stoi(string(optarg));         break;
-        default:   cerr<<"Option '"<<(char) optopt<<"' is invalid.\n";  break;
+        case 'k':    k_flag = true;  par.key_file = string(optarg);       break;
+        case 't':    par.n_threads = (byte) stoi(string(optarg));         break;
+        default:     cerr<<"Option '"<<(char) optopt<<"' is invalid.\n";  break;
       }
     }
     
@@ -126,10 +124,10 @@ int main (int argc, char* argv[]) {
       crypt.decrypt();
       ifstream in(DEC_FNAME);
       switch (in.peek()) {
-        case (char) 127:  cerr<<"Decompressing...\n";  fa.decompress();  break;
-        case (char) 126:  cerr<<"Decompressing...\n";  fq.decompress();  break;
-        case (char) 125:  crypt.unshuffle_file();                        break;
-        default:                                                         break;
+        case (char) 127:  cerr<<"Decompressing...\n";  fa.decompress();   break;
+        case (char) 126:  cerr<<"Decompressing...\n";  fq.decompress();   break;
+        case (char) 125:  crypt.unshuffle_file();                         break;
+        default:                                                          break;
       }
       in.close();
       return 0;
@@ -140,11 +138,11 @@ int main (int argc, char* argv[]) {
       if (!f_flag)
         par.format = format(par.in_file);
       switch (par.format) {
-        case 'A':  cerr<<"Compacting...\n";  fa.compress();        break;
-        case 'Q':  cerr<<"Compacting...\n";  fq.compress();        break;
-        case 'n':  crypt.shuffle_file();                           break;
-        default :  cerr<<"Error: \"" << par.in_file << "\" is not a valid "
-                       <<"FASTA or FASTQ file.\n";    return 0;    break;
+        case 'A':    cerr<<"Compacting...\n";    fa.compress();           break;
+        case 'Q':    cerr<<"Compacting...\n";    fq.compress();           break;
+        case 'n':    crypt.shuffle_file();                                break;
+        default :    cerr << "Error: \"" << par.in_file << "\" is not a valid "
+                          << "FASTA or FASTQ file.\n";    return 0;       break;
       }
     }
   }

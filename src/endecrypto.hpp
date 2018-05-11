@@ -30,8 +30,8 @@ class EnDecrypto : public Security
  public:
   EnDecrypto () = default;
   
-  auto pack_Lhdr_fa_fq (string&, const string&, const htbl_t&) -> void;
-  auto pack_Lqs_fq (string&, const string&, const htbl_t&) -> void;
+  auto pack_hL_fa_fq (string&, const string&, const htbl_t&) -> void;
+  auto pack_qL_fq (string&, const string&, const htbl_t&) -> void;
   auto pack_3to2 (string&, const string&, const htbl_t&) -> void;
   auto pack_2to1 (string&, const string&, const htbl_t&) -> void;
   auto pack_3to1 (string&, const string&, const htbl_t&) -> void;
@@ -54,18 +54,21 @@ class EnDecrypto : public Security
   
   auto build_hash_tbl (htbl_t&, const string&, short) -> void;
   auto build_unpack_tbl (vector<string>&, const string&, u16) -> void;
-  auto dna_pack_index (const string&) -> byte;
-  auto large_pack_index (const string&, const htbl_t&) -> u16;
+  auto dna_pack_idx (const string&) -> byte;
+  auto large_pack_idx (const string&, const htbl_t&) -> u16;
   auto pack_seq (string&, const string&) -> void;
   auto unpack_seq (string&, string::iterator&) -> void;
-  auto unpack_large (string&, string::iterator&, char, const vector<string>&) -> void;
-  auto join_packed_files (const string&, const string&, char, bool) const -> void;
+  auto unpack_large (string&, string::iterator&, char,
+                     const vector<string>&) -> void;
+  auto join_packed_files (const string&, const string&, char,
+                          bool) const -> void;
   auto join_unpacked_files () const -> void;
   auto join_shuffled_files () const -> void;
   auto join_unshuffled_files () const -> void;
 
  private:
-  auto pack_large (string&, const string&, const string&, const htbl_t&) -> void;
+  auto pack_large (string&, const string&, const string&,
+                   const htbl_t&) -> void;
   auto penalty_sym (char) const -> char;
   auto shuffle_block (byte) -> void;
   auto unshuffle_block (byte) -> void;

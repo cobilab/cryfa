@@ -24,6 +24,7 @@ using std::to_string;
 using std::chrono::high_resolution_clock;
 using std::memset;
 using std::setprecision;
+using std::uniform_int_distribution;
 using CryptoPP::AES;
 using CryptoPP::CBC_Mode_ExternalCipher;
 using CryptoPP::CBC_Mode;
@@ -38,16 +39,6 @@ using CryptoPP::GCM;
 std::mutex mutxSec;    /**< @brief Mutex */
 
 /**
- * @brief  Get password from a file
- * @return Password (string)
- */
-string Security::read_pass () const {
-  string pass;
-  file_to_string(key_file, pass.begin());
-  return pass;
-}
-
-/**
  * @brief   Encrypt
  * @details AES encryption uses a secret key of a variable length (128, 196 or
  *          256 bit). This key is secretly exchanged between two parties before
@@ -57,13 +48,13 @@ string Security::read_pass () const {
  */
 void Security::encrypt () {
   cerr << "Encrypting...\n";
-  const auto startTime = high_resolution_clock::now();  // Start timer
+  const auto start = high_resolution_clock::now();  // Start timer
   
   byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
   memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH);   // AES key
   memset(iv,  0x00, (size_t) AES::BLOCKSIZE);           // Initialization Vector
   
-  const string pass = read_pass();
+  const string pass = read_pass(key_file);
   build_key(key, pass);
   build_iv(iv, pass);
   
@@ -82,8 +73,8 @@ void Security::encrypt () {
     cerr << "Caught Exception...\n" << e.what() << "\n";
   }
 
-  const auto finishTime = high_resolution_clock::now();            // Stop timer
-  std::chrono::duration<double> elapsed = finishTime - startTime;  // Dur. (sec)
+  const auto finish = high_resolution_clock::now();        // Stop timer
+  std::chrono::duration<double> elapsed = finish - start;  // Dur. (sec)
   cerr << (verbose ? "Encryption done," : "Done,") << " in "
        << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
 
@@ -107,13 +98,13 @@ void Security::decrypt ()
     std::runtime_error("Error: failed opening \"" + in_file + "\".\n");
 
   cerr << "Decrypting...\n";
-  const auto startTime = high_resolution_clock::now();// Start timer
+  const auto start = high_resolution_clock::now();// Start timer
   
   byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
   memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
   memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
 
-  const string pass = read_pass();
+  const string pass = read_pass(key_file);
   build_key(key, pass);
   build_iv(iv, pass);
 
@@ -137,8 +128,8 @@ void Security::decrypt ()
     cerr << "Caught Exception...\n" << e.what() << "\n";
   }
   
-  const auto finishTime = high_resolution_clock::now();           //Stop timer
-  std::chrono::duration<double> elapsed = finishTime - startTime; //Dur. (sec)
+  const auto finish = high_resolution_clock::now();        // Stop timer
+  std::chrono::duration<double> elapsed = finish - start;  // Dur. (sec)
   cerr << (verbose ? "Decryption done," : "Done,") << " in "
        << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
   
@@ -158,7 +149,7 @@ void Security::srand (u32 s) {
  * @return Random number
  */
 int Security::rand () {
-  return (int) (rand_engine()() -rand_engine().min());
+  return (int) (rand_engine()() - rand_engine().min());
 }
 
 /**
@@ -174,7 +165,7 @@ std::minstd_rand0 &Security::rand_engine () {
  * @brief Shuffle/unshuffle seed generator -- For each chunk
  */
 void Security::gen_shuff_seed () {
-  const string pass = read_pass();
+  const string pass = read_pass(key_file);
   
   // Using old rand to generate the new rand seed
   u64 seed = 0;
@@ -193,7 +184,7 @@ void Security::gen_shuff_seed () {
  */
 void Security::shuffle (string& str) {
   gen_shuff_seed();    // shuffling seed
-  std::shuffle(str.begin(), str.end(), std::mt19937(seed_shared));
+  std::shuffle(str.begin(), str.end(), rng_t(seed_shared));
 }
 
 /**
@@ -204,14 +195,14 @@ void Security::shuffle (string& str) {
 void Security::unshuffle (string::iterator& i, u64 size) {
   string shuffledStr;     // Copy of shuffled string
   for (u64 j=0; j!=size; ++j, ++i)    shuffledStr += *i;
-  string::iterator shIt = shuffledStr.begin();
+  auto shIt = shuffledStr.begin();
   i -= size;
   
   // Shuffle vector of positions
   vector<u64> vPos(size);
   std::iota(vPos.begin(), vPos.end(), 0);     // Insert 0 .. N-1
   gen_shuff_seed();
-  std::shuffle(vPos.begin(), vPos.end(), std::mt19937(seed_shared));
+  std::shuffle(vPos.begin(), vPos.end(), rng_t(seed_shared));
   
   // Insert unshuffled data
   for (const u64& vI : vPos)  *(i + vI) = *shIt++;       // *shIt, then ++shIt
@@ -223,7 +214,7 @@ void Security::unshuffle (string::iterator& i, u64 size) {
  * @param pass  Password
  */
 void Security::build_iv (byte* iv, const string& pass) {
-  std::uniform_int_distribution<rng_t::result_type> udist(0, 255);
+  uniform_int_distribution<rng_t::result_type> udist(0, 255);
   rng_t rng;
   
   // Using old rand to generate the new rand seed
@@ -232,7 +223,7 @@ void Security::build_iv (byte* iv, const string& pass) {
          3175661 * accum_odd(pass.begin(), pass.end(), 0ul)) + 499397));
   u64 seed = 0;
   for (char c : pass)
-    seed += c*rand() +rand();
+    seed += c*rand() + rand();
   
   rng.seed(static_cast<rng_t::result_type>(seed));
   
@@ -247,7 +238,7 @@ void Security::build_iv (byte* iv, const string& pass) {
  * @param pass  password
  */
 void Security::build_key (byte*key, const string& pass) {
-  std::uniform_int_distribution<rng_t::result_type> udist(0, 255);
+  uniform_int_distribution<rng_t::result_type> udist(0, 255);
   rng_t rng;
   
   // Using old rand to generate the new rand seed
@@ -256,7 +247,7 @@ void Security::build_key (byte*key, const string& pass) {
          2597591 * accum_odd(pass.begin(), pass.end(), 0ul)) + 648649));
   u64 seed = 0;
   for (char c : pass)
-    seed += c*rand() +rand();
+    seed += c*rand() + rand();
   
   rng.seed(static_cast<rng_t::result_type>(seed));
   

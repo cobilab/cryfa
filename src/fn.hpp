@@ -11,12 +11,12 @@ using std::ifstream;
 using std::to_string;
 
 /**
- * @brief        Accumulate hop index values in a range
- * @param first  beginning of the range
- * @param last   end of the range
- * @param init   initial value
- * @param h      hop value
- * @return       A number
+ * @brief  Accumulate hop index values in a range
+ * @param  first  beginning of the range
+ * @param  last   end of the range
+ * @param  init   initial value
+ * @param  h      hop value
+ * @return A number
  */
 template <typename T, typename Iter, typename Hop>
 T accum_hops (Iter first, Iter last, T init, Hop h) {
@@ -26,11 +26,11 @@ T accum_hops (Iter first, Iter last, T init, Hop h) {
 };
 
 /**
- * @brief        Accumulate even index values in a range
- * @param first  beginning of the range
- * @param last   end of the range
- * @param init   initial value
- * @return       A number
+ * @brief  Accumulate even index values in a range
+ * @param  first  beginning of the range
+ * @param  last   end of the range
+ * @param  init   initial value
+ * @return A number
  */
 template <typename T, typename Iter>
 T accum_even (Iter first, Iter last, T init) {
@@ -38,29 +38,16 @@ T accum_even (Iter first, Iter last, T init) {
 };
 
 /**
- * @brief         Accumulate odd index values in a range
+ * @brief  Accumulate odd index values in a range
  * @param  first  beginning of the range
  * @param  last   end of the range
  * @param  init   initial value
- * @return        A number
+ * @return A number
  */
 template <typename T, typename Iter>
 T accum_odd (Iter first, Iter last, T init) {
   return accum_hops(first+1, last, init, 2);
 };
-
-/**
- * @brief        Save the contents of a file into a string
- * @param fname  file name
- * @param out    the output string
- */
-template <typename Iter>
-void file_to_string (const string& fname, Iter out) {
-  std::ifstream in(fname);
-  for (char c; in.get(c);)
-    *out++ += c;
-  in.close();
-}
 
 /**
  * @brief  Find file type: FASTA (A), FASTQ (Q), not FASTA/FASTQ (n)
@@ -92,36 +79,53 @@ inline char format (const string& inFileName) {
 }
 
 /**
- * @brief  Check password taken from a file
- * @param  keyFileName  Name of the file containing the password
- * @param  k_flag       If '-k' is entered by the user, for running Cryfa
+ * @brief Save the contents of a file into a string
+ * @param fname  file name
+ * @param out    the output string
  */
-inline void check_pass (const string& keyFileName, const bool k_flag) {
+template <typename Iter>
+void file_to_string (const string& fname, Iter out) {
+  std::ifstream in(fname);
+  for (char c; in.get(c);)
+    *out++ += c;
+  in.close();
+}
+
+/**
+ * @brief  Get password from a file
+ * @return Password (string)
+ */
+inline string read_pass (const string& keyFile) {
+  string pass;
+  file_to_string(keyFile, pass.begin());
+  return pass;
+}
+
+/**
+ * @brief Check password taken from a file
+ * @param keyFile  Name of the file containing the password
+ * @param k_flag   If '-k' is entered by the user, for running Cryfa
+ */
+inline void check_pass (const string& keyFile, const bool k_flag) {
   if (!k_flag)
     std::runtime_error("Error: no password file has been set.\n");
   else {
-    ifstream in(keyFileName);
-    
+    ifstream in(keyFile);
     if (in.peek() == EOF) {
       in.close();
       std::runtime_error("Error: password file is empty.\n");
     }
     else if (!in.good()) {
       in.close();
-      std::runtime_error("Error opening \"" + keyFileName + "\".\n");
+      std::runtime_error("Error opening \"" + keyFile + "\".\n");
     }
     else {
-      // Extract the password
-      char   c;
-      string pass;    pass.clear();
-      while (in.get(c))    pass += c;
-      
+      const string pass = read_pass(keyFile);
       if (pass.size() < 8) {
         in.close();
-        std::runtime_error("Error: the password size is " +
-                           to_string(pass.size()) + ". It must be at least 8.\n");
+        std::runtime_error("Error: the password size is "+to_string(pass.size())
+                           + ". It must be at least 8.\n");
       }
-      
       in.close();
     }
   }

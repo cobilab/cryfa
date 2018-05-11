@@ -50,7 +50,7 @@ struct POWER<B, 0> { static const u64 val = 1; };
 /** @endcond */
 
 // Macros
-#define LOOP(i,S)                 for(const char& (i) : (S))
+#define LOOP(i,S)                 for(char (i) : (S))
 #define LOOP2(i,j,S)              LOOP(i,S) LOOP(j,S)
 #define LOOP3(i,j,k,S)            LOOP(i,S) LOOP(j,S) LOOP(k,S)
 #define LOOP4(i,j,k,l,S)          LOOP(i,S) LOOP(j,S) LOOP2(k,l,S)

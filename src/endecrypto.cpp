@@ -34,7 +34,8 @@ std::mutex mutxEnDe;    /**< @brief Mutex */
  * @param[in]  strIn   The string including the keys
  * @param[in]  keyLen  Length of the keys
  */
-void EnDecrypto::build_hash_tbl (htbl_t& map, const string& strIn, short keyLen) {
+void EnDecrypto::build_hash_tbl (htbl_t& map, const string& strIn,
+                                 short keyLen) {
   u64 elementNo = 0;
   string element;    element.reserve((unsigned long) keyLen);
   map.clear();       map.reserve((u64) std::pow(strIn.size(), keyLen));
@@ -185,12 +186,12 @@ void EnDecrypto::build_unpack_tbl (vector<string>& unpack, const string& strIn,
  * @param  key  Key
  * @return Value (based on the idea of key-value in a hash table)
  */
-byte EnDecrypto::dna_pack_index (const string& key) {
-  const auto got = DNA_MAP.find(key);
-  if (got == DNA_MAP.end())
+byte EnDecrypto::dna_pack_idx (const string& key) {
+  const auto found = DNA_MAP.find(key);
+  if (found == DNA_MAP.end())
     std::runtime_error("Error: key '" + key + "'not found!\n");
   else
-    return (byte) got->second;
+    return (byte) found->second;
 }
 
 /**
@@ -199,12 +200,12 @@ byte EnDecrypto::dna_pack_index (const string& key) {
  * @param  map  Hash table
  * @return Value (based on the idea of key-value in a hash table)
  */
-u16 EnDecrypto::large_pack_index (const string& key, const htbl_t& map) {
-  const auto got = map.find(key);
-  if (got == map.end())
+u16 EnDecrypto::large_pack_idx (const string& key, const htbl_t& map) {
+  const auto found = map.find(key);
+  if (found == map.end())
     std::runtime_error("Error: key '" + key + "' not found!\n");
   else
-    return (u16) got->second;
+    return (u16) found->second;
 }
 
 /**
@@ -213,15 +214,13 @@ u16 EnDecrypto::large_pack_index (const string& key, const htbl_t& map) {
  * @param[in]  seq        Sequence
  */
 void EnDecrypto::pack_seq (string& packedSeq, const string& seq) {
-  bool   firstNotIn, secondNotIn, thirdNotIn;
-  char   s0, s1, s2;
-  string tuple;   tuple.reserve(3);
-  string::const_iterator i = seq.begin(),   iEnd = seq.end()-2;
+  auto i = seq.begin();
   
-  for (; i < iEnd; i += 3) {
-    s0 = *i,    s1 = *(i+1),    s2 = *(i+2);
+  for (auto iEnd=seq.end()-2; i < iEnd; i += 3) {
+    char s0 = *i,    s1 = *(i+1),    s2 = *(i+2);
     
-    tuple.clear();
+    string tuple;   tuple.reserve(3);
+    bool firstNotIn, secondNotIn, thirdNotIn;
     tuple +=
        (firstNotIn = (s0!='A' && s0!='C' && s0!='G' && s0!='T' && s0!='N'))
        ? 'X' : s0;
@@ -232,7 +231,7 @@ void EnDecrypto::pack_seq (string& packedSeq, const string& seq) {
        (thirdNotIn = (s2!='A' && s2!='C' && s2!='G' && s2!='T' && s2!='N'))
        ? 'X' : s2;
     
-    packedSeq += dna_pack_index(tuple);
+    packedSeq += dna_pack_idx(tuple);
     if (firstNotIn)  packedSeq += s0;
     if (secondNotIn) packedSeq += s1;
     if (thirdNotIn)  packedSeq += s2;
@@ -260,8 +259,8 @@ void EnDecrypto::pack_seq (string& packedSeq, const string& seq) {
  * @param[in]  strIn   Header
  * @param[in]  map     Hash table
  */
-void EnDecrypto::pack_Lhdr_fa_fq (string& packed, const string& strIn,
-                                  const htbl_t& map) {
+void EnDecrypto::pack_hL_fa_fq (string& packed, const string& strIn,
+                                const htbl_t& map) {
   pack_large(packed, strIn, Hdrs, map);
 }
 
@@ -272,8 +271,8 @@ void EnDecrypto::pack_Lhdr_fa_fq (string& packed, const string& strIn,
  * @param[in]  strIn   Quality scores
  * @param[in]  map     Hash table
  */
-void EnDecrypto::pack_Lqs_fq (string& packed, const string& strIn,
-                              const htbl_t& map) {
+void EnDecrypto::pack_qL_fq (string& packed, const string& strIn,
+                             const htbl_t& map) {
   pack_large(packed, strIn, QSs, map);
 }
 
@@ -287,24 +286,20 @@ void EnDecrypto::pack_Lqs_fq (string& packed, const string& strIn,
  */
 inline void EnDecrypto::pack_large (string& packed, const string& strIn,
                                     const string& hdrQs, const htbl_t& map) {
-  string tuple;    tuple.reserve(3);
-  bool   firstNotIn, secondNotIn, thirdNotIn;
-  char   s0, s1, s2;
-  u16    shortTuple;
-  string hQ = hdrQs;    // header/quality score
   // ASCII char after the last char in QUALITY_SCORES string
-  const char XChar = (char) (hQ.back() + 1);
-  string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-2;
+  const auto XChar = (char) (hdrQs.back() + 1);
+  auto i = strIn.begin();
   
-  for (; i < iEnd; i += 3) {
-    s0 = *i,    s1 = *(i+1),  s2 = *(i+2);
+  for (auto iEnd = strIn.end()-2; i < iEnd; i += 3) {
+    char s0 = *i,    s1 = *(i+1),  s2 = *(i+2);
     
-    tuple.clear();
-    tuple  = (firstNotIn  = (hQ.find(s0)==string::npos)) ? XChar : s0;
-    tuple += (secondNotIn = (hQ.find(s1)==string::npos)) ? XChar : s1;
-    tuple += (thirdNotIn  = (hQ.find(s2)==string::npos)) ? XChar : s2;
-    
-    shortTuple = large_pack_index(tuple, map);
+    string tuple;    tuple.reserve(3);
+    bool firstNotIn, secondNotIn, thirdNotIn;
+    tuple  = (firstNotIn  = (hdrQs.find(s0)==string::npos)) ? XChar : s0;
+    tuple += (secondNotIn = (hdrQs.find(s1)==string::npos)) ? XChar : s1;
+    tuple += (thirdNotIn  = (hdrQs.find(s2)==string::npos)) ? XChar : s2;
+  
+    u16 shortTuple = large_pack_idx(tuple, map);
     packed += (unsigned char) (shortTuple >> 8);      // Left byte
     packed += (unsigned char) (shortTuple & 0xFF);    // Right byte
     
@@ -336,13 +331,12 @@ inline void EnDecrypto::pack_large (string& packed, const string& strIn,
  */
 void EnDecrypto::pack_3to2 (string& packed, const string& strIn,
                             const htbl_t& map) {
-  string tuple;    tuple.reserve(3);
-  u16 shortTuple;
-  string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-2;
+  auto i = strIn.begin();
   
-  for (; i < iEnd; i += 3) {
-    tuple.clear();    tuple=*i;    tuple+=*(i+1);    tuple+=*(i+2);
-    shortTuple = (u16) map.find(tuple)->second;
+  for (auto iEnd = strIn.end()-2; i < iEnd; i += 3) {
+    string tuple;    tuple.reserve(3);
+    tuple=*i;    tuple+=*(i+1);    tuple+=*(i+2);
+    u16 shortTuple = (u16) map.find(tuple)->second;
     packed += (byte) (shortTuple >> 8);      // Left byte
     packed += (byte) (shortTuple & 0xFF);    // Right byte
   }
@@ -370,11 +364,11 @@ void EnDecrypto::pack_3to2 (string& packed, const string& strIn,
  */
 void EnDecrypto::pack_2to1 (string& packed, const string& strIn,
                             const htbl_t& map) {
-  string tuple;    tuple.reserve(2);
-  string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-1;
-    
-  for (; i < iEnd; i += 2) {
-    tuple.clear();    tuple = *i;    tuple += *(i+1);
+  auto i = strIn.begin();
+  
+  for (auto iEnd = strIn.end()-1; i < iEnd; i += 2) {
+    string tuple;    tuple.reserve(2);
+    tuple = *i;    tuple += *(i+1);
     packed += (char) map.find(tuple)->second;
   }
   
@@ -390,11 +384,11 @@ void EnDecrypto::pack_2to1 (string& packed, const string& strIn,
  */
 void EnDecrypto::pack_3to1 (string& packed, const string& strIn,
                             const htbl_t& map) {
-  string tuple;    tuple.reserve(3);
-  string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-2;
+  auto i = strIn.begin();
 
-  for (; i < iEnd; i += 3) {
-    tuple.clear();    tuple=*i;    tuple+=*(i+1);    tuple+=*(i+2);
+  for (auto iEnd = strIn.end()-2; i < iEnd; i += 3) {
+    string tuple;    tuple.reserve(3);
+    tuple=*i;    tuple+=*(i+1);    tuple+=*(i+2);
     packed += (char) map.find(tuple)->second;
   }
 
@@ -421,12 +415,12 @@ void EnDecrypto::pack_3to1 (string& packed, const string& strIn,
  */
 void EnDecrypto::pack_5to1 (string& packed, const string& strIn,
                             const htbl_t& map) {
-  string tuple;    tuple.reserve(5);
-  string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-4;
+  auto i = strIn.begin();
   
-  for (; i < iEnd; i += 5) {
-    tuple.clear();    tuple=*i;         tuple+=*(i+1);
-    tuple+=*(i+2);    tuple+=*(i+3);    tuple+=*(i+4);
+  for (auto iEnd = strIn.end()-4; i < iEnd; i += 5) {
+    string tuple;     tuple.reserve(5);
+    tuple=*i;         tuple+=*(i+1);    tuple+=*(i+2);
+    tuple+=*(i+3);    tuple+=*(i+4);
     packed += (char) map.find(tuple)->second;
   }
   
@@ -466,13 +460,13 @@ void EnDecrypto::pack_5to1 (string& packed, const string& strIn,
  */
 void EnDecrypto::pack_7to1 (string& packed, const string& strIn,
                             const htbl_t& map) {
-  string tuple;    tuple.reserve(7);
-  string::const_iterator i = strIn.begin(),   iEnd = strIn.end()-6;
+  auto i = strIn.begin();
   
-  for (; i < iEnd; i += 7) {
-      tuple.clear();    tuple=*i;         tuple+=*(i+1);    tuple+=*(i+2);
-      tuple+=*(i+3);    tuple+=*(i+4);    tuple+=*(i+5);    tuple+=*(i+6);
-      packed += (char) map.find(tuple)->second;
+  for (auto iEnd = strIn.end()-6; i < iEnd; i += 7) {
+    string tuple;    tuple.reserve(7);
+    tuple=*i;         tuple+=*(i+1);    tuple+=*(i+2);
+    tuple+=*(i+3);    tuple+=*(i+4);    tuple+=*(i+5);    tuple+=*(i+6);
+    packed += (char) map.find(tuple)->second;
   }
 
   // If len isn't multiple of 7, add (char) 255 before each sym
@@ -528,11 +522,9 @@ void EnDecrypto::pack_7to1 (string& packed, const string& strIn,
  */
 void EnDecrypto::pack_1to1 (string& packed, const string& strIn,
                             const htbl_t& map) {
-  string single;    single.reserve(1);
-  string::const_iterator i = strIn.begin(),   iEnd = strIn.end();
-  
-  for (; i < iEnd; ++i) {
-    single.clear();   single = *i;
+  for (auto i=strIn.begin(), iEnd=strIn.end(); i < iEnd; ++i) {
+    string single;
+    single = *i;
     packed += (char) map.find(single)->second;
   }
 }
@@ -559,47 +551,44 @@ char EnDecrypto::penalty_sym (char c) const {
  */
 void EnDecrypto::unpack_large (string& out, string::iterator& i,
                                char XChar, const vector<string>& unpack) {
-  byte   leftB, rightB;
-  u16    doubleB;                   // Double byte
-  string tpl;    tpl.reserve(3);    // Tuplet
   out.clear();
 
   while (*i != (char) 254) {
     // Hdr len not multiple of keyLen
     if (*i == (char) 255) { out += penalty_sym(*(i+1));    i+=2; }
     else {
-      leftB   = (byte) *i;
-      rightB  = (byte) *(i+1);
-      doubleB = leftB<<8 | rightB;    // Join two bytes
+      const auto leftB   = (byte) *i;
+      const auto rightB  = (byte) *(i+1);
+      const u16  doubleB = leftB<<8 | rightB;    // Join two bytes
+  
+      const string tpl = unpack[doubleB];
       
-      tpl = unpack[doubleB];
+      if (tpl[0]!=XChar && tpl[1]!=XChar && tpl[2]!=XChar)                // ...
+      { out+=tpl;                                                        i+=2; }
       
-      if (tpl[0]!=XChar && tpl[1]!=XChar && tpl[2]!=XChar)          // ...
-      { out+=tpl;                                                  i+=2; }
+      else if (tpl[0]==XChar && tpl[1]!=XChar && tpl[2]!=XChar)           // X..
+      { out+= penalty_sym(*(i+2));    out+=tpl[1];    out+=tpl[2];       i+=3; }
       
-      else if (tpl[0]==XChar && tpl[1]!=XChar && tpl[2]!=XChar)     // X..
-      { out+= penalty_sym(*(i+2));    out+=tpl[1];    out+=tpl[2];   i+=3; }
+      else if (tpl[0]!=XChar && tpl[1]==XChar && tpl[2]!=XChar)           // .X.
+      { out+=tpl[0];    out+= penalty_sym(*(i+2));    out+=tpl[2];       i+=3; }
       
-      else if (tpl[0]!=XChar && tpl[1]==XChar && tpl[2]!=XChar)     // .X.
-      { out+=tpl[0];    out+= penalty_sym(*(i+2));    out+=tpl[2];   i+=3; }
-      
-      else if (tpl[0]==XChar && tpl[1]==XChar && tpl[2]!=XChar)     // XX.
+      else if (tpl[0]==XChar && tpl[1]==XChar && tpl[2]!=XChar)           // XX.
       { out+= penalty_sym(*(i+2));  out+= penalty_sym(*(i+3));  out+=tpl[2];
-                                                                   i+=4; }
+                                                                         i+=4; }
       
-      else if (tpl[0]!=XChar && tpl[1]!=XChar && tpl[2]==XChar)     // ..X
-      { out+=tpl[0];    out+=tpl[1];    out+= penalty_sym(*(i+2));   i+=3; }
+      else if (tpl[0]!=XChar && tpl[1]!=XChar && tpl[2]==XChar)           // ..X
+      { out+=tpl[0];    out+=tpl[1];    out+= penalty_sym(*(i+2));       i+=3; }
       
-      else if (tpl[0]==XChar && tpl[1]!=XChar && tpl[2]==XChar)     // X.X
+      else if (tpl[0]==XChar && tpl[1]!=XChar && tpl[2]==XChar)           // X.X
       { out+= penalty_sym(*(i+2));  out+=tpl[1];  out+= penalty_sym(*(i+3));
-                                                                   i+=4; }
+                                                                         i+=4; }
       
-      else if (tpl[0]!=XChar && tpl[1]==XChar && tpl[2]==XChar)     // .XX
+      else if (tpl[0]!=XChar && tpl[1]==XChar && tpl[2]==XChar)           // .XX
       { out+=tpl[0];  out+= penalty_sym(*(i+2));  out+= penalty_sym(*(i+3));
-                                                                   i+=4; }
+                                                                         i+=4; }
       
-      else { out+= penalty_sym(*(i+2));    out+= penalty_sym(*(i+3));   // XXX
-             out+= penalty_sym(*(i+4));                              i+=5; }
+      else { out+= penalty_sym(*(i+2));    out+= penalty_sym(*(i+3));     // XXX
+             out+= penalty_sym(*(i+4));                                  i+=5; }
     }
   }
 }
@@ -612,8 +601,6 @@ void EnDecrypto::unpack_large (string& out, string::iterator& i,
  */
 void EnDecrypto::unpack_2B (string& out, string::iterator& i,
                             const vector<string>& unpack) {
-  byte leftB, rightB;
-  u16  doubleB;     // Double byte
   out.clear();
   
   for (; *i != (char) 254; i += 2) {
@@ -621,9 +608,9 @@ void EnDecrypto::unpack_2B (string& out, string::iterator& i,
     if (*i == (char) 255)
       out += penalty_sym(*(i+1));
     else {
-      leftB   = (byte) *i;
-      rightB  = (byte) *(i + 1);
-      doubleB = leftB << 8 | rightB;    // Join two bytes
+      const auto leftB   = (byte) *i;
+      const auto rightB  = (byte) *(i + 1);
+      const u16  doubleB = leftB << 8 | rightB;    // Join two bytes
   
       out += unpack[doubleB];
     }
@@ -653,14 +640,13 @@ void EnDecrypto::unpack_1B (string& out, string::iterator& i,
  * @param[in]  i    Input string iterator
  */
 void EnDecrypto::unpack_seq (string& out, string::iterator& i) {
-  string tpl;    tpl.reserve(3);     // Tuplet
   out.clear();
   
   for (; *i != (char) 254; ++i) {
     if (*i == (char) 255)                       // Seq len not multiple of 3
         out += penalty_sym(*(++i));
     else {
-      tpl = DNA_UNPACK[(byte) *i];
+      const string tpl = DNA_UNPACK[(byte) *i];
       
       if (tpl[0]!='X' && tpl[1]!='X' && tpl[2]!='X')                // ...
       { out+=tpl;                                                        }
@@ -696,12 +682,11 @@ void EnDecrypto::shuffle_file () {
   cerr << "This is not a FASTA/FASTQ file and we just encrypt it.\n";
   
   if (!disable_shuffle) {
-    auto startTime = high_resolution_clock::now();            // Start timer
+    const auto start = high_resolution_clock::now();            // Start timer
     thread arrThread[n_threads];
-    byte t;    // For threads
     
     // Distribute file among threads, for shuffling
-    for (t = 0; t != n_threads; ++t)
+    for (byte t=0; t != n_threads; ++t)
       arrThread[t] = thread(&EnDecrypto::shuffle_block, this, t);
     for (auto& thr : arrThread)
       if (thr.joinable())  thr.join();
@@ -709,8 +694,8 @@ void EnDecrypto::shuffle_file () {
     // Join partially shuffled files
     join_shuffled_files();
     
-    auto finishTime = high_resolution_clock::now();            // Stop timer
-    std::chrono::duration<double> elapsed = finishTime - startTime;   // sec
+    const auto finish = high_resolution_clock::now();            // Stop timer
+    std::chrono::duration<double> elapsed = finish - start;   // sec
     
     cerr << (verbose ? "Shuffling done" : "Done") << ", in "
          << std::fixed << setprecision(4) << elapsed.count()
@@ -720,8 +705,7 @@ void EnDecrypto::shuffle_file () {
     ifstream inFile(in_file);
     ofstream pckdFile(PCKD_FNAME);
     
-    pckdFile << (char) 125
-             << (!disable_shuffle ? (char) 128 : (char) 129);
+    pckdFile << (char) 125 << (!disable_shuffle ? (char) 128 : (char) 129);
     pckdFile << inFile.rdbuf();
     
     inFile.close();
@@ -739,14 +723,12 @@ void EnDecrypto::shuffle_file () {
 void EnDecrypto::shuffle_block (byte threadID) {
   ifstream in(in_file);
   ofstream shfile(SH_FNAME+to_string(threadID), std::ios_base::app);
-  string   context;
-  char     c;
   
   // Characters ignored at the beginning
   in.ignore((std::streamsize) (threadID * BLOCK_SIZE));
 
-  while (in.peek() != EOF) {
-    context.clear();
+  for (char c; in.peek() != EOF;) {
+    string context;
     for (u64 bs = BLOCK_SIZE; bs--;)
       if (in.get(c))    context += c;
     
@@ -782,12 +764,11 @@ void EnDecrypto::unshuffle_file () {
   if (c == (char) 128) {
     in.close();
 
-    auto startTime = high_resolution_clock::now();            // Start timer
+    const auto start = high_resolution_clock::now();         // Start timer
     thread arrThread[n_threads];
-    byte t;    // For threads
 
     // Distribute file among threads, for unshuffling
-    for (t = 0; t != n_threads; ++t)
+    for (byte t=0; t != n_threads; ++t)
       arrThread[t] = thread(&EnDecrypto::unshuffle_block, this, t);
     for (auto& thr : arrThread)
       if (thr.joinable())  thr.join();
@@ -798,8 +779,8 @@ void EnDecrypto::unshuffle_file () {
     // Join partially unshuffled files
     join_unshuffled_files();
 
-    auto finishTime = high_resolution_clock::now();            // Stop timer
-    std::chrono::duration<double> elapsed = finishTime - startTime;   // sec
+    const auto finish = high_resolution_clock::now();        // Stop timer
+    std::chrono::duration<double> elapsed = finish - start;  // sec
 
     cerr << (verbose ? "Unshuffling done" : "Done") << ", in "
          << std::fixed << setprecision(4) << elapsed.count()
@@ -824,19 +805,16 @@ void EnDecrypto::unshuffle_file () {
 void EnDecrypto::unshuffle_block (byte threadID) {
   ifstream in(DEC_FNAME);
   ofstream ushfile(USH_FNAME+to_string(threadID), std::ios_base::app);
-  string   unshText;
-  char     c;
-  string::iterator i;
   
   // filetype char (125) + shuffed (128) + characters ignored at the beginning
   in.ignore((std::streamsize) (2 + threadID*BLOCK_SIZE));
   
-  while (in.peek() != EOF) {
-    unshText.clear();
+  for (char c; in.peek() != EOF;) {
+    string unshText;
     for (u64 bs = BLOCK_SIZE; bs--;)
       if (in.get(c))    unshText += c;
     
-    i = unshText.begin();
+    auto i = unshText.begin();
 
     // Unshuffle
     if (shuffled) {
@@ -868,8 +846,8 @@ void EnDecrypto::unshuffle_block (byte threadID) {
  * @param fT        File type
  * @param justPlus  If the third line of FASTQ contains only the '+' char
  */
-void EnDecrypto::join_packed_files (const string& headers, const string& qscores,
-                                    char fT, bool justPlus) const {
+void EnDecrypto::join_packed_files (const string& headers,
+  const string& qscores, char fT, bool justPlus) const {
   byte     t;                            // For threads
   ifstream pkFile[n_threads];
   ofstream pckdFile(PCKD_FNAME);      // Packed file
@@ -909,10 +887,9 @@ void EnDecrypto::join_packed_files (const string& headers, const string& qscores
   
   // Close/delete input/output files
   pckdFile.close();
-  string pkFileName;
   for (t = n_threads; t--;) {
     pkFile[t].close();
-    pkFileName=PK_FNAME;    pkFileName+=to_string(t);
+    string pkFileName=PK_FNAME;    pkFileName+=to_string(t);
     std::remove(pkFileName.c_str());
   }
 }
@@ -923,7 +900,6 @@ void EnDecrypto::join_packed_files (const string& headers, const string& qscores
 void EnDecrypto::join_unpacked_files () const {
   byte     t;                           // For threads
   ifstream upkdFile[n_threads];
-  string   line;
   for (t = n_threads; t--;)    upkdFile[t].open(UPK_FNAME+to_string(t));
   
   bool prevLineNotThrID;                // If previous line was "THRD=" or not
@@ -931,8 +907,8 @@ void EnDecrypto::join_unpacked_files () const {
     for (t = 0; t != n_threads; ++t) {
       prevLineNotThrID = false;
       
-      while (getline(upkdFile[t], line).good() &&
-             line != THR_ID_HDR+to_string(t)) {
+      for (string line; getline(upkdFile[t], line).good() &&
+                        line != THR_ID_HDR+to_string(t);) {
         if (prevLineNotThrID)
           cout << '\n';
         cout << line;
@@ -945,10 +921,9 @@ void EnDecrypto::join_unpacked_files () const {
   }
   
   // Close/delete input/output files
-  string upkdFileName;
   for (t = n_threads; t--;) {
     upkdFile[t].close();
-    upkdFileName=UPK_FNAME;    upkdFileName+=to_string(t);
+    string upkdFileName=UPK_FNAME;    upkdFileName+=to_string(t);
     std::remove(upkdFileName.c_str());
   }
 }
@@ -967,14 +942,12 @@ void EnDecrypto::join_shuffled_files () const {
   // Input files
   for (t = n_threads; t--;)    shFile[t].open(SH_FNAME+to_string(t));
   
-  string line;
-  bool   prevLineNotThrID;               // If previous line was "THR=" or not
   while (!shFile[0].eof()) {
     for (t = 0; t != n_threads; ++t) {
-      prevLineNotThrID = false;
+      bool prevLineNotThrID = false;  // If previous line was "THR=" or not
       
-      while (getline(shFile[t], line).good() &&
-             line != THR_ID_HDR+to_string(t)) {
+      for (string line; getline(shFile[t], line).good() &&
+                        line != THR_ID_HDR+to_string(t);) {
         if (prevLineNotThrID)
           shdFile << '\n';
         shdFile << line;
@@ -986,10 +959,9 @@ void EnDecrypto::join_shuffled_files () const {
   
   // Close/delete input/output files
   shdFile.close();
-  string shFileName;
   for (t = n_threads; t--;) {
     shFile[t].close();
-    shFileName=SH_FNAME;    shFileName+=to_string(t);
+    string shFileName=SH_FNAME;    shFileName+=to_string(t);
     std::remove(shFileName.c_str());
   }
 }
@@ -1000,16 +972,14 @@ void EnDecrypto::join_shuffled_files () const {
 void EnDecrypto::join_unshuffled_files () const {
   byte     t;                          // For threads
   ifstream ushdFile[n_threads];
-  string   line;
   for (t = n_threads; t--;)    ushdFile[t].open(USH_FNAME+to_string(t));
   
-  bool prevLineNotThrID;               // If previous line was "THR=" or not
   while (!ushdFile[0].eof()) {
     for (t = 0; t != n_threads; ++t) {
-      prevLineNotThrID = false;
+      bool prevLineNotThrID = false;  // If previous line was "THR=" or not
       
-      while (getline(ushdFile[t], line).good() &&
-             line != THR_ID_HDR+to_string(t)) {
+      for (string line; getline(ushdFile[t], line).good() &&
+                        line != THR_ID_HDR+to_string(t);) {
         if (prevLineNotThrID)
           cout << '\n';
         cout << line;
@@ -1020,10 +990,9 @@ void EnDecrypto::join_unshuffled_files () const {
   }
   
   // Close/delete input/output files
-  string ushdFileName;
   for (t = n_threads; t--;) {
     ushdFile[t].close();
-    ushdFileName=USH_FNAME;    ushdFileName+=to_string(t);
+    string ushdFileName=USH_FNAME;    ushdFileName+=to_string(t);
     std::remove(ushdFileName.c_str());
   }
 }

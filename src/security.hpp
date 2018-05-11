@@ -30,9 +30,8 @@ class Security : public Param
   
  private:
   u64  seed_shared;         /**< @brief Shared seed */
-//    const int TAG_SIZE = 12;  /**< @brief Tag size used in GCC mode auth enc */
+//    const int TAG_SIZE = 12; /**< @brief Tag size used in GCC mode auth enc */
   
-  auto read_pass () const -> string;
   auto srand (u32) -> void;
   auto rand () -> int;
   auto rand_engine () -> std::minstd_rand0&;
