@@ -140,23 +140,23 @@ void Security::decrypt ()
  * @brief Random number seed -- Emulate C srand()
  * @param s  Seed
  */
-void Security::srand (u32 s) {
-  rand_engine().seed(s);
+void Security::srandom (u32 s) {
+  random_engine().seed(s);
 }
 
 /**
  * @brief  Random number generate -- Emulate C rand()
  * @return Random number
  */
-int Security::rand () {
-  return (int) (rand_engine()() - rand_engine().min());
+int Security::random () {
+  return (int) (random_engine()() - random_engine().min());
 }
 
 /**
  * @brief  Random number engine
  * @return The classic Minimum Standard rand0
  */
-std::minstd_rand0 &Security::rand_engine () {
+std::minstd_rand0 &Security::random_engine () {
   static std::minstd_rand0 e{};
   return e;
 }
@@ -167,12 +167,12 @@ std::minstd_rand0 &Security::rand_engine () {
 void Security::gen_shuff_seed () {
   const string pass = read_pass(key_file);
   
-  // Using old rand to generate the new rand seed
+  // Using old rand to generate the new random seed
   u64 seed = 0;
   
   mutxSec.lock();//-----------------------------------------------------------
-  srand(681493*std::accumulate(pass.begin(), pass.end(), u32(0))+9148693);
-  for (char c : pass)    seed += (u64) (c*rand());
+  srandom(681493*std::accumulate(pass.begin(), pass.end(), u32(0))+9148693);
+  for (char c : pass)    seed += (u64) (c*random());
   mutxSec.unlock();//---------------------------------------------------------
   
   seed_shared = seed;
@@ -217,13 +217,13 @@ void Security::build_iv (byte* iv, const string& pass) {
   uniform_int_distribution<rng_t::result_type> udist(0, 255);
   rng_t rng;
   
-  // Using old rand to generate the new rand seed
-  srand(static_cast<u32>(44701 *
-        (459229  * accum_even(pass.begin(), pass.end(), 0ul) +
-         3175661 * accum_odd(pass.begin(), pass.end(), 0ul)) + 499397));
+  // Using old rand to generate the new random seed
+  srandom(static_cast<u32>(44701*
+          (459229*accum_even(pass.begin(), pass.end(), 0ul)+
+           3175661*accum_odd(pass.begin(), pass.end(), 0ul)) + 499397));
   u64 seed = 0;
   for (char c : pass)
-    seed += c*rand() + rand();
+    seed += c*random() + random();
   
   rng.seed(static_cast<rng_t::result_type>(seed));
   
@@ -241,13 +241,13 @@ void Security::build_key (byte*key, const string& pass) {
   uniform_int_distribution<rng_t::result_type> udist(0, 255);
   rng_t rng;
   
-  // Using old rand to generate the new rand seed
-  srand(static_cast<u32>(24593 *
-        (9819241 * accum_even(pass.begin(), pass.end(), 0ul) +
-         2597591 * accum_odd(pass.begin(), pass.end(), 0ul)) + 648649));
+  // Using old rand to generate the new random seed
+  srandom(static_cast<u32>(24593*
+          (9819241*accum_even(pass.begin(), pass.end(), 0ul) +
+           2597591*accum_odd(pass.begin(), pass.end(), 0ul)) + 648649));
   u64 seed = 0;
   for (char c : pass)
-    seed += c*rand() + rand();
+    seed += c*random() + random();
   
   rng.seed(static_cast<rng_t::result_type>(seed));
   
