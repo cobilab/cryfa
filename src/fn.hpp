@@ -1,6 +1,11 @@
-//
-// Created by morteza on 10-05-2018.
-//
+/**
+ * @file      fn.hpp
+ * @brief     Global functions
+ * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
+ * @author    Diogo Pratas      (pratas@ua.pt)
+ * @author    Armando J. Pinho  (ap@ua.pt)
+ * @copyright The GNU General Public License v3.0
+ */
 
 #ifndef CRYFA_FN_HPP
 #define CRYFA_FN_HPP
@@ -129,6 +134,84 @@ inline void check_pass (const string& keyFile, const bool k_flag) {
       in.close();
     }
   }
+}
+
+/**
+ * @brief  Check if a string exists in a range
+ * @param  first  begin iterator of the range
+ * @param  last   end iterator of the range
+ * @return Yes, if it exists
+ */
+template <typename Iter, typename T>
+bool exist (Iter first, Iter last, const T& s) {
+  return std::find(first, last, s) != last;
+}
+
+/**
+ * @brief Usage guide
+ */
+inline void help () {
+  cout                                                                  << '\n'
+       << "NAME"                                                        << '\n'
+       << "      Cryfa v" << VERSION << " - "
+       <<                    "A secure encryption tool for genomic data"<< '\n'
+                                                                        << '\n'
+       << "AUTHORS"                                                     << '\n'
+       << "      Morteza Hosseini    seyedmorteza@ua.pt"                << '\n'
+       << "      Diogo Pratas        pratas@ua.pt"                      << '\n'
+       << "      Armando J. Pinho    ap@ua.pt"                          << '\n'
+                                                                        << '\n'
+       << "SYNOPSIS"                                                    << '\n'
+       << "      ./cryfa [OPTION]... -k [key_file] [-d] [in_file] "
+       <<                                                "> [OUT_FILE]" << '\n'
+                                                                        << '\n'
+       << "SAMPLE"                                                      << '\n'
+       << "      Encrypt and Compact:    ./cryfa -k pass.txt in.fq "
+       <<                                                  "> comp"     << '\n'
+       << "      Decrypt and Unpack:     ./cryfa -k pass.txt -d comp "
+       <<                                                  "> orig.fq"  << '\n'
+                                                                        << '\n'
+       << "      Encrypt:                ./cryfa -k pass.txt in > enc"  << '\n'
+       << "      Decrypt:                ./cryfa -k pass.txt -d enc > "
+       <<                                                        "orig" << '\n'
+                                                                        << '\n'
+       << "DESCRIPTION"                                                 << '\n'
+       << "      Compact & encrypt FASTA/FASTQ files."                  << '\n'
+       << "      Encrypt any text-based genomic data."                  << '\n'
+                                                                        << '\n'
+       << "      The key_file specifies a file including the password." << '\n'
+                                                                        << '\n'
+       << "      -h,  --help"                                           << '\n'
+       << "           usage guide"                                      << '\n'
+                                                                        << '\n'
+       << "      -k [key_file],  --key [key_file]"                      << '\n'
+       << "           key file name -- MANDATORY"                       << '\n'
+                                                                        << '\n'
+       << "      -d,  --dec"                                            << '\n'
+       << "           decrypt & unpack"                                 << '\n'
+                                                                        << '\n'
+       << "      -f,  --format"                                         << '\n'
+       << "           force specified format "
+                                   "('a':FASTA, 'q':FASTQ, 'n':others)" << '\n'
+                                                                        << '\n'
+       << "      -v,  --verbose"                                        << '\n'
+       << "           verbose mode (more information)"                  << '\n'
+                                                                        << '\n'
+       << "      -s,  --disable_shuffle"                                << '\n'
+       << "           disable input shuffling"                          << '\n'
+                                                                        << '\n'
+       << "      -t [NUMBER],  --thread [NUMBER]"                       << '\n'
+       << "           number of threads"                                << '\n'
+                                                                        << '\n'
+       << "COPYRIGHT"                                                   << '\n'
+       << "      Copyright (C) " << DEV_YEARS << ", IEETA, University "
+       <<                                                  "of Aveiro." << '\n'
+       << "      This is a Free software, under GPLv3. You may redistribute \n"
+       << "      copies of it under the terms of the GNU - General Public   \n"
+       << "      License v3 <http://www.gnu.org/licenses/gpl.html>. There   \n"
+       << "      is NOT ANY WARRANTY, to the extent permitted by law."  << '\n';
+  
+  throw EXIT_SUCCESS;
 }
 
 #endif //CRYFA_FN_HPP
