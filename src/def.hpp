@@ -161,7 +161,8 @@ inline void Help () {
        << "      License v3 <http://www.gnu.org/licenses/gpl.html>. There   \n"
        << "      is NOT ANY WARRANTY, to the extent permitted by law."  << '\n';
   
-  exit(1);
+//  exit(1);//todo
+  throw EXIT_SUCCESS;
 }
 
 #endif //CRYFA_DEF_H
