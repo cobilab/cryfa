@@ -1,6 +1,6 @@
 /**
  * @file      parser.hpp
- * @brief     Parse command line options
+ * @brief     Parser for command line options
  * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
  * @author    Diogo Pratas      (pratas@ua.pt)
  * @author    Armando J. Pinho  (ap@ua.pt)
@@ -15,73 +15,103 @@
 #include "def.hpp"
 #include "fn.hpp"
 using std::runtime_error;
+using std::cerr;
 
+/**
+ * @brief  Argument of a command line option
+ * @param  first  begin iterator of the range
+ * @param  last   end iterator of the range
+ * @param  value  the value to be found in the range
+ * @return An string
+ */
 template <typename Iter, typename T>
 string argument (Iter first, Iter last, const T& value) {
   return *++std::find(first, last, value);
 }
 
-void parse (Param par, int argc, char** argv) {
+/**
+ * @brief Check password file
+ * @param fname  the password file name
+ */
+inline void check_pass (const string& fname) {
+  assert_file_good(fname, "Error opening the password file \"" +fname+ "\".\n");
+  const string pass = file_to_string(fname);
+  assert(pass.size() < 8, "Error: the password size must be at least 8.\n");
+}
+
+/**
+ * @brief  Parse the command line options
+ * @param  par   An object to hold parameters
+ * @param  argc  Number of command line options
+ * @param  argv  Array of command line options
+ * @return 'c': compress+encrypt or 'd': decrypt+decompress
+ */
+char parse (Param& par, int argc, char** argv) {
   if (argc < 2)
     help();
   else {
+    // todo. change to read from stdin
+    par.in_file = *(argv+argc-1);    // Input file name
+    
     vector<string> vArgs;    vArgs.reserve(static_cast<u64>(argc));
     for (auto a=argv; a!=argv+argc; ++a)
       vArgs.emplace_back(string(*a));
     
+    // Help
     if (exist(vArgs.begin(), vArgs.end(), "-h") ||
         exist(vArgs.begin(), vArgs.end(), "--help"))
       help();
-    
+  
+    // key -- MANDATORY
+    assert(!exist(vArgs.begin(), vArgs.end(), "-k") &&
+           !exist(vArgs.begin(), vArgs.end(), "--key"),
+           "Error: no password file has been set.\n");
     for (auto i=vArgs.begin(); i!=vArgs.end(); ++i) {
       if (*i=="-k" || *i=="--key") {
-        if (i+1 != vArgs.end()) {
-          
+        if (i+1!=vArgs.end() && (*(i+1))[0]!='-') {
+          check_pass(*(i+1));
           par.key_file = *++i;
+          break;
         }
-        else
-          throw runtime_error("Error: no password file has been set.\n");
+        else throw runtime_error("Error: no password file has been set.\n");
       }
-//      if (*i=="-t" || *i=="--tar") {
-//        if (i+1 != vArgs.end()) {
-//          tar = *++i;
-//          checkFile(tar);
-//        }
-//        else throw runtime_error
-//               ("Error: target file not specified. Use \"-t fileName\".\n");
-//      }
-//      else if (*i=="-r" || *i=="--ref") {
-//        if (i+1 != vArgs.end()) {
-//          ref = *++i;
-//          checkFile(ref);
-//        }
-//        else throw runtime_error
-//              ("Error: reference file not specified. Use \"-r fileName\".\n");
-//      }
-//      else if ((*i=="-l" || *i=="--level") && i+1!=vArgs.end())
-//        level = static_cast<u8>(stoi(*++i));
-//      else if (*i=="-v"  || *i=="--verbose")
-//        verbose = true;
-//      else if ((*i=="-n" || *i=="--nthr") && i+1!=vArgs.end())
-//        nthr = static_cast<u8>(stoi(*++i));
-//      else if ((*i=="-m" || *i=="--models") && i+1!=vArgs.end())
-//        modelsPars = *++i;
-//      else if (*i=="-R"  || *i=="--report")
-//        report = (i+1!=vArgs.end()) ? *++i : "report.txt";
     }
-//
-//    // Mandatory args
-//    const bool has_t   {exist(vArgs.begin(), vArgs.end(), "-t")};
-//    const bool has_tar {exist(vArgs.begin(), vArgs.end(), "--tar")};
-//    const bool has_r   {exist(vArgs.begin(), vArgs.end(), "-r")};
-//    const bool has_ref {exist(vArgs.begin(), vArgs.end(), "--ref")};
-//
-//    if (!has_t && !has_tar)
-//      throw runtime_error
-//        ("Error: target file not specified. Use \"-t fileName\".\n");
-//    else if (!has_r && !has_ref)
-//      throw runtime_error
-//        ("Error: reference file not specified. Use \"-r fileName\".\n");
+    
+    // verbose, thread
+    for (auto i=vArgs.begin(); i!=vArgs.end(); ++i) {
+      if (*i=="-v"  || *i=="--verbose") {
+        par.verbose = true;
+        cerr << "Verbose mode on.\n";
+      }
+      else if ((*i=="-t" || *i=="--thread") &&
+               i+1!=vArgs.end() && (*(i+1))[0]!='-' && is_number(*(i+1)))
+        par.n_threads = static_cast<byte>(stoi(*++i));
+    }
+    
+    // Decrypt+decompress
+    if (exist(vArgs.begin(), vArgs.end(), "-d") ||
+        exist(vArgs.begin(), vArgs.end(), "--dec"))
+      return 'd';
+
+    // disable_shuffle, format
+    for (auto i=vArgs.begin(); i!=vArgs.end(); ++i) {
+      if (*i=="-s"  || *i=="--disable_shuffle")
+        par.disable_shuffle = true;
+      else if ((*i=="-f"  || *i=="--format") &&
+               i+1!=vArgs.end() && (*(i+1))[0]!='-') {
+        if      (*(i+1)=="a")  par.format='A';
+        else if (*(i+1)=="q")  par.format='Q';
+        else if (*(i+1)=="n")  par.format='n';
+        ++i;
+      }
+    }
+    if (!exist(vArgs.begin(), vArgs.end(), "-f") &&
+        !exist(vArgs.begin(), vArgs.end(), "--format"))
+      par.format = format(par.in_file);
+
+
+    // Compress+encrypt
+    return 'c';
   }
 }
 

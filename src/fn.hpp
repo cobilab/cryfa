@@ -10,11 +10,16 @@
 #ifndef CRYFA_FN_HPP
 #define CRYFA_FN_HPP
 
+#include <iostream>
 #include <fstream>
 #include <algorithm>
+#include "assert.hpp"
+#include "def.hpp"
 using std::wifstream;
 using std::ifstream;
 using std::to_string;
+using std::cerr;
+using std::runtime_error;
 
 /**
  * @brief  Accumulate hop index values in a range
@@ -86,73 +91,46 @@ inline char format (const string& inFileName) {
 
 /**
  * @brief Save the contents of a file into a string
- * @param fname  file name
- * @param out    the output string
+ * @param fname  the password file name
  */
-template <typename Iter>
-void file_to_string (const string& fname, Iter out) {
-  std::ifstream in(fname);
-  for (char c; in.get(c);)
-    *out++ += c;
-  in.close();
-}
-
-/**
- * @brief  Get password from a file
- * @return Password (string)
- */
-inline string read_pass (const string& keyFile) {
+inline string file_to_string (const string& fname) {
+  ifstream in(fname);
   string pass;
-  file_to_string(keyFile, pass.begin());
+  for (char c; in.get(c);)
+    pass += c;
+  in.close();
   return pass;
-}
-
-/**
- * @brief Check password taken from a file
- * @param keyFile  Name of the file containing the password
- * @param k_flag   If '-k' is entered by the user, for running Cryfa
- */
-inline void check_pass (const string& keyFile, const bool k_flag) {
-  if (!k_flag)
-    std::runtime_error("Error: no password file has been set.\n");
-  else {
-    ifstream in(keyFile);
-    if (in.peek() == EOF) {
-      in.close();
-      std::runtime_error("Error: password file is empty.\n");
-    }
-    else if (!in.good()) {
-      in.close();
-      std::runtime_error("Error opening \"" + keyFile + "\".\n");
-    }
-    else {
-      const string pass = read_pass(keyFile);
-      if (pass.size() < 8) {
-        in.close();
-        std::runtime_error("Error: the password size is "+to_string(pass.size())
-                           + ". It must be at least 8.\n");
-      }
-      in.close();
-    }
-  }
 }
 
 /**
  * @brief  Check if a string exists in a range
  * @param  first  begin iterator of the range
  * @param  last   end iterator of the range
+ * @param  value  the value to be found in the range
  * @return Yes, if it exists
  */
 template <typename Iter, typename T>
 bool exist (Iter first, Iter last, const T& value) {
+  assert(first==last, "Error: the range is empty.\n");
   return std::find(first, last, value) != last;
+}
+
+/**
+ * @brief  Check if a string is a number
+ * @param  s  the input string
+ * @return Yes, if it is a number
+ */
+inline bool is_number (const string& s) {
+  assert(s.empty(), "Error: the string is empty.\n");
+  return std::find_if(s.begin(), s.end(),
+                      [](char c) { return !std::isdigit(c); }) == s.end();
 }
 
 /**
  * @brief Usage guide
  */
 inline void help () {
-  cout                                                                  << '\n'
+  cerr                                                                  << '\n'
        << "NAME"                                                        << '\n'
        << "      Cryfa v" << VERSION << " - "
        <<                    "A secure encryption tool for genomic data"<< '\n'
@@ -211,8 +189,8 @@ inline void help () {
        << "      copies of it under the terms of the GNU - General Public   \n"
        << "      License v3 <http://www.gnu.org/licenses/gpl.html>. There   \n"
        << "      is NOT ANY WARRANTY, to the extent permitted by law."  << '\n';
-  
-  throw EXIT_SUCCESS;
+
+    throw EXIT_SUCCESS;
 }
 
 #endif //CRYFA_FN_HPP

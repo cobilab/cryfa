@@ -54,7 +54,7 @@ void Security::encrypt () {
   memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH);   // AES key
   memset(iv,  0x00, (size_t) AES::BLOCKSIZE);           // Initialization Vector
   
-  const string pass = read_pass(key_file);
+  const string pass = file_to_string(key_file);
   build_key(key, pass);
   build_iv(iv, pass);
   
@@ -91,11 +91,8 @@ void Security::encrypt () {
  *
  *          DEFAULT_KEYLENGTH = 16 bytes.
  */
-void Security::decrypt ()
-{
-  ifstream in(in_file);
-  if (!in.good())
-    std::runtime_error("Error: failed opening \"" + in_file + "\".\n");
+void Security::decrypt () {
+  assert_file_good(in_file, "Error: failed opening \"" + in_file + "\".\n");
 
   cerr << "Decrypting...\n";
   const auto start = high_resolution_clock::now();// Start timer
@@ -104,11 +101,12 @@ void Security::decrypt ()
   memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
   memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
 
-  const string pass = read_pass(key_file);
+  const string pass = file_to_string(key_file);
   build_key(key, pass);
   build_iv(iv, pass);
-
+  
   try {
+    ifstream in(in_file);
     const char* outFile = DEC_FNAME.c_str();
     
     GCM<AES>::Decryption d;
@@ -117,6 +115,7 @@ void Security::decrypt ()
     AuthenticatedDecryptionFilter df(d, new FileSink(outFile),
                         AuthenticatedDecryptionFilter::DEFAULT_FLAGS, TAG_SIZE);
     FileSource(in, true, new Redirector(df /*, PASS_EVERYTHING */ ));
+    in.close();
   }
   catch (CryptoPP::HashVerificationFilter::HashVerificationFailed& e) {
     cerr << "Caught HashVerificationFailed...\n" << e.what() << "\n";
@@ -132,8 +131,6 @@ void Security::decrypt ()
   std::chrono::duration<double> elapsed = finish - start;  // Dur. (sec)
   cerr << (verbose ? "Decryption done," : "Done,") << " in "
        << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
-  
-  in.close();
 }
 
 /**
@@ -165,7 +162,7 @@ std::minstd_rand0 &Security::random_engine () {
  * @brief Shuffle/unshuffle seed generator -- For each chunk
  */
 void Security::gen_shuff_seed () {
-  const string pass = read_pass(key_file);
+  const string pass = file_to_string(key_file);
   
   // Using old rand to generate the new random seed
   u64 seed = 0;

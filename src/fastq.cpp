@@ -298,8 +298,10 @@ void Fastq::decompress () {
   
   // Show number of different chars in headers and qs -- ignore '@'=64
   if (verbose)
-    cerr << headers.length() <<" different characters are in headers.\n"
-         << qscores.length() <<" different characters are in quality scores.\n";
+    cerr << headers.length()
+         <<" different characters are included in headers.\n"
+         << qscores.length()
+         <<" different characters are included in quality scores.\n";
   
   // Header -- Set unpack table and unpack function
   set_unpackTbl_unpackFn(upkStruct, headers, qscores);

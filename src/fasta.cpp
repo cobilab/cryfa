@@ -238,7 +238,8 @@ void Fasta::decompress () {
   while (in.get(c) && c != (char) 254)    headers += c;
   
   if (verbose)   // Show number of different chars in headers -- Ignore '>'=62
-    cerr << headers.length() << " different characters are in headers.\n";
+    cerr << headers.length()
+         << " different characters are included in headers.\n";
   
   // Header -- Set unpack table and unpack function
   set_unpackTbl_unpackFn(upkStruct, headers);
