@@ -16,7 +16,10 @@
 #include "fn.hpp"
 using std::runtime_error;
 
-void
+template <typename Iter, typename T>
+string argument (Iter first, Iter last, const T& value) {
+  return *++std::find(first, last, value);
+}
 
 void parse (Param par, int argc, char** argv) {
   if (argc < 2)
@@ -26,13 +29,20 @@ void parse (Param par, int argc, char** argv) {
     for (auto a=argv; a!=argv+argc; ++a)
       vArgs.emplace_back(string(*a));
     
-    std::cerr<<*(std::find(vArgs.begin(),vArgs.end(),"-h")+1);
+    if (exist(vArgs.begin(), vArgs.end(), "-h") ||
+        exist(vArgs.begin(), vArgs.end(), "--help"))
+      help();
     
     for (auto i=vArgs.begin(); i!=vArgs.end(); ++i) {
-//      if (*i=="-h" || *i=="--help") {
-//        help();  throw EXIT_SUCCESS;
-//      }
-//      else if (*i=="-t" || *i=="--tar") {
+      if (*i=="-k" || *i=="--key") {
+        if (i+1 != vArgs.end()) {
+          
+          par.key_file = *++i;
+        }
+        else
+          throw runtime_error("Error: no password file has been set.\n");
+      }
+//      if (*i=="-t" || *i=="--tar") {
 //        if (i+1 != vArgs.end()) {
 //          tar = *++i;
 //          checkFile(tar);

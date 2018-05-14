@@ -11,6 +11,7 @@
 #define CRYFA_FN_HPP
 
 #include <fstream>
+#include <algorithm>
 using std::wifstream;
 using std::ifstream;
 using std::to_string;
@@ -143,8 +144,8 @@ inline void check_pass (const string& keyFile, const bool k_flag) {
  * @return Yes, if it exists
  */
 template <typename Iter, typename T>
-bool exist (Iter first, Iter last, const T& s) {
-  return std::find(first, last, s) != last;
+bool exist (Iter first, Iter last, const T& value) {
+  return std::find(first, last, value) != last;
 }
 
 /**
