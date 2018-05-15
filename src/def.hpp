@@ -69,7 +69,7 @@ static const string SH_FNAME   = "CRYFA_SH";  /**< @brief Shuffed file name */
 static const string DEC_FNAME  = "CRYFA_DEC"; /**< @brief Decrypted file name */
 static const string UPK_FNAME  = "CRYFA_UPK"; /**< @brief Unpacked file name */
 static const string USH_FNAME  = "CRYFA_USH"; /**< @brief Unshuffled file name*/
-constexpr byte DEFAULT_N_THR   = 8;   /**< @brief Default number of threads */
+constexpr byte DEF_N_THR       = 8;   /**< @brief Default number of threads */
 constexpr u64  BLOCK_SIZE      = 8 * 1024; /**< @brief To read from input file*/
 constexpr byte C1              = 2;   /**< @brief       Cat 1  =  2 */
 constexpr byte C2              = 3;   /**< @brief       Cat 2  =  3 */
@@ -87,14 +87,14 @@ constexpr byte KEYLEN_C4       = 2;   /**< @brief 2 to 1 byte */
 constexpr byte KEYLEN_C5       = 3;   /**< @brief 3 to 2 byte */
 constexpr int  TAG_SIZE        = 12;  /**< @brief GCC mode auth enc */
 
-/** @brief Command line input arguments */
-struct Param {
-  static bool   verbose;          /**< @brief Verbose mode */
-  static bool   disable_shuffle;  /**< @brief Disable shuffle */
-  static byte   n_threads;        /**< @brief Number of threads */
-  static string in_file;          /**< @brief Input file name */
-  static string key_file;         /**< @brief Password file name */
-  static char   format;           /**< @brief Format of the input file */
-};
+///** @brief Command line input arguments */
+//struct Param {
+//  static bool   verbose;          /**< @brief Verbose mode */
+//  static bool   disable_shuffle;  /**< @brief Disable shuffle */
+//  static byte   n_threads;        /**< @brief Number of threads */
+//  static string in_file;          /**< @brief Input file name */
+//  static string key_file;         /**< @brief Password file name */
+//  static char   format;           /**< @brief Format of the input file */
+//};
 
 #endif //CRYFA_DEF_H

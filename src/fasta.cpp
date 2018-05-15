@@ -25,31 +25,36 @@ using std::memset;
 
 std::mutex mutxFA;    /**< @brief Mutex */
 
+//todo
+Fasta::Fasta(std::shared_ptr<Param> p) {
+  par = std::move(p);
+}
+
 /**
  * @brief Compress
  */
 void Fasta::compress () {
   const auto start = high_resolution_clock::now();                // Start timer
-  thread   arrThr[n_threads];
+  thread   arrThr[par->n_threads];
   string   headers;
   packfa_s pkStruct;    // Collection of inputs to pass to pack...
 
-  if (verbose)   cerr << "Calculating number of different characters...\n";
+  if (par->verbose)   cerr << "Calculating number of different characters...\n";
   // Gather different chars in all headers and max length in all bases
   gather_h_bs(headers);
   // Show number of different chars in headers -- ignore '>'=62
-  if (verbose)   cerr << "In headers, they are " << headers.length() << ".\n";
+  if (par->verbose)   cerr << "In headers, they are " << headers.length() << ".\n";
   
   // Set Hash table and pack function
   set_hashTbl_packFn(pkStruct, headers);
 
   // Distribute file among threads, for reading and packing
-  for (byte t=0; t != n_threads; ++t)
+  for (byte t=0; t != par->n_threads; ++t)
     arrThr[t] = thread(&Fasta::pack, this, pkStruct, t);
   for (auto& thr : arrThr)
     if (thr.joinable())    thr.join();
 
-  if (verbose)    cerr << "Shuffling done!\n";
+  if (par->verbose)    cerr << "Shuffling done!\n";
 
   // Join partially packed and/or shuffled files
   join_packed_files(headers, "", 'A', false);
@@ -57,7 +62,7 @@ void Fasta::compress () {
   const auto finish = high_resolution_clock::now();                // Stop timer
   std::chrono::duration<double> elapsed = finish - start;          // Dur. (sec)
 
-  cerr << (verbose ? "Compaction done" : "Done") << ", in "
+  cerr << (par->verbose ? "Compaction done" : "Done") << ", in "
        << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
 
   // Cout encrypted content
@@ -118,7 +123,7 @@ void Fasta::set_hashTbl_packFn (packfa_s& pkStruct, const string& headers) {
  */
 void Fasta::pack (const packfa_s& pkStruct, byte threadID) {
   packFP_t packHdr = pkStruct.packHdrFP;    // Function pointer
-  ifstream in(in_file);
+  ifstream in(par->in_file);
   string   line, context, seq;
   ofstream pkfile(PK_FNAME+to_string(threadID), std::ios_base::app);
 
@@ -165,9 +170,9 @@ void Fasta::pack (const packfa_s& pkStruct, byte threadID) {
     }
     
     // Shuffle
-    if (!disable_shuffle) {
+    if (!par->disable_shuffle) {
       mutxFA.lock();//----------------------------------------------------
-      if (verbose && shuffInProg)    cerr << "Shuffling...\n";
+      if (par->verbose && shuffInProg)    cerr << "Shuffling...\n";
       shuffInProg = false;
       mutxFA.unlock();//--------------------------------------------------
   
@@ -186,7 +191,7 @@ void Fasta::pack (const packfa_s& pkStruct, byte threadID) {
     pkfile << context << '\n';
 
     // Ignore to go to the next related chunk
-    for (u64 l = (u64) (n_threads-1)*BlockLine; l--;)  IGNORE_THIS_LINE(in);
+    for (u64 l = (u64) (par->n_threads-1)*BlockLine; l--;)  IGNORE_THIS_LINE(in);
   }
 
   pkfile.close();
@@ -203,7 +208,7 @@ void Fasta::gather_h_bs (string& headers) {
   bool hChars[127];
   memset(hChars+32, false, 95);
   
-  ifstream in(in_file);
+  ifstream in(par->in_file);
   string   line;
   while (getline(in, line).good()) {
     if (line[0] == '>')
@@ -230,14 +235,14 @@ void Fasta::decompress () {
   char       c;                   // Chars in file
   string     headers;
   unpackfa_s upkStruct;           // Collection of inputs to pass to unpack...
-  thread     arrThread[n_threads];// Array of threads
+  thread     arrThread[par->n_threads];// Array of threads
   ifstream   in(DEC_FNAME);
   
   in.ignore(1);                   // Jump over decText[0]==(char) 127
   in.get(c);    shuffled = (c==(char) 128); // Check if file had been shuffled
   while (in.get(c) && c != (char) 254)    headers += c;
   
-  if (verbose)   // Show number of different chars in headers -- Ignore '>'=62
+  if (par->verbose)   // Show number of different chars in headers -- Ignore '>'=62
     cerr << headers.length()
          << " different characters are included in headers.\n";
   
@@ -249,7 +254,7 @@ void Fasta::decompress () {
   unpackHFP unpackH =
     (headers.length() <= MAX_C5) ? &Fasta::unpack_hS : &Fasta::unpack_hL;
   
-  for (byte t=0; t != n_threads; ++t) {
+  for (byte t=0; t != par->n_threads; ++t) {
     in.get(c);
     if (c == (char) 253) {
       string chunkSizeStr;             // Chunk size (string) -- For unshuffling
@@ -271,7 +276,7 @@ void Fasta::decompress () {
   for (auto& thr : arrThread)
     if (thr.joinable())    thr.join();
   
-  if (verbose)    cerr << "Unshuffling done!\n";
+  if (par->verbose)    cerr << "Unshuffling done!\n";
   
   // Close/delete decrypted file
   in.close();
@@ -284,7 +289,7 @@ void Fasta::decompress () {
   const auto finish = high_resolution_clock::now();        // Stop timer
   std::chrono::duration<double> elapsed = finish - start;  // Dur. (sec)
 
-  cerr << (verbose ? "Decompression done" : "Done") << ", in "
+  cerr << (par->verbose ? "Decompression done" : "Done") << ", in "
        << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
 }
 
@@ -352,7 +357,7 @@ void Fasta::unpack_hS (const unpackfa_s& upkStruct, byte threadID) {
     // Unshuffle
     if (shuffled) {
       mutxFA.lock();//----------------------------------------------------
-      if (verbose && shuffInProg)    cerr << "Unshuffling...\n";
+      if (par->verbose && shuffInProg)    cerr << "Unshuffling...\n";
       shuffInProg = false;
       mutxFA.unlock();//--------------------------------------------------
   
@@ -372,7 +377,7 @@ void Fasta::unpack_hS (const unpackfa_s& upkStruct, byte threadID) {
     } while (++i != decText.end());        // If trouble: change "!=" to "<"
 
     // Update the chunk size and positions (beg & end)
-    for (byte t = n_threads; t--;) {
+    for (byte t = par->n_threads; t--;) {
       in.seekg(endPos);
       in.get(c);
       if (c == (char) 253) {
@@ -414,7 +419,7 @@ void Fasta::unpack_hL (const unpackfa_s& upkStruct, byte threadID) {
     // Unshuffle
     if (shuffled) {
       mutxFA.lock();//----------------------------------------------------
-      if (verbose && shuffInProg)    cerr << "Unshuffling...\n";
+      if (par->verbose && shuffInProg)    cerr << "Unshuffling...\n";
       shuffInProg = false;
       mutxFA.unlock();//--------------------------------------------------
   
@@ -435,7 +440,7 @@ void Fasta::unpack_hL (const unpackfa_s& upkStruct, byte threadID) {
     } while (++i != decText.end());        // If trouble: change "!=" to "<"
 
     // Update the chunk size and positions (beg & end)
-    for (byte t = n_threads; t--;) {
+    for (byte t = par->n_threads; t--;) {
       in.seekg(endPos);
       in.get(c);
       if (c == (char) 253) {

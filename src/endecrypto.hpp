@@ -10,8 +10,9 @@
 #ifndef CRYFA_ENDECRYPTO_H
 #define CRYFA_ENDECRYPTO_H
 
-#include "def.hpp"
+//#include "def.hpp"//todo
 #include "security.hpp"
+#include "parser.hpp"//todo
 using std::string;
 using std::vector;
 
@@ -29,6 +30,7 @@ class EnDecrypto : public Security
 {
  public:
   EnDecrypto () = default;
+  explicit EnDecrypto (std::shared_ptr<Param>);//todo
   
   auto pack_hL_fa_fq (string&, const string&, const htbl_t&) -> void;
   auto pack_qL_fq (string&, const string&, const htbl_t&) -> void;
@@ -67,6 +69,8 @@ class EnDecrypto : public Security
   auto join_unshuffled_files () const -> void;
 
  private:
+  std::shared_ptr<Param> par;//todo
+  
   auto pack_large (string&, const string&, const string&,
                    const htbl_t&) -> void;
   auto penalty_sym (char) const -> char;

@@ -33,11 +33,14 @@ struct unpackfa_s {
 class Fasta : public EnDecrypto
 {
  public:
-  Fasta () = default;
+//  Fasta () = default;
+  explicit Fasta (std::shared_ptr<Param>);//todo
   auto compress () -> void;
   auto decompress () -> void;
 
  private:
+  std::shared_ptr<Param> par;//todo
+  
   auto gather_h_bs (string&) -> void;
   auto set_hashTbl_packFn (packfa_s&, const string&) -> void;
   auto pack (const packfa_s&, byte) -> void;

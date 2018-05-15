@@ -37,11 +37,13 @@ struct unpackfq_s {
 class Fastq : public EnDecrypto
 {
  public:
-  Fastq  () = default;
+//  Fastq  () = default;
+  explicit Fastq (std::shared_ptr<Param>);//todo
   auto compress () -> void;
   auto decompress () -> void;
   
  private:
+  std::shared_ptr<Param> par;//todo
   bool justPlus = true;     /**< @brief If line 3 is just +  @hideinitializer */
   
   auto has_just_plus () const -> bool;

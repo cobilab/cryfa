@@ -38,6 +38,11 @@ using CryptoPP::GCM;
 
 std::mutex mutxSec;    /**< @brief Mutex */
 
+//todo
+Security::Security(std::shared_ptr<Param> p) {
+  par = std::move(p);
+}
+
 /**
  * @brief   Encrypt
  * @details AES encryption uses a secret key of a variable length (128, 196 or
@@ -54,7 +59,7 @@ void Security::encrypt () {
   memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH);   // AES key
   memset(iv,  0x00, (size_t) AES::BLOCKSIZE);           // Initialization Vector
   
-  const string pass = file_to_string(key_file);
+  const string pass = file_to_string(par->key_file);
   build_key(key, pass);
   build_iv(iv, pass);
   
@@ -75,7 +80,7 @@ void Security::encrypt () {
 
   const auto finish = high_resolution_clock::now();        // Stop timer
   std::chrono::duration<double> elapsed = finish - start;  // Dur. (sec)
-  cerr << (verbose ? "Encryption done," : "Done,") << " in "
+  cerr << (par->verbose ? "Encryption done," : "Done,") << " in "
        << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
 
   // Delete packed file
@@ -92,7 +97,7 @@ void Security::encrypt () {
  *          DEFAULT_KEYLENGTH = 16 bytes.
  */
 void Security::decrypt () {
-  assert_file_good(in_file, "Error: failed opening \"" + in_file + "\".\n");
+  assert_file_good(par->in_file, "Error: failed opening \"" + par->in_file + "\".\n");
 
   cerr << "Decrypting...\n";
   const auto start = high_resolution_clock::now();// Start timer
@@ -101,12 +106,12 @@ void Security::decrypt () {
   memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH); // AES key
   memset(iv,  0x00, (size_t) AES::BLOCKSIZE);         // Initialization Vector
 
-  const string pass = file_to_string(key_file);
+  const string pass = file_to_string(par->key_file);
   build_key(key, pass);
   build_iv(iv, pass);
   
   try {
-    ifstream in(in_file);
+    ifstream in(par->in_file);
     const char* outFile = DEC_FNAME.c_str();
     
     GCM<AES>::Decryption d;
@@ -129,7 +134,7 @@ void Security::decrypt () {
   
   const auto finish = high_resolution_clock::now();        // Stop timer
   std::chrono::duration<double> elapsed = finish - start;  // Dur. (sec)
-  cerr << (verbose ? "Decryption done," : "Done,") << " in "
+  cerr << (par->verbose ? "Decryption done," : "Done,") << " in "
        << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
 }
 
@@ -162,7 +167,7 @@ std::minstd_rand0 &Security::random_engine () {
  * @brief Shuffle/unshuffle seed generator -- For each chunk
  */
 void Security::gen_shuff_seed () {
-  const string pass = file_to_string(key_file);
+  const string pass = file_to_string(par->key_file);
   
   // Using old rand to generate the new random seed
   u64 seed = 0;
@@ -216,8 +221,8 @@ void Security::build_iv (byte* iv, const string& pass) {
   
   // Using old rand to generate the new random seed
   srandom(static_cast<u32>(44701*
-          (459229*accum_even(pass.begin(), pass.end(), 0ul)+
-           3175661*accum_odd(pass.begin(), pass.end(), 0ul)) + 499397));
+          (459229*accum_even(pass.begin(), pass.end(), 0ul) +
+          3175661*accum_odd(pass.begin(), pass.end(), 0ul)) + 499397));
   u64 seed = 0;
   for (char c : pass)
     seed += c*random() + random();

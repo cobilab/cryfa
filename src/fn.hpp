@@ -61,35 +61,6 @@ T accum_odd (Iter first, Iter last, T init) {
 };
 
 /**
- * @brief  Find file type: FASTA (A), FASTQ (Q), not FASTA/FASTQ (n)
- * @param  inFileName  Input file name
- * @return A, Q or n
- */
-inline char format (const string& inFileName) {
-  wchar_t c;
-  wifstream in(inFileName);
-  
-  if (!in.good())
-    std::runtime_error("Error: failed opening '" + inFileName + "'.\n");
-  
-  // Skip leading blank lines or spaces
-  while (in.peek()=='\n' || in.peek()==' ')    in.get(c);
-  
-  // Fastq
-  while (in.peek() == '@')     IGNORE_THIS_LINE(in);
-  byte nTabs=0;    while (in.get(c) && c!='\n')  if (c=='\t') ++nTabs;
-  
-  if (in.peek() == '+') { in.close();    return 'Q'; }            // Fastq
-  
-  // Fasta or Not Fasta/Fastq
-  in.clear();   in.seekg(0, std::ios::beg); // Return to beginning of the file
-  while (in.peek()!='>' && in.peek()!=EOF)    IGNORE_THIS_LINE(in);
-  
-  if (in.peek() == '>') { in.close();    return 'A'; }      // Fasta
-  else                  { in.close();    return 'n'; }      // Not Fasta/Fastq
-}
-
-/**
  * @brief Save the contents of a file into a string
  * @param fname  the password file name
  */

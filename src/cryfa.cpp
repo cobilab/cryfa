@@ -22,17 +22,16 @@
 
 #include <iostream>
 #include <fstream>
-//#include <getopt.h>//todo remove
 #include <chrono>       // time
 #include <iomanip>      // setw, setprecision
-#include <memory>//todo
+#include <memory>
 #include "def.hpp"
 #include "security.hpp"
 #include "endecrypto.hpp"
 #include "fasta.hpp"
 #include "fastq.hpp"
 #include "fn.hpp"
-#include "parser.h"
+#include "parser.hpp"
 #define __STDC_FORMAT_MACROS
 #if defined(_MSC_VER)
 #    include <io.h>
@@ -49,13 +48,13 @@ using std::setprecision;
 using std::chrono::high_resolution_clock;
 using std::to_string;
 
-// Instantiation of static variables in Param structure
-bool   Param::verbose         = false;
-bool   Param::disable_shuffle = false;
-byte   Param::n_threads       = DEFAULT_N_THR;
-string Param::in_file         = "";
-string Param::key_file        = "";
-char   Param::format          = 'n';
+//// Instantiation of static variables in Param structure
+//bool   Param::verbose         = false;
+//bool   Param::disable_shuffle = false;
+//byte   Param::n_threads       = DEF_N_THR;
+//string Param::in_file         = "";
+//string Param::key_file        = "";
+//char   Param::format          = 'n';
 
 /**
  * @brief Main function
@@ -64,24 +63,22 @@ int main (int argc, char* argv[]) {
   try {
 //  std::ios::sync_with_stdio(false); // Turn off synchronizing C++ to C streams
 
-    Param      par;
-    
-//    auto p = std::make_shared<Param>();//todo
-    
-    EnDecrypto crypt;
-    Fasta      fa;
-    Fastq      fq;
+    //todo
+//    Param par;
+    auto  par = std::make_shared<Param>();
+    const char action = par->parse(argc, argv);
+    auto  crypt = std::make_shared<EnDecrypto>(par);
+    auto  fa    = std::make_shared<Fasta>(par);
+    auto  fq    = std::make_shared<Fastq>(par);
 
-    const char action = parse(par, argc, argv);
-    
     // Decrypt and/or unshuffle + decompress
     if (action == 'd') {
-      crypt.decrypt();
+      crypt->decrypt();
       ifstream in(DEC_FNAME);
       switch (in.peek()) {
-        case (char) 127:  cerr<<"Decompressing...\n";  fa.decompress();   break;
-        case (char) 126:  cerr<<"Decompressing...\n";  fq.decompress();   break;
-        case (char) 125:  crypt.unshuffle_file();                         break;
+        case (char) 127:  cerr<<"Decompressing...\n";  fa->decompress();  break;
+        case (char) 126:  cerr<<"Decompressing...\n";  fq->decompress();  break;
+        case (char) 125:  crypt->unshuffle_file();                        break;
         default:          throw runtime_error("Error: corrupted file.");
       }
       in.close();
@@ -89,11 +86,11 @@ int main (int argc, char* argv[]) {
     }
     // Compress and/or shuffle + encrypt
     else if (action == 'c') {
-      switch (par.format) {
-        case 'A':    cerr<<"Compacting...\n";    fa.compress();           break;
-        case 'Q':    cerr<<"Compacting...\n";    fq.compress();           break;
-        case 'n':    crypt.shuffle_file();                                break;
-        default :    throw runtime_error("Error: \"" + par.in_file + "\" is not"
+      switch (par->format) {
+        case 'A':    cerr<<"Compacting...\n";    fa->compress();          break;
+        case 'Q':    cerr<<"Compacting...\n";    fq->compress();          break;
+        case 'n':    crypt->shuffle_file();                               break;
+        default :    throw runtime_error("Error: \"" +par->in_file+ "\" is not"
                                          " a valid FASTA or FASTQ file.\n");
       }
     }
