@@ -34,10 +34,9 @@
 #include "parser.hpp"
 #define __STDC_FORMAT_MACROS
 #if defined(_MSC_VER)
-#    include <io.h>
+#  include <io.h>
 #else
-#    include <unistd.h>
-
+#  include <unistd.h>
 #endif
 using std::string;
 using std::cout;
@@ -47,30 +46,30 @@ using std::wifstream;
 using std::setprecision;
 using std::chrono::high_resolution_clock;
 using std::to_string;
+using std::make_shared;
 
-//// Instantiation of static variables in Param structure
-//bool   Param::verbose         = false;
-//bool   Param::disable_shuffle = false;
-//byte   Param::n_threads       = DEF_N_THR;
-//string Param::in_file         = "";
-//string Param::key_file        = "";
-//char   Param::format          = 'n';
+// Instantiation of static variables in Param structure
+bool   Param::verbose         = false;
+bool   Param::disable_shuffle = false;
+byte   Param::n_threads       = DEF_N_THR;
+string Param::in_file         = "";
+string Param::key_file        = "";
+char   Param::format          = 'n';
 
 /**
  * @brief Main function
  */
 int main (int argc, char* argv[]) {
   try {
-//  std::ios::sync_with_stdio(false); // Turn off synchronizing C++ to C streams
-
-    //todo
-//    Param par;
-    auto  par = std::make_shared<Param>();
-    const char action = par->parse(argc, argv);
-    auto  crypt = std::make_shared<EnDecrypto>(par);
-    auto  fa    = std::make_shared<Fasta>(par);
-    auto  fq    = std::make_shared<Fastq>(par);
-
+//  std::ios::sync_with_stdio(false); // Turn off synchronizing C++ to C streams//todo
+    
+    Param par;
+    auto  crypt = make_shared<EnDecrypto>();
+    auto  fa    = make_shared<Fasta>();
+    auto  fq    = make_shared<Fastq>();
+  
+    const char action = parse(par, argc, argv);
+    
     // Decrypt and/or unshuffle + decompress
     if (action == 'd') {
       crypt->decrypt();
@@ -86,11 +85,11 @@ int main (int argc, char* argv[]) {
     }
     // Compress and/or shuffle + encrypt
     else if (action == 'c') {
-      switch (par->format) {
+      switch (par.format) {
         case 'A':    cerr<<"Compacting...\n";    fa->compress();          break;
         case 'Q':    cerr<<"Compacting...\n";    fq->compress();          break;
         case 'n':    crypt->shuffle_file();                               break;
-        default :    throw runtime_error("Error: \"" +par->in_file+ "\" is not"
+        default :    throw runtime_error("Error: \"" +par.in_file+ "\" is not"
                                          " a valid FASTA or FASTQ file.\n");
       }
     }

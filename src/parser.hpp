@@ -17,35 +17,6 @@
 using std::runtime_error;
 using std::cerr;
 
-
-
-
-
-
-/** @brief Command line input arguments */
-class Param
-{
- public:
-  bool   verbose;          /**< @brief Verbose mode */
-  bool   disable_shuffle;  /**< @brief Disable shuffle */
-  byte   n_threads;        /**< @brief Number of threads */
-  string in_file;          /**< @brief Input file name */
-  string key_file;         /**< @brief Password file name */
-  char   format;             /**< @brief Format of the input file */
-  
-  Param ();
-  template <typename Iter, typename T>
-  string argument (Iter, Iter, const T&) const;
-  void check_pass (const string&) const;
-  char frmt (const string&);
-  char parse (int, char**);
-};
-
-//todo
-inline Param::Param ()
-    : verbose(false), disable_shuffle(false), n_threads(DEF_N_THR),
-      in_file(""), key_file(""), format('n') {}
-      
 /**
  * @brief  Argument of a command line option
  * @param  first  begin iterator of the range
@@ -54,8 +25,7 @@ inline Param::Param ()
  * @return An string
  */
 template <typename Iter, typename T>
-inline string Param::argument (Iter first, Iter last, const T& value) const {
-//  string argument (Iter first, Iter last, const T& value) {
+inline string argument (Iter first, Iter last, const T& value) {
   return *++std::find(first, last, value);
 }
 
@@ -63,8 +33,7 @@ inline string Param::argument (Iter first, Iter last, const T& value) const {
  * @brief Check password file
  * @param fname  the password file name
  */
-inline void Param::check_pass (const string& fname) const {
-//  inline void check_pass (const string& fname) {
+inline void check_pass (const string& fname) {
   assert_file_good(fname, "Error opening the password file \"" +fname+ "\".\n");
   const string pass = file_to_string(fname);
   assert(pass.size() < 8, "Error: the password size must be at least 8.\n");
@@ -75,7 +44,7 @@ inline void Param::check_pass (const string& fname) const {
  * @param  inFileName  Input file name
  * @return A, Q or n
  */
-inline char Param::frmt (const string& inFileName) {
+inline char frmt (const string& inFileName) {
   wchar_t c;
   wifstream in(inFileName);
   assert(!in.good(), "Error: failed opening '" + inFileName + "'.\n");
@@ -104,13 +73,12 @@ inline char Param::frmt (const string& inFileName) {
  * @param  argv  Array of command line options
  * @return 'c': compress+encrypt or 'd': decrypt+decompress
  */
-inline char Param::parse (int argc, char** argv) {
-//  char parse (Param& par, int argc, char** argv) {
+char parse (Param& par, int argc, char** argv) {
   if (argc < 2)
     help();
   else {
     // todo. change to read from stdin
-    in_file = *(argv+argc-1);    // Input file name
+    par.in_file = *(argv+argc-1);    // Input file name
     
     vector<string> vArgs;    vArgs.reserve(static_cast<u64>(argc));
     for (auto a=argv; a!=argv+argc; ++a)
@@ -129,7 +97,7 @@ inline char Param::parse (int argc, char** argv) {
       if (*i=="-k" || *i=="--key") {
         if (i+1!=vArgs.end() && (*(i+1))[0]!='-') {
           check_pass(*(i+1));
-          key_file = *++i;
+          par.key_file = *++i;
           break;
         }
         else throw runtime_error("Error: no password file has been set.\n");
@@ -139,12 +107,12 @@ inline char Param::parse (int argc, char** argv) {
     // verbose, thread
     for (auto i=vArgs.begin(); i!=vArgs.end(); ++i) {
       if (*i=="-v"  || *i=="--verbose") {
-        verbose = true;
+        par.verbose = true;
         cerr << "Verbose mode on.\n";
       }
       else if ((*i=="-t" || *i=="--thread") &&
                i+1!=vArgs.end() && (*(i+1))[0]!='-' && is_number(*(i+1)))
-        n_threads = static_cast<byte>(stoi(*++i));
+        par.n_threads = static_cast<byte>(stoi(*++i));
     }
     
     // Decrypt+decompress
@@ -155,19 +123,19 @@ inline char Param::parse (int argc, char** argv) {
     // disable_shuffle, frmt
     for (auto i=vArgs.begin(); i!=vArgs.end(); ++i) {
       if (*i=="-s"  || *i=="--disable_shuffle")
-        disable_shuffle = true;
+        par.disable_shuffle = true;
       else if ((*i=="-f"  || *i=="--format") &&
                i+1!=vArgs.end() && (*(i+1))[0]!='-') {
-        if      (*(i+1)=="a")  format='A';
-        else if (*(i+1)=="q")  format='Q';
-        else if (*(i+1)=="n")  format='n';
+        if      (*(i+1)=="a")  par.format='A';
+        else if (*(i+1)=="q")  par.format='Q';
+        else if (*(i+1)=="n")  par.format='n';
         ++i;
       }
     }
     if (!exist(vArgs.begin(), vArgs.end(), "-f") &&
         !exist(vArgs.begin(), vArgs.end(), "--format"))
-      format = frmt(in_file);
-    
+      par.format = frmt(par.in_file);
+
     // Compress+encrypt
     return 'c';
   }

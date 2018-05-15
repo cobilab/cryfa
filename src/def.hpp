@@ -87,14 +87,14 @@ constexpr byte KEYLEN_C4       = 2;   /**< @brief 2 to 1 byte */
 constexpr byte KEYLEN_C5       = 3;   /**< @brief 3 to 2 byte */
 constexpr int  TAG_SIZE        = 12;  /**< @brief GCC mode auth enc */
 
-///** @brief Command line input arguments */
-//struct Param {
-//  static bool   verbose;          /**< @brief Verbose mode */
-//  static bool   disable_shuffle;  /**< @brief Disable shuffle */
-//  static byte   n_threads;        /**< @brief Number of threads */
-//  static string in_file;          /**< @brief Input file name */
-//  static string key_file;         /**< @brief Password file name */
-//  static char   format;           /**< @brief Format of the input file */
-//};
+/** @brief Command line input arguments */
+struct Param {
+  static bool   verbose;          /**< @brief Verbose mode */
+  static bool   disable_shuffle;  /**< @brief Disable shuffle */
+  static byte   n_threads;        /**< @brief Number of threads */
+  static string in_file;          /**< @brief Input file name */
+  static string key_file;         /**< @brief Password file name */
+  static char   format;           /**< @brief Format of the input file */
+};
 
 #endif //CRYFA_DEF_H

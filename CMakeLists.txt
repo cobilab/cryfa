@@ -5,14 +5,14 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -pthread")
 file(GLOB SOURCE_FILES "src/cryptopp/*.cpp")
 
 add_executable(cryfa   ${SOURCE_FILES}
+                       src/assert.hpp
                        src/cryfa.cpp
                        src/def.hpp
-#                       src/endecrypto.cpp
-#                       src/fasta.cpp
-#                       src/fastq.cpp
+                       src/endecrypto.cpp
+                       src/fasta.cpp
+                       src/fastq.cpp
                        src/fn.hpp
-                       src/parser.h
-#                       src/security.cpp
-        )
+                       src/parser.hpp
+                       src/security.cpp)
 
 #add_executable(keygen  src/keygen.cpp) #todo uncomment

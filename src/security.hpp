@@ -10,18 +10,15 @@
 #ifndef CRYFA_SECURITY_H
 #define CRYFA_SECURITY_H
 
-#include <memory>//todo
 #include "def.hpp"
-#include "parser.hpp"//todo
 
 /**
  * @brief Security
  */
-class Security //todo: public Param
+class Security : public Param
 {
  public:
-  Security () = default;//todo
-  explicit Security (std::shared_ptr<Param>);//todo
+  Security () = default;
   auto decrypt () -> void;
   
  protected:
@@ -35,8 +32,7 @@ class Security //todo: public Param
  private:
   u64  seed_shared;         /**< @brief Shared seed */
 //    const int TAG_SIZE = 12; /**< @brief Tag size used in GCC mode auth enc */
-  std::shared_ptr<Param> par;//todo
-  
+
   auto srandom (u32) -> void;
   auto random () -> int;
   auto random_engine () -> std::minstd_rand0&;
