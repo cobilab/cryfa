@@ -10,7 +10,6 @@
 #ifndef CRYFA_ENDECRYPTO_H
 #define CRYFA_ENDECRYPTO_H
 
-#include "def.hpp"//todo
 #include "security.hpp"
 using std::string;
 using std::vector;

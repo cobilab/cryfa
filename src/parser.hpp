@@ -44,27 +44,48 @@ inline void check_pass (const string& fname) {
  * @param  inFileName  Input file name
  * @return A, Q or n
  */
-inline char frmt (const string& inFileName) {
+inline char frmt () {//todo
   wchar_t c;
-  wifstream in(inFileName);
-  assert(!in.good(), "Error: failed opening '" + inFileName + "'.\n");
+//  wifstream in(inFileName);
+  assert(!std::wcin.good(), "Error: failed opening.\n");
   
   // Skip leading blank lines or spaces
-  while (in.peek()=='\n' || in.peek()==' ')    in.get(c);
+  while (std::wcin.peek()=='\n' || std::wcin.peek()==' ')    std::wcin.get(c);
   
   // Fastq
-  while (in.peek() == '@')     IGNORE_THIS_LINE(in);
-  byte nTabs=0;    while (in.get(c) && c!='\n')  if (c=='\t') ++nTabs;
+  while (std::wcin.peek() == '@')     IGNORE_THIS_LINE(std::wcin);
+  byte nTabs=0;    while (std::wcin.get(c) && c!='\n')  if (c=='\t') ++nTabs;
   
-  if (in.peek() == '+') { in.close();    return 'Q'; }            // Fastq
+  if (std::wcin.peek() == '+') { /*std::wcin.close();*/    return 'Q'; }            // Fastq
   
   // Fasta or Not Fasta/Fastq
-  in.clear();   in.seekg(0, std::ios::beg); // Return to beginning of the file
-  while (in.peek()!='>' && in.peek()!=EOF)    IGNORE_THIS_LINE(in);
+  std::wcin.clear();   std::wcin.seekg(0, std::ios::beg); // Return to beginning of the file
+  while (std::wcin.peek()!='>' && std::wcin.peek()!=EOF)    IGNORE_THIS_LINE(std::wcin);
   
-  if (in.peek() == '>') { in.close();    return 'A'; }      // Fasta
-  else                  { in.close();    return 'n'; }      // Not Fasta/Fastq
+  if (std::wcin.peek() == '>') { /*std::wcin.close();*/    return 'A'; }      // Fasta
+  else                  { /*std::wcin.close();*/    return 'n'; }      // Not Fasta/Fastq
 }
+//inline char frmt (const string& inFileName) {
+//  wchar_t c;
+//  wifstream in(inFileName);
+//  assert(!in.good(), "Error: failed opening '" + inFileName + "'.\n");
+//
+//  // Skip leading blank lines or spaces
+//  while (in.peek()=='\n' || in.peek()==' ')    in.get(c);
+//
+//  // Fastq
+//  while (in.peek() == '@')     IGNORE_THIS_LINE(in);
+//  byte nTabs=0;    while (in.get(c) && c!='\n')  if (c=='\t') ++nTabs;
+//
+//  if (in.peek() == '+') { in.close();    return 'Q'; }            // Fastq
+//
+//  // Fasta or Not Fasta/Fastq
+//  in.clear();   in.seekg(0, std::ios::beg); // Return to beginning of the file
+//  while (in.peek()!='>' && in.peek()!=EOF)    IGNORE_THIS_LINE(in);
+//
+//  if (in.peek() == '>') { in.close();    return 'A'; }      // Fasta
+//  else                  { in.close();    return 'n'; }      // Not Fasta/Fastq
+//}
 
 /**
  * @brief  Parse the command line options
@@ -78,7 +99,7 @@ char parse (Param& par, int argc, char** argv) {
     help();
   else {
     // todo. change to read from stdin
-    par.in_file = *(argv+argc-1);    // Input file name
+//    par.in_file = *(argv+argc-1);    // Input file name
     
     vector<string> vArgs;    vArgs.reserve(static_cast<u64>(argc));
     for (auto a=argv; a!=argv+argc; ++a)
@@ -134,7 +155,8 @@ char parse (Param& par, int argc, char** argv) {
     }
     if (!exist(vArgs.begin(), vArgs.end(), "-f") &&
         !exist(vArgs.begin(), vArgs.end(), "--format"))
-      par.format = frmt(par.in_file);
+      par.format = frmt();
+//    par.format = frmt(par.in_file);
 
     // Compress+encrypt
     return 'c';

@@ -69,30 +69,32 @@ int main (int argc, char* argv[]) {
     auto  fq    = make_shared<Fastq>();
   
     const char action = parse(par, argc, argv);
+  
+    cerr<<par.format;//todo
     
-    // Decrypt and/or unshuffle + decompress
-    if (action == 'd') {
-      crypt->decrypt();
-      ifstream in(DEC_FNAME);
-      switch (in.peek()) {
-        case (char) 127:  cerr<<"Decompressing...\n";  fa->decompress();  break;
-        case (char) 126:  cerr<<"Decompressing...\n";  fq->decompress();  break;
-        case (char) 125:  crypt->unshuffle_file();                        break;
-        default:          throw runtime_error("Error: corrupted file.");
-      }
-      in.close();
-      return 0;
-    }
-    // Compress and/or shuffle + encrypt
-    else if (action == 'c') {
-      switch (par.format) {
-        case 'A':    cerr<<"Compacting...\n";    fa->compress();          break;
-        case 'Q':    cerr<<"Compacting...\n";    fq->compress();          break;
-        case 'n':    crypt->shuffle_file();                               break;
-        default :    throw runtime_error("Error: \"" +par.in_file+ "\" is not"
-                                         " a valid FASTA or FASTQ file.\n");
-      }
-    }
+//    // Decrypt and/or unshuffle + decompress
+//    if (action == 'd') {
+//      crypt->decrypt();
+//      ifstream in(DEC_FNAME);
+//      switch (in.peek()) {
+//        case (char) 127:  cerr<<"Decompressing...\n";  fa->decompress();  break;
+//        case (char) 126:  cerr<<"Decompressing...\n";  fq->decompress();  break;
+//        case (char) 125:  crypt->unshuffle_file();                        break;
+//        default:          throw runtime_error("Error: corrupted file.");
+//      }
+//      in.close();
+//      return 0;
+//    }
+//    // Compress and/or shuffle + encrypt
+//    else if (action == 'c') {
+//      switch (par.format) {
+//        case 'A':    cerr<<"Compacting...\n";    fa->compress();          break;
+//        case 'Q':    cerr<<"Compacting...\n";    fq->compress();          break;
+//        case 'n':    crypt->shuffle_file();                               break;
+//        default :    throw runtime_error("Error: \"" +par.in_file+ "\" is not"
+//                                         " a valid FASTA or FASTQ file.\n");
+//      }
+//    }
   }
   catch (std::exception& e) { cerr << e.what(); }
   catch (...) { return EXIT_FAILURE; }
