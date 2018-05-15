@@ -47,7 +47,7 @@ inline void check_pass (const string& fname) {
 inline char frmt () {//todo
   wchar_t c;
 //  wifstream in(inFileName);
-  assert(!std::wcin.good(), "Error: failed opening.\n");
+  assert(!std::wcin.good(), "Error: failed opening the input file.\n");
   
   // Skip leading blank lines or spaces
   while (std::wcin.peek()=='\n' || std::wcin.peek()==' ')    std::wcin.get(c);
@@ -65,27 +65,30 @@ inline char frmt () {//todo
   if (std::wcin.peek() == '>') { /*std::wcin.close();*/    return 'A'; }      // Fasta
   else                  { /*std::wcin.close();*/    return 'n'; }      // Not Fasta/Fastq
 }
-//inline char frmt (const string& inFileName) {
-//  wchar_t c;
-//  wifstream in(inFileName);
-//  assert(!in.good(), "Error: failed opening '" + inFileName + "'.\n");
-//
-//  // Skip leading blank lines or spaces
-//  while (in.peek()=='\n' || in.peek()==' ')    in.get(c);
-//
-//  // Fastq
-//  while (in.peek() == '@')     IGNORE_THIS_LINE(in);
-//  byte nTabs=0;    while (in.get(c) && c!='\n')  if (c=='\t') ++nTabs;
-//
-//  if (in.peek() == '+') { in.close();    return 'Q'; }            // Fastq
-//
-//  // Fasta or Not Fasta/Fastq
-//  in.clear();   in.seekg(0, std::ios::beg); // Return to beginning of the file
-//  while (in.peek()!='>' && in.peek()!=EOF)    IGNORE_THIS_LINE(in);
-//
-//  if (in.peek() == '>') { in.close();    return 'A'; }      // Fasta
-//  else                  { in.close();    return 'n'; }      // Not Fasta/Fastq
-//}
+
+#ifdef DEBUG
+inline char frmt_not_stdin (const string& inFileName) {
+  wchar_t c;
+  wifstream in(inFileName);
+  assert(!in.good(), "Error: failed opening '" + inFileName + "'.\n");
+
+  // Skip leading blank lines or spaces
+  while (in.peek()=='\n' || in.peek()==' ')    in.get(c);
+
+  // Fastq
+  while (in.peek() == '@')     IGNORE_THIS_LINE(in);
+  byte nTabs=0;    while (in.get(c) && c!='\n')  if (c=='\t') ++nTabs;
+
+  if (in.peek() == '+') { in.close();    return 'Q'; }            // Fastq
+
+  // Fasta or Not Fasta/Fastq
+  in.clear();   in.seekg(0, std::ios::beg); // Return to beginning of the file
+  while (in.peek()!='>' && in.peek()!=EOF)    IGNORE_THIS_LINE(in);
+
+  if (in.peek() == '>') { in.close();    return 'A'; }      // Fasta
+  else                  { in.close();    return 'n'; }      // Not Fasta/Fastq
+}
+#endif
 
 /**
  * @brief  Parse the command line options
@@ -98,9 +101,7 @@ char parse (Param& par, int argc, char** argv) {
   if (argc < 2)
     help();
   else {
-    // todo. change to read from stdin
-//    par.in_file = *(argv+argc-1);    // Input file name
-    
+///    par.in_file = *(argv+argc-1);  // Not standard input
     vector<string> vArgs;    vArgs.reserve(static_cast<u64>(argc));
     for (auto a=argv; a!=argv+argc; ++a)
       vArgs.emplace_back(string(*a));
@@ -156,7 +157,7 @@ char parse (Param& par, int argc, char** argv) {
     if (!exist(vArgs.begin(), vArgs.end(), "-f") &&
         !exist(vArgs.begin(), vArgs.end(), "--format"))
       par.format = frmt();
-//    par.format = frmt(par.in_file);
+///    par.format = frmt_not_stdin(par.in_file);  // Not standard input file
 
     // Compress+encrypt
     return 'c';

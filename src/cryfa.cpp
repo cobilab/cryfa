@@ -69,8 +69,6 @@ int main (int argc, char* argv[]) {
     auto  fq    = make_shared<Fastq>();
   
     const char action = parse(par, argc, argv);
-  
-    cerr<<par.format;//todo
     
 //    // Decrypt and/or unshuffle + decompress
 //    if (action == 'd') {
