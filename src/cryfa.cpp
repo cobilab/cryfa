@@ -82,36 +82,36 @@ int main (int argc, char* argv[]) {
     const char action = parse(par, argc, argv);
 
     //todo remove
-f();
-    char c;
-    while(cin.get(c))
-      cerr << c << '_';
+//f();
+//    char c;
+//    while(cin.get(c))
+//      cerr << c << '_';
     
     
-//    // Decrypt and/or unshuffle + decompress
-//    if (action == 'd') {
-//      crypt->decrypt();
-//      ifstream in(DEC_FNAME);
-//      switch (in.peek()) {
+    // Decrypt and/or unshuffle + decompress
+    if (action == 'd') {
+      crypt->decrypt();
+      ifstream in(DEC_FNAME);
+      switch (in.peek()) {
 //        case (char) 127:  cerr<<"Decompressing...\n";  fa->decompress();  break;
 //        case (char) 126:  cerr<<"Decompressing...\n";  fq->decompress();  break;
-//        case (char) 125:  crypt->unshuffle_file();                        break;
-//        default:          throw runtime_error("Error: corrupted file.");
-//      }
-//      in.close();
-//      return 0;
-//    }
-//    // Compress and/or shuffle + encrypt
-//    else if (action == 'c') {
-//      switch (par.format) {
+        case (char) 125:  crypt->unshuffle_file();                        break;
+        default:          throw runtime_error("Error: corrupted file.");
+      }
+      in.close();
+      return 0;
+    }
+    // Compress and/or shuffle + encrypt
+    else if (action == 'c') {
+      switch (par.format) {
 //        case 'A':    cerr<<"Compacting...\n";    fa->compress();          break;
 //        case 'Q':    cerr<<"Compacting...\n";    fq->compress();          break;
-//        case 'n':    crypt->shuffle_file();                               break;
-//        default :    throw runtime_error("Error: the input file is not valid.\n");
-////        default :    throw runtime_error("Error: \"" +par.in_file+ "\" is not"
-////                                         " a valid FASTA or FASTQ file.\n");todo
-//      }
-//    }
+        case 'n':    crypt->shuffle_file();                               break;
+        default :    throw runtime_error("Error: the input file is not valid.\n");
+//        default :    throw runtime_error("Error: \"" +par.in_file+ "\" is not"
+//                                         " a valid FASTA or FASTQ file.\n");todo
+      }
+    }
   }
   catch (std::exception& e) { cerr << e.what(); }
   catch (...) { return EXIT_FAILURE; }

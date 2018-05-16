@@ -713,7 +713,7 @@ void EnDecrypto::shuffle_file () {
 //    inFile.close();//todo remove
     pckdFile.close();
   }
-
+  
   // Cout encrypted content
   encrypt();//todo uncomment
 }
@@ -725,7 +725,6 @@ void EnDecrypto::shuffle_file () {
 void EnDecrypto::shuffle_block (byte threadID) {
 //  ifstream in(in_file);//todo remove
   ofstream shfile(SH_FNAME+to_string(threadID), std::ios_base::app);
-  
   // Characters ignored at the beginning
   cin.ignore((std::streamsize) (threadID * BLOCK_SIZE));
 //  in.ignore((std::streamsize) (threadID * BLOCK_SIZE));//todo remove
@@ -736,7 +735,7 @@ void EnDecrypto::shuffle_block (byte threadID) {
     for (u64 bs=BLOCK_SIZE; bs--;)
       if (cin.get(c))    context += c;
 //      if (in.get(c))    context += c;//todo remove
-
+    
     // Shuffle
     if (!stop_shuffle) {
       mutxEnDe.lock();//--------------------------------------------------
@@ -756,7 +755,7 @@ void EnDecrypto::shuffle_block (byte threadID) {
     cin.ignore((std::streamsize) ((n_threads-1) * BLOCK_SIZE));
 //    in.ignore((std::streamsize) ((n_threads-1) * BLOCK_SIZE));//todo remove
   }
-
+  REWIND(cin);//todo
   shfile.close();
 //  cin.close();//todo remove
 }
