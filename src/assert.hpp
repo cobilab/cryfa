@@ -14,6 +14,7 @@
 using std::ifstream;
 using std::string;
 using std::runtime_error;
+using std::cin;
 
 /**
  * @brief Assert a condition
@@ -37,6 +38,7 @@ inline void assert_dual (bool cond, const string& msgT, const string& msgF) {
 /**
  * @brief Check if file is good
  * @param fname  the file name
+ * @param msg    the error message
  */
 inline void assert_file_good (const string& fname, const string& msg="") {
   ifstream in(fname);
@@ -45,6 +47,15 @@ inline void assert_file_good (const string& fname, const string& msg="") {
     assert_dual(msg.empty(), "Error opening the file \"" +fname+ "\".\n", msg);
   }
   in.close();
+}
+
+/**
+ * @brief Check if file, obtained by std::cin, is good
+ * @param msg  the error message
+ */
+inline void assert_file_cin_good (const string& msg="") {
+  if (!cin.good() || cin.peek()==EOF)
+    assert_dual(msg.empty(), "Error: failed opening the file.\n", msg);
 }
 
 #endif //CRYFA_ASSERT_H

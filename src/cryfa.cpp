@@ -49,26 +49,35 @@ using std::to_string;
 using std::make_shared;
 
 // Instantiation of static variables in Param structure
-bool   Param::verbose         = false;
-bool   Param::disable_shuffle = false;
-byte   Param::n_threads       = DEF_N_THR;
-string Param::in_file         = "";
-string Param::key_file        = "";
-char   Param::format          = 'n';
+bool   Param::verbose      = false;
+bool   Param::stop_shuffle = false;
+byte   Param::n_threads    = DEF_N_THR;
+//string Param::in_file      = "";//todo remove
+string Param::key_file     = "";
+char   Param::format       = 'n';
 
 /**
  * @brief Main function
  */
 int main (int argc, char* argv[]) {
   try {
-//  std::ios::sync_with_stdio(false); // Turn off synchronizing C++ to C streams//todo
+    //todo
+//  std::ios::sync_with_stdio(false); // Turn off synchronizing C++ to C streams
     
     Param par;
     auto  crypt = make_shared<EnDecrypto>();
     auto  fa    = make_shared<Fasta>();
     auto  fq    = make_shared<Fastq>();
-  
+
     const char action = parse(par, argc, argv);
+    
+    //todo remove
+    char c;
+    while(cin.get(c))
+    cerr<<c<<'_';
+//    ifstream fs("p");
+//    fs.get(c);
+//    cerr<<c<<'_';
     
 //    // Decrypt and/or unshuffle + decompress
 //    if (action == 'd') {
@@ -89,8 +98,9 @@ int main (int argc, char* argv[]) {
 //        case 'A':    cerr<<"Compacting...\n";    fa->compress();          break;
 //        case 'Q':    cerr<<"Compacting...\n";    fq->compress();          break;
 //        case 'n':    crypt->shuffle_file();                               break;
-//        default :    throw runtime_error("Error: \"" +par.in_file+ "\" is not"
-//                                         " a valid FASTA or FASTQ file.\n");
+//        default :    throw runtime_error("Error: the input file is not valid.\n");
+////        default :    throw runtime_error("Error: \"" +par.in_file+ "\" is not"
+////                                         " a valid FASTA or FASTQ file.\n");todo
 //      }
 //    }
   }

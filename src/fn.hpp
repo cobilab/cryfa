@@ -34,7 +34,7 @@ T accum_hops (Iter first, Iter last, T init, Hop h) {
   for (; first < last; first+=h)
     init += *first;
   return init;
-};
+}
 
 /**
  * @brief  Accumulate even index values in a range
@@ -46,7 +46,7 @@ T accum_hops (Iter first, Iter last, T init, Hop h) {
 template <typename T, typename Iter>
 T accum_even (Iter first, Iter last, T init) {
   return accum_hops(first, last, init, 2);
-};
+}
 
 /**
  * @brief  Accumulate odd index values in a range
@@ -58,7 +58,7 @@ T accum_even (Iter first, Iter last, T init) {
 template <typename T, typename Iter>
 T accum_odd (Iter first, Iter last, T init) {
   return accum_hops(first+1, last, init, 2);
-};
+}
 
 /**
  * @brief Save the contents of a file into a string
@@ -147,8 +147,10 @@ inline void help () {
        << "      -v,  --verbose"                                        << '\n'
        << "           verbose mode (more information)"                  << '\n'
                                                                         << '\n'
-       << "      -s,  --disable_shuffle"                                << '\n'
-       << "           disable input shuffling"                          << '\n'
+       << "      -s,  --stop_shuffle"                                   << '\n'
+       << "           stop input shuffling"                             << '\n'
+//       << "      -s,  --stop_shuffle"                                << '\n'//todo remove
+//       << "           disable input shuffling"                          << '\n'//todo remove
                                                                         << '\n'
        << "      -t [NUMBER],  --thread [NUMBER]"                       << '\n'
        << "           number of threads"                                << '\n'

@@ -16,6 +16,7 @@
 #include "fn.hpp"
 using std::runtime_error;
 using std::cerr;
+using std::wcin;
 
 /**
  * @brief  Argument of a command line option
@@ -44,26 +45,26 @@ inline void check_pass (const string& fname) {
  * @param  inFileName  Input file name
  * @return A, Q or n
  */
-inline char frmt () {//todo
+inline char frmt () {
   wchar_t c;
 //  wifstream in(inFileName);
-  assert(!std::wcin.good(), "Error: failed opening the input file.\n");
+  assert(!wcin.good(), "Error: failed opening the input file.\n");
   
   // Skip leading blank lines or spaces
-  while (std::wcin.peek()=='\n' || std::wcin.peek()==' ')    std::wcin.get(c);
+  while (wcin.peek()=='\n' || wcin.peek()==' ')    wcin.get(c);
   
   // Fastq
-  while (std::wcin.peek() == '@')     IGNORE_THIS_LINE(std::wcin);
-  byte nTabs=0;    while (std::wcin.get(c) && c!='\n')  if (c=='\t') ++nTabs;
+  while (wcin.peek() == '@')     IGNORE_THIS_LINE(wcin);
+  byte nTabs=0;    while (wcin.get(c) && c!='\n')  if (c=='\t') ++nTabs;
   
-  if (std::wcin.peek() == '+') { /*std::wcin.close();*/    return 'Q'; }            // Fastq
+  if (wcin.peek() == '+') { /*wcin.close();*/    return 'Q'; }            // Fastq
   
   // Fasta or Not Fasta/Fastq
-  std::wcin.clear();   std::wcin.seekg(0, std::ios::beg); // Return to beginning of the file
-  while (std::wcin.peek()!='>' && std::wcin.peek()!=EOF)    IGNORE_THIS_LINE(std::wcin);
+  wcin.clear();   wcin.seekg(0, std::ios::beg); // Return to beginning of the file
+  while (wcin.peek()!='>' && wcin.peek()!=EOF)    IGNORE_THIS_LINE(wcin);
   
-  if (std::wcin.peek() == '>') { /*std::wcin.close();*/    return 'A'; }      // Fasta
-  else                  { /*std::wcin.close();*/    return 'n'; }      // Not Fasta/Fastq
+  if (wcin.peek() == '>') { /*wcin.close();*/    return 'A'; }      // Fasta
+  else                  { /*wcin.close();*/    return 'n'; }      // Not Fasta/Fastq
 }
 
 #ifdef DEBUG
@@ -141,11 +142,11 @@ char parse (Param& par, int argc, char** argv) {
     if (exist(vArgs.begin(), vArgs.end(), "-d") ||
         exist(vArgs.begin(), vArgs.end(), "--dec"))
       return 'd';
-
-    // disable_shuffle, frmt
+    
+    // stop_shuffle, frmt
     for (auto i=vArgs.begin(); i!=vArgs.end(); ++i) {
-      if (*i=="-s"  || *i=="--disable_shuffle")
-        par.disable_shuffle = true;
+      if (*i=="-s"  || *i=="--stop_shuffle")
+        par.stop_shuffle = true;
       else if ((*i=="-f"  || *i=="--format") &&
                i+1!=vArgs.end() && (*(i+1))[0]!='-') {
         if      (*(i+1)=="a")  par.format='A';

@@ -17,6 +17,7 @@ using std::chrono::high_resolution_clock;
 using std::thread;
 using std::cout;
 using std::cerr;
+using std::cin;
 using std::ifstream;
 using std::ofstream;
 using std::to_string;
@@ -30,21 +31,24 @@ std::mutex mutxFQ;    /**< @brief Mutex */
  * @return True or false
  */
 bool Fastq::has_just_plus ()  const {
-  ifstream in(in_file);
-  string   line;
+//  ifstream in(in_file);//todo remove
+  string line;
 
-  IGNORE_THIS_LINE(in);    // Ignore header
-  IGNORE_THIS_LINE(in);    // Ignore seq
-  bool justPlus = !(getline(in, line).good() && line.length() > 1);
+  IGNORE_THIS_LINE(cin);    // Ignore header
+  IGNORE_THIS_LINE(cin);    // Ignore seq
+  bool justPlus = !(getline(cin, line).good() && line.length() > 1);
+//  IGNORE_THIS_LINE(in);    // Ignore header//todo remove
+//  IGNORE_THIS_LINE(in);    // Ignore seq//todo remove
+//  bool justPlus = !(getline(in, line).good() && line.length() > 1);//todo remove
 
-  in.close();
+//  in.close();//todo remove
   return justPlus;
 
   /* If input was string, instead of file
   // check if the third line contains only +
   bool justPlus = true;
-  string::const_iterator lFFirst = std::find(in.begin(), in.end(), '\n');
-  string::const_iterator lFSecond = std::find(lFFirst+1, in.end(), '\n');
+  const auto lFFirst = std::find(in.begin(), in.end(), '\n');
+  const auto lFSecond = std::find(lFFirst+1, in.end(), '\n');
   if (*(lFSecond+2) != '\n')  justPlus = false;    // check the symbol after +
   */
 }
@@ -186,34 +190,40 @@ void Fastq::set_hashTbl_packFn (packfq_s& pkStruct, const string& headers,
 void Fastq::pack (const packfq_s &pkStruct, byte threadID) {
   packFP_t packHdr = pkStruct.packHdrFPtr;    // Function pointer
   packFP_t packQS  = pkStruct.packQSFPtr;     // Function pointer
-  ifstream in(in_file);
+//  ifstream in(in_file);//todo remove
   ofstream pkfile(PK_FNAME+to_string(threadID), std::ios_base::app);
   
   // Lines ignored at the beginning
-  for (u64 l = (u64) threadID*BlockLine; l--;)    IGNORE_THIS_LINE(in);
+  for (u64 l = (u64) threadID*BlockLine; l--;)    IGNORE_THIS_LINE(cin);
+//  for (u64 l = (u64) threadID*BlockLine; l--;)    IGNORE_THIS_LINE(in);//todo remove
 
-  while (in.peek() != EOF) {
+//  while (in.peek() != EOF) {//todo remove
+  while (cin.peek() != EOF) {
     string context;  // Output string
   
     string line;
     for (u64 l = 0; l != BlockLine; l += 4) {  // Process 4 lines by 4 lines
-      if (getline(in, line).good()) {        // Header -- Ignore '@'
+//      if (getline(in, line).good()) {        // Header -- Ignore '@'//todo remove
+      if (getline(cin, line).good()) {        // Header -- Ignore '@'
           (this->*packHdr) (context, line.substr(1), HdrMap);
           context += (char) 254;
       }
-      if (getline(in, line).good()) {        // Sequence
+//      if (getline(in, line).good()) {        // Sequence//todo remove
+      if (getline(cin, line).good()) {        // Sequence
         pack_seq(context, line);
           context += (char) 254;
       }
-      IGNORE_THIS_LINE(in);                  // +. ignore
-      if (getline(in, line).good()) {        // Quality score
+      IGNORE_THIS_LINE(cin);                  // +. ignore
+//      IGNORE_THIS_LINE(in);                  // +. ignore//todo remove
+//      if (getline(in, line).good()) {        // Quality score//todo remove
+      if (getline(cin, line).good()) {        // Quality score
           (this->*packQS) (context, line, QsMap);
           context += (char) 254;
       }
     }
 
     // shuffle
-    if (!disable_shuffle) {
+    if (!stop_shuffle) {
         mutxFQ.lock();//----------------------------------------------------
         if (verbose && shuffInProg)    cerr << "Shuffling...\n";
         shuffInProg = false;
@@ -234,11 +244,12 @@ void Fastq::pack (const packfq_s &pkStruct, byte threadID) {
     pkfile << context << '\n';
 
     // Ignore to go to the next related chunk
-    for (u64 l = (u64) (n_threads-1)*BlockLine; l--;)  IGNORE_THIS_LINE(in);
+    for (u64 l = (u64) (n_threads-1)*BlockLine; l--;)  IGNORE_THIS_LINE(cin);
+//    for (u64 l = (u64) (n_threads-1)*BlockLine; l--;)  IGNORE_THIS_LINE(in);//todo remove
   }
 
   pkfile.close();
-  in.close();
+//  in.close();//todo remove
 }
 
 /**
@@ -252,22 +263,27 @@ void Fastq::gather_h_q (string& headers, string& qscores) {
   memset(hChars+32, false, 95);
   memset(qChars+32, false, 95);
 
-  ifstream in(in_file);
-  for (string line; !in.eof();) {
-    if (getline(in, line).good()) {
+//  ifstream in(in_file);//todo remove
+//  for (string line; !in.eof();) {//todo remove
+  for (string line; !cin.eof();) {
+//    if (getline(in, line).good()) {//todo remove
+    if (getline(cin, line).good()) {
       for (char c : line)           hChars[c] = true;
       if (line.size() > maxHLen)    maxHLen = (u32) line.size();
     }
 
-    IGNORE_THIS_LINE(in);    // Ignore sequence
-    IGNORE_THIS_LINE(in);    // Ignore +
+    IGNORE_THIS_LINE(cin);    // Ignore sequence
+    IGNORE_THIS_LINE(cin);    // Ignore +
+//    IGNORE_THIS_LINE(in);    // Ignore sequence//todo remove
+//    IGNORE_THIS_LINE(in);    // Ignore +//todo remove
 
-    if (getline(in, line).good()) {
+//    if (getline(in, line).good()) {//todo remove
+    if (getline(cin, line).good()) {
       for (char c : line)           qChars[c] = true;
       if (line.size() > maxQLen)    maxQLen = (u32) line.size();
     }
   }
-  in.close();
+//  in.close();//todo remove
 
   // Number of lines read from input file while compression
   BlockLine = (u32) (4 * (BLOCK_SIZE / (maxHLen + 2*maxQLen)));

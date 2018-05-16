@@ -17,6 +17,7 @@ using std::chrono::high_resolution_clock;
 using std::thread;
 using std::cout;
 using std::cerr;
+using std::cin;
 using std::ifstream;
 using std::ofstream;
 using std::to_string;
@@ -118,18 +119,21 @@ void Fasta::set_hashTbl_packFn (packfa_s& pkStruct, const string& headers) {
  */
 void Fasta::pack (const packfa_s& pkStruct, byte threadID) {
   packFP_t packHdr = pkStruct.packHdrFP;    // Function pointer
-  ifstream in(in_file);
+//  ifstream in(in_file);//todo remove
   string   line, context, seq;
   ofstream pkfile(PK_FNAME+to_string(threadID), std::ios_base::app);
 
   // Lines ignored at the beginning
-  for (u64 l = (u64) threadID*BlockLine; l--;)    IGNORE_THIS_LINE(in);
+  for (u64 l = (u64) threadID*BlockLine; l--;)    IGNORE_THIS_LINE(cin);
+//  for (u64 l = (u64) threadID*BlockLine; l--;)    IGNORE_THIS_LINE(in);//todo remove
 
-  while (in.peek() != EOF) {
+//  while (in.peek() != EOF) {//todo remove
+  while (cin.peek() != EOF) {
     context.clear();
     seq.clear();
 
-    for (u64 l = BlockLine; l-- && getline(in, line).good();) {
+//    for (u64 l = BlockLine; l-- && getline(in, line).good();) {//todo remove
+    for (u64 l = BlockLine; l-- && getline(cin, line).good();) {
       // Header
       if (line.front() == '>') {
         // Previous seq
@@ -165,7 +169,7 @@ void Fasta::pack (const packfa_s& pkStruct, byte threadID) {
     }
     
     // Shuffle
-    if (!disable_shuffle) {
+    if (!stop_shuffle) {
       mutxFA.lock();//----------------------------------------------------
       if (verbose && shuffInProg)    cerr << "Shuffling...\n";
       shuffInProg = false;
@@ -186,11 +190,12 @@ void Fasta::pack (const packfa_s& pkStruct, byte threadID) {
     pkfile << context << '\n';
 
     // Ignore to go to the next related chunk
-    for (u64 l = (u64) (n_threads-1)*BlockLine; l--;)  IGNORE_THIS_LINE(in);
+    for (u64 l = (u64) (n_threads-1)*BlockLine; l--;)  IGNORE_THIS_LINE(cin);
+//    for (u64 l = (u64) (n_threads-1)*BlockLine; l--;)  IGNORE_THIS_LINE(in);//todo remove
   }
 
   pkfile.close();
-  in.close();
+//  in.close();//todo remove
 }
 
 /**
@@ -203,15 +208,16 @@ void Fasta::gather_h_bs (string& headers) {
   bool hChars[127];
   memset(hChars+32, false, 95);
   
-  ifstream in(in_file);
+//  ifstream in(in_file);//todo remove
   string   line;
-  while (getline(in, line).good()) {
+//  while (getline(in, line).good()) {//todo remove
+  while (getline(cin, line).good()) {
     if (line[0] == '>')
       for (char c : line)    hChars[c] = true;
     else
       if (line.size() > maxBLen)    maxBLen = (u32) line.size();
   }
-  in.close();
+//  in.close();//todo remove
   
   // Number of lines read from input file while compression
   BlockLine = (u32) (BLOCK_SIZE / maxBLen);

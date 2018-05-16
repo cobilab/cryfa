@@ -83,8 +83,8 @@ DESCRIPTION
       -v,  --verbose
            verbose mode (more information)
 
-      -s,  --disable_shuffle
-           disable input shuffling
+      -s,  --stop_shuffle
+           stop input shuffling
 
       -t [NUMBER],  --thread [NUMBER]
            number of threads

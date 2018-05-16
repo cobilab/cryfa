@@ -90,9 +90,9 @@ constexpr int  TAG_SIZE        = 12;  /**< @brief GCC mode auth enc */
 /** @brief Command line input arguments */
 struct Param {
   static bool   verbose;          /**< @brief Verbose mode */
-  static bool   disable_shuffle;  /**< @brief Disable shuffle */
+  static bool   stop_shuffle;     /**< @brief Disable shuffling */
   static byte   n_threads;        /**< @brief Number of threads */
-  static string in_file;          /**< @brief Input file name */
+//  static string in_file;          /**< @brief Input file name *///todo remove
   static string key_file;         /**< @brief Password file name */
   static char   format;           /**< @brief Format of the input file */
 };
