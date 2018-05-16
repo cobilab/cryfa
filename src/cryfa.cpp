@@ -61,24 +61,28 @@ char   Param::format       = 'n';
  */
 int main (int argc, char* argv[]) {
   try {
-    //todo
-//  std::ios::sync_with_stdio(false); // Turn off synchronizing C++ to C streams
-    
     Param par;
     auto  crypt = make_shared<EnDecrypto>();
     auto  fa    = make_shared<Fasta>();
     auto  fq    = make_shared<Fastq>();
-
-    const char action = parse(par, argc, argv);
     
+//    const char action = parse(par, argc, argv);
+
     //todo remove
     char c;
+    while(cin.get(c)) {
+      cerr << cin.tellg();
+      cerr << c << '_';
+    }
+    cin.clear();
+    cin.seekg(0, std::ios::beg);
+    cerr << cin.tellg();
     while(cin.get(c))
-    cerr<<c<<'_';
+      cerr<<c<<'_';
 //    ifstream fs("p");
 //    fs.get(c);
 //    cerr<<c<<'_';
-    
+
 //    // Decrypt and/or unshuffle + decompress
 //    if (action == 'd') {
 //      crypt->decrypt();

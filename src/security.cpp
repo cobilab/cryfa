@@ -48,36 +48,36 @@ std::mutex mutxSec;    /**< @brief Mutex */
  */
 void Security::encrypt () {
   //todo uncomment
-//  cerr << "Encrypting...\n";
-//  const auto start = high_resolution_clock::now();  // Start timer
-//
-//  byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
-//  memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH);   // AES key
-//  memset(iv,  0x00, (size_t) AES::BLOCKSIZE);           // Initialization Vector
-//
-//  const string pass = file_to_string(key_file);
-//  build_key(key, pass);
-//  build_iv(iv, pass);
-//
-//  try {
-//    GCM<AES>::Encryption e;
-//    e.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
-//
-//    FileSource(PCKD_FNAME.c_str(), true,
-//               new AuthenticatedEncryptionFilter(e, new FileSink(cout),
-//                                                 false, TAG_SIZE));
-//  }
-//  catch (CryptoPP::InvalidArgument& e) {
-//    cerr << "Caught InvalidArgument...\n" << e.what() << "\n";
-//  }
-//  catch (CryptoPP::Exception& e) {
-//    cerr << "Caught Exception...\n" << e.what() << "\n";
-//  }
-//
-//  const auto finish = high_resolution_clock::now();        // Stop timer
-//  std::chrono::duration<double> elapsed = finish - start;  // Dur. (sec)
-//  cerr << (verbose ? "Encryption done," : "Done,") << " in "
-//       << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
+  cerr << "Encrypting...\n";
+  const auto start = high_resolution_clock::now();  // Start timer
+
+  byte key[AES::DEFAULT_KEYLENGTH], iv[AES::BLOCKSIZE];
+  memset(key, 0x00, (size_t) AES::DEFAULT_KEYLENGTH);   // AES key
+  memset(iv,  0x00, (size_t) AES::BLOCKSIZE);           // Initialization Vector
+
+  const string pass = file_to_string(key_file);
+  build_key(key, pass);
+  build_iv(iv, pass);
+
+  try {
+    GCM<AES>::Encryption e;
+    e.SetKeyWithIV(key, sizeof(key), iv, sizeof(iv));
+
+    FileSource(PCKD_FNAME.c_str(), true,
+               new AuthenticatedEncryptionFilter(e, new FileSink(cout),
+                                                 false, TAG_SIZE));
+  }
+  catch (CryptoPP::InvalidArgument& e) {
+    cerr << "Caught InvalidArgument...\n" << e.what() << "\n";
+  }
+  catch (CryptoPP::Exception& e) {
+    cerr << "Caught Exception...\n" << e.what() << "\n";
+  }
+
+  const auto finish = high_resolution_clock::now();        // Stop timer
+  std::chrono::duration<double> elapsed = finish - start;  // Dur. (sec)
+  cerr << (verbose ? "Encryption done," : "Done,") << " in "
+       << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
   
   // Delete packed file
   const string pkdFileName = PCKD_FNAME;//todo remove
