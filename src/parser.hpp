@@ -46,26 +46,24 @@ inline void check_pass (const string& fname) {
  * @return A, Q or n
  */
 inline char frmt () {
-//  wifstream in(inFileName);//todo remove
-  assert(!wcin.good(), "Error: failed opening the input file.\n");
-  wchar_t c;
+  assert(!cin.good(), "Error: failed opening the input file.\n");
+  char c;
   
   // Skip leading blank lines or spaces
-  while (wcin.peek()=='\n' || wcin.peek()==' ')    wcin.get(c);
+  while (cin.peek()=='\n' || cin.peek()==' ')    cin.get(c);
   
   // Fastq
-  while (wcin.peek()=='@')     IGNORE_THIS_LINE(wcin);
-  byte nTabs=0;    while (wcin.get(c) && c!='\n')  if (c=='\t') ++nTabs;
+  while (cin.peek()=='@')     IGNORE_THIS_LINE(cin);
+  byte nTabs=0;    while (cin.get(c) && c!='\n')  if (c=='\t') ++nTabs;
   
-  if (wcin.peek()=='+') { /*wcin.close();*/    return 'Q'; }            // Fastq
+  if (cin.peek()=='+') { REWIND(cin);  return 'Q'; }    // Fastq
   
   // Fasta or Not Fasta/Fastq
-  wcin.seekg(0, std::ios::beg); // Return to beginning of the file
-  while (wcin.peek()!='>' && wcin.peek()!=EOF)    IGNORE_THIS_LINE(wcin);
+  REWIND(cin);  // Return to beginning of the file
+  while (cin.peek()!='>' && cin.peek()!=EOF)    IGNORE_THIS_LINE(cin);
   
-  if (wcin.peek()=='>') { /*wcin.close();*/    return 'A'; }      // Fasta
-  else                  { /*wcin.clear(); wcin.seekg(0, wcin.beg);*/        return 'n'; }      // Not Fasta/Fastq
-//  else                  { /*wcin.close();*/    return 'n'; }// Not Fasta/Fastq todo remove
+  if (cin.peek()=='>') { REWIND(cin);  return 'A'; }    // Fasta
+  else                 { REWIND(cin);  return 'n'; }    // Not Fasta/Fastq
 }
 
 #ifdef DEBUG

@@ -56,6 +56,19 @@ byte   Param::n_threads    = DEF_N_THR;
 string Param::key_file     = "";
 char   Param::format       = 'n';
 
+//todo remove
+void f(){
+  char c;
+  wchar_t wc;
+//  while(wcin.get(wc)) {
+    while(cin.get(c)) {
+//    cerr << cin.tellg();
+    cerr << c << '_';
+//    cerr << wc << '_';
+  }
+  REWIND(cin);
+}
+
 /**
  * @brief Main function
  */
@@ -66,23 +79,15 @@ int main (int argc, char* argv[]) {
     auto  fa    = make_shared<Fasta>();
     auto  fq    = make_shared<Fastq>();
     
-//    const char action = parse(par, argc, argv);
+    const char action = parse(par, argc, argv);
 
     //todo remove
+f();
     char c;
-    while(cin.get(c)) {
-      cerr << cin.tellg();
-      cerr << c << '_';
-    }
-    cin.clear();
-    cin.seekg(0, std::ios::beg);
-    cerr << cin.tellg();
     while(cin.get(c))
-      cerr<<c<<'_';
-//    ifstream fs("p");
-//    fs.get(c);
-//    cerr<<c<<'_';
-
+      cerr << c << '_';
+    
+    
 //    // Decrypt and/or unshuffle + decompress
 //    if (action == 'd') {
 //      crypt->decrypt();

@@ -50,7 +50,7 @@ struct POWER<B, 0> { static const u64 val = 1; };
 /** @endcond */
 
 // Macros
-#define LOOP(i,S)                 for(char (i) : (S))
+#define LOOP(c,S)                 for(char (c) : (S))
 #define LOOP2(i,j,S)              LOOP(i,S) LOOP(j,S)
 #define LOOP3(i,j,k,S)            LOOP(i,S) LOOP(j,S) LOOP(k,S)
 #define LOOP4(i,j,k,l,S)          LOOP(i,S) LOOP(j,S) LOOP2(k,l,S)
@@ -60,6 +60,7 @@ struct POWER<B, 0> { static const u64 val = 1; };
 #define LOOP8(i,j,k,l,m,n,o,p,S)  LOOP(i,S) LOOP(j,S) LOOP6(k,l,m,n,o,p,S)
 #define IGNORE_THIS_LINE(in) \
         (in).ignore(std::numeric_limits<std::streamsize>::max(),'\n')
+#define REWIND(in)  {(in).clear();  (in).seekg(0, std::ios::beg);}
 
 // Constants
 static const string THR_ID_HDR = "THRD=";     /**< @brief Thread ID header */
