@@ -40,33 +40,6 @@ inline void check_pass (const string& fname) {
   assert(pass.size() < 8, "Error: the password size must be at least 8.\n");
 }
 
-/**
- * @brief  Find file type: FASTA (A), FASTQ (Q), not FASTA/FASTQ (n)
- * @param  inFileName  Input file name
- * @return A, Q or n
- */
-inline char frmt () {
-  assert(!cin.good(), "Error: failed opening the input file.\n");
-  char c;
-  
-  // Skip leading blank lines or spaces
-  while (cin.peek()=='\n' || cin.peek()==' ')    cin.get(c);
-  
-  // Fastq
-  while (cin.peek()=='@')     IGNORE_THIS_LINE(cin);
-  byte nTabs=0;    while (cin.get(c) && c!='\n')  if (c=='\t') ++nTabs;
-  
-  if (cin.peek()=='+') { REWIND(cin);  return 'Q'; }    // Fastq
-  
-  // Fasta or Not Fasta/Fastq
-  REWIND(cin);  // Return to beginning of the file
-  while (cin.peek()!='>' && cin.peek()!=EOF)    IGNORE_THIS_LINE(cin);
-  
-  if (cin.peek()=='>') { REWIND(cin);  return 'A'; }    // Fasta
-  else                 { REWIND(cin);  return 'n'; }    // Not Fasta/Fastq
-}
-
-//#ifdef DEBUG
 inline char frmt_not_stdin (const string& inFileName) {
   wchar_t c;
   wifstream in(inFileName);
@@ -88,7 +61,6 @@ inline char frmt_not_stdin (const string& inFileName) {
   if (in.peek() == '>') { in.close();    return 'A'; }      // Fasta
   else                  { in.close();    return 'n'; }      // Not Fasta/Fastq
 }
-//#endif
 
 /**
  * @brief  Parse the command line options
@@ -101,7 +73,7 @@ char parse (Param& par, int argc, char** argv) {
   if (argc < 2)
     help();
   else {
-    par.in_file = *(argv+argc-1);  // Not standard input//todo
+    par.in_file = *(argv+argc-1);  // Not standard input
     vector<string> vArgs;    vArgs.reserve(static_cast<u64>(argc));
     for (auto a=argv; a!=argv+argc; ++a)
       vArgs.emplace_back(string(*a));
@@ -156,8 +128,7 @@ char parse (Param& par, int argc, char** argv) {
     }
     if (!exist(vArgs.begin(), vArgs.end(), "-f") &&
         !exist(vArgs.begin(), vArgs.end(), "--format"))
-//      par.format = frmt();//todo
-      par.format = frmt_not_stdin(par.in_file);  // Not standard input file//todo
+      par.format = frmt_not_stdin(par.in_file);  // Not standard input file
 
     // Compress+encrypt
     return 'c';

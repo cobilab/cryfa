@@ -52,55 +52,15 @@ using std::make_shared;
 bool   Param::verbose      = false;
 bool   Param::stop_shuffle = false;
 byte   Param::n_threads    = DEF_N_THR;
-string Param::in_file      = "";//todo remove
+string Param::in_file      = "";
 string Param::key_file     = "";
 char   Param::format       = 'n';
-
-//todo
-    void f(){
-      string s;
-      for(char c;cin.get(c);)
-        s+=c;
-      cerr<<s;
-    }
     
 /**
  * @brief Main function
  */
-//todo
-#include <thread>
-#include <future>
-
-bool is_prime (int x) {
-  for (int i=(int)std::round(std::sqrt(x)); i>2; --i) if (x%i==0) return false;
-  return true;
-}
 int main (int argc, char* argv[]) {
   try {
-    //todo
-//    f();
-//    std::thread t1(&f);
-//    std::thread t2(&f);
-//    if(t1.joinable())
-//      t1.join();
-//    if(t2.joinable())
-//      t2.join();
-  
-//    // call function asynchronously:
-//    std::future<bool> fut = std::async (is_prime,13768146);
-//
-//    // do something while waiting for function to set future:
-//    std::cout << "checking, please wait";
-////    std::chrono::milliseconds span (100);
-////    while (fut.wait_for(span)==std::future_status::timeout)
-////      std::cout << '.' << std::flush;
-//
-//    bool x = fut.get();     // retrieve return value
-//
-//    std::cout << "\n444444443 " << (x?"is":"is not") << " prime.\n";
-
-
-
     Param par;
     auto  crypt = make_shared<EnDecrypto>();
     auto  fa    = make_shared<Fasta>();
@@ -127,9 +87,8 @@ int main (int argc, char* argv[]) {
         case 'A':    cerr<<"Compacting...\n";    fa->compress();          break;
         case 'Q':    cerr<<"Compacting...\n";    fq->compress();          break;
         case 'n':    crypt->shuffle_file();                               break;
-        default :    throw runtime_error("Error: the input file is not valid.\n");
-//        default :    throw runtime_error("Error: \"" +par.in_file+ "\" is not"
-//                                         " a valid FASTA or FASTQ file.\n");todo
+        default :    throw runtime_error("Error: \"" +par.in_file+ "\" is not"
+                                         " a valid FASTA or FASTQ file.\n");
       }
     }
   }

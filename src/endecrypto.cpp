@@ -13,7 +13,6 @@
 #include <iomanip>      // setw, setprecision
 #include <functional>
 #include <algorithm>
-#include <sstream>//todo
 #include "endecrypto.hpp"
 #include "assert.hpp"
 using std::chrono::high_resolution_clock;
@@ -21,7 +20,6 @@ using std::thread;
 using std::vector;
 using std::cout;
 using std::cerr;
-using std::cin;
 using std::ifstream;
 using std::ofstream;
 using std::getline;
@@ -687,18 +685,13 @@ void EnDecrypto::shuffle_file () {
   if (!stop_shuffle) {
     const auto start = high_resolution_clock::now();            // Start timer
     thread arrThread[n_threads];
-    //todo
-//    std::stringstream in;
-//    in << cin.rdbuf();
-//    in.seekg(0);
+
     // Distribute file among threads, for shuffling
     for (byte t=0; t != n_threads; ++t)
-//      arrThread[t] = thread(&EnDecrypto::f, this, t);
-      arrThread[t] = thread(&EnDecrypto::shuffle_block, this, t);//todo
+      arrThread[t] = thread(&EnDecrypto::shuffle_block, this, t);
     for (auto& thr : arrThread)
       if (thr.joinable())  thr.join();
 
-    //todo uncomment
     // Join partially shuffled files
     join_shuffled_files();
 
@@ -710,47 +703,34 @@ void EnDecrypto::shuffle_file () {
          << " seconds.\n";
   }
   else {
-    ifstream inFile(in_file);//todo remove
+    ifstream inFile(in_file);
     ofstream pckdFile(PCKD_FNAME);
 
     pckdFile << (char) 125 << (!stop_shuffle ? (char) 128 : (char) 129);
-//    pckdFile << cin.rdbuf();//todo
-    pckdFile << inFile.rdbuf();//todo remove
+    pckdFile << inFile.rdbuf();
 
-    inFile.close();//todo remove
-//    REWIND(cin);//todo
+    inFile.close();
     pckdFile.close();
   }
   
   // Cout encrypted content
-  encrypt();//todo uncomment
+  encrypt();
 }
 
 /**
  * @brief Shuffle a block of file
  * @param threadID  Thread ID
  */
-//todo moshkel az multithr hastesh
-//template <typename T>//todo
-//void EnDecrypto::shuffle_block (byte threadID, T& in) {//todo
-  void EnDecrypto::shuffle_block (byte threadID) {
-  ifstream in(in_file);//todo remove
-  //todo bezar birun e function
-//  REWIND(cin);//todo
+void EnDecrypto::shuffle_block (byte threadID) {
+  ifstream in(in_file);
   ofstream shfile(SH_FNAME+to_string(threadID), std::ios_base::app);
   // Characters ignored at the beginning
-//  mutxEnDe.lock();//--------------------------------------------------
-//  cin.ignore((std::streamsize) (threadID * BLOCK_SIZE));
-  in.ignore((std::streamsize) (threadID * BLOCK_SIZE));//todo remove
+  in.ignore((std::streamsize) (threadID * BLOCK_SIZE));
 
-  for (char c; in.peek() != EOF;) {//todo remove
-//  for (char c; cin.peek() != EOF;) {
+  for (char c; in.peek() != EOF;) {
     string context;
     for (u64 bs=BLOCK_SIZE; bs--;)
-//      if (cin.get(c))    context += c;
-      if (in.get(c))    context += c;//todo remove
-//    if (cin.get(c))   { mutxEnDe.unlock();  context += c;}//todo remove
-//    cerr<<context<<"\n/////////\n";//todo
+      if (in.get(c))    context += c;
     
     // Shuffle
     if (!stop_shuffle) {
@@ -764,18 +744,12 @@ void EnDecrypto::shuffle_file () {
     
     // Write header containing threadID for each partially shuffled file
     shfile << THR_ID_HDR << to_string(threadID) << '\n';
-//    cerr<<context<<"\n**********\n";//todo
     shfile << context << '\n';
 
     // Ignore to go to the next related chunk
-//    mutxEnDe.lock();//--------------------------------------------------
-//    cin.ignore((std::streamsize) ((n_threads-1) * BLOCK_SIZE));
-    in.ignore((std::streamsize) ((n_threads-1) * BLOCK_SIZE));//todo remove
+    in.ignore((std::streamsize) ((n_threads-1) * BLOCK_SIZE));
   }
-//  REWIND(cin);//todo
   shfile.close();
-//  in.close();//todo remove
-//  mutxEnDe.unlock();//------------------------------------------------
 }
 
 /**

@@ -149,8 +149,8 @@ inline void help () {
                                                                         << '\n'
        << "      -s,  --stop_shuffle"                                   << '\n'
        << "           stop input shuffling"                             << '\n'
-//       << "      -s,  --stop_shuffle"                                << '\n'//todo remove
-//       << "           disable input shuffling"                          << '\n'//todo remove
+//       << "      -s,  --stop_shuffle"                 << '\n'//todo remove
+//       << "           disable input shuffling"        << '\n'//todo remove
                                                                         << '\n'
        << "      -t [NUMBER],  --thread [NUMBER]"                       << '\n'
        << "           number of threads"                                << '\n'

@@ -47,7 +47,6 @@ std::mutex mutxSec;    /**< @brief Mutex */
  *          DEFAULT_KEYLENGTH = 16 bytes.
  */
 void Security::encrypt () {
-  //todo uncomment
   cerr << "Encrypting...\n";
   const auto start = high_resolution_clock::now();  // Start timer
 
@@ -80,9 +79,8 @@ void Security::encrypt () {
        << std::fixed << setprecision(4) << elapsed.count() << " seconds.\n";
   
   // Delete packed file
-  const string pkdFileName = PCKD_FNAME;//todo remove
-  std::remove(pkdFileName.c_str());//todo remove
-//  std::remove(PCKD_FNAME.c_str());//todo add
+  const string pkdFileName = PCKD_FNAME;
+  std::remove(pkdFileName.c_str());
 }
 
 /**
@@ -94,8 +92,7 @@ void Security::encrypt () {
  *          DEFAULT_KEYLENGTH = 16 bytes.
  */
 void Security::decrypt () {
-//  assert_file_cin_good("Error: failed opening the input file.\n");
-  assert_file_good(in_file, "Error: failed opening \"" + in_file + "\".\n");//todo remove
+  assert_file_good(in_file, "Error: failed opening \"" + in_file + "\".\n");
 
   cerr << "Decrypting...\n";
   const auto start = high_resolution_clock::now();// Start timer
@@ -109,7 +106,7 @@ void Security::decrypt () {
   build_iv(iv, pass);
 
   try {
-    ifstream in(in_file);//todo remove
+    ifstream in(in_file);
     const char* outFile = DEC_FNAME.c_str();
 
     GCM<AES>::Decryption d;
@@ -117,9 +114,8 @@ void Security::decrypt () {
 
     AuthenticatedDecryptionFilter df(d, new FileSink(outFile),
                         AuthenticatedDecryptionFilter::DEFAULT_FLAGS, TAG_SIZE);
-//    FileSource(cin, true, new Redirector(df /*, PASS_EVERYTHING */ ));
-    FileSource(in, true, new Redirector(df /*, PASS_EVERYTHING */ ));//todo remove
-    in.close();//todo remove
+    FileSource(in, true, new Redirector(df /*, PASS_EVERYTHING */ ));
+    in.close();
   }
   catch (CryptoPP::HashVerificationFilter::HashVerificationFailed& e) {
     cerr << "Caught HashVerificationFailed...\n" << e.what() << "\n";
