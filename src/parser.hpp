@@ -66,7 +66,7 @@ inline char frmt () {
   else                 { REWIND(cin);  return 'n'; }    // Not Fasta/Fastq
 }
 
-#ifdef DEBUG
+//#ifdef DEBUG
 inline char frmt_not_stdin (const string& inFileName) {
   wchar_t c;
   wifstream in(inFileName);
@@ -88,7 +88,7 @@ inline char frmt_not_stdin (const string& inFileName) {
   if (in.peek() == '>') { in.close();    return 'A'; }      // Fasta
   else                  { in.close();    return 'n'; }      // Not Fasta/Fastq
 }
-#endif
+//#endif
 
 /**
  * @brief  Parse the command line options
@@ -101,7 +101,7 @@ char parse (Param& par, int argc, char** argv) {
   if (argc < 2)
     help();
   else {
-///    par.in_file = *(argv+argc-1);  // Not standard input
+    par.in_file = *(argv+argc-1);  // Not standard input//todo
     vector<string> vArgs;    vArgs.reserve(static_cast<u64>(argc));
     for (auto a=argv; a!=argv+argc; ++a)
       vArgs.emplace_back(string(*a));
@@ -156,8 +156,8 @@ char parse (Param& par, int argc, char** argv) {
     }
     if (!exist(vArgs.begin(), vArgs.end(), "-f") &&
         !exist(vArgs.begin(), vArgs.end(), "--format"))
-      par.format = frmt();
-///    par.format = frmt_not_stdin(par.in_file);  // Not standard input file
+//      par.format = frmt();//todo
+      par.format = frmt_not_stdin(par.in_file);  // Not standard input file//todo
 
     // Compress+encrypt
     return 'c';

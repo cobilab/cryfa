@@ -93,7 +93,7 @@ struct Param {
   static bool   verbose;          /**< @brief Verbose mode */
   static bool   stop_shuffle;     /**< @brief Disable shuffling */
   static byte   n_threads;        /**< @brief Number of threads */
-//  static string in_file;          /**< @brief Input file name *///todo remove
+  static string in_file;          /**< @brief Input file name *///todo remove
   static string key_file;         /**< @brief Password file name */
   static char   format;           /**< @brief Format of the input file */
 };

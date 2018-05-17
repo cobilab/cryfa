@@ -69,8 +69,25 @@ class EnDecrypto : public Security
   auto pack_large (string&, const string&, const string&,
                    const htbl_t&) -> void;
   auto penalty_sym (char) const -> char;
+//  template <typename T>//todo
+//  auto shuffle_block (byte, T&) -> void;//todo
   auto shuffle_block (byte) -> void;
   auto unshuffle_block (byte) -> void;
+  //todo
+  void f (int t) {
+    string s;
+    char c;
+//    std::ifstream in("pass.txt");
+    std::ifstream in("temp");
+//    in.ignore((std::streamsize) t);
+    std::cin.ignore((std::streamsize) t);
+//      for(char c;std::cin.get(c);)
+//        s+=c;
+//    for (; in.get(c);)
+    for (; std::cin.get(c);)
+      s += c;
+    std::cerr << s;
+  }
 };
 
 /**
