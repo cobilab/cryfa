@@ -67,7 +67,14 @@ char   Param::format       = 'n';
 /**
  * @brief Main function
  */
+//todo
 #include <thread>
+#include <future>
+
+bool is_prime (int x) {
+  for (int i=(int)std::round(std::sqrt(x)); i>2; --i) if (x%i==0) return false;
+  return true;
+}
 int main (int argc, char* argv[]) {
   try {
     //todo
@@ -78,7 +85,22 @@ int main (int argc, char* argv[]) {
 //      t1.join();
 //    if(t2.joinable())
 //      t2.join();
-    
+  
+//    // call function asynchronously:
+//    std::future<bool> fut = std::async (is_prime,13768146);
+//
+//    // do something while waiting for function to set future:
+//    std::cout << "checking, please wait";
+////    std::chrono::milliseconds span (100);
+////    while (fut.wait_for(span)==std::future_status::timeout)
+////      std::cout << '.' << std::flush;
+//
+//    bool x = fut.get();     // retrieve return value
+//
+//    std::cout << "\n444444443 " << (x?"is":"is not") << " prime.\n";
+
+
+
     Param par;
     auto  crypt = make_shared<EnDecrypto>();
     auto  fa    = make_shared<Fasta>();
