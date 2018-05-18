@@ -103,8 +103,8 @@ inline bool is_number (const string& s) {
 inline void help () {
   cerr                                                                   << '\n'
      << "NAME"                                                           << '\n'
-     << "      Cryfa v" << VERSION << " - A secure encryption tool for genomic "
-     <<                                                           "data" << '\n'
+     << "      Cryfa v" << VERSION << " - A secure encryption tool "
+     <<                                               "for genomic data" << '\n'
                                                                          << '\n'
      << "AUTHORS"                                                        << '\n'
      << "      Morteza Hosseini    seyedmorteza@ua.pt"                   << '\n'
@@ -125,13 +125,12 @@ inline void help () {
      << "      Compact & encrypt FASTA/FASTQ files."                     << '\n'
      << "      Encrypt any text-based genomic data."                     << '\n'
                                                                          << '\n'
-                                                                         << '\n'
      << "      -h,  --help"                                              << '\n'
      << "           usage guide"                                         << '\n'
                                                                          << '\n'
      << "      -k [KEY_FILE],  --key [KEY_FILE]"                         << '\n'
      << "           key file name -- MANDATORY"                          << '\n'
-     << "           The KEY_FILE specifies a file including the password."<<'\n'
+     << "           The KEY_FILE should contain the password."<<'\n'
                                                                          << '\n'
      << "      -d,  --dec"                                               << '\n'
      << "           decrypt & unpack"                                    << '\n'

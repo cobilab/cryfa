@@ -69,13 +69,14 @@ DESCRIPTION
       Compact & encrypt FASTA/FASTQ files.
       Encrypt any text-based genomic data.
 
-
       -h,  --help
            usage guide
 
       -k [KEY_FILE],  --key [KEY_FILE]
            key file name -- MANDATORY
-           The KEY_FILE specifies a file including the password.
+           The KEY_FILE contains a password.
+           You can employ the "keygen" program to make a strong 
+           password, via the command "./keygen".
 
       -d,  --dec
            decrypt & unpack
@@ -92,9 +93,36 @@ DESCRIPTION
       -t [NUMBER],  --thread [NUMBER]
            number of threads
 ```
-
 Cryfa uses standard ouput stream, hence, its output can be directly integrated
 with pipelines.
+
+
+#### Choose the password
+Regarding `-k` or `--key` flags, there are two options: either saving a 
+raw password in a file and passing the file name to the flags; or, 
+employing the "keygen" program, which is provided to generate a strong password.
+This second method is highly recommended.
+
+To employ the first method, you can use the following commands to save an 
+arbitrary raw password, in this case "Such a strong password!", into the 
+"pass.txt" file. A text editor can also be used for this purpose.
+Then, you are able to pass the key file to Cryfa:
+```bash
+echo Such a strong password! > pass.txt
+./cryfa -k pass.txt in_file > out_file
+```
+Note, this raw password must include at least 8 characters.
+Although, employing a raw password is not recommended, but if you tend to use 
+it, it would be a better practice to choose a strong password.
+
+A "strong password" is
+
+
+
+
+With the second method, that is highly recommended, you are able to have a 
+strong password. 
+
 
 
 ## CITE
