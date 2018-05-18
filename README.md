@@ -50,7 +50,7 @@ print the results.
 ### OPTIONS
 To see the possible options, type:
 ```bash
-./cryfa -h
+./cryfa
 ```
 
 which provides the following:
@@ -69,29 +69,32 @@ DESCRIPTION
       Compact & encrypt FASTA/FASTQ files.
       Encrypt any text-based genomic data.
 
-      The KEY_FILE specifies a file including the password.
 
       -h,  --help
            usage guide
 
       -k [KEY_FILE],  --key [KEY_FILE]
            key file name -- MANDATORY
+           The KEY_FILE specifies a file including the password.
 
       -d,  --dec
            decrypt & unpack
-
+           
+      -f,  --format
+           force specified format -- 'a':FASTA, 'q':FASTQ, 'n':others
+           
       -v,  --verbose
            verbose mode (more information)
 
       -s,  --stop_shuffle
-           stop input shuffling
+           stop shuffling the input
 
       -t [NUMBER],  --thread [NUMBER]
            number of threads
 ```
 
-Cryfa uses standard input and ouput streams, hence, it can be directly 
-integrated with pipelines.
+Cryfa uses standard ouput stream, hence, its output can be directly integrated
+with pipelines.
 
 
 ## CITE

@@ -101,69 +101,62 @@ inline bool is_number (const string& s) {
  * @brief Usage guide
  */
 inline void help () {
-  cerr                                                                  << '\n'
-       << "NAME"                                                        << '\n'
-       << "      Cryfa v" << VERSION << " - "
-       <<                    "A secure encryption tool for genomic data"<< '\n'
-                                                                        << '\n'
-       << "AUTHORS"                                                     << '\n'
-       << "      Morteza Hosseini    seyedmorteza@ua.pt"                << '\n'
-       << "      Diogo Pratas        pratas@ua.pt"                      << '\n'
-       << "      Armando J. Pinho    ap@ua.pt"                          << '\n'
-                                                                        << '\n'
-       << "SYNOPSIS"                                                    << '\n'
-       << "      ./cryfa [OPTION]... -k [key_file] [-d] [in_file] "
-       <<                                                "> [OUT_FILE]" << '\n'
-                                                                        << '\n'
-       << "SAMPLE"                                                      << '\n'
-       << "      Encrypt and Compact:    ./cryfa -k pass.txt in.fq "
-       <<                                                  "> comp"     << '\n'
-       << "      Decrypt and Unpack:     ./cryfa -k pass.txt -d comp "
-       <<                                                  "> orig.fq"  << '\n'
-                                                                        << '\n'
-       << "      Encrypt:                ./cryfa -k pass.txt in > enc"  << '\n'
-       << "      Decrypt:                ./cryfa -k pass.txt -d enc > "
-       <<                                                        "orig" << '\n'
-                                                                        << '\n'
-       << "DESCRIPTION"                                                 << '\n'
-       << "      Compact & encrypt FASTA/FASTQ files."                  << '\n'
-       << "      Encrypt any text-based genomic data."                  << '\n'
-                                                                        << '\n'
-       << "      The key_file specifies a file including the password." << '\n'
-                                                                        << '\n'
-       << "      -h,  --help"                                           << '\n'
-       << "           usage guide"                                      << '\n'
-                                                                        << '\n'
-       << "      -k [key_file],  --key [key_file]"                      << '\n'
-       << "           key file name -- MANDATORY"                       << '\n'
-                                                                        << '\n'
-       << "      -d,  --dec"                                            << '\n'
-       << "           decrypt & unpack"                                 << '\n'
-                                                                        << '\n'
-       << "      -f,  --format"                                         << '\n'
-       << "           force specified format "
-                                   "('a':FASTA, 'q':FASTQ, 'n':others)" << '\n'
-                                                                        << '\n'
-       << "      -v,  --verbose"                                        << '\n'
-       << "           verbose mode (more information)"                  << '\n'
-                                                                        << '\n'
-       << "      -s,  --stop_shuffle"                                   << '\n'
-       << "           stop input shuffling"                             << '\n'
-//       << "      -s,  --stop_shuffle"                 << '\n'//todo remove
-//       << "           disable input shuffling"        << '\n'//todo remove
-                                                                        << '\n'
-       << "      -t [NUMBER],  --thread [NUMBER]"                       << '\n'
-       << "           number of threads"                                << '\n'
-                                                                        << '\n'
-       << "COPYRIGHT"                                                   << '\n'
-       << "      Copyright (C) " << DEV_YEARS << ", IEETA, University "
-       <<                                                  "of Aveiro." << '\n'
-       << "      This is a Free software, under GPLv3. You may redistribute \n"
-       << "      copies of it under the terms of the GNU - General Public   \n"
-       << "      License v3 <http://www.gnu.org/licenses/gpl.html>. There   \n"
-       << "      is NOT ANY WARRANTY, to the extent permitted by law."  << '\n';
+  cerr                                                                   << '\n'
+     << "NAME"                                                           << '\n'
+     << "      Cryfa v" << VERSION << " - A secure encryption tool for genomic "
+     <<                                                           "data" << '\n'
+                                                                         << '\n'
+     << "AUTHORS"                                                        << '\n'
+     << "      Morteza Hosseini    seyedmorteza@ua.pt"                   << '\n'
+     << "      Diogo Pratas        pratas@ua.pt"                         << '\n'
+     << "      Armando J. Pinho    ap@ua.pt"                             << '\n'
+                                                                         << '\n'
+     << "SYNOPSIS"                                                       << '\n'
+     << "      ./cryfa [OPTION]... -k [KEY_FILE] [-d] [IN_FILE] > [OUT_FILE] \n"
+                                                                         << '\n'
+     << "SAMPLE"                                                         << '\n'
+     << "      Encrypt and Compact:    ./cryfa -k pass.txt in.fq > comp" << '\n'
+     << "      Decrypt and Unpack:     ./cryfa -k pass.txt -d comp > orig.fq \n"
+                                                                         << '\n'
+     << "      Encrypt:                ./cryfa -k pass.txt in > enc"     << '\n'
+     << "      Decrypt:                ./cryfa -k pass.txt -d enc > orig"<< '\n'
+                                                                         << '\n'
+     << "DESCRIPTION"                                                    << '\n'
+     << "      Compact & encrypt FASTA/FASTQ files."                     << '\n'
+     << "      Encrypt any text-based genomic data."                     << '\n'
+                                                                         << '\n'
+                                                                         << '\n'
+     << "      -h,  --help"                                              << '\n'
+     << "           usage guide"                                         << '\n'
+                                                                         << '\n'
+     << "      -k [KEY_FILE],  --key [KEY_FILE]"                         << '\n'
+     << "           key file name -- MANDATORY"                          << '\n'
+     << "           The KEY_FILE specifies a file including the password."<<'\n'
+                                                                         << '\n'
+     << "      -d,  --dec"                                               << '\n'
+     << "           decrypt & unpack"                                    << '\n'
+                                                                         << '\n'
+     << "      -f,  --format"                                            << '\n'
+     << "           force specified format ('a':FASTA, 'q':FASTQ, 'n':others)\n"
+                                                                         << '\n'
+     << "      -v,  --verbose"                                           << '\n'
+     << "           verbose mode (more information)"                     << '\n'
+                                                                         << '\n'
+     << "      -s,  --stop_shuffle"                                      << '\n'
+     << "           stop shuffling the input"                            << '\n'
+                                                                         << '\n'
+     << "      -t [NUMBER],  --thread [NUMBER]"                          << '\n'
+     << "           number of threads"                                   << '\n'
+                                                                         << '\n'
+     << "COPYRIGHT"                                                      << '\n'
+     << "      Copyright (C) " << DEV_YEARS << ", IEETA, University "
+     <<                                                  "of Aveiro."    << '\n'
+     << "      This is a Free software, under GPLv3. You may redistribute    \n"
+     << "      copies of it under the terms of the GNU - General Public      \n"
+     << "      License v3 <http://www.gnu.org/licenses/gpl.html>. There      \n"
+     << "      is NOT ANY WARRANTY, to the extent permitted by law."    << '\n';
 
-    throw EXIT_SUCCESS;
+  throw EXIT_SUCCESS;
 }
 
 #endif //CRYFA_FN_HPP
