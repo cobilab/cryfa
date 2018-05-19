@@ -40,7 +40,7 @@ inline void check_pass (const string& fname) {
   assert(pass.size() < 8, "Error: the password size must be at least 8.\n");
 }
 
-inline char frmt_not_stdin (const string& inFileName) {
+inline char frmt (const string &inFileName) {
   wchar_t c;
   wifstream in(inFileName);
   assert(!in.good(), "Error: failed opening '" + inFileName + "'.\n");
@@ -118,17 +118,22 @@ char parse (Param& par, int argc, char** argv) {
     for (auto i=vArgs.begin(); i!=vArgs.end(); ++i) {
       if (*i=="-s"  || *i=="--stop_shuffle")
         par.stop_shuffle = true;
-      else if ((*i=="-f"  || *i=="--format") &&
-               i+1!=vArgs.end() && (*(i+1))[0]!='-') {
-        if      (*(i+1)=="a")  par.format='A';
-        else if (*(i+1)=="q")  par.format='Q';
-        else if (*(i+1)=="n")  par.format='n';
-        ++i;
-      }
+      else if (*i=="-f" || *i=="--force")
+        par.format='n';
+//      else if ((*i=="-f" || *i=="--format") &&
+//               i+1!=vArgs.end() && (*(i+1))[0]!='-') {
+//        if      (*(i+1)=="a")  par.format='A';
+//        else if (*(i+1)=="q")  par.format='Q';
+//        else if (*(i+1)=="n")  par.format='n';
+//        ++i;
+//      }
     }
     if (!exist(vArgs.begin(), vArgs.end(), "-f") &&
-        !exist(vArgs.begin(), vArgs.end(), "--format"))
-      par.format = frmt_not_stdin(par.in_file);  // Not standard input file
+        !exist(vArgs.begin(), vArgs.end(), "--force"))
+      par.format = frmt(par.in_file);  // Not standard input file
+//    if (!exist(vArgs.begin(), vArgs.end(), "-f") &&
+//        !exist(vArgs.begin(), vArgs.end(), "--format"))
+//      par.format = frmt(par.in_file);  // Not standard input file
 
     // Compress+encrypt
     return 'c';

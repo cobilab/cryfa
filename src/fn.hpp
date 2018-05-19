@@ -81,7 +81,7 @@ inline string file_to_string (const string& fname) {
  * @return Yes, if it exists
  */
 template <typename Iter, typename T>
-bool exist (Iter first, Iter last, const T& value) {
+bool exist (const Iter first, const Iter last, const T& value) {
   assert(first==last, "Error: the range is empty.\n");
   return std::find(first, last, value) != last;
 }
@@ -130,13 +130,19 @@ inline void help () {
                                                                          << '\n'
      << "      -k [KEY_FILE],  --key [KEY_FILE]"                         << '\n'
      << "           key file name -- MANDATORY"                          << '\n'
-     << "           The KEY_FILE should contain the password."<<'\n'
+     << "           The KEY_FILE would contain a password."              << '\n'//todo
+     << "           To make a strong password, the \"keygen\" program can be \n"//todo
+     << "           employed via the command \"./keygen\"."              << '\n'//todo
                                                                          << '\n'
      << "      -d,  --dec"                                               << '\n'
      << "           decrypt & unpack"                                    << '\n'
                                                                          << '\n'
-     << "      -f,  --format"                                            << '\n'
-     << "           force specified format ('a':FASTA, 'q':FASTQ, 'n':others)\n"
+     << "      -f,  --force"                                             << '\n'//todo
+     << "           force to consider input as non-FASTA/FASTQ"          << '\n'//todo
+     << "           Forces Cryfa not to compress, but shuffle and encrypt.   \n"//todo
+     << "           If the input is FASTA/FASTQ, it is again considered as   \n"//todo
+     << "           non-FASTA/FASTQ, therefore, compression will be ignored, \n"//todo
+     << "           but shuffling and encryption will be performed."     << '\n'//todo
                                                                          << '\n'
      << "      -v,  --verbose"                                           << '\n'
      << "           verbose mode (more information)"                     << '\n'
