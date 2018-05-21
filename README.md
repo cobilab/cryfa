@@ -50,9 +50,9 @@ will be exactly the same as running
 ./cryfa -k pass.txt test.fa > comp
 ```
 
-Note, for a password file, the user is not limited to any file extension.
-Therefore, that file can either have no extension or any extension. For example,
-it can be "pass", "pass.txt", "pass.dat", etc.
+Note, a password file is not limited to any extension. Therefore, that file can
+either have no extension or any extension. For example, it can be "pass",
+"pass.txt", "pass.dat", etc.
 
 #### Compare Cryfa with other methods
 If you want to compare Cryfa with other methods, set the parameters in 
