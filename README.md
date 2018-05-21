@@ -35,8 +35,26 @@ and, to decrypt & unpack:
 ```bash
 ./cryfa -k pass.txt -d comp > orig.fq
 ```
-Options are described in the following section.
+Options are described in the following sections.
 
+#### Input file format
+Cryfa automatically detects a genomic data file format by looking inside the
+file and not by the file extension. For example, a FASTA file, say “test”, can
+be fed into Cryfa as "test", "test.fa", "test.fasta", "test.fas", "test.fsa" or
+any other file extension. By this explanation, running
+```bash
+./cryfa -k pass.txt test > comp
+```
+will be exactly the same as running
+```bash
+./cryfa -k pass.txt test.fa > comp
+```
+
+Note, for a password file, the user is not limited to any file extension.
+Therefore, that file can either have no extension or any extension. For example,
+it can be "pass", "pass.txt", "pass.dat", etc.
+
+#### Compare Cryfa with other methods
 If you want to compare Cryfa with other methods, set the parameters in 
 **run.sh** bash script, then run it:
 ```bash
@@ -151,12 +169,11 @@ key file, in this case "key.txt", to Cryfa:
 
 If you are interested in the topic of "key management", which is to deal with
 generating, exchanging, storing, using and replacing keys, you can read the 
-articles at [this](https://en.wikipedia.org/wiki/Key_management),
-[this](https://info.townsendsecurity.com/definitive-guide-to-encryption-key-management-fundamentals),
-[this](https://csrc.nist.gov/projects/key-management/cryptographic-key-management-systems)
+articles [[1]](https://en.wikipedia.org/wiki/Key_management),
+[[2]](https://info.townsendsecurity.com/definitive-guide-to-encryption-key-management-fundamentals),
+[[3]](https://csrc.nist.gov/projects/key-management/cryptographic-key-management-systems)
 and
-[this](https://www.cryptomathic.com/news-events/blog/what-is-key-management-a-ciso-perspective)
-links.
+[[4]](https://www.cryptomathic.com/news-events/blog/what-is-key-management-a-ciso-perspective).
 
 
 ## CITE
