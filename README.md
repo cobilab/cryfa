@@ -37,7 +37,7 @@ and, to decrypt & unpack:
 ```
 Options are described in the following sections.
 
-#### Input file format
+### Input file format
 Cryfa automatically detects a genomic data file format by looking inside the
 file and not by the file extension. For example, a FASTA file, say “test”, can
 be fed into Cryfa as "test", "test.fa", "test.fasta", "test.fas", "test.fsa" or
@@ -54,7 +54,7 @@ Note, a password file is not limited to any extension. Therefore, that file can
 either have no extension or any extension. For example, it can be "pass",
 "pass.txt", "pass.dat", etc.
 
-#### Compare Cryfa with other methods
+### Compare Cryfa with other methods
 If you want to compare Cryfa with other methods, set the parameters in 
 **run.sh** bash script, then run it:
 ```bash
@@ -65,7 +65,7 @@ install the compression and encryption tools, run these tools, and finally,
 print the results.
 
 
-### OPTIONS
+## OPTIONS
 To see the possible options, type:
 ```bash
 ./cryfa
@@ -118,7 +118,7 @@ DESCRIPTION
 Cryfa uses standard ouput stream, hence, its output can be directly integrated
 with pipelines.
 
-#### Make a key file
+### Make a key file
 To make a "KEY_FILE", in order to pass to the `-k` or `--key` flags, there are
 two methods: either saving a raw password in a file; or, employing the "keygen"
 program, which is provided to generate a strong password. The second method is
