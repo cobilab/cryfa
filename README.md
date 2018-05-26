@@ -85,7 +85,7 @@ SAMPLE
 
 DESCRIPTION
       Compact & encrypt FASTA/FASTQ files.
-      Encrypt any text-based genomic data.
+      Encrypt any text-based genomic data, e.g., VCF/SAM/BAM.
 
       -h,  --help
            usage guide
@@ -101,9 +101,9 @@ DESCRIPTION
            
       -f,  --force
            force to consider input as non-FASTA/FASTQ
-           Forces Cryfa not to compress, but shuffle and encrypt.
+           Forces Cryfa not to compact, but shuffle and encrypt.
            If the input is FASTA/FASTQ, it is again considered as
-           non-FASTA/FASTQ, therefore, compression will be ignored,
+           non-FASTA/FASTQ, therefore, compaction will be ignored,
            but shuffling and encryption will be performed.
            
       -v,  --verbose
@@ -119,10 +119,10 @@ Cryfa uses standard ouput stream, hence, its output can be directly integrated
 with pipelines.
 
 ### Make a key file
-To make a "KEY_FILE", in order to pass to the `-k` or `--key` flags, there are
-two methods: either saving a raw password in a file; or, employing the "keygen"
-program, which is provided to generate a strong password. The second method is
-highly recommended.
+There are two methods to make a "KEY_FILE", in order to pass to the `-k` or
+`--key` flags, : either saving a raw password in a file; or, employing the
+"keygen" program, which is provided to generate a strong password. The second
+method is highly recommended.
 
 To apply the first method, the following commands can be used to save a raw 
 password in a file, then passing it to Cryfa. In this case, 
@@ -131,17 +131,17 @@ our password in it. For the purpose of saving a password in a file, a text
 editor can also be used:
 ```bash
 echo Such a strong password! > pass.txt
-./cryfa -k pass.txt in_file > out_file
+./cryfa -k pass.txt IN_FILE > OUT_FILE
 ```
 Note, the password must include at least 8 characters.
 Although, employing this method is not recommended, but if you tend to use 
 it, it would be a better practice to choose a "strong password".
 
 A strong password:
-* Has at least 12 characters
-* Includes lowercase letters (a-z), uppercase letters (A-Z), digits (0-9) and
+* has at least 12 characters
+* includes lowercase letters (a-z), uppercase letters (A-Z), digits (0-9) and
 symbols (e.g. !, #, $, % and })
-* Is not a character repetition (e.g. zzzzzz), keyboard pattern (e.g. qwerty)
+* is not a character repetition (e.g. zzzzzz), keyboard pattern (e.g. qwerty)
 or digit sequences (e.g. 123456)
 
 The second method to make a key file is using the "keygen" program, which 
@@ -164,7 +164,7 @@ an initial raw password, which is not required to be strong itself, to generate
 a strong password. Afterward, you can use the following command to pass the 
 key file, in this case "key.txt", to Cryfa:
 ```bash
-./cryfa -k key.txt in_file > out_file
+./cryfa -k key.txt IN_FILE > OUT_FILE
 ```
 
 If you are interested in the topic of "key management", which is to deal with

@@ -12,13 +12,20 @@
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ### Dataset
-GET_DATASET=0           # 42 GB free disk space
-    DL_HUMAN_FA=0       # Download Human             (FASTA) -- 3.1 GB
-    DL_VIRUSES_FA=0     # Download Viruses           (FASTA) -- 0.3 GB
-    GEN_SYNTH_FA=0      # Generate synthetic dataset (FASTA) -- 2.8 GB
-    DL_HUMAN_FQ=0       # Download Human             (FASTQ) -- 27  GB
-    DL_DENISOVA_FQ=0    # Download Denisova          (FASTQ) -- 2.9 GB
-    GEN_SYNTH_FQ=0      # Generate synthetic dataset (FASTQ) -- 6.1 GB
+GET_DATASET=0               # todo 43 GB free disk space
+    DL_HUMAN_FA=0           # Download Human             (FASTA) -- 3.1  GB
+    DL_VIRUSES_FA=0         # Download Viruses           (FASTA) -- 0.3  GB
+    GEN_SYNTH_FA=0          # Generate synthetic dataset (FASTA) -- 2.8  GB
+    DL_HUMAN_FQ=0           # Download Human             (FASTQ) -- 27.0 GB
+    DL_DENISOVA_FQ=0        # Download Denisova          (FASTQ) -- 2.9  GB
+    GEN_SYNTH_FQ=0          # Generate synthetic dataset (FASTQ) -- 6.1  GB
+#    todo                                                                
+    DL_DENISOVA_VCF=0       # Download Denisova          (VCF)   -- 6.3  GB
+    DL_NEANDERTHAL_VCF=0    # Download Neanderthal       (VCF)   -- 0.8  GB
+    DL_HUMAN_SAM=0          # Download Human             (SAM)   -- 0.5  GB
+    DL_NEANDERTHAL_SAM=0    # Download Neanderthal       (SAM)   -- 1.5  GB
+    DL_HUMAN_BAM=0          # Download Human             (BAM)   -- 0.6  GB
+    DL_NEANDERTHAL_BAM=0    # Download Neanderthal       (BAM)   -- 1.3  GB
 
 ### Dependencies
 INSTALL_DEPENDENCIES=0
@@ -87,7 +94,7 @@ RUN_CRYFA_THREADS=0
     RESULTS_CRYFA_THR=0
 
 ### Run different methods to explore redundancy
-RUN_REDUNDANCY=1        # cryfa, DELIMINATE, MFCompress
+RUN_REDUNDANCY=0        # cryfa, DELIMINATE, MFCompress
     # Dataset (FASTA) -- archaea, bacteria, fungi, plants, viruses
     GET_DATASET_REDUN=1 # 12 GB free disk space
     # Run & Results
@@ -108,14 +115,29 @@ then
     if [[ ! -d $dataset ]]; then  mkdir -p $dataset;  fi
 
     ### FASTA
-    if [[ $DL_HUMAN_FA    -eq 1 ]]; then  . $script/dl_human_fa.sh;     fi
-    if [[ $DL_VIRUSES_FA  -eq 1 ]]; then  . $script/dl_viruses_fa.sh;   fi
-    if [[ $GEN_SYNTH_FA   -eq 1 ]]; then  . $script/gen_synth_fa.sh;    fi
+    if [[ $DL_HUMAN_FA       -eq 1 ]]; then  . $script/dl_human_fa.sh;        fi
+    if [[ $DL_VIRUSES_FA     -eq 1 ]]; then  . $script/dl_viruses_fa.sh;      fi
+    if [[ $GEN_SYNTH_FA      -eq 1 ]]; then  . $script/gen_synth_fa.sh;       fi
 
     ### FASTQ
-    if [[ $DL_HUMAN_FQ    -eq 1 ]]; then  . $script/dl_human_fq.sh;     fi
-    if [[ $DL_DENISOVA_FQ -eq 1 ]]; then  . $script/dl_denisova_fq.sh;  fi
-    if [[ $GEN_SYNTH_FQ   -eq 1 ]]; then  . $script/gen_synth_fq.sh;    fi
+    if [[ $DL_HUMAN_FQ       -eq 1 ]]; then  . $script/dl_human_fq.sh;        fi
+    if [[ $DL_DENISOVA_FQ    -eq 1 ]]; then  . $script/dl_denisova_fq.sh;     fi
+    if [[ $GEN_SYNTH_FQ      -eq 1 ]]; then  . $script/gen_synth_fq.sh;       fi
+
+#    todo
+    ### VCF
+    if [[ DL_DENISOVA_VCF    -eq 1 ]]; then  . $script/dl_denisova_vcf.sh;    fi
+    if [[ DL_NEANDERTHAL_VCF -eq 1 ]]; then  . $script/dl_neanderthal_vcf.sh; fi
+
+#    todo
+    ### SAM
+    if [[ DL_HUMAN_SAM       -eq 1 ]]; then  . $script/dl_human_sam.sh;       fi
+    if [[ DL_NEANDERTHAL_SAM -eq 1 ]]; then  . $script/dl_neanderthal_sam.sh; fi
+
+#    todo
+    ### BAM
+    if [[ DL_HUMAN_BAM       -eq 1 ]]; then  . $script/dl_human_bam.sh;       fi
+    if [[ DL_NEANDERTHAL_BAM -eq 1 ]]; then  . $script/dl_neanderthal_bam.sh; fi
 fi
 
 

@@ -123,7 +123,7 @@ inline void help () {
                                                                          << '\n'
      << "DESCRIPTION"                                                    << '\n'
      << "      Compact & encrypt FASTA/FASTQ files."                     << '\n'
-     << "      Encrypt any text-based genomic data."                     << '\n'
+     << "      Encrypt any text-based genomic data, e.g., VCF/SAM/BAM."  << '\n'
                                                                          << '\n'
      << "      -h,  --help"                                              << '\n'
      << "           usage guide"                                         << '\n'
@@ -139,9 +139,9 @@ inline void help () {
                                                                          << '\n'
      << "      -f,  --force"                                             << '\n'//todo
      << "           force to consider input as non-FASTA/FASTQ"          << '\n'//todo
-     << "           Forces Cryfa not to compress, but shuffle and encrypt.   \n"//todo
+     << "           Forces Cryfa not to compact, but shuffle and encrypt.    \n"//todo
      << "           If the input is FASTA/FASTQ, it is again considered as   \n"//todo
-     << "           non-FASTA/FASTQ, therefore, compression will be ignored, \n"//todo
+     << "           non-FASTA/FASTQ, therefore, compaction will be ignored,  \n"//todo
      << "           but shuffling and encryption will be performed."     << '\n'//todo
                                                                          << '\n'
      << "      -v,  --verbose"                                           << '\n'

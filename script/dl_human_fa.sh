@@ -1,5 +1,5 @@
           #######################################################
-          #          Download human (FASTA) -- 3.1 GB           #
+          #          Download Human (FASTA) -- 3.1 GB           #
           #       - - - - - - - - - - - - - - - - - - - -       #
           #        Morteza Hosseini    seyedmorteza@ua.pt       #
           #        Diogo Pratas        pratas@ua.pt             #

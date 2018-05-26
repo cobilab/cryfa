@@ -1,5 +1,5 @@
           #######################################################
-          #         Download denisova (FASTQ) -- 2.9 GB         #
+          #         Download Denisova (FASTQ) -- 2.9 GB         #
           #       - - - - - - - - - - - - - - - - - - - -       #
           #        Morteza Hosseini    seyedmorteza@ua.pt       #
           #        Diogo Pratas        pratas@ua.pt             #
