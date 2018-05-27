@@ -18,6 +18,9 @@ result="result"
     details="details"
 FA="FA"
 FQ="FQ"
+VCF="VCF"
+SAM="SAM"
+BAM="BAM"
 XS="XS"
 goose="goose"
 
@@ -29,6 +32,15 @@ HUMAN_FA_URL="ftp://ftp.ncbi.nlm.nih.gov/genomes/H_sapiens/\
 Assembled_chromosomes/seq"
 HUMAN_FQ_URL="ftp://ftp.sra.ebi.ac.uk/vol1/fastq"
 DENISOVA_FQ_URL="http://cdna.eva.mpg.de/denisova/raw_reads"
+DENISOVA_VCF_URL="http://cdna.eva.mpg.de/denisova/VCF/human"
+NEANDERTHAL_VCF_URL="http://cdna.eva.mpg.de/neandertal/altai/ModernHumans/vcf"
+HUMAN_SAM_URL="ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/phase3/data/HG00096/\
+alignment"
+NEANDERTHAL_SAM_URL="http://cdna.eva.mpg.de/neandertal/altai/AltaiNeandertal/\
+bam"
+HUMAN_BAM_URL="ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/phase3/data/HG00096/\
+alignment"
+NEANDERTHAL_BAM_URL="http://cdna.eva.mpg.de/neandertal/Vindija/bam"
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -42,6 +54,7 @@ PLANTS="P"
 VIRUSES="V"
 DENISOVA="DS"
 Synth="Synth"
+NEANDERTHAL="N"
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -62,6 +75,9 @@ INF="dat"        # Information (data) file type
 RES="res"        # Result file type
 fasta="fasta"    # FASTA file extension
 fastq="fastq"    # FASTQ file extension
+vcf="vcf"        # VCF   file extension
+sam="sam"        # SAM   file extension
+bam="bam"        # BAM   file extension
 
 FASTA_METHODS="GZIP BZIP2 MFCOMPRESS DELIM"
 FASTQ_METHODS="GZIP BZIP2 FQZCOMP QUIP DSRC FQC"

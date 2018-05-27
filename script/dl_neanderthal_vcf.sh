@@ -1,5 +1,5 @@
           #######################################################
-          #          Download Denisova (VCF) -- 6.3 GB          #
+          #         Download Neanderthal (VCF) -- 0.8 GB        #
           #       - - - - - - - - - - - - - - - - - - - -       #
           #        Morteza Hosseini    seyedmorteza@ua.pt       #
           #        Diogo Pratas        pratas@ua.pt             #
@@ -7,12 +7,14 @@
           #######################################################
 #!/bin/bash
 
-### Create a folder for VCF files and one for Denisova dataset
-if [[ ! -d $dataset/$VCF/$DENISOVA ]]; then mkdir -p $dataset/$VCF/$DENISOVA; fi
+### Create a folder for VCF files and one for Neanderthal dataset
+if [[ ! -d $dataset/$VCF/$NEANDERTHAL ]]; then
+    mkdir -p $dataset/$VCF/$NEANDERTHAL;
+fi
 
 ### Download
-# HGDP0456.hg19_1000g.22.mod - High quality
-file="HGDP0456.hg19_1000g.22.mod"
-wget $WGET_OP $DENISOVA_VCF_URL/$file.$vcf.gz;
-gunzip < $file.$vcf.gz > $dataset/$VCF/$DENISOVA/DS-22.$vcf;
+# SS6004472.hg19_1000g.nonchrom.mod - High coverage
+file="SS6004472.hg19_1000g.nonchrom.mod"
+wget $WGET_OP $NEANDERTHAL_VCF_URL/$file.$vcf.gz;
+gunzip < $file.$vcf.gz > $dataset/$VCF/$NEANDERTHAL/N-n.$vcf;
 rm -f $file.$vcf.gz;
