@@ -130,19 +130,19 @@ inline void help () {
                                                                          << '\n'
      << "      -k [KEY_FILE],  --key [KEY_FILE]"                         << '\n'
      << "           key file name -- MANDATORY"                          << '\n'
-     << "           The KEY_FILE would contain a password."              << '\n'//todo
-     << "           To make a strong password, the \"keygen\" program can be \n"//todo
-     << "           employed via the command \"./keygen\"."              << '\n'//todo
+     << "           The KEY_FILE would contain a password."              << '\n'
+     << "           To make a strong password, the \"keygen\" program can be \n"
+     << "           employed via the command \"./keygen\"."              << '\n'
                                                                          << '\n'
      << "      -d,  --dec"                                               << '\n'
      << "           decrypt & unpack"                                    << '\n'
                                                                          << '\n'
-     << "      -f,  --force"                                             << '\n'//todo
-     << "           force to consider input as non-FASTA/FASTQ"          << '\n'//todo
-     << "           Forces Cryfa not to compact, but shuffle and encrypt.    \n"//todo
-     << "           If the input is FASTA/FASTQ, it is again considered as   \n"//todo
-     << "           non-FASTA/FASTQ, therefore, compaction will be ignored,  \n"//todo
-     << "           but shuffling and encryption will be performed."     << '\n'//todo
+     << "      -f,  --force"                                             << '\n'
+     << "           force to consider input as non-FASTA/FASTQ"          << '\n'
+     << "           Forces Cryfa not to compact, but shuffle and encrypt.    \n"
+     << "           If the input is FASTA/FASTQ, it is again considered as   \n"
+     << "           non-FASTA/FASTQ, therefore, compaction will be ignored,  \n"
+     << "           but shuffling and encryption will be performed."     << '\n'
                                                                          << '\n'
      << "      -v,  --verbose"                                           << '\n'
      << "           verbose mode (more information)"                     << '\n'
