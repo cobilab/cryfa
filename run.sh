@@ -34,7 +34,7 @@ INSTALL_DEPENDENCIES=0
     INS_CURL=0          # Curl
     INS_VALGRIND=0      # Valgrind
     INS_ZLIB=0          # Zlib
-#    todo samtools
+    INS_SAMTOOLS=0      # Samtools
 
 ### Install methods
 INSTALL_METHODS=0
@@ -57,6 +57,12 @@ RUN_METHODS_COMP=0      # 75 GB free disk space
     RUN_CRYFA_FA=0      # cryfa
     # FASTQ
     RUN_CRYFA_FQ=0      # cryfa
+    # VCF
+    RUN_CRYFA_VCF=0     # cryfa
+    # SAM
+    RUN_CRYFA_SAM=0     # cryfa
+    # BAM
+    RUN_CRYFA_BAM=0     # cryfa
     # Results
     RESULTS_COMP=0
 
@@ -149,6 +155,7 @@ then
     if [[ $INS_CURL     -eq 1 ]]; then  . $script/dep_curl.sh;      fi
     if [[ $INS_VALGRIND -eq 1 ]]; then  . $script/dep_valgrind.sh;  fi
     if [[ $INS_ZLIB     -eq 1 ]]; then  . $script/dep_zlib.sh;      fi
+    if [[ $INS_SAMTOOLS -eq 1 ]]; then  . $script/dep_samtools.sh;  fi
 fi
 
 
@@ -196,6 +203,15 @@ then
 
     ### FASTQ
     if [[ $RUN_CRYFA_FQ   -eq 1 ]]; then  compDecompOnDataset cryfa fq;  fi
+
+    ### VCF
+    if [[ $RUN_CRYFA_VCF  -eq 1 ]]; then  compDecompOnDataset cryfa vcf; fi
+
+    ### SAM
+    if [[ $RUN_CRYFA_SAM  -eq 1 ]]; then  compDecompOnDataset cryfa sam; fi
+
+    ### BAM
+    if [[ $RUN_CRYFA_BAM  -eq 1 ]]; then  compDecompOnDataset cryfa bam; fi
 
     ### Results
     if [[ $RESULTS_COMP   -eq 1 ]]; then  . $script/res_comp.sh;         fi

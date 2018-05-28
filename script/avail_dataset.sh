@@ -14,8 +14,8 @@
 function isAvail
 {
     if [[ ! -e $1 ]]; then
-        echo "Warning: The file \"$1\" is not available in" \
-             "\"$dataset/\" directory.";
+        echo "Warning: The file \"$1\" is not available in" "\"$dataset/\" \
+             directory.";
         return;
     fi
 }
@@ -37,3 +37,15 @@ for i in B1087 B1088; do
     isAvail "$dataset/$FQ/$DENISOVA/$DENISOVA-${i}_SR.$fastq"
 done
 for i in 1 2; do  isAvail "$dataset/$FQ/$Synth/SynFQ-$i.$fastq";  done
+
+### VCF -- Denisova - Neanderthal
+isAvail "$dataset/$VCF/$DENISOVA/DS-22.$vcf";
+isAvail "$dataset/$VCF/$NEANDERTHAL/N-n.$vcf";
+
+### SAM -- human - Neanderthal
+isAvail "$dataset/$SAM/$HUMAN/HS-n.$sam";
+isAvail "$dataset/$SAM/$NEANDERTHAL/N-y.$sam";
+
+### BAM -- human - Neanderthal
+isAvail "$dataset/$BAM/$HUMAN/HS-11.$bam";
+isAvail "$dataset/$BAM/$NEANDERTHAL/N-21.$bam";

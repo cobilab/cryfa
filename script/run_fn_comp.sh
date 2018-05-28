@@ -151,6 +151,18 @@ function compDecompOnDataset
           for i in 1 2; do
               compDecomp $method $dsPath/$FQ/$Synth/SynFQ-$i.$fastq
           done;;
+
+      "vcf"|"VCF")                      # VCF -- Denisova - Neanderthal
+          compDecomp $method $dsPath/$VCF/$DENISOVA/DS-22.$vcf
+          compDecomp $method $dsPath/$VCF/$NEANDERTHAL/N-n.$vcf;;
+
+      "sam"|"SAM")                      # SAM -- human - Neanderthal
+          compDecomp $method $dsPath/$SAM/$HUMAN/HS-n.$sam
+          compDecomp $method $dsPath/$SAM/$NEANDERTHAL/N-y.$sam;;
+
+      "bam"|"BAM")                      # BAM -- human - Neanderthal
+          compDecomp $method $dsPath/$BAM/$HUMAN/HS-11.$bam
+          compDecomp $method $dsPath/$BAM/$NEANDERTHAL/N-21.$bam;;
     esac
 
     rm -f mem_ps
