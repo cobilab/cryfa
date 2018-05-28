@@ -120,14 +120,14 @@ with pipelines.
 
 ### Make a key file
 There are two methods to make a "KEY_FILE", in order to pass to the `-k` or
-`--key` flags, : either saving a raw password in a file; or, employing the
+`--key` flags, either saving a raw password in a file, or, employing the
 "keygen" program, which is provided to generate a strong password. The second
 method is highly recommended.
 
 To apply the first method, the following commands can be used to save a raw 
 password in a file, then passing it to Cryfa. In this case, 
-"Such a strong password!" is our raw password and "pass.txt" is the file we save
-our password in it. For the purpose of saving a password in a file, a text 
+"Such a strong password!" is our raw password and "pass.txt" is the file where 
+we save our password. For the purpose of saving a password in a file, a text 
 editor can also be used:
 ```bash
 echo Such a strong password! > pass.txt
@@ -138,14 +138,14 @@ Although, employing this method is not recommended, but if you tend to use
 it, it would be a better practice to choose a "strong password".
 
 A strong password:
-* has at least 12 characters
+* has at least 12 characters;
 * includes lowercase letters (a-z), uppercase letters (A-Z), digits (0-9) and
-symbols (e.g. !, #, $, % and })
+symbols (e.g. !, #, $, % and });
 * is not a character repetition (e.g. zzzzzz), keyboard pattern (e.g. qwerty)
-or digit sequences (e.g. 123456)
+or digit sequences (e.g. 123456).
 
 The second method to make a key file is using the "keygen" program, which 
-automatically provides with a strong password. Runnig
+automatically provides a strong password. Running
 ```bash
 ./keygen
 ```
