@@ -130,7 +130,7 @@ password in a file, then passing it to Cryfa. In this case,
 we save our password. For the purpose of saving a password in a file, a text 
 editor can also be used:
 ```bash
-echo Such a strong password! > pass.txt
+echo "Such a strong password!" > pass.txt
 ./cryfa -k pass.txt IN_FILE > OUT_FILE
 ```
 Note, the password must include at least 8 characters.
