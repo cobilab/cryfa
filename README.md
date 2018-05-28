@@ -153,13 +153,13 @@ the following message appears:
 ```
 Enter a password, then press 'Enter':
 ```
-After typing a raw password, e.g. `A keygen raw pass!`, and pressing "Enter",
+After typing a raw password, e.g. "A keygen raw pass!", and pressing "Enter",
 the following message appears:
 ```
 Enter a file name to save the generated key, then press 'Enter':
 ```
 The automatically generated strong password will be saved in the file that you
-specify its name, e.g. `key.txt`, in this step. Note, the "keygen" program needs
+specify its name, e.g. "key.txt", in this step. Note, the "keygen" program needs
 an initial raw password, which is not required to be strong itself, to generate
 a strong password. Afterward, you can use the following command to pass the 
 key file, in this case "key.txt", to Cryfa:
