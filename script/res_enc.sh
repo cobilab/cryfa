@@ -75,6 +75,9 @@ function encResOnDataset
 {
     FAdsPath=$dataset/$FA
     FQdsPath=$dataset/$FQ
+    VCFdsPath=$dataset/$VCF
+    SAMdsPath=$dataset/$SAM
+    BAMdsPath=$dataset/$BAM
     OUT_FILE=$1
     en="Method\tEn_Size(B)\tEn_Time_real(s)\tEn_Time_user(s)\tEn_Time_sys(s)"
     en+="\tEn_Mem(KB)"
@@ -100,6 +103,18 @@ function encResOnDataset
         for j in 1 2; do
             encDecRes $i $FQdsPath/$Synth/SynFQ-${j}.$fastq >> $OUT_FILE;
         done
+
+        ### VCF -- Denisova - Neanderthal
+        encDecRes $i $VCFdsPath/$DENISOVA/DS-22.$vcf >> $OUT_FILE;
+        encDecRes $i $VCFdsPath/$DENISOVA/$NEANDERTHAL/N-n.$vcf >> $OUT_FILE;
+
+        ### SAM -- human - Neanderthal
+        encDecRes $i $SAMdsPath/$HUMAN/HS-n.$sam >> $OUT_FILE;
+        encDecRes $i $SAMdsPath/$NEANDERTHAL/N-y.$sam >> $OUT_FILE;
+
+        ### BAM -- human - Neanderthal
+        encDecRes $i $BAMdsPath/$HUMAN/HS-11.$bam >> $OUT_FILE;
+        encDecRes $i $BAMdsPath/$NEANDERTHAL/N-21.$bam >> $OUT_FILE;
     done
 }
 
@@ -213,6 +228,99 @@ function encResHumanReadable
     # Extract from Cryfa
     cat $result/COMP_tot_FQ.$INF | awk 'NR>1' \
       | awk 'BEGIN{}{if ($2=="Cryfa") print;}' >> ${INWF}_tot_FQ.$INF
+
+    ### VCF
+    # Details -- 1 row for headers and 1 row after all
+    removeFromRow=`echo $((VCF_DATASET_SIZE*ENC_METHODS_SIZE+1+1))`
+    sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_VCF.$INF;
+
+#    # For each dataset
+#    for i in $VCF_DATASET; do
+#        sed "2,$ d" ${INWF}_VCF.$INF > ${INWF}_${i}_VCF.$INF;
+#        cat ${INWF}_VCF.$INF | awk 'NR>1' \
+#          | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_VCF.$INF;
+#
+#        # Extract from Cryfa
+#        cat $result/COMP_${i}_VCF.$INF | awk 'NR>1' \
+#          | awk 'BEGIN{}{if ($3=="Cryfa") print;}' >> ${INWF}_${i}_VCF.$INF;
+#    done
+
+    # Total
+    printf "Size(MB)\t$en\t$de\tEq\n" > ${INWF}_tot_VCF.$INF;
+    cat ${INWF}_VCF.$INF | tr ',' '.' | awk 'NR>1' \
+      | awk -v dsSize=$VCF_DATASET_SIZE 'BEGIN{}{
+      s+=$2;   cS+=$5;   cTR+=$6;   cTC+=$7;   dTR+=$9;   dTC+=$10;   eq+=$12;
+      if (NR % dsSize==0) {
+          printf "%.f\t%s\t%.1f\t%.f\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\n",
+                 s, $3, s/cS, cS, cTR, cTC, dTR, dTC, eq;
+          s=0; cS=0;     cTR=0;     cTC=0;     dTR=0;     dTC=0;      eq=0;
+      }
+    }' >> ${INWF}_tot_VCF.$INF
+    # Extract from Cryfa
+    cat $result/COMP_tot_VCF.$INF | awk 'NR>1' \
+      | awk 'BEGIN{}{if ($2=="Cryfa") print;}' >> ${INWF}_tot_VCF.$INF
+
+    ### SAM
+    # Details -- 1 row for headers and 1 row after all
+    removeFromRow=`echo $((SAM_DATASET_SIZE*ENC_METHODS_SIZE+1+1))`
+    sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_SAM.$INF;
+
+#    # For each dataset
+#    for i in $SAM_DATASET; do
+#        sed "2,$ d" ${INWF}_SAM.$INF > ${INWF}_${i}_SAM.$INF;
+#        cat ${INWF}_SAM.$INF | awk 'NR>1' \
+#          | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_SAM.$INF;
+#
+#        # Extract from Cryfa
+#        cat $result/COMP_${i}_SAM.$INF | awk 'NR>1' \
+#          | awk 'BEGIN{}{if ($3=="Cryfa") print;}' >> ${INWF}_${i}_SAM.$INF;
+#    done
+
+    # Total
+    printf "Size(MB)\t$en\t$de\tEq\n" > ${INWF}_tot_SAM.$INF;
+    cat ${INWF}_SAM.$INF | tr ',' '.' | awk 'NR>1' \
+      | awk -v dsSize=$SAM_DATASET_SIZE 'BEGIN{}{
+      s+=$2;   cS+=$5;   cTR+=$6;   cTC+=$7;   dTR+=$9;   dTC+=$10;   eq+=$12;
+      if (NR % dsSize==0) {
+          printf "%.f\t%s\t%.1f\t%.f\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\n",
+                 s, $3, s/cS, cS, cTR, cTC, dTR, dTC, eq;
+          s=0; cS=0;     cTR=0;     cTC=0;     dTR=0;     dTC=0;      eq=0;
+      }
+    }' >> ${INWF}_tot_SAM.$INF
+    # Extract from Cryfa
+    cat $result/COMP_tot_SAM.$INF | awk 'NR>1' \
+      | awk 'BEGIN{}{if ($2=="Cryfa") print;}' >> ${INWF}_tot_SAM.$INF
+
+    ### BAM
+    # Details -- 1 row for headers and 1 row after all
+    removeFromRow=`echo $((BAM_DATASET_SIZE*ENC_METHODS_SIZE+1+1))`
+    sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_BAM.$INF;
+
+#    # For each dataset
+#    for i in $BAM_DATASET; do
+#        sed "2,$ d" ${INWF}_BAM.$INF > ${INWF}_${i}_BAM.$INF;
+#        cat ${INWF}_BAM.$INF | awk 'NR>1' \
+#          | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_BAM.$INF;
+#
+#        # Extract from Cryfa
+#        cat $result/COMP_${i}_BAM.$INF | awk 'NR>1' \
+#          | awk 'BEGIN{}{if ($3=="Cryfa") print;}' >> ${INWF}_${i}_BAM.$INF;
+#    done
+
+    # Total
+    printf "Size(MB)\t$en\t$de\tEq\n" > ${INWF}_tot_BAM.$INF;
+    cat ${INWF}_BAM.$INF | tr ',' '.' | awk 'NR>1' \
+      | awk -v dsSize=$BAM_DATASET_SIZE 'BEGIN{}{
+      s+=$2;   cS+=$5;   cTR+=$6;   cTC+=$7;   dTR+=$9;   dTC+=$10;   eq+=$12;
+      if (NR % dsSize==0) {
+          printf "%.f\t%s\t%.1f\t%.f\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\n",
+                 s, $3, s/cS, cS, cTR, cTC, dTR, dTC, eq;
+          s=0; cS=0;     cTR=0;     cTC=0;     dTR=0;     dTC=0;      eq=0;
+      }
+    }' >> ${INWF}_tot_BAM.$INF
+    # Extract from Cryfa
+    cat $result/COMP_tot_BAM.$INF | awk 'NR>1' \
+      | awk 'BEGIN{}{if ($2=="Cryfa") print;}' >> ${INWF}_tot_BAM.$INF
 
     rm -f $INWF.tmp
 }

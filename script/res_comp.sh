@@ -231,32 +231,79 @@ function compResHumanReadable
     }' >> ${INWF}_tot_FQ.$INF
 
     ### VCF
-#    # Details -- 1 row for headers and 1 row after all
-#    FASTA_METHODS_SIZE=0    # Just when Cryfa is the only compression method run
-#    removeFromRow=`echo $((FASTA_DATASET_SIZE*(FASTA_METHODS_SIZE+1)+1+1))`;
-#    sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_FA.$INF;
-#
-##    # For each dataset
-##    for i in $FASTA_DATASET; do
-##        sed "2,$ d" ${INWF}_FA.$INF > ${INWF}_${i}_FA.$INF;
-##        cat ${INWF}_FA.$INF | awk 'NR>1' \
-##         | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_FA.$INF;
-##    done
-#
-#    # Total
-#    printf "Size(MB)\t$c\t$d\tEq\n" > ${INWF}_tot_FA.$INF;
-#    cat ${INWF}_FA.$INF | tr ',' '.' | awk 'NR>1' \
-#      | awk -v dsSize=$FASTA_DATASET_SIZE 'BEGIN{}{
-#      s+=$2;   cS+=$5;   cTR+=$6;   cTC+=$7;   dTR+=$9;   dTC+=$10;   eq+=$12;
-#      if (NR % dsSize==0) {
-#          printf "%.f\t%s\t%.1f\t%.f\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\n",
-#                 s, $3, s/cS, cS, cTR, cTC, dTR, dTC, eq;
-#          s=0; cS=0;     cTR=0;     cTC=0;     dTR=0;     dTC=0;      eq=0;
-#      }
-#    }' >> ${INWF}_tot_FA.$INF
+    # Details -- 1 row for headers and 1 row after all
+    VCF_METHODS_SIZE=0    # Just when Cryfa is the only compression method run
+    removeFromRow=`echo $((VCF_DATASET_SIZE*(VCF_METHODS_SIZE+1)+1+1))`;
+    sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_VCF.$INF;
 
+#    # For each dataset
+#    for i in $VCF_DATASET; do
+#        sed "2,$ d" ${INWF}_VCF.$INF > ${INWF}_${i}_VCF.$INF;
+#        cat ${INWF}_VCF.$INF | awk 'NR>1' \
+#         | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_VCF.$INF;
+#    done
 
+    # Total
+    printf "Size(MB)\t$c\t$d\tEq\n" > ${INWF}_tot_VCF.$INF;
+    cat ${INWF}_VCF.$INF | tr ',' '.' | awk 'NR>1' \
+      | awk -v dsSize=$VCF_DATASET_SIZE 'BEGIN{}{
+      s+=$2;   cS+=$5;   cTR+=$6;   cTC+=$7;   dTR+=$9;   dTC+=$10;   eq+=$12;
+      if (NR % dsSize==0) {
+          printf "%.f\t%s\t%.1f\t%.f\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\n",
+                 s, $3, s/cS, cS, cTR, cTC, dTR, dTC, eq;
+          s=0; cS=0;     cTR=0;     cTC=0;     dTR=0;     dTC=0;      eq=0;
+      }
+    }' >> ${INWF}_tot_VCF.$INF
 
+    ### SAM
+    # Details -- 1 row for headers and 1 row after all
+    SAM_METHODS_SIZE=0    # Just when Cryfa is the only compression method run
+    removeFromRow=`echo $((SAM_DATASET_SIZE*(SAM_METHODS_SIZE+1)+1+1))`;
+    sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_SAM.$INF;
+
+#    # For each dataset
+#    for i in $SAM_DATASET; do
+#        sed "2,$ d" ${INWF}_SAM.$INF > ${INWF}_${i}_SAM.$INF;
+#        cat ${INWF}_SAM.$INF | awk 'NR>1' \
+#         | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_SAM.$INF;
+#    done
+
+    # Total
+    printf "Size(MB)\t$c\t$d\tEq\n" > ${INWF}_tot_SAM.$INF;
+    cat ${INWF}_SAM.$INF | tr ',' '.' | awk 'NR>1' \
+      | awk -v dsSize=$SAM_DATASET_SIZE 'BEGIN{}{
+      s+=$2;   cS+=$5;   cTR+=$6;   cTC+=$7;   dTR+=$9;   dTC+=$10;   eq+=$12;
+      if (NR % dsSize==0) {
+          printf "%.f\t%s\t%.1f\t%.f\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\n",
+                 s, $3, s/cS, cS, cTR, cTC, dTR, dTC, eq;
+          s=0; cS=0;     cTR=0;     cTC=0;     dTR=0;     dTC=0;      eq=0;
+      }
+    }' >> ${INWF}_tot_SAM.$INF
+
+    ### BAM
+    # Details -- 1 row for headers and 1 row after all
+    BAM_METHODS_SIZE=0    # Just when Cryfa is the only compression method run
+    removeFromRow=`echo $((BAM_DATASET_SIZE*(BAM_METHODS_SIZE+1)+1+1))`;
+    sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_BAM.$INF;
+
+#    # For each dataset
+#    for i in $BAM_DATASET; do
+#        sed "2,$ d" ${INWF}_BAM.$INF > ${INWF}_${i}_BAM.$INF;
+#        cat ${INWF}_BAM.$INF | awk 'NR>1' \
+#         | awk -v i=$i 'BEGIN{}{if ($1==i) print;}' >> ${INWF}_${i}_BAM.$INF;
+#    done
+
+    # Total
+    printf "Size(MB)\t$c\t$d\tEq\n" > ${INWF}_tot_BAM.$INF;
+    cat ${INWF}_BAM.$INF | tr ',' '.' | awk 'NR>1' \
+      | awk -v dsSize=$BAM_DATASET_SIZE 'BEGIN{}{
+      s+=$2;   cS+=$5;   cTR+=$6;   cTC+=$7;   dTR+=$9;   dTC+=$10;   eq+=$12;
+      if (NR % dsSize==0) {
+          printf "%.f\t%s\t%.1f\t%.f\t%.1f\t%.1f\t%.1f\t%.1f\t%.1f\n",
+                 s, $3, s/cS, cS, cTR, cTC, dTR, dTC, eq;
+          s=0; cS=0;     cTR=0;     cTC=0;     dTR=0;     dTC=0;      eq=0;
+      }
+    }' >> ${INWF}_tot_BAM.$INF
 
     rm -f $INWF.tmp
 }

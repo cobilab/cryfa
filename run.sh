@@ -12,7 +12,7 @@
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 ### Dataset
-GET_DATASET=0               # todo 54 GB free disk space
+GET_DATASET=0               # 54 GB free disk space
     DL_HUMAN_FA=0           # Download Human             (FASTA) -- 3.1  GB
     DL_VIRUSES_FA=0         # Download Viruses           (FASTA) -- 0.3  GB
     GEN_SYNTH_FA=0          # Generate synthetic dataset (FASTA) -- 2.8  GB
@@ -38,8 +38,8 @@ INSTALL_DEPENDENCIES=0
 
 ### Install methods
 INSTALL_METHODS=0
-    # FASTA/FASTQ
-    INS_CRYFA=1         # cryfa
+    # FASTA/FASTQ/VCF/SAM/BAM
+    INS_CRYFA=1         # Cryfa
     # FASTA
     INS_MFCOMPRESS=0    # MFCompress -- error: make -- executables available
     INS_DELIMINATE=0    # DELIMINATE -- error: site not reachable -- exec avail.
@@ -48,21 +48,21 @@ INSTALL_METHODS=0
     INS_QUIP=0          # Quip
     INS_DSRC=0          # DSRC
     INS_FQC=0           # FQC -- error: site not reachable -- exec available
-    # Encryption
+    # Encryption -- FASTA/FASTQ/VCF/SAM/BAM
     INS_AESCRYPT=0      # AES Crypt
 
 ### Run compression methods
-RUN_METHODS_COMP=0      # 75 GB free disk space
+RUN_METHODS_COMP=0      # 100 GB free disk space
     # FASTA
-    RUN_CRYFA_FA=0      # cryfa
+    RUN_CRYFA_FA=0      # Cryfa
     # FASTQ
-    RUN_CRYFA_FQ=0      # cryfa
+    RUN_CRYFA_FQ=0      # Cryfa
     # VCF
-    RUN_CRYFA_VCF=0     # cryfa
+    RUN_CRYFA_VCF=0     # Cryfa
     # SAM
-    RUN_CRYFA_SAM=0     # cryfa
+    RUN_CRYFA_SAM=0     # Cryfa
     # BAM
-    RUN_CRYFA_BAM=0     # cryfa
+    RUN_CRYFA_BAM=0     # Cryfa
     # Results
     RESULTS_COMP=0
 
@@ -84,12 +84,12 @@ RUN_METHODS_COMP_ENC=0
     RESULTS_COMP_ENC=0
 
 ### Run encryption methods
-RUN_METHODS_ENC=0       # 90 GB free disk space
+RUN_METHODS_ENC=0       # 110 GB free disk space
     RUN_AESCRYPT=0      # AES Crypt
     # Results
     RESULTS_ENC=0
 
-### Run cryfa with different number of threads
+### Run Cryfa with different number of threads
 RUN_CRYFA_THREADS=0
     MAX_N_THR=8         # Max number of threads
     CRYFA_THR_DATASET="dataset/FA/V/viruses.fasta"
@@ -100,7 +100,7 @@ RUN_CRYFA_THREADS=0
     RESULTS_CRYFA_THR=0
 
 ### Run different methods to explore redundancy
-RUN_REDUNDANCY=0        # cryfa, DELIMINATE, MFCompress
+RUN_REDUNDANCY=0        # Cryfa, DELIMINATE, MFCompress
     # Dataset (FASTA) -- archaea, bacteria, fungi, plants, viruses
     GET_DATASET_REDUN=1 # 12 GB free disk space
     # Run & Results
@@ -233,7 +233,7 @@ then
     ### Encryption functions
     . $script/run_fn_enc.sh
 
-    ### FASTA/FASTQ
+    ### FASTA/FASTQ/VCF/SAM/BAM
     if [[ $RUN_AESCRYPT -eq 1 ]]; then  encDecOnDataset aescrypt;  fi
 
     ### Results
@@ -296,7 +296,7 @@ fi
 
 
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-#   Run cryfa with different number of threads
+#   Run Cryfa with different number of threads
 #%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 if [[ $RUN_CRYFA_THREADS -eq 1 ]];
 then
@@ -309,7 +309,7 @@ then
         return;
     fi
 
-    ### cryfa compress/decompress function
+    ### Cryfa compress/decompress function
     . $script/run_fn_cryfa_thr.sh
 
     ### Run

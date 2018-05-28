@@ -86,7 +86,19 @@ function encDecOnDataset
           done
           for i in 1 2; do
               encDecrypt $method $dsPath/$FQ/$Synth/SynFQ-$i.$fastq
-          done;;
+          done
+
+          # VCF
+          encDecrypt $method $dsPath/$VCF/$DENISOVA/DS-22.$vcf
+          encDecrypt $method $dsPath/$VCF/$NEANDERTHAL/N-n.$vcf
+
+          # SAM
+          encDecrypt $method $dsPath/$SAM/$HUMAN/HS-n.$sam
+          encDecrypt $method $dsPath/$SAM/$NEANDERTHAL/N-y.$sam
+
+          # BAM
+          encDecrypt $method $dsPath/$BAM/$HUMAN/HS-11.$bam
+          encDecrypt $method $dsPath/$BAM/$NEANDERTHAL/N-21.$bam;;
     esac
 
     rm -f mem_ps
