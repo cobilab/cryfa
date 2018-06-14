@@ -2,12 +2,8 @@
 <img src="img/logo.png" alt="Cryfa" width="150" border="0" /></p>
 <br>
 
-Cryfa is a secure encryption tool for genomic data, and is also capable of 
-compacting FASTA and FASTQ sequences. For the purpose of authenticated 
-encryption, it employs AES (Advanced Encryption Standard) algorithm in GCM 
-mode (Galois / counter mode) of operation. Cryfa is able to decrease the file 
-sizes by a factor of 3, without creating security problems such as those 
-derived from CRIME or BREACH attacks.
+Cryfa is a secure encryption tool for genomic data, and is also capable to 
+compact FASTA and FASTQ sequences by a factor of 3.
 
 
 ## INSTALL
@@ -18,8 +14,8 @@ cd cryfa
 cmake .
 make
 ```
-Note, an already compiled version of Cryfa is available for 64 bit Linux OS
-in the `bin/` directory.
+Note, an already compiled version of Cryfa is available for 64 bit Linux OS in
+the `bin/` directory.
 
 
 ## RUN
@@ -133,9 +129,9 @@ editor can also be used:
 echo "Such a strong password!" > pass.txt
 ./cryfa -k pass.txt IN_FILE > OUT_FILE
 ```
-Note, the password must include at least 8 characters.
-Although, employing this method is not recommended, but if you tend to use 
-it, it would be a better practice to choose a "strong password".
+Note, the password must include at least 8 characters. Although, employing this
+method is not recommended, but if you tend to use it, it would be a better
+practice to choose a "strong password".
 
 A strong password:
 * has at least 12 characters;
@@ -161,8 +157,8 @@ Enter a file name to save the generated key, then press 'Enter':
 The automatically generated strong password will be saved in the file that you
 specify its name, e.g. "key.txt", in this step. Note, the "keygen" program needs
 an initial raw password, which is not required to be strong itself, to generate
-a strong password. Afterward, you can use the following command to pass the 
-key file, in this case "key.txt", to Cryfa:
+a strong password. Afterward, you can use the following command to pass the key
+file, in this case "key.txt", to Cryfa:
 ```bash
 ./cryfa -k key.txt IN_FILE > OUT_FILE
 ```
@@ -184,8 +180,10 @@ Computational Biology & Bioinformatics* (PACBB), Springer, June 2017.
 
 
 ## RELEASES
-* [Release](https://github.com/pratas/cryfa/releases) 2: Secure encryption of FASTA, FASTQ, VCF, SAM and BAM PLUS compacting FASTA and FASTQ.
-* [Release](https://github.com/pratas/cryfa/releases) 1: Encryption PLUS compacting FASTA.
+* [Release](https://github.com/pratas/cryfa/releases) 2: Secure encryption of
+FASTA/FASTQ/VCF/SAM/BAM PLUS compacting FASTA/FASTQ.
+* [Release](https://github.com/pratas/cryfa/releases) 1: Encryption PLUS
+compacting FASTA.
 
 
 ## ISSUES
