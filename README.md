@@ -2,8 +2,8 @@
 <img src="img/logo.png" alt="Cryfa" width="150" border="0" /></p>
 <br>
 
-Cryfa is a secure encryption tool for genomic data, and is also capable to
-compact FASTA/FASTQ sequences by a factor of 3.
+Cryfa is a secure encryption tool for genomic data, and is also able to compact
+FASTA/FASTQ sequences by a factor of 3.
 
 
 ## INSTALL
