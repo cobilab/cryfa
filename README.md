@@ -3,7 +3,7 @@
 <br>
 
 Cryfa is a secure encryption tool for genomic data, and is also capable to 
-compact FASTA and FASTQ sequences by a factor of 3.
+compact FASTA/FASTQ sequences by a factor of 3.
 
 
 ## INSTALL
