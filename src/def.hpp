@@ -19,7 +19,7 @@ using std::unordered_map;
 using std::vector;
 
 // Version
-static const string MONTH     = "05";
+static const string MONTH     = "06";
 static const string YEAR      = "18";
 static const string VERSION   = YEAR + "." + MONTH;
 static const string DEV_YEARS = "2017-2018";
