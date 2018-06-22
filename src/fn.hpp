@@ -103,8 +103,8 @@ inline bool is_number (const string& s) {
 inline void help () {
   cerr                                                                   << '\n'
      << "NAME"                                                           << '\n'
-     << "      Cryfa v" << VERSION << " - A secure encryption tool "
-     <<                                               "for genomic data" << '\n'
+     << "      Cryfa v" << VERSION << " - A secure encryption tool for "
+     <<                                                   "genomic data" << '\n'
                                                                          << '\n'
      << "AUTHORS"                                                        << '\n'
      << "      Morteza Hosseini    seyedmorteza@ua.pt"                   << '\n'
@@ -154,12 +154,12 @@ inline void help () {
      << "           number of threads"                                   << '\n'
                                                                          << '\n'
      << "COPYRIGHT"                                                      << '\n'
-     << "      Copyright (C) " << DEV_YEARS << ", IEETA, University "
-     <<                                                  "of Aveiro."    << '\n'
+     << "      Copyright (C) " << DEV_YEARS << ", IEETA, University of "
+     <<                                                        "Aveiro." << '\n'
      << "      This is a Free software, under GPLv3. You may redistribute    \n"
-     << "      copies of it under the terms of the GNU - General Public      \n"
-     << "      License v3 <http://www.gnu.org/licenses/gpl.html>. There      \n"
-     << "      is NOT ANY WARRANTY, to the extent permitted by law."    << '\n';
+     << "      copies of it under the terms of the GNU - General Public" << '\n'
+     << "      License v3 <http://www.gnu.org/licenses/gpl.html>. There" << '\n'
+     << "      is NOT ANY WARRANTY, to the extent permitted by law."     <<'\n';
 
   throw EXIT_SUCCESS;
 }
