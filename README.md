@@ -2,6 +2,8 @@
 <img src="img/logo.png" alt="Cryfa" width="150" border="0" /></p>
 <br>
 
+[![Build Status](https://travis-ci.org/pratas/cryfa.svg?branch=master)](https://travis-ci.org/pratas/cryfa)
+
 Cryfa is a secure encryption tool for genomic data, and is also able to compact
 FASTA/FASTQ sequences by a factor of 3.
 
