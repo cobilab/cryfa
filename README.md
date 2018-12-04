@@ -9,7 +9,6 @@
 Cryfa is a secure encryption tool for genomic data, and is also able to compact
 FASTA/FASTQ sequences by a factor of 3.
 
-
 ## INSTALL
 Get Cryfa and make the project, using:
 ```bash
@@ -20,7 +19,6 @@ make
 ```
 Note, an already compiled version of Cryfa is available for 64 bit Linux OS in
 the `bin/` directory.
-
 
 ## RUN
 If you want to run Cryfa in stand-alone mode, use the following command:
@@ -64,7 +62,6 @@ With this script, you can download the datasets, install the dependencies,
 install the compression and encryption tools, run these tools, and finally,
 print the results.
 
-
 ## OPTIONS
 To see the possible options, type:
 ```bash
@@ -72,7 +69,7 @@ To see the possible options, type:
 ```
 
 which provides the following:
-```
+```text
 SYNOPSIS
       ./cryfa [OPTION]... -k [KEY_FILE] [-d] [IN_FILE] > [OUT_FILE]
 
@@ -140,9 +137,9 @@ practice to choose a "strong password".
 A strong password:
 * has at least 12 characters;
 * includes lowercase letters (a-z), uppercase letters (A-Z), digits (0-9) and
-symbols (e.g. !, #, $, % and });
+  symbols (e.g. !, #, $, % and });
 * is not a character repetition (e.g. zzzzzz), keyboard pattern (e.g. qwerty)
-or digit sequences (e.g. 123456).
+  or digit sequences (e.g. 123456).
 
 The second method to make a key file is using the "keygen" program, which 
 automatically provides a strong password. Running
@@ -175,27 +172,22 @@ articles [[1]](https://en.wikipedia.org/wiki/Key_management),
 and
 [[4]](https://www.cryptomathic.com/news-events/blog/what-is-key-management-a-ciso-perspective).
 
-
 ## CITE
 Please cite the followings, if you use Cryfa:
 * M. Hosseini, D. Pratas and A.J. Pinho, "Cryfa: a secure encryption tool for genomic data,"
-*Bioinformatics*, bty645, 2018.
+  *Bioinformatics*, bty645, 2018.
 * D. Pratas, M. Hosseini and A.J. Pinho, "Cryfa: a tool to compact and encrypt
-FASTA files," *11'th International Conference on Practical Applications of 
-Computational Biology & Bioinformatics* (PACBB), Springer, June 2017.
-
+  FASTA files," *11'th International Conference on Practical Applications of 
+  Computational Biology & Bioinformatics* (PACBB), Springer, June 2017.
 
 ## RELEASES
 * [Release](https://github.com/pratas/cryfa/releases) 2: Secure encryption of
-FASTA/FASTQ/VCF/SAM/BAM PLUS compacting FASTA/FASTQ.
-* [Release](https://github.com/pratas/cryfa/releases) 1: Encryption PLUS
-compacting FASTA.
-
+  FASTA/FASTQ/VCF/SAM/BAM PLUS compacting FASTA/FASTQ.
+* [Release](https://github.com/pratas/cryfa/releases) 1: Encryption PLUS compacting FASTA.
 
 ## ISSUES
 Please let us know if there is any 
 [issues](https://github.com/pratas/cryfa/issues).
-
 
 ## LICENSE
 Cryfa is under GPL v3 license. For more information, click 
