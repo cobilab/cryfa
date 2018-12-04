@@ -2,6 +2,7 @@
 <img src="img/logo.png" alt="Cryfa" width="150" border="0" /></p>
 <br>
 
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/879d3d39ad9c49eaab9fa4917af3a0b9)](https://app.codacy.com/app/smortezah/cryfa?utm_source=github.com&utm_medium=referral&utm_content=pratas/cryfa&utm_campaign=Badge_Grade_Dashboard)
 [![Build Status](https://travis-ci.org/pratas/cryfa.svg?branch=master)](https://travis-ci.org/pratas/cryfa)
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 
