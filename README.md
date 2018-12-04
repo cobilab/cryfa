@@ -4,6 +4,7 @@
 
 [![Build Status](https://travis-ci.org/pratas/cryfa.svg?branch=master)](https://travis-ci.org/pratas/cryfa)
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/571e165addde4485973c39867206cb0f)](https://www.codacy.com/app/smortezah/cryfa?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=pratas/cryfa&amp;utm_campaign=Badge_Grade)
 
 Cryfa is a secure encryption tool for genomic data, and is also able to compact
 FASTA/FASTQ sequences by a factor of 3.
