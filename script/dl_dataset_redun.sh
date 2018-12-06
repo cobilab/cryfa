@@ -26,7 +26,7 @@ fi
 for d in "$ARCHAEA Archaea" "$BACTERIA Bacteria" "$FUNGI Fungi" \
          "$PLANTS  Plants"  "$VIRUSES  Viruses"; do
     set $d
-    smallCapsD=`echo $2 | tr A-Z a-z`
+    smallCapsD=$(echo $2 | tr A-Z a-z)
 
     if [[ ! -d $DS_PATH/$1 ]]; then  mkdir -p $DS_PATH/$1;  fi
     cd $DS_PATH/$1
@@ -37,7 +37,7 @@ for d in "$ARCHAEA Archaea" "$BACTERIA Bacteria" "$FUNGI Fungi" \
     perl ./Download$2.pl
 
     # Remove blank lines and split reads by complete genomes
-    cat $smallCapsD.fa | grep -Ev "^$" \
+    grep -Ev "^$" $smallCapsD.fa \
         | ./goose-extractreadbypattern "complete genome" | ./goose-splitreads
 
     # Rename *.fa to *.fasta

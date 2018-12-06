@@ -17,9 +17,9 @@ function compEncDecDecompRes
     in="${3##*/}"                      # Dataset name
     dName="${in%.*}"                   # Dataset name without filetype
     ft="${in##*.}"                     # Dataset filetype
-    fsize=`stat --printf="%s" $3`      # File size (bytes)
-    methodComp=`printMethodName $1`    # Compression methods' name for printing
-    methodEnc=`printMethodName $2`     # Encryption methods' name for printing
+    fsize=$(stat --printf="%s" $3)      # File size (bytes)
+    methodComp=$(printMethodName $1)    # Compression methods' name for printing
+    methodEnc=$(printMethodName $2)     # Encryption methods' name for printing
 
     CS="";       CT_r="";     CT_u="";     CT_s="";     CM="";
     EnS="";      EnT_r="";    EnT_u="";    EnT_s="";    EnM="";
@@ -28,63 +28,63 @@ function compEncDecDecompRes
 
     ### Compressed file size
     cs_file="$result/${1}_${2}_CS__${dName}_$ft"
-    if [[ -e $cs_file ]]; then  CS=`awk '{ print $5; }'` $cs_file;  fi
+    if [[ -e $cs_file ]]; then  CS=$(awk '{ print $5; }') $cs_file;  fi
 
     ### Compression time -- real - user - system
     ct_file="$result/${1}_${2}_CT__${dName}_$ft"
     if [[ -e $ct_file ]]; then
-        CT_r=`< $ct_file tail -n 3 | head -n 1 | awk '{ print $2;}'`;
-        CT_u=`< $ct_file tail -n 2 | head -n 1 | awk '{ print $2;}'`;
-        CT_s=`< $ct_file tail -n 1 | awk '{ print $2;}'`;
+        CT_r=$(< $ct_file tail -n 3 | head -n 1 | awk '{ print $2;}');
+        CT_u=$(< $ct_file tail -n 2 | head -n 1 | awk '{ print $2;}');
+        CT_s=$(< $ct_file tail -n 1 | awk '{ print $2;}');
     fi
 
     ### Compression memory
     cm_file="$result/${1}_${2}_CM__${dName}_$ft"
-    if [[ -e $cm_file ]]; then  CM=`cat $cm_file`;  fi
+    if [[ -e $cm_file ]]; then  CM=$(cat $cm_file);  fi
 
     ### Encrypted file size
     ens_file="$result/${1}_${2}_EnS__${dName}_$ft"
-    if [[ -e $ens_file ]]; then  EnS=`cat $ens_file | awk '{ print $5; }'`;  fi
+    if [[ -e $ens_file ]]; then  EnS=$(awk '{ print $5; }' $ens_file);  fi
 
     ### Encryption time -- real - user - system
     ent_file="$result/${1}_${2}_EnT__${dName}_$ft"
     if [[ -e $ent_file ]]; then
-        EnT_r=`cat $ent_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
-        EnT_u=`cat $ent_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
-        EnT_s=`cat $ent_file | tail -n 1 | awk '{ print $2;}'`;
+        EnT_r=$(< $ent_file tail -n 3 | head -n 1 | awk '{ print $2;}');
+        EnT_u=$(< $ent_file tail -n 2 | head -n 1 | awk '{ print $2;}');
+        EnT_s=$(< $ent_file tail -n 1 | awk '{ print $2;}');
     fi
 
     ### Encryption memory
     enm_file="$result/${1}_${2}_EnM__${dName}_$ft"
-    if [[ -e $enm_file ]]; then  EnM=`cat $enm_file`;  fi
+    if [[ -e $enm_file ]]; then  EnM=$(cat $enm_file);  fi
 
     ### Decryption time -- real - user - system
     det_file="$result/${1}_${2}_DeT__${dName}_$ft"
     if [[ -e $det_file ]]; then
-        DeT_r=`cat $det_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
-        DeT_u=`cat $det_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
-        DeT_s=`cat $det_file | tail -n 1 | awk '{ print $2;}'`;
+        DeT_r=$(< $det_file tail -n 3 | head -n 1 | awk '{ print $2;}');
+        DeT_u=$(< $det_file tail -n 2 | head -n 1 | awk '{ print $2;}');
+        DeT_s=$(< $det_file tail -n 1 | awk '{ print $2;}');
     fi
 
     ### Decryption memory
     dem_file="$result/${1}_${2}_DeM__${dName}_$ft"
-    if [[ -e $dem_file ]]; then  DeM=`cat $dem_file`;  fi
+    if [[ -e $dem_file ]]; then  DeM=$(cat $dem_file);  fi
 
     ### Decompression time -- real - user - system
     dt_file="$result/${1}_${2}_DT__${dName}_$ft"
     if [[ -e $dt_file ]]; then
-        DT_r=`cat $dt_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
-        DT_u=`cat $dt_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
-        DT_s=`cat $dt_file | tail -n 1 | awk '{ print $2;}'`;
+        DT_r=$(< $dt_file tail -n 3 | head -n 1 | awk '{ print $2;}');
+        DT_u=$(< $dt_file tail -n 2 | head -n 1 | awk '{ print $2;}');
+        DT_s=$(< $dt_file tail -n 1 | awk '{ print $2;}');
     fi
 
     ### Decompression memory
     dm_file="$result/${1}_${2}_DM__${dName}_$ft"
-    if [[ -e $dm_file ]]; then  DM=`cat $dm_file`;  fi
+    if [[ -e $dm_file ]]; then  DM=$(cat $dm_file);  fi
 
     ### Verify if the decompressed and the original files are equal
     v_file="$result/${1}_${2}_V__${dName}_$ft"
-    if [[ -e $v_file ]]; then  V=`cat $v_file | wc -l`;  fi
+    if [[ -e $v_file ]]; then  V=$(cat $v_file | wc -l);  fi
 
     ### Remove extra files
     for xf in $cs_file $cm_file $dem_file $dm_file $enm_file $ens_file; do
@@ -174,7 +174,7 @@ function compEncResHumanReadable
 
     printf "Dataset\tSize(MB)\t$cen\tCEn_Mem(MB)\t$ded\tDeD_Mem(MB)\tEq\n" \
         > $INWF.tmp
-    cat $IN | awk 'NR>1' | tr ',' . | awk 'BEGIN {}{
+    awk 'NR>1' $IN | tr ',' . | awk 'BEGIN {}{
       printf "%s\t%.f\t%s+%s\t%.1f\t%.f",
              $1, $2/(1024*1024), $3, $4, $2/$5, $10/(1024*1024);
 
@@ -247,7 +247,7 @@ function compEncResHumanReadable
 
     ### FASTA
     # Details -- 1 row for headers and 1 row after all
-    removeFromRow=`echo $((FASTA_DATASET_SIZE*FASTA_METHODS_SIZE+1+1))`
+    removeFromRow=$(echo $((FASTA_DATASET_SIZE*FASTA_METHODS_SIZE+1+1)))
     sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_FA.$INF;
 
 #    # For each dataset
@@ -263,7 +263,7 @@ function compEncResHumanReadable
 
     # Total
     printf "Size(MB)\t$cen\t$ded\tEq\n" > ${INWF}_tot_FA.$INF;
-    cat ${INWF}_FA.$INF | tr ',' '.' | awk 'NR>1' \
+    < ${INWF}_FA.$INF tr ',' '.' | awk 'NR>1' \
       | awk -v dsSize=$FASTA_DATASET_SIZE 'BEGIN{}{
       s+=$2;  cenS+=$5;  cenTR+=$6;  cenTC+=$7;  dedTR+=$9; dedTC+=$10; eq+=$12;
       if (NR % dsSize==0) {
@@ -273,12 +273,12 @@ function compEncResHumanReadable
       }
     }' >> ${INWF}_tot_FA.$INF
     # Extract from Cryfa
-    cat $result/COMP_tot_FA.$INF | awk 'NR>1' \
+    awk 'NR>1' $result/COMP_tot_FA.$INF \
       | awk 'BEGIN{}{if ($2=="Cryfa") print;}' >> ${INWF}_tot_FA.$INF
 
     ### FASTQ
     # Details -- 1 row for headers and 1 row after all
-    removeUpToRow=`echo $((removeFromRow-1))`
+    removeUpToRow=$(echo $((removeFromRow-1)))
     sed "2,$removeUpToRow d" $INWF.tmp > ${INWF}_FQ.$INF;
 
 #    # For each dataset
@@ -294,7 +294,7 @@ function compEncResHumanReadable
 
     # Total
     printf "Size(MB)\t$cen\t$ded\tEq\n" > ${INWF}_tot_FQ.$INF;
-    cat ${INWF}_FQ.$INF | tr ',' '.' | awk 'NR>1' \
+    < ${INWF}_FQ.$INF tr ',' '.' | awk 'NR>1' \
       | awk -v dsSize=$FASTQ_DATASET_SIZE 'BEGIN{}{
       s+=$2;  cenS+=$5;  cenTR+=$6;  cenTC+=$7;  dedTR+=$9; dedTC+=$10; eq+=$12;
       if (NR % dsSize==0) {
@@ -304,7 +304,7 @@ function compEncResHumanReadable
       }
     }' >> ${INWF}_tot_FQ.$INF
     # Extract from Cryfa
-    cat $result/COMP_tot_FQ.$INF | awk 'NR>1' \
+    awk 'NR>1' $result/COMP_tot_FQ.$INF \
       | awk 'BEGIN{}{if ($2=="Cryfa") print;}' >> ${INWF}_tot_FQ.$INF
 
     rm -f $INWF.tmp

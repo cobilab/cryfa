@@ -24,7 +24,7 @@ function progMemoryStart
 function progMemoryStop
 {
     kill $1 >/dev/null 2>&1
-    cat mem_ps | sort -V | tail -n 1 > $2;
+    < mem_ps sort -V | tail -n 1 > $2;
 }
 
 

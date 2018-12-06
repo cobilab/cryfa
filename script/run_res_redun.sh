@@ -30,10 +30,10 @@ then
             ./cryfa -k $CRYFA_KEY_FILE -t $CRYFA_DEFAULT_N_THR $i > $i.cryfa
             in="${i##*/}"      # Input file name
             inwf="${in%.*}"    # Input file name without filetype
-            origSize=`stat --printf="%s" $i`
-            compSize=`stat --printf="%s" $i.cryfa`
+            origSize=$(stat --printf="%s" $i)
+            compSize=$(stat --printf="%s" $i.cryfa)
             printf "cryfa\t$d\t$inwf\t$origSize\t$compSize\t%s\n"      \
-                   "`echo "scale=5; ($compSize*8)/($origSize*2)" | bc -l`" \
+                   "$(echo "scale=5; ($compSize*8)/($origSize*2)" | bc -l)" \
                    >> ../../$result/REDUN-CRYFA.$INF
             rm -f $i.cryfa
         done
@@ -43,8 +43,8 @@ then
     ### Split the results for A, B, F, V, P
     for d in $DATA_SET; do
         cd $result
-        cat REDUN-CRYFA.$INF | grep Method   > REDUN-CRYFA-$d;
-        cat REDUN-CRYFA.$INF | grep $'\t'$d >> REDUN-CRYFA-$d;
+        grep Method  REDUN-CRYFA.$INF  > REDUN-CRYFA-$d;
+        grep $'\t'$d REDUN-CRYFA.$INF >> REDUN-CRYFA-$d;
         cd ..
     done
 fi
@@ -66,10 +66,10 @@ then
             ./MFCompressC -o $i.mfc $i;
             in="${i##*/}"      # Input file name
             inwf="${in%.*}"    # Input file name without filetype
-            origSize=`stat --printf="%s" $i`
-            compSize=`stat --printf="%s" $i.mfc`
+            origSize=$(stat --printf="%s" $i)
+            compSize=$(stat --printf="%s" $i.mfc)
             printf "MFCompress\t$d\t$inwf\t$origSize\t$compSize\t%s\n" \
-                   "`echo "scale=5; ($compSize*8)/($origSize*2)" | bc -l`" \
+                   "$(echo "scale=5; ($compSize*8)/($origSize*2)" | bc -l)" \
                    >> ../../$result/REDUN-MFCOMPRESS.$INF
             rm -f $i.mfc
         done
@@ -79,8 +79,8 @@ then
     ### Split the results for A, B, F, V, P
     for d in $DATA_SET; do
         cd $result
-        cat REDUN-MFCOMPRESS.$INF | grep Method   > REDUN-MFCOMPRESS-$d;
-        cat REDUN-MFCOMPRESS.$INF | grep $'\t'$d >> REDUN-MFCOMPRESS-$d;
+        grep Method  REDUN-MFCOMPRESS.$INF  > REDUN-MFCOMPRESS-$d;
+        grep $'\t'$d REDUN-MFCOMPRESS.$INF >> REDUN-MFCOMPRESS-$d;
         cd ..
     done
 fi
@@ -102,10 +102,10 @@ then
             ./delim a $i;
             in="${i##*/}"      # Input file name
             inwf="${in%.*}"    # Input file name without filetype
-            origSize=`stat --printf="%s" $i`
-            compSize=`stat --printf="%s" $i.dlim`
+            origSize=$(stat --printf="%s" $i)
+            compSize=$(stat --printf="%s" $i.dlim)
             printf "DELIMINATE\t$d\t$inwf\t$origSize\t$compSize\t%s\n" \
-                   "`echo "scale=5; ($compSize*8)/($origSize*2)" | bc -l`" \
+                   "$(echo "scale=5; ($compSize*8)/($origSize*2)" | bc -l)" \
                    >> ../../$result/REDUN-DELIMINATE.$INF
             rm -f $i.dlim
         done
@@ -115,8 +115,8 @@ then
     ### Split the results for A, B, F, V, P
     for d in $DATA_SET; do
         cd $result
-        cat REDUN-DELIMINATE.$INF | grep Method   > REDUN-DELIMINATE-$d;
-        cat REDUN-DELIMINATE.$INF | grep $'\t'$d >> REDUN-DELIMINATE-$d;
+        grep Method  REDUN-DELIMINATE.$INF  > REDUN-DELIMINATE-$d;
+        grep $'\t'$d REDUN-DELIMINATE.$INF >> REDUN-DELIMINATE-$d;
         cd ..
     done
 fi

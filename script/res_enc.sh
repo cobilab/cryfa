@@ -16,39 +16,39 @@ function encDecRes
     in="${2##*/}"                    # Dataset name
     dName="${in%.*}"                 # Dataset name without filetype
     ft="${in##*.}"                   # Dataset filetype
-    fsize=`stat --printf="%s" $2`    # File size (bytes)
-    method=`printMethodName $1`      # Methods' name for printing
+    fsize=$(stat --printf="%s" $2)    # File size (bytes)
+    method=$(printMethodName $1)      # Methods' name for printing
 
     EnS="";      EnT_r="";    EnT_u="";    EnT_s="";    EnM="";
     DeT_r="";    DeT_u="";    DeT_s="";    DeM="";
 
     ### Encrypted file size
     ens_file="$result/${1}_EnS__${dName}_$ft"
-    if [[ -e $ens_file ]]; then  EnS=`cat $ens_file | awk '{ print $5; }'`;  fi
+    if [[ -e $ens_file ]]; then  EnS=$(cat $ens_file | awk '{ print $5; }');  fi
 
     ### Encryption time -- real - user - system
     ent_file="$result/${1}_EnT__${dName}_$ft"
     if [[ -e $ent_file ]]; then
-        EnT_r=`cat $ent_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
-        EnT_u=`cat $ent_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
-        EnT_s=`cat $ent_file | tail -n 1 | awk '{ print $2;}'`;
+        EnT_r=$(< $ent_file tail -n 3 | head -n 1 | awk '{ print $2;}');
+        EnT_u=$(< $ent_file tail -n 2 | head -n 1 | awk '{ print $2;}');
+        EnT_s=$(< $ent_file tail -n 1 | awk '{ print $2;}');
     fi
 
     ### Encryption memory
     enm_file="$result/${1}_EnM__${dName}_$ft"
-    if [[ -e $enm_file ]]; then  EnM=`cat $enm_file`;  fi
+    if [[ -e $enm_file ]]; then  EnM=$(cat $enm_file);  fi
 
     ### Decryption time -- real - user - system
     det_file="$result/${1}_DeT__${dName}_$ft"
     if [[ -e $det_file ]]; then
-        DeT_r=`cat $det_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
-        DeT_u=`cat $det_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
-        DeT_s=`cat $det_file | tail -n 1 | awk '{ print $2;}'`;
+        DeT_r=$(< $det_file tail -n 3 | head -n 1 | awk '{ print $2;}');
+        DeT_u=$(< $det_file tail -n 2 | head -n 1 | awk '{ print $2;}');
+        DeT_s=$(< $det_file tail -n 1 | awk '{ print $2;}');
     fi
 
     ### Decryption memory
     dem_file="$result/${1}_DeM__${dName}_$ft"
-    if [[ -e $dem_file ]]; then  DeM=`cat $dem_file`;  fi
+    if [[ -e $dem_file ]]; then  DeM=$(cat $dem_file);  fi
 
     ### Remove extra files
     for xf in $ens_file $enm_file $dem_file; do
@@ -130,7 +130,7 @@ function encResHumanReadable
 
     printf "Dataset\tSize(MB)\t$en\tEn_Mem(MB)\t$de\tDe_Mem(MB)\tEq\n" \
         > $INWF.tmp
-    cat $IN | awk 'NR>1' | tr ',' . | awk 'BEGIN {}{
+    awk 'NR>1' $IN | tr ',' . | awk 'BEGIN {}{
       printf "%s\t%.f\t%s\t%.1f\t%.f",
              $1, $2/(1024*1024), $3, $2/$4, $4/(1024*1024);
 
@@ -169,7 +169,7 @@ function encResHumanReadable
 
     ### FASTA
     # Details -- 1 row for headers and 1 row after all
-    removeFromRow=`echo $((FASTA_DATASET_SIZE*ENC_METHODS_SIZE+1+1))`
+    removeFromRow=$(echo $((FASTA_DATASET_SIZE*ENC_METHODS_SIZE+1+1)))
     sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_FA.$INF;
 
 #    # For each dataset
@@ -185,7 +185,7 @@ function encResHumanReadable
 
     # Total
     printf "Size(MB)\t$en\t$de\tEq\n" > ${INWF}_tot_FA.$INF;
-    cat ${INWF}_FA.$INF | tr ',' '.' | awk 'NR>1' \
+    < ${INWF}_FA.$INF tr ',' '.' | awk 'NR>1' \
       | awk -v dsSize=$FASTA_DATASET_SIZE 'BEGIN{}{
       s+=$2;   cS+=$5;   cTR+=$6;   cTC+=$7;   dTR+=$9;   dTC+=$10;   eq+=$12;
       if (NR % dsSize==0) {
@@ -195,12 +195,12 @@ function encResHumanReadable
       }
     }' >> ${INWF}_tot_FA.$INF
     # Extract from Cryfa
-    cat $result/COMP_tot_FA.$INF | awk 'NR>1' \
+    awk 'NR>1' $result/COMP_tot_FA.$INF \
       | awk 'BEGIN{}{if ($2=="Cryfa") print;}' >> ${INWF}_tot_FA.$INF
 
     ### FASTQ
     # Details -- 1 row for headers and 1 row after all
-    removeUpToRow=`echo $((removeFromRow-1))`
+    removeUpToRow=$(echo $((removeFromRow-1)))
     sed "2,$removeUpToRow d" $INWF.tmp > ${INWF}_FQ.$INF;
 
 #    # For each dataset
@@ -216,7 +216,7 @@ function encResHumanReadable
 
     # Total
     printf "Size(MB)\t$en\t$de\tEq\n" > ${INWF}_tot_FQ.$INF;
-    cat ${INWF}_FQ.$INF | tr ',' '.' | awk 'NR>1' \
+    < ${INWF}_FQ.$INF tr ',' '.' | awk 'NR>1' \
       | awk -v dsSize=$FASTQ_DATASET_SIZE 'BEGIN{}{
       s+=$2;   cS+=$5;   cTR+=$6;   cTC+=$7;   dTR+=$9;   dTC+=$10;   eq+=$12;
       if (NR % dsSize==0) {
@@ -226,12 +226,12 @@ function encResHumanReadable
       }
     }' >> ${INWF}_tot_FQ.$INF
     # Extract from Cryfa
-    cat $result/COMP_tot_FQ.$INF | awk 'NR>1' \
+    awk 'NR>1' $result/COMP_tot_FQ.$INF \
       | awk 'BEGIN{}{if ($2=="Cryfa") print;}' >> ${INWF}_tot_FQ.$INF
 
     ### VCF
     # Details -- 1 row for headers and 1 row after all
-    removeFromRow=`echo $((VCF_DATASET_SIZE*ENC_METHODS_SIZE+1+1))`
+    removeFromRow=$(echo $((VCF_DATASET_SIZE*ENC_METHODS_SIZE+1+1)))
     sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_VCF.$INF;
 
 #    # For each dataset
@@ -247,7 +247,7 @@ function encResHumanReadable
 
     # Total
     printf "Size(MB)\t$en\t$de\tEq\n" > ${INWF}_tot_VCF.$INF;
-    cat ${INWF}_VCF.$INF | tr ',' '.' | awk 'NR>1' \
+    < ${INWF}_VCF.$INF tr ',' '.' | awk 'NR>1' \
       | awk -v dsSize=$VCF_DATASET_SIZE 'BEGIN{}{
       s+=$2;   cS+=$5;   cTR+=$6;   cTC+=$7;   dTR+=$9;   dTC+=$10;   eq+=$12;
       if (NR % dsSize==0) {
@@ -257,12 +257,12 @@ function encResHumanReadable
       }
     }' >> ${INWF}_tot_VCF.$INF
     # Extract from Cryfa
-    cat $result/COMP_tot_VCF.$INF | awk 'NR>1' \
+    awk 'NR>1' $result/COMP_tot_VCF.$INF \
       | awk 'BEGIN{}{if ($2=="Cryfa") print;}' >> ${INWF}_tot_VCF.$INF
 
     ### SAM
     # Details -- 1 row for headers and 1 row after all
-    removeFromRow=`echo $((SAM_DATASET_SIZE*ENC_METHODS_SIZE+1+1))`
+    removeFromRow=$(echo $((SAM_DATASET_SIZE*ENC_METHODS_SIZE+1+1)))
     sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_SAM.$INF;
 
 #    # For each dataset
@@ -278,7 +278,7 @@ function encResHumanReadable
 
     # Total
     printf "Size(MB)\t$en\t$de\tEq\n" > ${INWF}_tot_SAM.$INF;
-    cat ${INWF}_SAM.$INF | tr ',' '.' | awk 'NR>1' \
+    < ${INWF}_SAM.$INF tr ',' '.' | awk 'NR>1' \
       | awk -v dsSize=$SAM_DATASET_SIZE 'BEGIN{}{
       s+=$2;   cS+=$5;   cTR+=$6;   cTC+=$7;   dTR+=$9;   dTC+=$10;   eq+=$12;
       if (NR % dsSize==0) {
@@ -288,12 +288,12 @@ function encResHumanReadable
       }
     }' >> ${INWF}_tot_SAM.$INF
     # Extract from Cryfa
-    cat $result/COMP_tot_SAM.$INF | awk 'NR>1' \
+    awk 'NR>1' $result/COMP_tot_SAM.$INF \
       | awk 'BEGIN{}{if ($2=="Cryfa") print;}' >> ${INWF}_tot_SAM.$INF
 
     ### BAM
     # Details -- 1 row for headers and 1 row after all
-    removeFromRow=`echo $((BAM_DATASET_SIZE*ENC_METHODS_SIZE+1+1))`
+    removeFromRow=$(echo $((BAM_DATASET_SIZE*ENC_METHODS_SIZE+1+1)))
     sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_BAM.$INF;
 
 #    # For each dataset
@@ -309,7 +309,7 @@ function encResHumanReadable
 
     # Total
     printf "Size(MB)\t$en\t$de\tEq\n" > ${INWF}_tot_BAM.$INF;
-    cat ${INWF}_BAM.$INF | tr ',' '.' | awk 'NR>1' \
+    < ${INWF}_BAM.$INF tr ',' '.' | awk 'NR>1' \
       | awk -v dsSize=$BAM_DATASET_SIZE 'BEGIN{}{
       s+=$2;   cS+=$5;   cTR+=$6;   cTC+=$7;   dTR+=$9;   dTC+=$10;   eq+=$12;
       if (NR % dsSize==0) {
@@ -319,7 +319,7 @@ function encResHumanReadable
       }
     }' >> ${INWF}_tot_BAM.$INF
     # Extract from Cryfa
-    cat $result/COMP_tot_BAM.$INF | awk 'NR>1' \
+    awk 'NR>1' $result/COMP_tot_BAM.$INF \
       | awk 'BEGIN{}{if ($2=="Cryfa") print;}' >> ${INWF}_tot_BAM.$INF
 
     rm -f $INWF.tmp

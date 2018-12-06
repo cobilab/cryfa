@@ -16,39 +16,39 @@ function compDecompRes
     in="${2##*/}"                    # Dataset name
     dName="${in%.*}"                 # Dataset name without filetype
     ft="${in##*.}"                   # Dataset filetype
-    fsize=`stat --printf="%s" $2`    # File size (bytes)
-    method=`printMethodName $1`      # Methods' name for printing
+    fsize=$(stat --printf="%s" $2)    # File size (bytes)
+    method=$(printMethodName $1)      # Methods' name for printing
 
     CS="";      CT_r="";    CT_u="";    CT_s="";    CM="";
     DT_r="";    DT_u="";    DT_s="";    DM="";      V="";
 
     ### Compressed file size
     cs_file="$result/${1}_CS__${dName}_$ft"
-    if [[ -e $cs_file ]]; then  CS=`cat $cs_file | awk '{ print $5; }'`;  fi
+    if [[ -e $cs_file ]]; then  CS=$(awk '{ print $5; }' $cs_file);  fi
 
     ### Compression time -- real - user - system
     ct_file="$result/${1}_CT__${dName}_$ft"
     if [[ -e $ct_file ]]; then
-        CT_r=`cat $ct_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
-        CT_u=`cat $ct_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
-        CT_s=`cat $ct_file | tail -n 1 | awk '{ print $2;}'`;
+        CT_r=$(< $ct_file tail -n 3 | head -n 1 | awk '{ print $2;}');
+        CT_u=$(< $ct_file tail -n 2 | head -n 1 | awk '{ print $2;}');
+        CT_s=$(< $ct_file tail -n 1 | awk '{ print $2;}');
     fi
 
     ### Compression memory
     cm_file="$result/${1}_CM__${dName}_$ft"
-    if [[ -e $cm_file ]]; then  CM=`cat $cm_file`;  fi
+    if [[ -e $cm_file ]]; then  CM=$(cat $cm_file);  fi
 
     ### Decompression time -- real - user - system
     dt_file="$result/${1}_DT__${dName}_$ft"
     if [[ -e $dt_file ]]; then
-        DT_r=`cat $dt_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
-        DT_u=`cat $dt_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
-        DT_s=`cat $dt_file | tail -n 1 | awk '{ print $2;}'`;
+        DT_r=$(< $dt_file tail -n 3 | head -n 1 | awk '{ print $2;}');
+        DT_u=$(< $dt_file tail -n 2 | head -n 1 | awk '{ print $2;}');
+        DT_s=$(< $dt_file tail -n 1 | awk '{ print $2;}');
     fi
 
     ### Decompression memory
     dm_file="$result/${1}_DM__${dName}_$ft"
-    if [[ -e $dm_file ]]; then  DM=`cat $dm_file`;  fi
+    if [[ -e $dm_file ]]; then  DM=$(cat $dm_file);  fi
 
     ### Verify if the decompressed and the original files are equal
     v_file="$result/${1}_V__${dName}_$ft"
@@ -184,7 +184,7 @@ function compResHumanReadable
     ### FASTA
     # Details -- 1 row for headers and 1 row after all
     FASTA_METHODS_SIZE=0    # Just when Cryfa is the only compression method run
-    removeFromRow=`echo $((FASTA_DATASET_SIZE*(FASTA_METHODS_SIZE+1)+1+1))`;
+    removeFromRow=$(echo $((FASTA_DATASET_SIZE*(FASTA_METHODS_SIZE+1)+1+1)));
     sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_FA.$INF;
 
 #    # For each dataset
@@ -196,7 +196,7 @@ function compResHumanReadable
 
     # Total
     printf "Size(MB)\t$c\t$d\tEq\n" > ${INWF}_tot_FA.$INF;
-    cat ${INWF}_FA.$INF | tr ',' '.' | awk 'NR>1' \
+    < ${INWF}_FA.$INF tr ',' '.' | awk 'NR>1' \
       | awk -v dsSize=$FASTA_DATASET_SIZE 'BEGIN{}{
       s+=$2;   cS+=$5;   cTR+=$6;   cTC+=$7;   dTR+=$9;   dTC+=$10;   eq+=$12;
       if (NR % dsSize==0) {
@@ -208,7 +208,7 @@ function compResHumanReadable
 
     ### FASTQ
     # Details -- 1 row for headers and 1 row after all
-    removeUpToRow=`echo $((removeFromRow-1))`
+    removeUpToRow=$(echo $((removeFromRow-1)))
     sed "2,$removeUpToRow d" $INWF.tmp > ${INWF}_FQ.$INF;
 
 #    # For each dataset
@@ -233,7 +233,7 @@ function compResHumanReadable
     ### VCF
     # Details -- 1 row for headers and 1 row after all
     VCF_METHODS_SIZE=0    # Just when Cryfa is the only compression method run
-    removeFromRow=`echo $((VCF_DATASET_SIZE*(VCF_METHODS_SIZE+1)+1+1))`;
+    removeFromRow=$(echo $((VCF_DATASET_SIZE*(VCF_METHODS_SIZE+1)+1+1)));
     sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_VCF.$INF;
 
 #    # For each dataset
@@ -245,7 +245,7 @@ function compResHumanReadable
 
     # Total
     printf "Size(MB)\t$c\t$d\tEq\n" > ${INWF}_tot_VCF.$INF;
-    cat ${INWF}_VCF.$INF | tr ',' '.' | awk 'NR>1' \
+    < ${INWF}_VCF.$INF tr ',' '.' | awk 'NR>1' \
       | awk -v dsSize=$VCF_DATASET_SIZE 'BEGIN{}{
       s+=$2;   cS+=$5;   cTR+=$6;   cTC+=$7;   dTR+=$9;   dTC+=$10;   eq+=$12;
       if (NR % dsSize==0) {
@@ -270,7 +270,7 @@ function compResHumanReadable
 
     # Total
     printf "Size(MB)\t$c\t$d\tEq\n" > ${INWF}_tot_SAM.$INF;
-    cat ${INWF}_SAM.$INF | tr ',' '.' | awk 'NR>1' \
+    < ${INWF}_SAM.$INF tr ',' '.' | awk 'NR>1' \
       | awk -v dsSize=$SAM_DATASET_SIZE 'BEGIN{}{
       s+=$2;   cS+=$5;   cTR+=$6;   cTC+=$7;   dTR+=$9;   dTC+=$10;   eq+=$12;
       if (NR % dsSize==0) {
@@ -295,7 +295,7 @@ function compResHumanReadable
 
     # Total
     printf "Size(MB)\t$c\t$d\tEq\n" > ${INWF}_tot_BAM.$INF;
-    cat ${INWF}_BAM.$INF | tr ',' '.' | awk 'NR>1' \
+    < ${INWF}_BAM.$INF tr ',' '.' | awk 'NR>1' \
       | awk -v dsSize=$BAM_DATASET_SIZE 'BEGIN{}{
       s+=$2;   cS+=$5;   cTR+=$6;   cTC+=$7;   dTR+=$9;   dTC+=$10;   eq+=$12;
       if (NR % dsSize==0) {

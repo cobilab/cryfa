@@ -14,5 +14,5 @@ if [[ ! -d $dataset/$FA/$VIRUSES ]]; then  mkdir -p $dataset/$FA/$VIRUSES;  fi
 perl ./$script/DownloadViruses.pl
 
 ### Remove blank lines in downloaded file and move it to dataset folder
-cat viruses.fa | grep -Ev "^$" > $dataset/$FA/$VIRUSES/viruses.$fasta
+grep -Ev "^$" viruses.fa > $dataset/$FA/$VIRUSES/viruses.$fasta
 rm -f viruses.fa

@@ -13,8 +13,8 @@
 ### Results of compress/decompress. $1: program's name, $2: dataset
 function cryfaThrRes
 {
-    fsize=`stat --printf="%s" $CRYFA_THR_DATASET`    # File size (bytes)
-    CRYFA_THR_RUN=`seq -s' ' 1 $MAX_N_THR`;          # 1 2 3 ... $MAX_N_THR
+    fsize=$(stat --printf="%s" $CRYFA_THR_DATASET)    # File size (bytes)
+    CRYFA_THR_RUN=$(seq -s' ' 1 $MAX_N_THR);          # 1 2 3 ... $MAX_N_THR
 
     for nThr in $CRYFA_THR_RUN; do
         CS="";       CT_r="";     CT_u="";     CT_s="";     CM="";
@@ -22,35 +22,35 @@ function cryfaThrRes
 
         ### Compressed file size
         cs_file="$result/${1}_${nThr}_CS__${2}_$3"
-        if [[ -e $cs_file ]]; then  CS=`cat $cs_file | awk '{ print $5; }'`;  fi
+        if [[ -e $cs_file ]]; then  CS=$(awk '{ print $5; }' $cs_file);  fi
 
         ### Compression time -- real - user - system
         ct_file="$result/${1}_${nThr}_CT__${2}_$3"
         if [[ -e $ct_file ]]; then
-            CT_r=`cat $ct_file |tail -n 3 |head -n 1 | awk '{ print $2;}'`
-            CT_u=`cat $ct_file |tail -n 2 |head -n 1 | awk '{ print $2;}'`
-            CT_s=`cat $ct_file |tail -n 1 |awk '{ print $2;}'`
+            CT_r=$(< $ct_file tail -n 3 | head -n 1 | awk '{ print $2;}')
+            CT_u=$(< $ct_file tail -n 2 | head -n 1 | awk '{ print $2;}')
+            CT_s=$(< $ct_file tail -n 1 | awk '{ print $2;}')
         fi
 
         ### Compression memory
         cm_file="$result/${1}_${nThr}_CM__${2}_$3"
-        if [[ -e $cm_file ]]; then  CM=`cat $cm_file`;  fi
+        if [[ -e $cm_file ]]; then  CM=$(cat $cm_file);  fi
 
         ### Decompression time -- real - user - system
         dt_file="$result/${1}_${nThr}_DT__${2}_$3"
         if [[ -e $dt_file ]]; then
-            DT_r=`cat $dt_file |tail -n 3 |head -n 1 | awk '{ print $2;}'`
-            DT_u=`cat $dt_file |tail -n 2 |head -n 1 | awk '{ print $2;}'`
-            DT_s=`cat $dt_file |tail -n 1 |awk '{ print $2;}'`
+            DT_r=$(< $dt_file tail -n 3 | head -n 1 | awk '{ print $2;}')
+            DT_u=$(< $dt_file tail -n 2 | head -n 1 | awk '{ print $2;}')
+            DT_s=$(< $dt_file tail -n 1 | awk '{ print $2;}')
         fi
 
         ### Decompression memory
         dm_file="$result/${1}_${nThr}_DM__${2}_$3"
-        if [[ -e $dm_file ]]; then  DM=`cat $dm_file`;  fi
+        if [[ -e $dm_file ]]; then  DM=$(cat $dm_file);  fi
 
         ### Verify if the decompressed and the original files are equal
         v_file="$result/${1}_${nThr}_V__${2}_$3"
-        if [[ -e $v_file ]]; then  V=`cat $v_file | wc -l`;  fi
+        if [[ -e $v_file ]]; then  V=$(cat $v_file | wc -l);  fi
 
         ### Remove extra files
         for xf in $cs_file $cm_file $dm_file; do
@@ -98,7 +98,7 @@ function cryfaThrResHumanReadable
     d="D_Time_real(m)\tD_Time_cpu(m)\tD_Mem(MB)"
 
     printf "Size(MB)\tThread\t$c\t$d\tEq\n" > $INWF.$INF
-    cat $IN | awk 'NR>1' | tr ',' . | awk 'BEGIN {}{
+    awk 'NR>1' $IN | tr ',' . | awk 'BEGIN {}{
       printf "%.f\t%s\t%.1f\t%.f", $2/(1024*1024), $3, $2/$4, $4/(1024*1024);
 
       split($5, c_arrMinReal, "m");                 c_minReal=c_arrMinReal[1];
