@@ -52,7 +52,7 @@ function compDecompRes
 
     ### Verify if the decompressed and the original files are equal
     v_file="$result/${1}_V__${dName}_$ft"
-    if [[ -e $v_file ]]; then  V=`cat $v_file | wc -l`;  fi
+    if [[ -e $v_file ]]; then  V=$(cat $v_file | wc -l);  fi
 
     ### Remove extra files
     for xf in $cs_file $cm_file $dm_file; do
@@ -144,7 +144,7 @@ function compResHumanReadable
     d="D_Time_real(m)\tD_Time_cpu(m)"
 
     printf "Dataset\tSize(MB)\t$c\tC_Mem(MB)\t$d\tD_Mem(MB)\tEq\n" > $INWF.tmp
-    cat $IN | awk 'NR>1' | tr ',' . | awk 'BEGIN {}{
+    awk 'NR>1' $IN | tr ',' . | awk 'BEGIN {}{
       printf "%s\t%.f\t%s\t%.1f\t%.f",
              $1, $2/(1024*1024), $3, $2/$4, $4/(1024*1024);
 
@@ -220,7 +220,7 @@ function compResHumanReadable
 
     # Total
     printf "Size(MB)\t$c\t$d\tEq\n" > ${INWF}_tot_FQ.$INF;
-    cat ${INWF}_FQ.$INF | tr ',' '.' | awk 'NR>1' \
+    < ${INWF}_FQ.$INF tr ',' '.' | awk 'NR>1' \
       | awk -v dsSize=$FASTQ_DATASET_SIZE 'BEGIN{}{
       s+=$2;   cS+=$5;   cTR+=$6;   cTC+=$7;   dTR+=$9;   dTC+=$10;   eq+=$12;
       if (NR % dsSize==0) {
@@ -258,7 +258,7 @@ function compResHumanReadable
     ### SAM
     # Details -- 1 row for headers and 1 row after all
     SAM_METHODS_SIZE=0    # Just when Cryfa is the only compression method run
-    removeFromRow=`echo $((SAM_DATASET_SIZE*(SAM_METHODS_SIZE+1)+1+1))`;
+    removeFromRow=$(echo $((SAM_DATASET_SIZE*(SAM_METHODS_SIZE+1)+1+1)));
     sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_SAM.$INF;
 
 #    # For each dataset
@@ -283,7 +283,7 @@ function compResHumanReadable
     ### BAM
     # Details -- 1 row for headers and 1 row after all
     BAM_METHODS_SIZE=0    # Just when Cryfa is the only compression method run
-    removeFromRow=`echo $((BAM_DATASET_SIZE*(BAM_METHODS_SIZE+1)+1+1))`;
+    removeFromRow=$(echo $((BAM_DATASET_SIZE*(BAM_METHODS_SIZE+1)+1+1)));
     sed "$removeFromRow,$ d" $INWF.tmp > ${INWF}_BAM.$INF;
 
 #    # For each dataset

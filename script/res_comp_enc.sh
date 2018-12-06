@@ -28,14 +28,14 @@ function compEncDecDecompRes
 
     ### Compressed file size
     cs_file="$result/${1}_${2}_CS__${dName}_$ft"
-    if [[ -e $cs_file ]]; then  CS=`cat $cs_file | awk '{ print $5; }'`;  fi
+    if [[ -e $cs_file ]]; then  CS=`awk '{ print $5; }'` $cs_file;  fi
 
     ### Compression time -- real - user - system
     ct_file="$result/${1}_${2}_CT__${dName}_$ft"
     if [[ -e $ct_file ]]; then
-        CT_r=`cat $ct_file | tail -n 3 | head -n 1 | awk '{ print $2;}'`;
-        CT_u=`cat $ct_file | tail -n 2 | head -n 1 | awk '{ print $2;}'`;
-        CT_s=`cat $ct_file | tail -n 1 | awk '{ print $2;}'`;
+        CT_r=`< $ct_file tail -n 3 | head -n 1 | awk '{ print $2;}'`;
+        CT_u=`< $ct_file tail -n 2 | head -n 1 | awk '{ print $2;}'`;
+        CT_s=`< $ct_file tail -n 1 | awk '{ print $2;}'`;
     fi
 
     ### Compression memory
