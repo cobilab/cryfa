@@ -81,7 +81,7 @@ constexpr byte MIN_C4          = 7;   /**< @brief  7 <= Cat 4 <= 15 */
 constexpr byte MAX_C4          = 15;
 constexpr byte MIN_C5          = 16;  /**< @brief 16 <= Cat 5 <= 39 */
 constexpr byte MAX_C5          = 39;
-constexpr byte KEYLEN_C1       = 7;   /**< @brief 7 to 1 byte. Build hash table */
+constexpr byte KEYLEN_C1       = 7;  /**< @brief 7 to 1 byte. Build hash table*/
 constexpr byte KEYLEN_C2       = 5;   /**< @brief 5 to 1 byte */
 constexpr byte KEYLEN_C3       = 3;   /**< @brief 3 to 1 byte */
 constexpr byte KEYLEN_C4       = 2;   /**< @brief 2 to 1 byte */
