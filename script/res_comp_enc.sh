@@ -84,7 +84,7 @@ function compEncDecDecompRes
 
     ### Verify if the decompressed and the original files are equal
     v_file="$result/${1}_${2}_V__${dName}_$ft"
-    if [[ -e $v_file ]]; then  V=$(cat $v_file | wc -l);  fi
+    if [[ -e $v_file ]]; then  V=$(wc -l $v_file);  fi
 
     ### Remove extra files
     for xf in $cs_file $cm_file $dem_file $dm_file $enm_file $ens_file; do

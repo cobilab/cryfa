@@ -24,7 +24,7 @@ function encDecRes
 
     ### Encrypted file size
     ens_file="$result/${1}_EnS__${dName}_$ft"
-    if [[ -e $ens_file ]]; then  EnS=$(cat $ens_file | awk '{ print $5; }');  fi
+    if [[ -e $ens_file ]]; then  EnS=$(awk '{ print $5; }' $ens_file);  fi
 
     ### Encryption time -- real - user - system
     ent_file="$result/${1}_EnT__${dName}_$ft"
