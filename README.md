@@ -177,7 +177,7 @@ and
 ## CITE
 Please cite the followings, if you use Cryfa:
 * M. Hosseini, D. Pratas and A.J. Pinho, "Cryfa: a secure encryption tool for
-  genomic data, "*Bioinformatics*, bty645, 2018.
+  genomic data," *Bioinformatics*, bty645, 2018.
 
 * D. Pratas, M. Hosseini and A.J. Pinho, "Cryfa: a tool to compact and encrypt
   FASTA files," *11'th International Conference on Practical Applications of* 
