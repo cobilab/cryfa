@@ -11,7 +11,7 @@ FASTA/FASTQ sequences by a factor of 3.
 
 ## INSTALL
 ### Linux
-Install *git* and *cmake*:
+Install "git" and "cmake":
 ```bash
 sudo apt update
 sudo apt install git cmake
@@ -26,7 +26,7 @@ make
 ```
 
 ### macOS
-Install *Homebrew*, *git* and *cmake*:
+Install "Homebrew", "git" and "cmake":
 ```bash
 /usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
 brew install git cmake
@@ -51,15 +51,15 @@ If you want to run Cryfa in stand-alone mode, use the following command:
 ```bash
 ./cryfa [OPTION]... -k [KEY_FILE] [-d] [IN_FILE] > [OUT_FILE]
 ```
-For example, to compact & encrypt:
+For example, to compact & encrypt, run
 ```bash
 ./cryfa -k pass.txt in.fq > comp
 ```
-and, to decrypt & unpack:
+and, to decrypt & unpack, run
 ```bash
 ./cryfa -k pass.txt -d comp > orig.fq
 ```
-Options are described in the following sections.
+There is a copy of file "in.fq" in `example/` directory. Options are described in the following sections.
 
 ### Input file format
 Cryfa automatically detects a genomic data file format by looking inside the
@@ -74,9 +74,7 @@ will be exactly the same as running
 ./cryfa -k pass.txt test.fa > comp
 ```
 
-Note, a password file is not limited to any extension. Therefore, that file can
-either have no extension or any extension. For example, it can be "pass",
-"pass.txt", "pass.dat", etc.
+Note that password file is not limited to any extension, therefore, it can have either no extension or any extension. For example, using "pass", "pass.txt", "pass.dat", etc provides the same result.
 
 ### Compare Cryfa with other methods
 If you want to compare Cryfa with other methods, set the parameters in 
