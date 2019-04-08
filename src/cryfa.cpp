@@ -32,12 +32,12 @@
 #include "fastq.hpp"
 #include "fn.hpp"
 #include "parser.hpp"
-#define __STDC_FORMAT_MACROS
-#if defined(_MSC_VER)
-#  include <io.h>
-#else
-#  include <unistd.h>
-#endif
+// #define __STDC_FORMAT_MACROS
+// #if defined(_MSC_VER)
+// #  include <io.h>
+// #else
+// #  include <unistd.h>
+// #endif
 using std::string;
 using std::cout;
 using std::cerr;

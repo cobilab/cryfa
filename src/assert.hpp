@@ -10,6 +10,9 @@
 #ifndef CRYFA_ASSERT_H
 #define CRYFA_ASSERT_H
 
+#ifdef __APPLE__
+#  undef assert
+#endif
 #include <fstream>
 using std::ifstream;
 using std::string;
