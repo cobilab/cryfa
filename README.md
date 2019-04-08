@@ -10,14 +10,37 @@ Cryfa is a secure encryption tool for genomic data, and is also able to compact
 FASTA/FASTQ sequences by a factor of 3.
 
 ## INSTALL
-Get Cryfa and make the project, using:
+### Linux
+Install *git* and *cmake*:
+```bash
+sudo apt update
+sudo apt install git cmake
+```
+
+Clone Cryfa and make the project:
 ```bash
 git clone https://github.com/pratas/cryfa.git
 cd cryfa
 cmake .
 make
 ```
-Note, an already compiled version of Cryfa is available for 64 bit Linux OS in
+
+### macOS
+Install *Homebrew*, *git* and *cmake*:
+```bash
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
+brew install git cmake
+```
+
+Clone Cryfa and make the project:
+```bash
+git clone https://github.com/pratas/cryfa.git
+cd cryfa
+cmake .
+make
+```
+
+Note, an already compiled version of Cryfa is available for 64 bit Linux OS and macOS in
 the `bin/` directory.
 
 ## RUN
