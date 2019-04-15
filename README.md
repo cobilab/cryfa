@@ -1,7 +1,10 @@
+<html>
+<head>
+
 <style>
-/* * {
+* {
   box-sizing: border-box;
-} */
+}
 
 /* Create two equal columns that floats next to each other */
 .column {
@@ -18,7 +21,8 @@
   clear: both;
 }
 </style>
-
+</head>
+<body>
 <div class="row">
   <div class="column">
     <p><img src="img/logo.png" alt="Cryfa" height="130" border="0" /></p>
@@ -32,6 +36,8 @@
     </p>
   </div>
 </div>
+</body>
+</html>
 
 ## What is Cryfa?
 Cryfa is an ultrafast secure encryption tool for genomic data, that is also able to compact FASTA/FASTQ sequences by a factor of three.
