@@ -1,13 +1,19 @@
-<p align="center">
-<img src="img/logo.png" alt="Cryfa" width="150" border="0" /></p>
-<br>
+<table>
+<tr>
+<td><img src="img/logo.png" alt="Cryfa" height="130" border="0" /></td>
+<td></td>
+<td></td>
+<td valign="bottom">
 
 [![Build Status](https://travis-ci.org/pratas/cryfa.svg?branch=master)](https://travis-ci.org/pratas/cryfa)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/fcdf8235b95b44718d308a1383ba5a88)](https://www.codacy.com/app/smortezah/cryfa?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=pratas/cryfa&amp;utm_campaign=Badge_Grade)
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
+</td>
+</tr>
+</table>
 
-Cryfa is a secure encryption tool for genomic data, and is also able to compact
-FASTA/FASTQ sequences by a factor of 3.
+## What is Cryfa?
+Cryfa is an ultrafast secure encryption tool for genomic data, that is also able to compact FASTA/FASTQ sequences by a factor of three.
 
 ## INSTALL
 ### Linux
