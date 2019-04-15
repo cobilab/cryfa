@@ -19,7 +19,7 @@ sudo apt install git cmake
 
 Clone Cryfa and make the project:
 ```bash
-git clone https://github.com/pratas/cryfa.git
+git clone https://github.com/cobilab/cryfa.git
 cd cryfa
 cmake .
 make
@@ -34,7 +34,7 @@ brew install git cmake
 
 Clone Cryfa and make the project:
 ```bash
-git clone https://github.com/pratas/cryfa.git
+git clone https://github.com/cobilab/cryfa.git
 cd cryfa
 cmake .
 make
