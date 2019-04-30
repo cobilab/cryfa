@@ -1,6 +1,6 @@
 <img src="img/logo.png" alt="Cryfa" height="150" border="0" />
 
-[![Build Status](https://travis-ci.org/pratas/cryfa.svg?branch=master)](https://travis-ci.org/pratas/cryfa)
+[![Build Status](https://travis-ci.org/cobilab/cryfa.svg?branch=master)](https://travis-ci.org/cobilab/cryfa)
 [![Codacy Badge](https://api.codacy.com/project/badge/Grade/fcdf8235b95b44718d308a1383ba5a88)](https://www.codacy.com/app/smortezah/cryfa?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=pratas/cryfa&amp;utm_campaign=Badge_Grade)
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 
