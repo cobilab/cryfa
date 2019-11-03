@@ -6,6 +6,11 @@
 Cryfa is an ultrafast secure encryption tool for genomic data, that is also able to compact FASTA/FASTQ sequences by a factor of three.
 
 ## INSTALL
+### Conda
+```bash
+conda install -c bioconda cryfa
+```
+
 ### Linux
 Install "git" and "cmake":
 ```bash
