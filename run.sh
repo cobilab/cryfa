@@ -121,26 +121,26 @@ then
     if [[ ! -d $dataset ]]; then  mkdir -p $dataset;  fi
 
     ### FASTA
-    if [[ $DL_HUMAN_FA       -eq 1 ]]; then  . $script/dl_human_fa.sh;        fi
-    if [[ $DL_VIRUSES_FA     -eq 1 ]]; then  . $script/dl_viruses_fa.sh;      fi
-    if [[ $GEN_SYNTH_FA      -eq 1 ]]; then  . $script/gen_synth_fa.sh;       fi
+    if [[ $DL_HUMAN_FA        -eq 1 ]]; then . $script/dl_human_fa.sh;        fi
+    if [[ $DL_VIRUSES_FA      -eq 1 ]]; then . $script/dl_viruses_fa.sh;      fi
+    if [[ $GEN_SYNTH_FA       -eq 1 ]]; then . $script/gen_synth_fa.sh;       fi
 
     ### FASTQ
-    if [[ $DL_HUMAN_FQ       -eq 1 ]]; then  . $script/dl_human_fq.sh;        fi
-    if [[ $DL_DENISOVA_FQ    -eq 1 ]]; then  . $script/dl_denisova_fq.sh;     fi
-    if [[ $GEN_SYNTH_FQ      -eq 1 ]]; then  . $script/gen_synth_fq.sh;       fi
+    if [[ $DL_HUMAN_FQ        -eq 1 ]]; then . $script/dl_human_fq.sh;        fi
+    if [[ $DL_DENISOVA_FQ     -eq 1 ]]; then . $script/dl_denisova_fq.sh;     fi
+    if [[ $GEN_SYNTH_FQ       -eq 1 ]]; then . $script/gen_synth_fq.sh;       fi
 
     ### VCF
-    if [[ DL_DENISOVA_VCF    -eq 1 ]]; then  . $script/dl_denisova_vcf.sh;    fi
-    if [[ DL_NEANDERTHAL_VCF -eq 1 ]]; then  . $script/dl_neanderthal_vcf.sh; fi
+    if [[ $DL_DENISOVA_VCF    -eq 1 ]]; then . $script/dl_denisova_vcf.sh;    fi
+    if [[ $DL_NEANDERTHAL_VCF -eq 1 ]]; then . $script/dl_neanderthal_vcf.sh; fi
 
     ### SAM
-    if [[ DL_HUMAN_SAM       -eq 1 ]]; then  . $script/dl_human_sam.sh;       fi
-    if [[ DL_NEANDERTHAL_SAM -eq 1 ]]; then  . $script/dl_neanderthal_sam.sh; fi
+    if [[ $DL_HUMAN_SAM       -eq 1 ]]; then . $script/dl_human_sam.sh;       fi
+    if [[ $DL_NEANDERTHAL_SAM -eq 1 ]]; then . $script/dl_neanderthal_sam.sh; fi
 
     ### BAM
-    if [[ DL_HUMAN_BAM       -eq 1 ]]; then  . $script/dl_human_bam.sh;       fi
-    if [[ DL_NEANDERTHAL_BAM -eq 1 ]]; then  . $script/dl_neanderthal_bam.sh; fi
+    if [[ $DL_HUMAN_BAM       -eq 1 ]]; then . $script/dl_human_bam.sh;       fi
+    if [[ $DL_NEANDERTHAL_BAM -eq 1 ]]; then . $script/dl_neanderthal_bam.sh; fi
 fi
 
 
@@ -332,5 +332,5 @@ then
     if [[ $GET_DATASET_REDUN -eq 1 ]]; then  . $script/dl_dataset_redun.sh;  fi
 
     ### Run & Results
-    if [[ $RUN_RES_REDUN -eq 1 ]];     then  . $script/run_res_redun.sh;     fi
+    if [[ $RUN_RES_REDUN     -eq 1 ]]; then  . $script/run_res_redun.sh;     fi
 fi
