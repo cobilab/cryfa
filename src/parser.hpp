@@ -72,72 +72,61 @@ inline char frmt (const string &inFileName) {
 char parse (Param& par, int argc, char** argv) {
   if (argc < 2)
     help();
-  else {
-    par.in_file = *(argv+argc-1);  // Not standard input
-    vector<string> vArgs;    vArgs.reserve(static_cast<u64>(argc));
-    for (auto a=argv; a!=argv+argc; ++a)
-      vArgs.emplace_back(string(*a));
-    
-    // Help
-    if (exist(vArgs.begin(), vArgs.end(), "-h") ||
-        exist(vArgs.begin(), vArgs.end(), "--help"))
-      help();
-  
-    // key -- MANDATORY
-    assert(!exist(vArgs.begin(), vArgs.end(), "-k") &&
-           !exist(vArgs.begin(), vArgs.end(), "--key"),
-           "Error: no password file has been set.\n");
-    for (auto i=vArgs.begin(); i!=vArgs.end(); ++i) {
-      if (*i=="-k" || *i=="--key") {
-        if (i+1!=vArgs.end() && (*(i+1))[0]!='-') {
-          check_pass(*(i+1));
-          par.key_file = *++i;
-          break;
-        }
-        else throw runtime_error("Error: no password file has been set.\n");
-      }
-    }
-    
-    // verbose, thread
-    for (auto i=vArgs.begin(); i!=vArgs.end(); ++i) {
-      if (*i=="-v"  || *i=="--verbose") {
-        par.verbose = true;
-        cerr << "Verbose mode on.\n";
-      }
-      else if ((*i=="-t" || *i=="--thread") &&
-               i+1!=vArgs.end() && (*(i+1))[0]!='-' && is_number(*(i+1)))
-        par.n_threads = static_cast<byte>(stoi(*++i));
-    }
-    
-    // Decrypt+decompress
-    if (exist(vArgs.begin(), vArgs.end(), "-d") ||
-        exist(vArgs.begin(), vArgs.end(), "--dec"))
-      return 'd';
-    
-    // stop_shuffle, frmt
-    for (auto i=vArgs.begin(); i!=vArgs.end(); ++i) {
-      if (*i=="-s"  || *i=="--stop_shuffle")
-        par.stop_shuffle = true;
-      else if (*i=="-f" || *i=="--force")
-        par.format='n';
-//      else if ((*i=="-f" || *i=="--format") &&
-//               i+1!=vArgs.end() && (*(i+1))[0]!='-') {
-//        if      (*(i+1)=="a")  par.format='A';
-//        else if (*(i+1)=="q")  par.format='Q';
-//        else if (*(i+1)=="n")  par.format='n';
-//        ++i;
-//      }
-    }
-    if (!exist(vArgs.begin(), vArgs.end(), "-f") &&
-        !exist(vArgs.begin(), vArgs.end(), "--force"))
-      par.format = frmt(par.in_file);  // Not standard input file
-//    if (!exist(vArgs.begin(), vArgs.end(), "-f") &&
-//        !exist(vArgs.begin(), vArgs.end(), "--format"))
-//      par.format = frmt(par.in_file);  // Not standard input file
 
-    // Compress+encrypt
-    return 'c';
+  par.in_file = *(argv+argc-1);  // Not standard input
+  vector<string> vArgs;    vArgs.reserve(static_cast<u64>(argc));
+  for (auto a=argv; a!=argv+argc; ++a)
+    vArgs.emplace_back(string(*a));
+    
+  // Help
+  if (exist(vArgs.begin(), vArgs.end(), "-h") ||
+      exist(vArgs.begin(), vArgs.end(), "--help"))
+    help();
+  
+  // key -- MANDATORY
+  assert(!exist(vArgs.begin(), vArgs.end(), "-k") &&
+         !exist(vArgs.begin(), vArgs.end(), "--key"),
+         "Error: no password file has been set.\n");
+  for (auto i=vArgs.begin(); i!=vArgs.end(); ++i) {
+    if (*i=="-k" || *i=="--key") {
+      if (i+1!=vArgs.end() && (*(i+1))[0]!='-') {
+        check_pass(*(i+1));
+        par.key_file = *++i;
+        break;
+      }
+      else throw runtime_error("Error: no password file has been set.\n");
+    }
   }
+    
+  // verbose, thread
+  for (auto i=vArgs.begin(); i!=vArgs.end(); ++i) {
+    if (*i=="-v"  || *i=="--verbose") {
+      par.verbose = true;
+      cerr << "Verbose mode on.\n";
+    }
+    else if ((*i=="-t" || *i=="--thread") &&
+             i+1!=vArgs.end() && (*(i+1))[0]!='-' && is_number(*(i+1)))
+      par.n_threads = static_cast<byte>(stoi(*++i));
+  }
+    
+  // Decrypt+decompress
+  if (exist(vArgs.begin(), vArgs.end(), "-d") ||
+      exist(vArgs.begin(), vArgs.end(), "--dec"))
+    return 'd';
+    
+  // stop_shuffle, frmt
+  for (auto i=vArgs.begin(); i!=vArgs.end(); ++i) {
+    if (*i=="-s"  || *i=="--stop_shuffle")
+      par.stop_shuffle = true;
+    else if (*i=="-f" || *i=="--force")
+      par.format='n';
+  }
+  if (!exist(vArgs.begin(), vArgs.end(), "-f") &&
+      !exist(vArgs.begin(), vArgs.end(), "--force"))
+    par.format = frmt(par.in_file);  // Not standard input file
+
+  // Compress+encrypt
+  return 'c';
 }
 
 #endif //CRYFA_PARSER_H

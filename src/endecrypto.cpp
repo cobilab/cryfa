@@ -191,8 +191,8 @@ byte EnDecrypto::dna_pack_idx (const string& key) {
   const auto found = DNA_MAP.find(key);
   if (found == DNA_MAP.end())
     std::runtime_error("Error: key '" + key + "'not found!\n");
-  else
-    return (byte) found->second;
+
+  return (byte) found->second;
 }
 
 /**
@@ -205,8 +205,8 @@ u16 EnDecrypto::large_pack_idx (const string& key, const htbl_t& map) {
   const auto found = map.find(key);
   if (found == map.end())
     std::runtime_error("Error: key '" + key + "' not found!\n");
-  else
-    return (u16) found->second;
+  
+  return (u16) found->second;
 }
 
 /**

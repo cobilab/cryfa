@@ -7,7 +7,7 @@
           <          Diogo Pratas        pratas@ua.pt               >
           <          Armando J. Pinho    ap@ua.pt                   >
           <<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-          <   Copyright (C) 2017-2018, IEETA, University of Aveiro  >
+          <   Copyright (C) 2017-2020, IEETA, University of Aveiro  >
           <<<<<<<<<<<<<<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
           
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%*/
@@ -16,7 +16,6 @@
  * @brief     Main
  * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
  * @author    Diogo Pratas      (pratas@ua.pt)
- * @author    Armando J. Pinho  (ap@ua.pt)
  * @copyright The GNU General Public License v3.0
  */
 
