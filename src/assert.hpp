@@ -3,7 +3,6 @@
  * @brief     Assertions
  * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
  * @author    Diogo Pratas      (pratas@ua.pt)
- * @author    Armando J. Pinho  (ap@ua.pt)
  * @copyright The GNU General Public License v3.0
  */
 
@@ -11,20 +10,19 @@
 #define CRYFA_ASSERT_H
 
 #ifdef __APPLE__
-#  undef assert
+#undef assert
 #endif
-#include <fstream>
-using std::ifstream;
-using std::string;
-using std::runtime_error;
 
+#include <fstream>
+
+namespace cryfa {
 /**
  * @brief Assert a condition
  * @param cond  the condition to be checked
  * @param msg   the message shown when the condition is true
  */
-inline void assert (bool cond, const string& msg) {
-  if (cond)  throw runtime_error(msg);
+inline void assert(bool cond, const std::string& msg) {
+  if (cond) throw std::runtime_error(msg);
 }
 
 /**
@@ -33,8 +31,9 @@ inline void assert (bool cond, const string& msg) {
  * @param msgT  the message shown when the condition is true
  * @param msgF  the message shown when the condition is false
  */
-inline void assert_dual (bool cond, const string& msgT, const string& msgF) {
-  throw runtime_error(cond ? msgT : msgF);
+inline void assert_dual(bool cond, const std::string& msgT,
+                        const std::string& msgF) {
+  throw std::runtime_error(cond ? msgT : msgF);
 }
 
 /**
@@ -42,13 +41,16 @@ inline void assert_dual (bool cond, const string& msgT, const string& msgF) {
  * @param fname  the file name
  * @param msg    the error message
  */
-inline void assert_file_good (const string& fname, const string& msg="") {
-  ifstream in(fname);
-  if (!in.good() || in.peek()==EOF) {
+inline void assert_file_good(const std::string& fname,
+                             const std::string& msg = "") {
+  std::ifstream in(fname);
+  if (!in.good() || in.peek() == EOF) {
     in.close();
-    assert_dual(msg.empty(), "Error opening the file \"" +fname+ "\".\n", msg);
+    assert_dual(msg.empty(), "Error opening the file \"" + fname + "\".\n",
+                msg);
   }
   in.close();
 }
+}  // namespace cryfa
 
-#endif //CRYFA_ASSERT_H
+#endif  // CRYFA_ASSERT_H

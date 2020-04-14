@@ -3,30 +3,28 @@
  * @brief     Parser for command line options
  * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
  * @author    Diogo Pratas      (pratas@ua.pt)
- * @author    Armando J. Pinho  (ap@ua.pt)
  * @copyright The GNU General Public License v3.0
  */
 
 #ifndef CRYFA_PARSER_H
 #define CRYFA_PARSER_H
 
-#include <iostream>
 #include <algorithm>
+#include <iostream>
+
 #include "def.hpp"
 #include "fn.hpp"
-using std::runtime_error;
-using std::cerr;
-using std::wcin;
 
+namespace cryfa {
 /**
  * @brief  Argument of a command line option
  * @param  first  begin iterator of the range
  * @param  last   end iterator of the range
  * @param  value  the value to be found in the range
- * @return An string
+ * @return An std::string
  */
 template <typename Iter, typename T>
-inline string argument (Iter first, Iter last, const T& value) {
+inline std::string argument(Iter first, Iter last, const T& value) {
   return *++std::find(first, last, value);
 }
 
@@ -34,32 +32,45 @@ inline string argument (Iter first, Iter last, const T& value) {
  * @brief Check password file
  * @param fname  the password file name
  */
-inline void check_pass (const string& fname) {
-  assert_file_good(fname, "Error opening the password file \"" +fname+ "\".\n");
-  const string pass = file_to_string(fname);
+inline void check_pass(const std::string& fname) {
+  assert_file_good(fname,
+                   "Error opening the password file \"" + fname + "\".\n");
+  const std::string pass = file_to_string(fname);
   assert(pass.size() < 8, "Error: the password size must be at least 8.\n");
 }
 
-inline char frmt (const string &inFileName) {
+inline char frmt(const std::string& inFileName) {
   wchar_t c;
-  wifstream in(inFileName);
+  std::wifstream in(inFileName);
   assert(!in.good(), "Error: failed opening '" + inFileName + "'.\n");
 
   // Skip leading blank lines or spaces
-  while (in.peek()=='\n' || in.peek()==' ')    in.get(c);
+  while (in.peek() == '\n' || in.peek() == ' ') in.get(c);
 
   // Fastq
-  while (in.peek() == '@')     IGNORE_THIS_LINE(in);
-  byte nTabs=0;    while (in.get(c) && c!='\n')  if (c=='\t') ++nTabs;
+  while (in.peek() == '@') IGNORE_THIS_LINE(in);
+  byte nTabs = 0;
+  while (in.get(c) && c != '\n')
+    if (c == '\t') ++nTabs;
 
-  if (in.peek() == '+') { in.close();    return 'Q'; }            // Fastq
+  if (in.peek() == '+') {
+    in.close();
+    return 'Q';
+  }  // Fastq
 
   // Fasta or Not Fasta/Fastq
-  in.clear();   in.seekg(0, std::ios::beg); // Return to beginning of the file
-  while (in.peek()!='>' && in.peek()!=EOF)    IGNORE_THIS_LINE(in);
+  in.clear();
+  in.seekg(0, std::ios::beg);  // Return to beginning of the file
+  while (in.peek() != '>' && in.peek() != EOF) IGNORE_THIS_LINE(in);
 
-  if (in.peek() == '>') { in.close();    return 'A'; }      // Fasta
-  else                  { in.close();    return 'n'; }      // Not Fasta/Fastq
+  if (in.peek() == '>') {
+    in.close();
+    return 'A';
+  }  // Fasta
+  else {
+    in.close();
+    return 'n';
+  }  // Not Fasta/Fastq
 }
 
 /**
@@ -69,57 +80,56 @@ inline char frmt (const string &inFileName) {
  * @param  argv  Array of command line options
  * @return 'c': compress+encrypt or 'd': decrypt+decompress
  */
-char parse (Param& par, int argc, char** argv) {
-  if (argc < 2)
-    help();
+char parse(Param& par, int argc, char** argv) {
+  if (argc < 2) help();
 
-  par.in_file = *(argv+argc-1);  // Not standard input
-  vector<string> vArgs;    vArgs.reserve(static_cast<u64>(argc));
-  for (auto a=argv; a!=argv+argc; ++a)
-    vArgs.emplace_back(string(*a));
-    
+  par.in_file = *(argv + argc - 1);  // Not standard input
+  std::vector<std::string> vArgs;
+  vArgs.reserve(static_cast<u64>(argc));
+  for (auto a = argv; a != argv + argc; ++a)
+    vArgs.emplace_back(std::string(*a));
+
   // Help
   if (exist(vArgs.begin(), vArgs.end(), "-h") ||
       exist(vArgs.begin(), vArgs.end(), "--help"))
     help();
-  
+
   // key -- MANDATORY
   assert(!exist(vArgs.begin(), vArgs.end(), "-k") &&
-         !exist(vArgs.begin(), vArgs.end(), "--key"),
+             !exist(vArgs.begin(), vArgs.end(), "--key"),
          "Error: no password file has been set.\n");
-  for (auto i=vArgs.begin(); i!=vArgs.end(); ++i) {
-    if (*i=="-k" || *i=="--key") {
-      if (i+1!=vArgs.end() && (*(i+1))[0]!='-') {
-        check_pass(*(i+1));
+  for (auto i = vArgs.begin(); i != vArgs.end(); ++i) {
+    if (*i == "-k" || *i == "--key") {
+      if (i + 1 != vArgs.end() && (*(i + 1))[0] != '-') {
+        check_pass(*(i + 1));
         par.key_file = *++i;
         break;
-      }
-      else throw runtime_error("Error: no password file has been set.\n");
+      } else
+        throw std::runtime_error("Error: no password file has been set.\n");
     }
   }
-    
+
   // verbose, thread
-  for (auto i=vArgs.begin(); i!=vArgs.end(); ++i) {
-    if (*i=="-v"  || *i=="--verbose") {
+  for (auto i = vArgs.begin(); i != vArgs.end(); ++i) {
+    if (*i == "-v" || *i == "--verbose") {
       par.verbose = true;
-      cerr << "Verbose mode on.\n";
-    }
-    else if ((*i=="-t" || *i=="--thread") &&
-             i+1!=vArgs.end() && (*(i+1))[0]!='-' && is_number(*(i+1)))
+      std::cerr << "Verbose mode on.\n";
+    } else if ((*i == "-t" || *i == "--thread") && i + 1 != vArgs.end() &&
+               (*(i + 1))[0] != '-' && is_number(*(i + 1)))
       par.n_threads = static_cast<byte>(stoi(*++i));
   }
-    
+
   // Decrypt+decompress
   if (exist(vArgs.begin(), vArgs.end(), "-d") ||
       exist(vArgs.begin(), vArgs.end(), "--dec"))
     return 'd';
-    
+
   // stop_shuffle, frmt
-  for (auto i=vArgs.begin(); i!=vArgs.end(); ++i) {
-    if (*i=="-s"  || *i=="--stop_shuffle")
+  for (auto i = vArgs.begin(); i != vArgs.end(); ++i) {
+    if (*i == "-s" || *i == "--stop_shuffle")
       par.stop_shuffle = true;
-    else if (*i=="-f" || *i=="--force")
-      par.format='n';
+    else if (*i == "-f" || *i == "--force")
+      par.format = 'n';
   }
   if (!exist(vArgs.begin(), vArgs.end(), "-f") &&
       !exist(vArgs.begin(), vArgs.end(), "--force"))
@@ -128,5 +138,6 @@ char parse (Param& par, int argc, char** argv) {
   // Compress+encrypt
   return 'c';
 }
+}  // namespace cryfa
 
-#endif //CRYFA_PARSER_H
+#endif  // CRYFA_PARSER_H
