@@ -33,7 +33,11 @@ std::mutex mutxSec; /**< @brief Mutex */
  *          DEFAULT_KEYLENGTH = 16 bytes.
  */
 void Security::encrypt() {
-  std::cerr << "Encrypting...\n";
+  if (verbose) {
+    std::cerr << "Encrypting...\n";
+  } else {
+    std::cerr << bold("[+]") << " Encrypting ...";
+  }
   const auto start = std::chrono::high_resolution_clock::now();  // Start timer
 
   byte key[CryptoPP::AES::DEFAULT_KEYLENGTH], iv[CryptoPP::AES::BLOCKSIZE];
@@ -61,8 +65,16 @@ void Security::encrypt() {
 
   const auto finish = std::chrono::high_resolution_clock::now();  // Stop timer
   std::chrono::duration<double> elapsed = finish - start;         // Dur. (sec)
-  std::cerr << (verbose ? "Encryption done," : "Done,") << " in " << std::fixed
-            << std::setprecision(4) << elapsed.count() << " seconds.\n";
+  // std::cerr << (verbose ? "Encryption done," : "Done,") << " in " << std::fixed
+  //           << std::setprecision(4) << elapsed.count() << " seconds.\n";
+  if (verbose) {
+    std::cerr << "Encryption done,"
+              << " in " << std::fixed << std::setprecision(4) << elapsed.count()
+              << " seconds.\n";
+  } else {
+    std::cerr << "\r" << bold("[+]") << " Encrypting done in " << std::fixed
+              << std::setprecision(3) << elapsed.count() << " seconds.\n";
+  }
 
   // Delete packed file
   const std::string pkdFileName = PCKD_FNAME;

@@ -66,7 +66,7 @@ void application::exe_compress_encrypt() {
       fa.compress();
       break;
     case 'Q':
-      std::cerr << "Compacting...\n";
+      // std::cerr << "Compacting...\n";
       fq.compress();
       break;
     case 'n':

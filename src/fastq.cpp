@@ -45,6 +45,12 @@ bool Fastq::has_just_plus() const {
  * @brief Compress
  */
 void Fastq::compress() {
+  if (verbose) {
+    std::cerr << "Compacting...\n";
+  } else {
+    std::cerr << "[+] Compacting ...";
+  }
+
   const auto start = std::chrono::high_resolution_clock::now();  // Start timer
   std::thread arrThread[n_threads];
   std::string headers, qscores;
@@ -75,8 +81,18 @@ void Fastq::compress() {
   const auto finish = std::chrono::high_resolution_clock::now();  // Stop timer
   std::chrono::duration<double> elapsed = finish - start;         // Dur. (sec)
 
-  std::cerr << (verbose ? "Compaction done" : "Done") << ", in " << std::fixed
-            << std::setprecision(4) << elapsed.count() << " seconds.\n";
+  // std::cerr << (verbose ? "Compaction done" : "Done") << ", in " <<
+  // std::fixed
+  //           << std::setprecision(4) << elapsed.count() << " seconds.\n";
+
+  if (verbose) {
+    std::cerr << "Compaction done"
+              << ", in " << std::fixed << std::setprecision(4)
+              << elapsed.count() << " seconds.\n";
+  } else {
+    std::cerr << "\r[+] Compacting done in " << std::fixed
+              << std::setprecision(3) << elapsed.count() << " seconds.\n";
+  }
 
   // Cout encrypted content
   encrypt();
