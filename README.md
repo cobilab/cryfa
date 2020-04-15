@@ -52,11 +52,13 @@ For example, to compact & encrypt, run
 ```bash
 ./cryfa -k pass.txt in.fq > comp
 ```
-and, to decrypt & unpack, run
+and to decrypt & unpack, run
 ```bash
 ./cryfa -k pass.txt -d comp > orig.fq
 ```
 There is a copy of file "in.fq" in `example/` directory. Options are described in the following sections.
+
+Note that the maximum file size supported by Cryfa is 64 GB. For larger files, you can split them, e.g. by "split" command in Linux, and encrypt each chunk. After the decryption, you can concatenate the chunks, e.g. by "cat" command.
 
 ### Input file format
 Cryfa automatically detects a genomic data file format by looking inside the
@@ -95,24 +97,21 @@ SYNOPSIS
       ./cryfa [OPTION]... -k [KEY_FILE] [-d] [IN_FILE] > [OUT_FILE]
 
 SAMPLE
-      Encrypt and compact:   ./cryfa -k pass.txt in.fq > comp     
-      Decrypt and unpack:    ./cryfa -k pass.txt -d comp > orig.fq
+      Encrypt and compact:  ./cryfa -k pass.txt in.fq > comp     
+      Decrypt and unpack:   ./cryfa -k pass.txt -d comp > orig.fq
       
-      Encrypt:               ./cryfa -k pass.txt in > enc
-      Decrypt:               ./cryfa -k pass.txt -d enc > orig
+      Encrypt:              ./cryfa -k pass.txt in > enc
+      Decrypt:              ./cryfa -k pass.txt -d enc > orig
 
-DESCRIPTION
+OPTIONS
       Compact & encrypt FASTA/FASTQ files.
       Encrypt any text-based genomic data, e.g., VCF/SAM/BAM.
 
-      -h,  --help
-           usage guide
-
       -k [KEY_FILE],  --key [KEY_FILE]
            key file name -- MANDATORY
-           The KEY_FILE would contain a password.
+           The KEY_FILE should contain a password.
            To make a strong password, the "keygen" program can be
-           employed via the command "./keygen".
+           used via the command "./keygen".
 
       -d,  --dec
            decrypt & unpack
@@ -120,18 +119,24 @@ DESCRIPTION
       -f,  --force
            force to consider input as non-FASTA/FASTQ
            Forces Cryfa not to compact, but shuffle and encrypt.
-           If the input is FASTA/FASTQ, it is again considered as
-           non-FASTA/FASTQ, therefore, compaction will be ignored,
-           but shuffling and encryption will be performed.
+           If the input is FASTA/FASTQ, it is considered as
+           non-FASTA/FASTQ; so, compaction will be ignored, but 
+           shuffling and encryption will be performed.
            
-      -v,  --verbose
-           verbose mode (more information)
-
       -s,  --stop_shuffle
            stop shuffling the input
 
       -t [NUMBER],  --thread [NUMBER]
            number of threads
+
+      -v,  --verbose
+           verbose mode (more information)
+      
+      -h,  --help
+           usage guide
+
+      --version
+           version information
 ```
 Cryfa uses standard ouput stream, hence, its output can be directly integrated
 with pipelines.
