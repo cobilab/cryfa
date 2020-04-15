@@ -20,7 +20,10 @@
 using namespace cryfa;
 
 /**
- * @brief Main function
+ * @brief  Run Cryfa
+ * @param  argc  number of command line arguments
+ * @param  argv  command line arguments
+ * @return SUCCESS or FAILURE   
  */
 int main(int argc, char* argv[]) {
   try {

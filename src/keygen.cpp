@@ -10,9 +10,15 @@
 
 #include "assert.hpp"
 #include "def.hpp"
-#include "fn.hpp"
+#include "numeric.hpp"
 using namespace cryfa;
 
+/**
+ * @brief  Generate a key and save in a file
+ * @param  argc  number of command line arguments
+ * @param  argv  command line arguments
+ * @return SUCCESS or FAILURE   
+ */
 int main(int argc, char* argv[]) {
   try {
     constexpr u32 keyLen = 1024;
@@ -27,7 +33,7 @@ int main(int argc, char* argv[]) {
                  "then press 'Enter':\n";
     std::string target;
     for (char c; std::cin.get(c) && c != '\n';) {
-      assert(c == ' ', "Error: the file name has a space character.\n");
+      assert(c == ' ', "the file name has a space character.");
       target += c;
     }
 

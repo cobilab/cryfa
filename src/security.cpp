@@ -13,11 +13,13 @@
 #include <iomanip>  // setw, std::setprecision
 #include <mutex>
 
+#include "assert.hpp"
 #include "cryptopp/aes.h"
 #include "cryptopp/eax.h"
 #include "cryptopp/files.h"
 #include "cryptopp/gcm.h"
-#include "fn.hpp"
+#include "numeric.hpp"
+#include "string.hpp"
 using namespace cryfa;
 
 std::mutex mutxSec; /**< @brief Mutex */
@@ -168,8 +170,8 @@ void Security::shuffle(std::string& str) {
 
 /**
  * @brief Unshuffle
- * @param i     Shuffled std::string iterator
- * @param size  Size of shuffled std::string
+ * @param i     Shuffled string iterator
+ * @param size  Size of shuffled string
  */
 void Security::unshuffle(std::string::iterator& i, u64 size) {
   std::string shuffledStr;  // Copy of shuffled std::string

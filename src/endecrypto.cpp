@@ -128,8 +128,8 @@ void EnDecrypto::build_hash_tbl(htbl_t& map, const std::string& strIn,
 
 /**
  * @brief Build a table for unpacking
- * @param[out] unpack  Table (std::vector of strings)
- * @param[in]  strIn   The std::string including the keys
+ * @param[out] unpack  Table (vector of strings)
+ * @param[in]  strIn   The string including the keys
  * @param[in]  keyLen  Length of the keys
  */
 void EnDecrypto::build_unpack_tbl(std::vector<std::string>& unpack,
@@ -237,7 +237,7 @@ void EnDecrypto::build_unpack_tbl(std::vector<std::string>& unpack,
 byte EnDecrypto::dna_pack_idx(const std::string& key) {
   const auto found = DNA_MAP.find(key);
   if (found == DNA_MAP.end())
-    std::runtime_error("Error: key '" + key + "'not found!\n");
+    error("key \"" + key + "\" not found!");
 
   return (byte)found->second;
 }
@@ -251,7 +251,7 @@ byte EnDecrypto::dna_pack_idx(const std::string& key) {
 u16 EnDecrypto::large_pack_idx(const std::string& key, const htbl_t& map) {
   const auto found = map.find(key);
   if (found == map.end())
-    std::runtime_error("Error: key '" + key + "' not found!\n");
+    error("key \"" + key + "\" not found!");
 
   return (u16)found->second;
 }
@@ -388,8 +388,8 @@ inline void EnDecrypto::pack_large(std::string& packed,
 
 /**
  * @brief Encapsulate 3 symbols in 2 bytes, when 16 <= # <= 39. Reduction ~1/3
- * @param[out] packed  Packed std::string
- * @param[in]  strIn   Input std::string
+ * @param[out] packed  Packed string
+ * @param[in]  strIn   Input string
  * @param[in]  map     Hash table
  */
 void EnDecrypto::pack_3to2(std::string& packed, const std::string& strIn,
@@ -428,8 +428,8 @@ void EnDecrypto::pack_3to2(std::string& packed, const std::string& strIn,
 
 /**
  * @brief Encapsulate 2 symbols in 1 byte, when 7 <= # <= 15. Reduction ~1/2
- * @param[out] packed  Packed std::string
- * @param[in]  strIn   Input std::string
+ * @param[out] packed  Packed string
+ * @param[in]  strIn   Input string
  * @param[in]  map     Hash table
  */
 void EnDecrypto::pack_2to1(std::string& packed, const std::string& strIn,
@@ -453,8 +453,8 @@ void EnDecrypto::pack_2to1(std::string& packed, const std::string& strIn,
 
 /**
  * @brief Encapsulate 3 symbols in 1 byte, when # = 4, 5, 6. Reduction ~2/3
- * @param packed  Packed std::string
- * @param strIn   Input std::string
+ * @param packed  Packed string
+ * @param strIn   Input string
  * @param map     Hash table
  */
 void EnDecrypto::pack_3to1(std::string& packed, const std::string& strIn,
@@ -491,8 +491,8 @@ void EnDecrypto::pack_3to1(std::string& packed, const std::string& strIn,
 
 /**
  * @brief Encapsulate 5 symbols in 1 byte, when # = 3. Reduction ~4/5
- * @param[out] packed  Packed std::string
- * @param[in]  strIn   Input std::string
+ * @param[out] packed  Packed string
+ * @param[in]  strIn   Input string
  * @param[in]  map     Hash table
  */
 void EnDecrypto::pack_5to1(std::string& packed, const std::string& strIn,
@@ -551,8 +551,8 @@ void EnDecrypto::pack_5to1(std::string& packed, const std::string& strIn,
 
 /**
  * @brief Encapsulate 7 symbols in 1 byte, when # = 2. Reduction ~6/7
- * @param[out] packed  Packed std::string
- * @param[in]  strIn   Input std::string
+ * @param[out] packed  Packed string
+ * @param[in]  strIn   Input string
  * @param[in]  map     Hash table
  */
 void EnDecrypto::pack_7to1(std::string& packed, const std::string& strIn,
@@ -641,8 +641,8 @@ void EnDecrypto::pack_7to1(std::string& packed, const std::string& strIn,
 
 /**
  * @brief Encapsulate 1 symbol in 1 byte, when # = 1.
- * @param[out] packed  Packed std::string
- * @param[in]  strIn   Input std::string
+ * @param[out] packed  Packed string
+ * @param[in]  strIn   Input string
  * @param[in]  map     Hash table
  */
 void EnDecrypto::pack_1to1(std::string& packed, const std::string& strIn,
@@ -669,8 +669,8 @@ char EnDecrypto::penalty_sym(char c) const {
 
 /**
  * @brief Unpack by reading 2 byte by 2 byte, when # > 39
- * @param[out] out     Unpacked std::string
- * @param[in]  i       Input std::string iterator
+ * @param[out] out     Unpacked string
+ * @param[in]  i       Input string iterator
  * @param[in]  XChar   Extra character for unpacking
  * @param[in]  unpack  Table for unpacking
  */
@@ -757,8 +757,8 @@ void EnDecrypto::unpack_large(std::string& out, std::string::iterator& i,
 
 /**
  * @brief Unpack by reading 2 byte by 2 byte
- * @param[out] out     Unpacked std::string
- * @param[in]  i       Input std::string iterator
+ * @param[out] out     Unpacked string
+ * @param[in]  i       Input string iterator
  * @param[in]  unpack  Table for unpacking
  */
 void EnDecrypto::unpack_2B(std::string& out, std::string::iterator& i,
@@ -781,8 +781,8 @@ void EnDecrypto::unpack_2B(std::string& out, std::string::iterator& i,
 
 /**
  * @brief Unpack by reading 1 byte by 1 byte
- * @param[out] out     Unpacked std::string
- * @param[in]  i       Input std::string iterator
+ * @param[out] out     Unpacked string
+ * @param[in]  i       Input string iterator
  * @param[in]  unpack  Table for unpacking
  */
 void EnDecrypto::unpack_1B(std::string& out, std::string::iterator& i,
@@ -801,7 +801,7 @@ void EnDecrypto::unpack_1B(std::string& out, std::string::iterator& i,
 /**
  * @brief Unpack 1 byte to 3 DNA bases
  * @param[out] out  DNA bases
- * @param[in]  i    Input std::string iterator
+ * @param[in]  i    Input string iterator
  */
 void EnDecrypto::unpack_seq(std::string& out, std::string::iterator& i) {
   out.clear();
@@ -984,7 +984,7 @@ void EnDecrypto::unshuffle_file() {
     in.close();
     std::remove(DEC_FNAME.c_str());
   } else {
-    std::cerr << "Error: file corrupted.";
+    std::cerr << bold("Error:", "red") << " file corrupted.";
     in.close();
   }
 }

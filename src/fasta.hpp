@@ -13,12 +13,16 @@
 #include "security.hpp"
 
 namespace cryfa {
-/** @brief Packing FASTA */
+/**
+ * @brief Packing FASTA
+ */
 struct packfa_s {
   packFP_t packHdrFP; /**< @brief Points to a header packing function */
 };
 
-/** @brief Unpakcing FASTA */
+/**
+ * @brief Unpakcing FASTA
+ */
 struct unpackfa_s {
   char XChar_hdr; /**< @brief Extra char if header's length > 39 */
   pos_t begPos;   /**< @brief Begining position for each thread */

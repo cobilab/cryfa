@@ -8,14 +8,10 @@ file(GLOB CRYPTOPP_SOURCE "src/cryptopp/*.cpp")
 
 add_executable(cryfa
     ${CRYPTOPP_SOURCE}
-    src/assert.hpp
     src/cryfa.cpp
-    src/def.hpp
     src/endecrypto.cpp
     src/fasta.cpp
     src/fastq.cpp
-    src/fn.hpp
-    src/parser.hpp
     src/security.cpp)
 
 add_executable(keygen

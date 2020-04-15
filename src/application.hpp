@@ -19,7 +19,7 @@
 #include "endecrypto.hpp"
 #include "fasta.hpp"
 #include "fastq.hpp"
-#include "fn.hpp"
+#include "numeric.hpp"
 #include "parser.hpp"
 #include "security.hpp"
 // #define __STDC_FORMAT_MACROS
@@ -73,9 +73,7 @@ void application::exe_compress_encrypt() {
       crypt.shuffle_file();
       break;
     default:
-      throw std::runtime_error("Error: \"" + par.in_file +
-                               "\" is not"
-                               " a valid FASTA or FASTQ file.\n");
+      error("\"" + par.in_file + "\" is not a valid FASTA or FASTQ file.");
   }
 }
 
@@ -98,13 +96,15 @@ void application::exe_decrypt_decompress() {
       crypt.unshuffle_file();
       break;
     default:
-      throw std::runtime_error("Error: corrupted file.");
+      error("corrupted file.");
   }
   in.close();
 }
 
 /**
  * @brief Execute Cryfa
+ * @param argc  number of command line arguments
+ * @param argv  command line arguments
  */
 void application::exe(int argc, char* argv[]) {
   const char action = parse(par, argc, argv);

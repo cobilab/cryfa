@@ -15,14 +15,37 @@
 
 #include <fstream>
 
-namespace cryfa {
+#include "string.hpp"
+
+/**
+ * @brief Show error
+ * @param message  the message to be shown
+ * @param width    width of the message shown on terminal
+ */
+inline void error(std::string const& message, int width = 65) {
+  std::string msg = wrap_text("Error: " + message, "", width);
+  msg = bold(msg.substr(0, 6), "red") + msg.substr(6) + "\n";
+  throw std::runtime_error(msg);
+}
+
+/**
+ * @brief Show warning
+ * @param message  the message to be shown
+ * @param width    width of the message shown on terminal
+ */
+inline void warning(std::string const& message, int width = 65) {
+  std::string msg = wrap_text("Warning: " + message, "", width);
+  msg = bold(msg.substr(0, 8), "magenta") + msg.substr(8) + "\n";
+  std::cerr << msg;
+}
+
 /**
  * @brief Assert a condition
  * @param cond  the condition to be checked
  * @param msg   the message shown when the condition is true
  */
 inline void assert(bool cond, const std::string& msg) {
-  if (cond) throw std::runtime_error(msg);
+  if (cond) error(msg);
 }
 
 /**
@@ -33,7 +56,7 @@ inline void assert(bool cond, const std::string& msg) {
  */
 inline void assert_dual(bool cond, const std::string& msgT,
                         const std::string& msgF) {
-  throw std::runtime_error(cond ? msgT : msgF);
+  error(cond ? msgT : msgF);
 }
 
 /**
@@ -46,11 +69,9 @@ inline void assert_file_good(const std::string& fname,
   std::ifstream in(fname);
   if (!in.good() || in.peek() == EOF) {
     in.close();
-    assert_dual(msg.empty(), "Error opening the file \"" + fname + "\".\n",
-                msg);
+    assert_dual(msg.empty(), "failed opening the file \"" + fname + "\".", msg);
   }
   in.close();
 }
-}  // namespace cryfa
 
 #endif  // CRYFA_ASSERT_H
