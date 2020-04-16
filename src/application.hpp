@@ -62,11 +62,9 @@ class application {
 void application::exe_compress_encrypt() {
   switch (par.format) {
     case 'A':
-      std::cerr << "Compacting...\n";
       fa.compress();
       break;
     case 'Q':
-      // std::cerr << "Compacting...\n";
       fq.compress();
       break;
     case 'n':
@@ -85,11 +83,11 @@ void application::exe_decrypt_decompress() {
   std::ifstream in(DEC_FNAME);
   switch (in.peek()) {
     case (char)127:
-      std::cerr << "Decompressing...\n";
+      // std::cerr << "Decompressing...\n";
       fa.decompress();
       break;
     case (char)126:
-      std::cerr << "Decompressing...\n";
+      // std::cerr << "Decompressing...\n";
       fq.decompress();
       break;
     case (char)125:

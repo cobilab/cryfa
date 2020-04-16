@@ -69,7 +69,7 @@ inline void assert_file_good(const std::string& fname,
   std::ifstream in(fname);
   if (!in.good() || in.peek() == EOF) {
     in.close();
-    assert_dual(msg.empty(), "failed opening the file \"" + fname + "\".", msg);
+    assert_dual(msg.empty(), "failed opening \"" + fname + "\".", msg);
   }
   in.close();
 }

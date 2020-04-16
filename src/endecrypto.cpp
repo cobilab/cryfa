@@ -16,6 +16,8 @@
 #include <thread>
 
 #include "assert.hpp"
+#include "file.hpp"
+#include "time.hpp"
 using namespace cryfa;
 
 std::mutex mutxEnDe; /**< @brief Mutex */
@@ -236,8 +238,7 @@ void EnDecrypto::build_unpack_tbl(std::vector<std::string>& unpack,
  */
 byte EnDecrypto::dna_pack_idx(const std::string& key) {
   const auto found = DNA_MAP.find(key);
-  if (found == DNA_MAP.end())
-    error("key \"" + key + "\" not found!");
+  if (found == DNA_MAP.end()) error("key \"" + key + "\" not found!");
 
   return (byte)found->second;
 }
@@ -250,8 +251,7 @@ byte EnDecrypto::dna_pack_idx(const std::string& key) {
  */
 u16 EnDecrypto::large_pack_idx(const std::string& key, const htbl_t& map) {
   const auto found = map.find(key);
-  if (found == map.end())
-    error("key \"" + key + "\" not found!");
+  if (found == map.end()) error("key \"" + key + "\" not found!");
 
   return (u16)found->second;
 }
@@ -872,11 +872,11 @@ void EnDecrypto::unpack_seq(std::string& out, std::string::iterator& i) {
  * @brief Shuffle a file (not FASTA/FASTQ)
  */
 void EnDecrypto::shuffle_file() {
-  std::cerr << "This is not a FASTA/FASTQ file and we just encrypt it.\n";
+  std::cerr << "\"" << file_name(in_file)
+            << "\" isn't FASTA/FASTQ. We just encrypt it.\n";
 
   if (!stop_shuffle) {
-    const auto start =
-        std::chrono::high_resolution_clock::now();  // Start timer
+    const auto start = now();  // Start timer
     std::thread arrThread[n_threads];
 
     // Distribute file among threads, for shuffling
@@ -888,12 +888,9 @@ void EnDecrypto::shuffle_file() {
     // Join partially shuffled files
     join_shuffled_files();
 
-    const auto finish =
-        std::chrono::high_resolution_clock::now();           // Stop timer
-    std::chrono::duration<double> elapsed = finish - start;  // sec
-
-    std::cerr << (verbose ? "Shuffling done" : "Done") << ", in " << std::fixed
-              << std::setprecision(4) << elapsed.count() << " seconds.\n";
+    const auto finish = now();  // Stop timer
+    std::cerr << "\r" << bold("[+]") << " Shuffling done in "
+              << hms(finish - start);
   } else {
     std::ifstream inFile(in_file);
     std::ofstream pckdFile(PCKD_FNAME);
@@ -927,7 +924,10 @@ void EnDecrypto::shuffle_block(byte threadID) {
     // Shuffle
     if (!stop_shuffle) {
       mutxEnDe.lock();  //--------------------------------------------------
-      if (shuffInProg) std::cerr << "Shuffling...\n";
+      if (shuffInProg) {
+        std::cerr << bold("[+]") << " Shuffling ...";
+        shuffle_timer = now();
+      }
       shuffInProg = false;
       mutxEnDe.unlock();  //------------------------------------------------
 
@@ -955,8 +955,7 @@ void EnDecrypto::unshuffle_file() {
   if (c == (char)128) {
     in.close();
 
-    const auto start =
-        std::chrono::high_resolution_clock::now();  // Start timer
+    const auto start = now();  // Start timer
     std::thread arrThread[n_threads];
 
     // Distribute file among threads, for unshuffling
@@ -971,13 +970,9 @@ void EnDecrypto::unshuffle_file() {
     // Join partially unshuffled files
     join_unshuffled_files();
 
-    const auto finish =
-        std::chrono::high_resolution_clock::now();           // Stop timer
-    std::chrono::duration<double> elapsed = finish - start;  // sec
-
-    std::cerr << (verbose ? "Unshuffling done" : "Done") << ", in "
-              << std::fixed << std::setprecision(4) << elapsed.count()
-              << " seconds.\n";
+    const auto finish = now();  // Stop timer
+    std::cerr << "\r" << bold("[+]") << " Unshuffling done in "
+              << hms(finish - start);
   } else if (c == (char)129) {
     std::cout << in.rdbuf();
 
@@ -1011,7 +1006,10 @@ void EnDecrypto::unshuffle_block(byte threadID) {
     // Unshuffle
     if (shuffled) {
       mutxEnDe.lock();  //--------------------------------------------------
-      if (shuffInProg) std::cerr << "Unshuffling...\n";
+      if (shuffInProg) {
+        std::cerr << bold("[+]") << " Unshuffling ...";
+        shuffle_timer = now();
+      }
       shuffInProg = false;
       mutxEnDe.unlock();  //------------------------------------------------
 

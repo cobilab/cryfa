@@ -9,6 +9,8 @@
 #ifndef CRYFA_ENDECRYPTO_H
 #define CRYFA_ENDECRYPTO_H
 
+#include <chrono>
+
 #include "security.hpp"
 
 namespace cryfa {
@@ -50,6 +52,7 @@ class EnDecrypto : public Security {
   htbl_t HdrMap;     /**< @brief Hdrs hash table */
   htbl_t QsMap;      /**< @brief QSs hash table */
   u32 BlockLine;     /**< @brief Max block lines */
+  std::chrono::time_point<std::chrono::high_resolution_clock> shuffle_timer;
 
   void build_hash_tbl(htbl_t&, const std::string&, short);
   void build_unpack_tbl(std::vector<std::string>&, const std::string&, u16);

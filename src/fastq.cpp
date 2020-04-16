@@ -13,6 +13,9 @@
 #include <iomanip>  // setw, std::setprecision
 #include <mutex>
 #include <thread>
+
+#include "string.hpp"
+#include "time.hpp"
 using namespace cryfa;
 
 std::mutex mutxFQ; /**< @brief Mutex */
@@ -45,24 +48,21 @@ bool Fastq::has_just_plus() const {
  * @brief Compress
  */
 void Fastq::compress() {
-  if (verbose) {
-    std::cerr << "Compacting...\n";
-  } else {
-    std::cerr << "[+] Compacting ...";
-  }
-
-  const auto start = std::chrono::high_resolution_clock::now();  // Start timer
+  if (!verbose) std::cerr << bold("[+]") << " Compacting ...";
+  const auto start = now();  // Start timer
   std::thread arrThread[n_threads];
   std::string headers, qscores;
   packfq_s pkStruct;  // Collection of inputs to pass to pack...
 
-  if (verbose) std::cerr << "Calculating number of different characters...\n";
+  if (verbose)
+    std::cerr << bold("[+]") << " Calculating no. unique characters ...";
   // Gather different chars and max length in all headers and quality scores
   gather_h_q(headers, qscores);
   // Show number of different chars in headers and qs -- Ignore '@'=64 in hdr
   if (verbose)
-    std::cerr << "In headers, they are " << headers.length() << ".\n"
-              << "In quality scores, they are " << qscores.length() << ".\n";
+    std::cerr << "\r" << bold("[+]") << " No. unique characters: headers => "
+              << headers.length() << ", qscores => " << qscores.length()
+              << "\n";
 
   // Set Hash table and pack function
   set_hashTbl_packFn(pkStruct, headers, qscores);
@@ -73,26 +73,18 @@ void Fastq::compress() {
   for (auto& thr : arrThread)
     if (thr.joinable()) thr.join();
 
-  if (verbose) std::cerr << "Shuffling done!\n";
+  if (verbose){
+    std::cerr << "\r" << bold("[+]") << " Shuffling done in "
+              << hms(now() - shuffle_timer);
+    std::cerr << bold("[+]") << " Compacting ...";
+  }
 
   // Join partially packed and/or shuffled files
   join_packed_files(headers, qscores, 'Q', has_just_plus());
 
-  const auto finish = std::chrono::high_resolution_clock::now();  // Stop timer
-  std::chrono::duration<double> elapsed = finish - start;         // Dur. (sec)
-
-  // std::cerr << (verbose ? "Compaction done" : "Done") << ", in " <<
-  // std::fixed
-  //           << std::setprecision(4) << elapsed.count() << " seconds.\n";
-
-  if (verbose) {
-    std::cerr << "Compaction done"
-              << ", in " << std::fixed << std::setprecision(4)
-              << elapsed.count() << " seconds.\n";
-  } else {
-    std::cerr << "\r[+] Compacting done in " << std::fixed
-              << std::setprecision(3) << elapsed.count() << " seconds.\n";
-  }
+  const auto finish = now();  // Stop timer
+  std::cerr << "\r" << bold("[+]") << " Compacting done in "
+            << hms(finish - start);
 
   // Cout encrypted content
   encrypt();
@@ -213,7 +205,10 @@ void Fastq::pack(const packfq_s& pkStruct, byte threadID) {
     // shuffle
     if (!stop_shuffle) {
       mutxFQ.lock();  //----------------------------------------------------
-      if (verbose && shuffInProg) std::cerr << "Shuffling...\n";
+      if (verbose && shuffInProg) {
+        std::cerr << bold("[+]") << " Shuffling ...";
+        shuffle_timer = now();
+      }
       shuffInProg = false;
       mutxFQ.unlock();  //--------------------------------------------------
 
@@ -284,7 +279,9 @@ void Fastq::gather_h_q(std::string& headers, std::string& qscores) {
  * @brief Decompress
  */
 void Fastq::decompress() {
-  const auto start = std::chrono::high_resolution_clock::now();  // Start timer
+  if (!verbose) std::cerr << bold("[+]") << " Decompressing ...";
+  const auto start = now();  // Start timer
+
   char c;  // Chars in file
   std::string headers, qscores;
   unpackfq_s upkStruct;  // Collection of inputs to pass to unpack...
@@ -294,16 +291,16 @@ void Fastq::decompress() {
   in.ignore(1);  // Jump over decText[0]==(char) 126
   in.get(c);
   shuffled = (c == (char)128);  // Check if file had been shuffled
+  if (verbose)
+    std::cerr << bold("[+]") << " Extracting no. unique characters ...";
   while (in.get(c) && c != (char)254) headers += c;
   while (in.get(c) && c != '\n' && c != (char)253) qscores += c;
-  if (c == '\n') justPlus = false;  // If 3rd line is just +
-
   // Show number of different chars in headers and qs -- ignore '@'=64
   if (verbose)
-    std::cerr << headers.length()
-              << " different characters are included in headers.\n"
-              << qscores.length()
-              << " different characters are included in quality scores.\n";
+    std::cerr << "\r" << bold("[+]") << " No. unique characters: headers => "
+              << headers.length() << ", qscores => " << qscores.length()
+              << "\n";
+  if (c == '\n') justPlus = false;  // If 3rd line is just +
 
   // Header -- Set unpack table and unpack function
   set_unpackTbl_unpackFn(upkStruct, headers, qscores);
@@ -339,7 +336,11 @@ void Fastq::decompress() {
   for (auto& thr : arrThread)
     if (thr.joinable()) thr.join();
 
-  if (verbose) std::cerr << "Unshuffling done!\n";
+  if (verbose) {
+    std::cerr << "\r" << bold("[+]") << " Unshuffling done in "
+              << hms(now() - shuffle_timer);
+    std::cerr << bold("[+]") << " Decompressing ...";
+  }
 
   // Close/delete decrypted file
   in.close();
@@ -349,12 +350,9 @@ void Fastq::decompress() {
   // Join partially unpacked files
   join_unpacked_files();
 
-  const auto finish = std::chrono::high_resolution_clock::now();  // Stop timer
-  std::chrono::duration<double> elapsed = finish - start;         // Dur. (sec)
-
-  std::cerr << (verbose ? "Decompression done," : "Done,") << " in "
-            << std::fixed << std::setprecision(4) << elapsed.count()
-            << " seconds.\n";
+  const auto finish = now();  // Stop timer
+  std::cerr << "\r" << bold("[+]") << " Decompressing done in "
+            << hms(finish - start);
 }
 
 /**
@@ -479,7 +477,10 @@ void Fastq::unpack_hS_qS(const unpackfq_s& upkStruct, byte threadID) {
     // Unshuffle
     if (shuffled) {
       mutxFQ.lock();  //----------------------------------------------------
-      if (verbose && shuffInProg) std::cerr << "Unshuffling...\n";
+      if (verbose && shuffInProg) {
+        std::cerr << bold("[+]") << " Unshuffling ...";
+        shuffle_timer = now();
+      }
       shuffInProg = false;
       mutxFQ.unlock();  //--------------------------------------------------
 
@@ -554,7 +555,10 @@ void Fastq::unpack_hS_qL(const unpackfq_s& upkStruct, byte threadID) {
     // Unshuffle
     if (shuffled) {
       mutxFQ.lock();  //----------------------------------------------------
-      if (verbose && shuffInProg) std::cerr << "Unshuffling...\n";
+      if (verbose && shuffInProg) {
+        std::cerr << bold("[+]") << " Unshuffling ...";
+        shuffle_timer = now();
+      }
       shuffInProg = false;
       mutxFQ.unlock();  //--------------------------------------------------
 
@@ -629,7 +633,10 @@ void Fastq::unpack_hL_qS(const unpackfq_s& upkStruct, byte threadID) {
     // Unshuffle
     if (shuffled) {
       mutxFQ.lock();  //----------------------------------------------------
-      if (verbose && shuffInProg) std::cerr << "Unshuffling...\n";
+      if (verbose && shuffInProg) {
+        std::cerr << bold("[+]") << " Unshuffling ...";
+        shuffle_timer = now();
+      }
       shuffInProg = false;
       mutxFQ.unlock();  //--------------------------------------------------
 
@@ -703,7 +710,10 @@ void Fastq::unpack_hL_qL(const unpackfq_s& upkStruct, byte threadID) {
     // Unshuffle
     if (shuffled) {
       mutxFQ.lock();  //----------------------------------------------------
-      if (verbose && shuffInProg) std::cerr << "Unshuffling...\n";
+      if (verbose && shuffInProg) {
+        std::cerr << bold("[+]") << " Unshuffling ...";
+        shuffle_timer = now();
+      }
       shuffInProg = false;
       mutxFQ.unlock();  //--------------------------------------------------
 

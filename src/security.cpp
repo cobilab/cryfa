@@ -20,6 +20,7 @@
 #include "cryptopp/gcm.h"
 #include "numeric.hpp"
 #include "string.hpp"
+#include "time.hpp"
 using namespace cryfa;
 
 std::mutex mutxSec; /**< @brief Mutex */
@@ -33,12 +34,8 @@ std::mutex mutxSec; /**< @brief Mutex */
  *          DEFAULT_KEYLENGTH = 16 bytes.
  */
 void Security::encrypt() {
-  if (verbose) {
-    std::cerr << "Encrypting...\n";
-  } else {
-    std::cerr << bold("[+]") << " Encrypting ...";
-  }
-  const auto start = std::chrono::high_resolution_clock::now();  // Start timer
+  std::cerr << bold("[+]") << " Encrypting ...";
+  const auto start = now();  // Start timer
 
   byte key[CryptoPP::AES::DEFAULT_KEYLENGTH], iv[CryptoPP::AES::BLOCKSIZE];
   std::memset(key, 0x00, (size_t)CryptoPP::AES::DEFAULT_KEYLENGTH);  // AES key
@@ -63,18 +60,9 @@ void Security::encrypt() {
     std::cerr << "Caught Exception...\n" << e.what() << "\n";
   }
 
-  const auto finish = std::chrono::high_resolution_clock::now();  // Stop timer
-  std::chrono::duration<double> elapsed = finish - start;         // Dur. (sec)
-  // std::cerr << (verbose ? "Encryption done," : "Done,") << " in " << std::fixed
-  //           << std::setprecision(4) << elapsed.count() << " seconds.\n";
-  if (verbose) {
-    std::cerr << "Encryption done,"
-              << " in " << std::fixed << std::setprecision(4) << elapsed.count()
-              << " seconds.\n";
-  } else {
-    std::cerr << "\r" << bold("[+]") << " Encrypting done in " << std::fixed
-              << std::setprecision(3) << elapsed.count() << " seconds.\n";
-  }
+  const auto finish = now();  // Stop timer
+  std::cerr << "\r" << bold("[+]") << " Encrypting done in "
+            << hms(finish - start);
 
   // Delete packed file
   const std::string pkdFileName = PCKD_FNAME;
@@ -90,10 +78,10 @@ void Security::encrypt() {
  *          DEFAULT_KEYLENGTH = 16 bytes.
  */
 void Security::decrypt() {
-  assert_file_good(in_file, "Error: failed opening \"" + in_file + "\".\n");
+  assert_file_good(in_file);
 
-  std::cerr << "Decrypting...\n";
-  const auto start = std::chrono::high_resolution_clock::now();  // Start timer
+  std::cerr << bold("[+]") << " Decrypting ...";
+  const auto start = now();  // Start timer
 
   byte key[CryptoPP::AES::DEFAULT_KEYLENGTH], iv[CryptoPP::AES::BLOCKSIZE];
   std::memset(key, 0x00, (size_t)CryptoPP::AES::DEFAULT_KEYLENGTH);  // AES key
@@ -125,10 +113,9 @@ void Security::decrypt() {
     std::cerr << "Caught Exception...\n" << e.what() << "\n";
   }
 
-  const auto finish = std::chrono::high_resolution_clock::now();  // Stop timer
-  std::chrono::duration<double> elapsed = finish - start;         // Dur. (sec)
-  std::cerr << (verbose ? "Decryption done," : "Done,") << " in " << std::fixed
-            << std::setprecision(4) << elapsed.count() << " seconds.\n";
+  const auto finish = now();  // Stop timer
+  std::cerr << "\r" << bold("[+]") << " Decrypting done in "
+            << hms(finish - start);
 }
 
 /**

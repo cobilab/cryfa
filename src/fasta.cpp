@@ -13,6 +13,9 @@
 #include <iomanip>  // setw, std::setprecision
 #include <mutex>
 #include <thread>
+
+#include "string.hpp"
+#include "time.hpp"
 using namespace cryfa;
 
 std::mutex mutxFA; /**< @brief Mutex */
@@ -21,17 +24,20 @@ std::mutex mutxFA; /**< @brief Mutex */
  * @brief Compress
  */
 void Fasta::compress() {
-  const auto start = std::chrono::high_resolution_clock::now();  // Start timer
+  if (!verbose) std::cerr << bold("[+]") << " Compacting ...";
+  const auto start = now();  // Start timer
   std::thread arrThr[n_threads];
   std::string headers;
   packfa_s pkStruct;  // Collection of inputs to pass to pack...
 
-  if (verbose) std::cerr << "Calculating number of different characters...\n";
+  if (verbose)
+    std::cerr << bold("[+]") << " Calculating no. unique characters ...";
   // Gather different chars in all headers and max length in all bases
   gather_h_bs(headers);
   // Show number of different chars in headers -- ignore '>'=62
   if (verbose)
-    std::cerr << "In headers, they are " << headers.length() << ".\n";
+    std::cerr << "\r" << bold("[+]") << " No. unique characters: headers => "
+              << headers.length() << "   \n";
 
   // Set Hash table and pack function
   set_hashTbl_packFn(pkStruct, headers);
@@ -42,16 +48,18 @@ void Fasta::compress() {
   for (auto& thr : arrThr)
     if (thr.joinable()) thr.join();
 
-  if (verbose) std::cerr << "Shuffling done!\n";
+  if (verbose){
+    std::cerr << "\r" << bold("[+]") << " Shuffling done in "
+              << hms(now() - shuffle_timer);
+    std::cerr << bold("[+]") << " Compacting ...";
+  }
 
   // Join partially packed and/or shuffled files
   join_packed_files(headers, "", 'A', false);
 
-  const auto finish = std::chrono::high_resolution_clock::now();  // Stop timer
-  std::chrono::duration<double> elapsed = finish - start;         // Dur. (sec)
-
-  std::cerr << (verbose ? "Compaction done" : "Done") << ", in " << std::fixed
-            << std::setprecision(4) << elapsed.count() << " seconds.\n";
+  const auto finish = now();  // Stop timer
+  std::cerr << "\r" << bold("[+]") << " Compacting done in "
+            << hms(finish - start);
 
   // Cout encrypted content
   encrypt();
@@ -157,7 +165,10 @@ void Fasta::pack(const packfa_s& pkStruct, byte threadID) {
     // Shuffle
     if (!stop_shuffle) {
       mutxFA.lock();  //----------------------------------------------------
-      if (verbose && shuffInProg) std::cerr << "Shuffling...\n";
+      if (verbose && shuffInProg) {
+        std::cerr << bold("[+]") << " Shuffling ...";
+        shuffle_timer = now();
+      }
       shuffInProg = false;
       mutxFA.unlock();  //--------------------------------------------------
 
@@ -218,7 +229,9 @@ void Fasta::gather_h_bs(std::string& headers) {
  * @brief Decompress
  */
 void Fasta::decompress() {
-  const auto start = std::chrono::high_resolution_clock::now();  // Start timer
+  if (!verbose) std::cerr << bold("[+]") << " Decompressing ...";
+  const auto start = now();  // Start timer
+
   char c;  // Chars in file
   std::string headers;
   unpackfa_s upkStruct;  // Collection of inputs to pass to unpack...
@@ -228,11 +241,12 @@ void Fasta::decompress() {
   in.ignore(1);  // Jump over decText[0]==(char) 127
   in.get(c);
   shuffled = (c == (char)128);  // Check if file had been shuffled
+  if (verbose)
+    std::cerr << bold("[+]") << " Extracting no. unique characters ...";
   while (in.get(c) && c != (char)254) headers += c;
-
   if (verbose)  // Show number of different chars in headers -- Ignore '>'=62
-    std::cerr << headers.length()
-              << " different characters are included in headers.\n";
+    std::cerr << "\r" << bold("[+]") << " No. unique characters: headers => "
+              << headers.length() << "    \n";
 
   // Header -- Set unpack table and unpack function
   set_unpackTbl_unpackFn(upkStruct, headers);
@@ -265,7 +279,11 @@ void Fasta::decompress() {
   for (auto& thr : arrThread)
     if (thr.joinable()) thr.join();
 
-  if (verbose) std::cerr << "Unshuffling done!\n";
+  if (verbose) {
+    std::cerr << "\r" << bold("[+]") << " Unshuffling done in "
+              << hms(now() - shuffle_timer);
+    std::cerr << bold("[+]") << " Decompressing ...";
+  }
 
   // Close/delete decrypted file
   in.close();
@@ -275,12 +293,9 @@ void Fasta::decompress() {
   // Join partially unpacked files
   join_unpacked_files();
 
-  const auto finish = std::chrono::high_resolution_clock::now();  // Stop timer
-  std::chrono::duration<double> elapsed = finish - start;         // Dur. (sec)
-
-  std::cerr << (verbose ? "Decompression done" : "Done") << ", in "
-            << std::fixed << std::setprecision(4) << elapsed.count()
-            << " seconds.\n";
+  const auto finish = now();  // Stop timer
+  std::cerr << "\r" << bold("[+]") << " Decompressing done in "
+            << hms(finish - start);
 }
 
 /**
@@ -356,7 +371,10 @@ void Fasta::unpack_hS(const unpackfa_s& upkStruct, byte threadID) {
     // Unshuffle
     if (shuffled) {
       mutxFA.lock();  //----------------------------------------------------
-      if (verbose && shuffInProg) std::cerr << "Unshuffling...\n";
+      if (verbose && shuffInProg) {
+        std::cerr << bold("[+]") << " Unshuffling ...";
+        shuffle_timer = now();
+      }
       shuffInProg = false;
       mutxFA.unlock();  //--------------------------------------------------
 
@@ -421,7 +439,10 @@ void Fasta::unpack_hL(const unpackfa_s& upkStruct, byte threadID) {
     // Unshuffle
     if (shuffled) {
       mutxFA.lock();  //----------------------------------------------------
-      if (verbose && shuffInProg) std::cerr << "Unshuffling...\n";
+      if (verbose && shuffInProg) {
+        std::cerr << bold("[+]") << " Unshuffling ...";
+        shuffle_timer = now();
+      }
       shuffInProg = false;
       mutxFA.unlock();  //--------------------------------------------------
 

@@ -1,13 +1,13 @@
 /**
- * @file      fn.hpp
- * @brief     Global functions
+ * @file      numeric.hpp
+ * @brief     numerical functions
  * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
  * @author    Diogo Pratas      (pratas@ua.pt)
  * @copyright The GNU General Public License v3.0
  */
 
-#ifndef CRYFA_FN_HPP
-#define CRYFA_FN_HPP
+#ifndef CRYFA_NUMERIC_HPP
+#define CRYFA_NUMERIC_HPP
 
 #include <algorithm>
 #include <fstream>
@@ -65,4 +65,4 @@ inline bool is_number(const std::string& s) {
                       [](char c) { return !std::isdigit(c); }) == s.end();
 }
 
-#endif  // CRYFA_FN_HPP
+#endif  // CRYFA_NUMERIC_HPP
