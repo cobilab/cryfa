@@ -52,7 +52,6 @@ class application {
 
  public:
   application() = default;
-
   void exe(int, char**);
 };
 
@@ -83,11 +82,9 @@ void application::exe_decrypt_decompress() {
   std::ifstream in(DEC_FNAME);
   switch (in.peek()) {
     case (char)127:
-      // std::cerr << "Decompressing...\n";
       fa.decompress();
       break;
     case (char)126:
-      // std::cerr << "Decompressing...\n";
       fq.decompress();
       break;
     case (char)125:

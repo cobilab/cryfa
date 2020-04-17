@@ -62,11 +62,6 @@ struct POWER<B, 0> {
   LOOP(i, S) LOOP(j, S) LOOP6(k, l, m, n, o, p, S)
 #define IGNORE_THIS_LINE(in) \
   (in).ignore(std::numeric_limits<std::streamsize>::max(), '\n')
-#define REWIND(in)                \
-  {                               \
-    (in).clear();                 \
-    (in).seekg(0, std::ios::beg); \
-  }
 
 // Constants
 static const std::string THR_ID_HDR = "THRD=";  /**< @brief Thread ID header */
@@ -81,7 +76,7 @@ static const std::string UPK_FNAME =
 static const std::string USH_FNAME =
     "CRYFA_USH";                     /**< @brief Unshuffled file name*/
 constexpr byte DEF_N_THR = 8;        /**< @brief Default number of threads */
-constexpr u64 BLOCK_SIZE = 8 * 1024; /**< @brief To read from input file*/
+constexpr u64 BLOCK_SIZE = 8 * 1024; /**< @brief To read/write from/to file */
 constexpr byte C1 = 2;               /**< @brief       Cat 1  =  2 */
 constexpr byte C2 = 3;               /**< @brief       Cat 2  =  3 */
 constexpr byte MIN_C3 = 4;           /**< @brief  4 <= Cat 3 <=  6 */

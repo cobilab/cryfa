@@ -57,9 +57,12 @@ int main(int argc, char* argv[]) {
 
     std::ofstream keyFile(target);
     keyFile << key;
+    keyFile.close();
   } catch (std::exception& e) {
     std::cerr << e.what();
   } catch (...) {
     return EXIT_FAILURE;
   }
+
+  return 0;
 }

@@ -238,7 +238,6 @@ char parse(Param& par, int argc, char** argv) {
   for (auto i = vArgs.begin(); i != vArgs.end(); ++i) {
     if (*i == "-v" || *i == "--verbose") {
       par.verbose = true;
-      // std::cerr << "Verbose mode on.\n";
     } else if ((*i == "-t" || *i == "--thread") && i + 1 != vArgs.end() &&
                (*(i + 1))[0] != '-' && is_number(*(i + 1)))
       par.n_threads = static_cast<byte>(stoi(*++i));

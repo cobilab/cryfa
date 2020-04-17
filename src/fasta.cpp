@@ -26,6 +26,7 @@ std::mutex mutxFA; /**< @brief Mutex */
 void Fasta::compress() {
   if (!verbose) std::cerr << bold("[+]") << " Compacting ...";
   const auto start = now();  // Start timer
+
   std::thread arrThr[n_threads];
   std::string headers;
   packfa_s pkStruct;  // Collection of inputs to pass to pack...
@@ -48,7 +49,7 @@ void Fasta::compress() {
   for (auto& thr : arrThr)
     if (thr.joinable()) thr.join();
 
-  if (verbose){
+  if (verbose) {
     std::cerr << "\r" << bold("[+]") << " Shuffling done in "
               << hms(now() - shuffle_timer);
     std::cerr << bold("[+]") << " Compacting ...";
@@ -117,7 +118,6 @@ void Fasta::pack(const packfa_s& pkStruct, byte threadID) {
   std::ifstream in(in_file);
   std::string line, context, seq;
   std::ofstream pkfile(PK_FNAME + std::to_string(threadID), std::ios_base::app);
-
   // Lines ignored at the beginning
   for (u64 l = (u64)threadID * BlockLine; l--;) IGNORE_THIS_LINE(in);
 
@@ -355,6 +355,9 @@ void Fasta::unpack_hS(const unpackfa_s& upkStruct, byte threadID) {
   std::ofstream upkfile(UPK_FNAME + std::to_string(threadID),
                         std::ios_base::app);
   std::string upkhdrOut, upkSeqOut;
+  std::string content;
+  content.reserve(BLOCK_SIZE);
+  auto write_content = [&]() { upkfile << content; };
 
   while (in.peek() != EOF) {
     char c;
@@ -380,15 +383,15 @@ void Fasta::unpack_hS(const unpackfa_s& upkStruct, byte threadID) {
 
       unshuffle(i, chunkSize);
     }
-
-    upkfile << THR_ID_HDR + std::to_string(threadID) << '\n';
+    // todo
+    content += THR_ID_HDR + std::to_string(threadID) + "\n";
     do {
       if (*i == (char)253) {  // Hdr
         (this->*unpackHdr)(upkhdrOut, ++i, upkStruct.hdrUnpack);
-        upkfile << '>' << upkhdrOut << '\n';
+        content += ">" + upkhdrOut + "\n";
       } else {  // Seq
         unpack_seq(upkSeqOut, i);
-        upkfile << upkSeqOut << '\n';
+        content += upkSeqOut + "\n";
       }
     } while (++i != decText.end());  // If trouble: change "!=" to "<"
 
@@ -405,7 +408,14 @@ void Fasta::unpack_hS(const unpackfa_s& upkStruct, byte threadID) {
         endPos = begPos + (pos_t)chunkSize;
       }
     }
+
+    if (content.size() >= BLOCK_SIZE) {
+      write_content();
+      content.clear();
+      content.reserve(BLOCK_SIZE);
+    }
   }
+  write_content();
 
   upkfile.close();
   in.close();
@@ -423,6 +433,9 @@ void Fasta::unpack_hL(const unpackfa_s& upkStruct, byte threadID) {
   std::ofstream upkfile(UPK_FNAME + std::to_string(threadID),
                         std::ios_base::app);
   std::string upkHdrOut, upkSeqOut;
+  std::string content;
+  content.reserve(BLOCK_SIZE);
+  auto write_content = [&]() { upkfile << content; };
 
   while (in.peek() != EOF) {
     char c;
@@ -449,14 +462,14 @@ void Fasta::unpack_hL(const unpackfa_s& upkStruct, byte threadID) {
       unshuffle(i, chunkSize);
     }
 
-    upkfile << THR_ID_HDR + std::to_string(threadID) << '\n';
+    content += THR_ID_HDR + std::to_string(threadID) + "\n";
     do {
       if (*i == (char)253) {  // Hdr
         unpack_large(upkHdrOut, ++i, upkStruct.XChar_hdr, upkStruct.hdrUnpack);
-        upkfile << '>' << upkHdrOut << '\n';
+        content += ">" + upkHdrOut + "\n";
       } else {  // Seq
         unpack_seq(upkSeqOut, i);
-        upkfile << upkSeqOut << '\n';
+        content += upkSeqOut + "\n";
       }
     } while (++i != decText.end());  // If trouble: change "!=" to "<"
 
@@ -473,7 +486,14 @@ void Fasta::unpack_hL(const unpackfa_s& upkStruct, byte threadID) {
         endPos = begPos + (pos_t)chunkSize;
       }
     }
+
+    if (content.size() >= BLOCK_SIZE) {
+      write_content();
+      content.clear();
+      content.reserve(BLOCK_SIZE);
+    }
   }
+  write_content();
 
   upkfile.close();
   in.close();

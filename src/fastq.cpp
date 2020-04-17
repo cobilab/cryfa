@@ -73,7 +73,7 @@ void Fastq::compress() {
   for (auto& thr : arrThread)
     if (thr.joinable()) thr.join();
 
-  if (verbose){
+  if (verbose) {
     std::cerr << "\r" << bold("[+]") << " Shuffling done in "
               << hms(now() - shuffle_timer);
     std::cerr << bold("[+]") << " Compacting ...";
@@ -461,6 +461,9 @@ void Fastq::unpack_hS_qS(const unpackfq_s& upkStruct, byte threadID) {
   std::ofstream upkfile(UPK_FNAME + std::to_string(threadID),
                         std::ios_base::app);
   std::string upkHdrOut, upkSeqOut, upkQsOut;
+  std::string content;
+  content.reserve(BLOCK_SIZE);
+  auto write_content = [&]() { upkfile << content; };
 
   while (in.peek() != EOF) {
     char c;
@@ -487,23 +490,24 @@ void Fastq::unpack_hS_qS(const unpackfq_s& upkStruct, byte threadID) {
       unshuffle(i, chunkSize);
     }
 
-    upkfile << THR_ID_HDR + std::to_string(threadID) << '\n';
+    content += THR_ID_HDR + std::to_string(threadID) + "\n";
     do {
-      upkfile << '@';
+      content += '@';
       std::string plusMore;
 
       (this->*unpackHdr)(upkHdrOut, i, upkStruct.hdrUnpack);
-      upkfile << (plusMore = upkHdrOut) << '\n';
+      plusMore = upkHdrOut;
+      content += upkHdrOut + "\n";
       ++i;  // Hdr
 
       unpack_seq(upkSeqOut, i);
-      upkfile << upkSeqOut << '\n';  // Seq
+      content += upkSeqOut + "\n";  // Seq
 
-      upkfile << (justPlus ? "+" : "+" + plusMore) << '\n';
+      content += (justPlus ? "+" : "+" + plusMore) + "\n";
       ++i;  // +
 
       (this->*unpackQS)(upkQsOut, i, upkStruct.qsUnpack);
-      upkfile << upkQsOut << '\n';   // Qs
+      content += upkQsOut + "\n";    // Qs
     } while (++i != decText.end());  // If trouble: change "!=" to "<"
 
     // Update the chunk size and positions (beg & end)
@@ -519,7 +523,14 @@ void Fastq::unpack_hS_qS(const unpackfq_s& upkStruct, byte threadID) {
         endPos = begPos + (pos_t)chunkSize;
       }
     }
+
+    if (content.size() >= BLOCK_SIZE) {
+      write_content();
+      content.clear();
+      content.reserve(BLOCK_SIZE);
+    }
   }
+  write_content();
 
   upkfile.close();
   in.close();
@@ -539,6 +550,9 @@ void Fastq::unpack_hS_qL(const unpackfq_s& upkStruct, byte threadID) {
   std::ofstream upkfile(UPK_FNAME + std::to_string(threadID),
                         std::ios_base::app);
   std::string upkHdrOut, upkSeqOut, upkQsOut;
+  std::string content;
+  content.reserve(BLOCK_SIZE);
+  auto write_content = [&]() { upkfile << content; };
 
   while (in.peek() != EOF) {
     char c;
@@ -565,23 +579,24 @@ void Fastq::unpack_hS_qL(const unpackfq_s& upkStruct, byte threadID) {
       unshuffle(i, chunkSize);
     }
 
-    upkfile << THR_ID_HDR + std::to_string(threadID) << '\n';
+    content += THR_ID_HDR + std::to_string(threadID) + "\n";
     do {
-      upkfile << '@';
+      content += '@';
       std::string plusMore;
 
       (this->*unpackHdr)(upkHdrOut, i, upkStruct.hdrUnpack);
-      upkfile << (plusMore = upkHdrOut) << '\n';
+      plusMore = upkHdrOut;
+      content += upkHdrOut + "\n";
       ++i;  // Hdr
 
       unpack_seq(upkSeqOut, i);
-      upkfile << upkSeqOut << '\n';  // Seq
+      content += upkSeqOut + "\n";  // Seq
 
-      upkfile << (justPlus ? "+" : "+" + plusMore) << '\n';
+      content += (justPlus ? "+" : "+" + plusMore) + "\n";
       ++i;  // +
 
       unpack_large(upkQsOut, i, upkStruct.XChar_qs, upkStruct.qsUnpack);
-      upkfile << upkQsOut << '\n';   // Qs
+      content += upkQsOut + "\n";    // Qs
     } while (++i != decText.end());  // If trouble: change "!=" to "<"
 
     // Update the chunk size and positions (beg & end)
@@ -597,7 +612,14 @@ void Fastq::unpack_hS_qL(const unpackfq_s& upkStruct, byte threadID) {
         endPos = begPos + (pos_t)chunkSize;
       }
     }
+
+    if (content.size() >= BLOCK_SIZE) {
+      write_content();
+      content.clear();
+      content.reserve(BLOCK_SIZE);
+    }
   }
+  write_content();
 
   upkfile.close();
   in.close();
@@ -617,6 +639,9 @@ void Fastq::unpack_hL_qS(const unpackfq_s& upkStruct, byte threadID) {
   std::ofstream upkfile(UPK_FNAME + std::to_string(threadID),
                         std::ios_base::app);
   std::string upkHdrOut, upkSeqOut, upkQsOut;
+  std::string content;
+  content.reserve(BLOCK_SIZE);
+  auto write_content = [&]() { upkfile << content; };
 
   while (in.peek() != EOF) {
     char c;
@@ -643,23 +668,24 @@ void Fastq::unpack_hL_qS(const unpackfq_s& upkStruct, byte threadID) {
       unshuffle(i, chunkSize);
     }
 
-    upkfile << THR_ID_HDR + std::to_string(threadID) << '\n';
+    content += THR_ID_HDR + std::to_string(threadID) + "\n";
     do {
-      upkfile << '@';
+      content += "@";
       std::string plusMore;
 
       unpack_large(upkHdrOut, i, upkStruct.XChar_hdr, upkStruct.hdrUnpack);
-      upkfile << (plusMore = upkHdrOut) << '\n';
+      plusMore = upkHdrOut;
+      content += upkHdrOut + "\n";
       ++i;  // Hdr
 
       unpack_seq(upkSeqOut, i);
-      upkfile << upkSeqOut << '\n';  // Seq
+      content += upkSeqOut + "\n";  // Seq
 
-      upkfile << (justPlus ? "+" : "+" + plusMore) << '\n';
+      content += (justPlus ? "+" : "+" + plusMore) + "\n";
       ++i;  // +
 
       (this->*unpackQS)(upkQsOut, i, upkStruct.qsUnpack);
-      upkfile << upkQsOut << '\n';   // Qs
+      content += upkQsOut + "\n";    // Qs
     } while (++i != decText.end());  // If trouble: change "!=" to "<"
 
     // Update the chunk size and positions (beg & end)
@@ -675,7 +701,14 @@ void Fastq::unpack_hL_qS(const unpackfq_s& upkStruct, byte threadID) {
         endPos = begPos + (pos_t)chunkSize;
       }
     }
+
+    if (content.size() >= BLOCK_SIZE) {
+      write_content();
+      content.clear();
+      content.reserve(BLOCK_SIZE);
+    }
   }
+  write_content();
 
   upkfile.close();
   in.close();
@@ -694,6 +727,9 @@ void Fastq::unpack_hL_qL(const unpackfq_s& upkStruct, byte threadID) {
   std::ofstream upkfile(UPK_FNAME + std::to_string(threadID),
                         std::ios_base::app);
   std::string upkHdrOut, upkSeqOut, upkQsOut;
+  std::string content;
+  content.reserve(BLOCK_SIZE);
+  auto write_content = [&]() { upkfile << content; };
 
   while (in.peek() != EOF) {
     char c;
@@ -720,23 +756,24 @@ void Fastq::unpack_hL_qL(const unpackfq_s& upkStruct, byte threadID) {
       unshuffle(i, chunkSize);
     }
 
-    upkfile << THR_ID_HDR + std::to_string(threadID) << '\n';
+    content += THR_ID_HDR + std::to_string(threadID) + "\n";
     do {
-      upkfile << '@';
+      content += "@";
       std::string plusMore;
 
       unpack_large(upkHdrOut, i, upkStruct.XChar_hdr, upkStruct.hdrUnpack);
-      upkfile << (plusMore = upkHdrOut) << '\n';
+      plusMore = upkHdrOut;
+      content += upkHdrOut + "\n";
       ++i;  // Hdr
 
       unpack_seq(upkSeqOut, i);
-      upkfile << upkSeqOut << '\n';  // Seq
+      content += upkSeqOut + "\n";  // Seq
 
-      upkfile << (justPlus ? "+" : "+" + plusMore) << '\n';
+      content += (justPlus ? "+" : "+" + plusMore) + "\n";
       ++i;  // +
 
       unpack_large(upkQsOut, i, upkStruct.XChar_qs, upkStruct.qsUnpack);
-      upkfile << upkQsOut << '\n';   // Qs
+      content += upkQsOut + "\n";    // Qs
     } while (++i != decText.end());  // If trouble: change "!=" to "<"
 
     // Update the chunk size and positions (beg & end)
@@ -752,7 +789,14 @@ void Fastq::unpack_hL_qL(const unpackfq_s& upkStruct, byte threadID) {
         endPos = begPos + (pos_t)chunkSize;
       }
     }
+
+    if (content.size() >= BLOCK_SIZE) {
+      write_content();
+      content.clear();
+      content.reserve(BLOCK_SIZE);
+    }
   }
+  write_content();
 
   upkfile.close();
   in.close();

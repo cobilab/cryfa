@@ -11,12 +11,6 @@
 
 #include <chrono>
 #include <string>
-// #include <algorithm>
-// #include <fstream>
-// #include <iostream>
-
-// #include "assert.hpp"
-// #include "string.hpp"
 
 /**
  * @brief  Accumulate hop index values in a range
@@ -40,13 +34,14 @@ inline static std::string hms(Time elapsed) {
   const auto m = (durSec % 3600) / 60;
   const auto s = durSec % 60;
 
-  if (m < 1)
-    return std::to_string(s) + " sec.\n";
-  else if (h < 1)
+  if (m < 1) {
+    return (s == 0 ? "< 1" : std::to_string(s)) + " sec.\n";
+  } else if (h < 1) {
     return std::to_string(m) + ":" + std::to_string(s) + " min:sec.\n";
-  else
+  } else {
     return std::to_string(h) + ":" + std::to_string(m) + ":" +
            std::to_string(s) + " hour:min:sec.\n";
+  }
 }
 
 #endif  // CRYFA_TIME_HPP
