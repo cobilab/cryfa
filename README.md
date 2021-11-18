@@ -1,6 +1,6 @@
-<center>
+<p align="center">
      <img src="img/logo.png" alt="Cryfa" height="125"/>
-</center>
+</p>
 <!-- &emsp;&emsp;  -->
 
 [![Build Status](https://travis-ci.org/cobilab/cryfa.svg?branch=master)](https://travis-ci.org/cobilab/cryfa)
