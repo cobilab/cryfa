@@ -33,7 +33,7 @@ int main(int argc, char* argv[]) {
                  "then press 'Enter':\n";
     std::string target;
     for (char c; std::cin.get(c) && c != '\n';) {
-      assert(c == ' ', "the file name has a space character.");
+      assert_single(c == ' ', "the file name has a space character.");
       target += c;
     }
 

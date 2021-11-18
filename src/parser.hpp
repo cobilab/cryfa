@@ -37,7 +37,7 @@ inline void check_pass(const std::string& fname) {
   assert_file_good(fname,
                    "Error opening the password file \"" + fname + "\".\n");
   const std::string pass = file_to_string(fname);
-  assert(pass.size() < 8, "the password size must be at least 8.");
+  assert_single(pass.size() < 8, "the password size must be at least 8.");
 }
 
 /**
@@ -48,7 +48,7 @@ inline void check_pass(const std::string& fname) {
 inline char frmt(const std::string& inFileName) {
   wchar_t c;
   std::wifstream in(inFileName);
-  assert(!in.good(), "failed opening \"" + inFileName + "\".");
+  assert_single(!in.good(), "failed opening \"" + inFileName + "\".");
 
   // Skip leading blank lines or spaces
   while (in.peek() == '\n' || in.peek() == ' ') in.get(c);
@@ -220,7 +220,7 @@ char parse(Param& par, int argc, char** argv) {
   }
 
   // key -- MANDATORY
-  assert(!exist(vArgs.begin(), vArgs.end(), "-k") &&
+  assert_single(!exist(vArgs.begin(), vArgs.end(), "-k") &&
              !exist(vArgs.begin(), vArgs.end(), "--key"),
          "no password file has been set.");
   for (auto i = vArgs.begin(); i != vArgs.end(); ++i) {

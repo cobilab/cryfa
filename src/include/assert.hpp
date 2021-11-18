@@ -9,9 +9,9 @@
 #ifndef CRYFA_ASSERT_H
 #define CRYFA_ASSERT_H
 
-#ifdef __APPLE__
-#undef assert
-#endif
+// #if defined(__APPLE__) || defined(__arm__) || defined(__arm64) || defined(__arm64__) || defined(__aarch64__)
+// #undef assert
+// #endif
 
 #include <fstream>
 
@@ -44,7 +44,7 @@ inline void warning(std::string const& message, int width = 65) {
  * @param cond  the condition to be checked
  * @param msg   the message shown when the condition is true
  */
-inline void assert(bool cond, const std::string& msg) {
+inline void assert_single(bool cond, const std::string& msg) {
   if (cond) error(msg);
 }
 

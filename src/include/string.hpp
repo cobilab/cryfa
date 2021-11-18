@@ -14,7 +14,7 @@
 #include <memory>
 #include <string>
 
-extern void assert(bool, const std::string&);
+extern void assert_single(bool, const std::string&);
 
 /**
  * @brief  Convert a string to lower case
@@ -147,7 +147,7 @@ inline std::string wrap_text(std::string text, std::string pre_str = "",
  */
 template <typename Iter, typename T>
 bool exist(const Iter first, const Iter last, const T& value) {
-  assert(first == last, "the range is empty.");
+  assert_single(first == last, "the range is empty.");
   return std::find(first, last, value) != last;
 }
 

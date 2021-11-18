@@ -60,7 +60,7 @@ T accum_odd(Iter first, Iter last, T init) {
  * @return Yes, if it is a number
  */
 inline bool is_number(const std::string& s) {
-  assert(s.empty(), "the string is empty.");
+  assert_single(s.empty(), "the string is empty.");
   return std::find_if(s.begin(), s.end(),
                       [](char c) { return !std::isdigit(c); }) == s.end();
 }
