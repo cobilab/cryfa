@@ -1,4 +1,6 @@
-<center><img src="img/logo.png" alt="Cryfa" height="125""/></center>
+<center>
+     <img src="img/logo.png" alt="Cryfa" height="125"/>
+</center>
 <!-- &emsp;&emsp;  -->
 
 [![Build Status](https://travis-ci.org/cobilab/cryfa.svg?branch=master)](https://travis-ci.org/cobilab/cryfa)
@@ -7,7 +9,7 @@
 
 Cryfa is an ultrafast secure encryption tool for genomic data, that is also able to compact FASTA/FASTQ sequences by a factor of three.
 
-# INSTALL
+# Install
 
 ## Conda
 
@@ -51,7 +53,7 @@ sh install.sh
 
 Note that a pre-compiled version of Cryfa is available for 64 bit Linux OS and macOS in the `bin/` directory.
 
-# USAGE
+# Usage
 
 If you want to run Cryfa in stand-alone mode, use the following command:
 
@@ -101,7 +103,7 @@ If you want to compare Cryfa with other methods, set the parameters in **run.sh*
 
 With this script, you can download the datasets, install the dependencies, install the compression and encryption tools, run these tools, and finally, print the results.
 
-# OPTIONS
+# Options
 
 To see the possible options, type:
 
@@ -207,7 +209,7 @@ The automatically generated strong password will be saved in the file that you s
 
 If you are interested in the topic of "key management", which is to deal with generating, exchanging, storing, using and replacing keys, you can read the articles [[1]](https://en.wikipedia.org/wiki/Key_management), [[2]](https://info.townsendsecurity.com/definitive-guide-to-encryption-key-management-fundamentals), [[3]](https://csrc.nist.gov/projects/key-management/cryptographic-key-management-systems) and [[4]](https://www.cryptomathic.com/news-events/blog/what-is-key-management-a-ciso-perspective).
 
-# CITE
+# Cite
 
 Please cite the followings, if you use Cryfa:
 
@@ -221,6 +223,6 @@ Please cite the followings, if you use Cryfa:
 * [Release](https://github.com/pratas/cryfa/releases) 1: Encryption PLUS 
   compacting FASTA. -->
 
-# LICENSE
+# License
 
 Cryfa is under [GPLv3](http://www.gnu.org/licenses/gpl-3.0.html) license.
