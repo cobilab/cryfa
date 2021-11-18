@@ -200,9 +200,9 @@ and
 
 ## CITE
 Please cite the followings, if you use Cryfa:
-* M. Hosseini, D. Pratas and A.J. Pinho, "Cryfa: a secure encryption tool for genomic data," *Bioinformatics*, vol. 35, no. 1, pp. 146--148, 2018. [[BibTeX]](https://scholar.googleusercontent.com/scholar.bib?q=info:GqzasPvKgHsJ:scholar.google.com/&output=citation&scisdr=CgVA98UgELTZ8omN8V4:AAGBfm0AAAAAYXaI6V6ArPVbiyexT4oo1xi2jop0ex4O&scisig=AAGBfm0AAAAAYXaI6a93BsYB4ERk3dQ7Qf0z998WyHmI&scisf=4&ct=citation&cd=-1&hl=en) [[EndNote]](https://scholar.googleusercontent.com/scholar.enw?q=info:GqzasPvKgHsJ:scholar.google.com/&output=citation&scisdr=CgVA98UgEN32sP2P4aU:AAGBfm0AAAAAYXaJ-aW6xLEsjkH7lPb7G1Eyb55mGs4D&scisig=AAGBfm0AAAAAYXaJ-Q7jW9HrXjtDsquewbD9sTbRun2f&scisf=3&ct=citation&cd=-1&hl=en)
+* M. Hosseini, D. Pratas and A.J. Pinho, "Cryfa: a secure encryption tool for genomic data," *Bioinformatics*, vol. 35, no. 1, pp. 146--148, 2018. [DOI: 10.1093/bioinformatics/bty645](https://doi.org/10.1093/bioinformatics/bty645)
 
-* D. Pratas, M. Hosseini and A.J. Pinho, "Cryfa: a tool to compact and encrypt FASTA files," *11'th International Conference on Practical Applications of Computational Biology & Bioinformatics* (PACBB), Springer, June 2017. [[BibTeX]](https://scholar.googleusercontent.com/scholar.bib?q=info:1Itf2Zm7G6IJ:scholar.google.com/&output=citation&scisdr=CgVA98UgEN32sP2MeP8:AAGBfm0AAAAAYXaKYP8675eCxootVdleRr2T5HJ6lcO9&scisig=AAGBfm0AAAAAYXaKYEdsxPEQAmrUVs1RxMMPyYAo-VPg&scisf=4&ct=citation&cd=-1&hl=en) [[EndNote]](https://scholar.googleusercontent.com/scholar.enw?q=info:1Itf2Zm7G6IJ:scholar.google.com/&output=citation&scisdr=CgVA98UgEN32sP2MeP8:AAGBfm0AAAAAYXaKYP8675eCxootVdleRr2T5HJ6lcO9&scisig=AAGBfm0AAAAAYXaKYEdsxPEQAmrUVs1RxMMPyYAo-VPg&scisf=3&ct=citation&cd=-1&hl=en)
+* D. Pratas, M. Hosseini and A.J. Pinho, "Cryfa: a tool to compact and encrypt FASTA files," *11'th International Conference on Practical Applications of Computational Biology & Bioinformatics* (PACBB), Springer, June 2017. [DOI: 10.1007/978-3-319-60816-7_37](https://doi.org/10.1007/978-3-319-60816-7_37)
 
 <!-- ## RELEASES
 * [Release](https://github.com/pratas/cryfa/releases) 2: Secure encryption of
