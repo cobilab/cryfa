@@ -1,5 +1,5 @@
 <p align="center">
-     <img src="img/logo.png" alt="Cryfa" height="125"/>
+     <img src="img/logo.png" alt="Cryfa" height="150"/>
 </p>
 <!-- &emsp;&emsp;  -->
 
@@ -10,6 +10,20 @@
 Cryfa is an ultrafast secure encryption tool for genomic data, that is also able to compact FASTA/FASTQ sequences by a factor of three.
 
 # Install
+
+## Docker
+
+Pull the image by
+
+```bash
+docker pull smortezah/cryfa
+```
+
+and run it:
+
+```bash
+docker run -it smortezah/cryfa
+```
 
 ## Conda
 
