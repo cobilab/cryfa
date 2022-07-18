@@ -1,12 +1,9 @@
-/*******************************************************
-   Cryfa :: A secure encryption tool for genomic data
-********************************************************
+/*****************************************************
+  Cryfa :: A secure encryption tool for genomic data
+******************************************************
          Morteza Hosseini    seyedmorteza@ua.pt
          Diogo Pratas        pratas@ua.pt
-         Armando J. Pinho    ap@ua.pt
-********************************************************
-  Copyright (C) 2017-2020, IEETA, University of Aveiro
-********************************************************/
+******************************************************/
 
 /**
  * @file      cryfa.cpp

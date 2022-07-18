@@ -18,7 +18,6 @@ namespace cryfa {
 static const std::string MONTH = "04";
 static const std::string YEAR = "20";
 static const std::string VERSION = YEAR + "." + MONTH;
-static const std::string DEV_YEARS = "2017-2020";
 
 // Typedefs
 using byte = unsigned char;

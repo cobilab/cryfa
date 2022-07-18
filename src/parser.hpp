@@ -149,26 +149,16 @@ inline void show_help() {
       << init_space << bold("--version") << '\n'
       << opt_space << "version information \n"
       << '\n'
+      << bold("AUTHORS") << '\n'
+      << "      Morteza Hosseini   seyedmorteza@ua.pt \n"
+      << "      Diogo Pratas       pratas@ua.pt \n"
+      << '\n'
+      << bold("Warning:") << ' '
       << wrap_text(
-             "Note that the maximum file size supported is 64 GB. For "
-             "larger files, you can split them, e.g. by \"split\" "
-             "command, and encrypt each chunk. After the decryption, you "
-             "can concatenate the chunks, e.g. by \"cat\" command.",
-             init_space)
-      // << '\n'
-      // << bold("AUTHORS") << '\n'
-      // << "      Morteza Hosseini   seyedmorteza@ua.pt \n"
-      // << "      Diogo Pratas       pratas@ua.pt \n"
-      // << '\n'
-      // << bold("COPYRIGHT") << '\n'
-      // << "      Copyright (C) " << DEV_YEARS
-      // << ", IEETA, University of Aveiro.\n"
-      // << "      This is a Free software, under GPLv3. You may "
-      //    "redistribute    \n"
-      // << "      copies of it under the terms of the GNU - General Public \n"
-      // << "      License v3 <http://www.gnu.org/licenses/gpl.html>. There \n"
-      // << "      is NOT ANY WARRANTY, to the extent permitted by law."
-      << std::endl;
+             "the maximum file size supported is 64 GB. For larger files, you "
+             "can split them, e.g. by \"split\" command, and encrypt each "
+             "chunk. After the decryption, you can concatenate the chunks, "
+             "e.g. by \"cat\" command.") << std::endl;
 
   throw EXIT_SUCCESS;
 }
@@ -177,10 +167,7 @@ inline void show_help() {
  * @brief Version information
  */
 inline void show_version() {
-  std::cerr << "Cryfa " << VERSION << "\n"
-            << "Copyright (C) " << DEV_YEARS
-            << " IEETA, University of Aveiro.\n"
-            << "Written by Morteza Hosseini and Diogo Pratas." << std::endl;
+  std::cerr << "Cryfa " << VERSION << std::endl;
   throw EXIT_SUCCESS;
 }
 
