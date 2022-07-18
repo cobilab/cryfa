@@ -1,5 +1,52 @@
-.vscode/*
-build
+# Prerequisites
+*.d
+
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# Executables
+*.exe
+*.out
+*.app
+
+# macOS
+.DS_Store
+
+# Windows
+desktop.ini
+
+# Debug/profile
+callgrind.out*
+gprof2dot.py
+
+# Visual Studio Code
+.vscode
+
+# CMake
+**/build
+
+# Cryfa
 cryfa
 keygen
-.DS_Store
