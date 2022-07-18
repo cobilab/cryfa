@@ -1,7 +1,4 @@
-<p align="center">
-     <img src="img/logo.png" alt="Cryfa" height="150"/>
-</p>
-<!-- &emsp;&emsp;  -->
+<p align="center"><img src="logo.png" alt="Cryfa" height="150"/></p>
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 [![CI](https://github.com/cobilab/cryfa/actions/workflows/CI.yml/badge.svg)](https://github.com/cobilab/cryfa/actions/workflows/CI.yml)
@@ -12,16 +9,12 @@ Cryfa is an ultrafast secure encryption tool for genomic data, that is also able
 
 ## Docker
 
-Pull the image by
-
 ```bash
-docker pull smortezah/cryfa
-```
+# Pull the image
+docker pull smortezah/cryfa;
 
-and run it:
-
-```bash
-docker run -it smortezah/cryfa
+# Run the image
+docker run -it smortezah/cryfa;
 ```
 
 ## Conda
@@ -32,39 +25,32 @@ conda install -c bioconda -y cryfa
 
 ## Linux
 
-Install "git" and "cmake":
-
 ```bash
-sudo apt update
-sudo apt install git cmake
-```
+# Install git and cmake
+sudo apt update;
+sudo apt install git cmake;
 
-Clone Cryfa and make the project:
-
-```bash
-git clone https://github.com/cobilab/cryfa.git
-cd cryfa
-sh install.sh
+# Clone and install Cryfa
+git clone https://github.com/cobilab/cryfa.git;
+cd cryfa;
+sh install.sh;
 ```
 
 ## macOS
 
-Install "Homebrew", "git" and "cmake":
-
 ```bash
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)"
-brew install git cmake
+# Install Homebrew, git and cmake
+/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)";
+brew install git cmake;
+
+# Clone and install Cryfa
+git clone https://github.com/cobilab/cryfa.git;
+cd cryfa;
+sh install.sh;
 ```
 
-Clone Cryfa and make the project:
-
-```bash
-git clone https://github.com/cobilab/cryfa.git
-cd cryfa
-sh install.sh
-```
-
-Note that a pre-compiled version of Cryfa is available for 64 bit Linux OS and macOS in the `bin/` directory.
+**Note**
+Pre-compiled versions of Cryfa are available for 64 bit Linux OS and macOS in the `bin/` directory.
 
 # Usage
 
@@ -88,7 +74,8 @@ and to decrypt & unpack, run
 
 There is a copy of file "in.fq" in `example/` directory. Options are described in the following sections.
 
-Note that the maximum file size supported by Cryfa is 64 GB. For larger files, you can split them, e.g. by "split" command in Linux, and encrypt each chunk. After the decryption, you can concatenate the chunks, e.g. by "cat" command.
+**Warning**
+The maximum file size supported by Cryfa is 64 GB. For larger files, you can split them, e.g. by "split" command in Linux, and encrypt each chunk. After the decryption, you can concatenate the chunks, e.g. by "cat" command.
 
 ## Input file format
 
@@ -104,7 +91,8 @@ will be exactly the same as running
 ./cryfa -k pass.txt test.fa > comp
 ```
 
-Note that password file is not limited to any extension, therefore, it can have either no extension or any extension. For example, using "pass", "pass.txt", "pass.dat", etc provides the same result.
+**Note**
+The password file is not limited to any extension, therefore, it can have either no extension or any extension. For example, using "pass", "pass.txt", "pass.dat", etc provides the same result.
 
 ## Compare Cryfa with other methods
 
@@ -228,13 +216,6 @@ Please cite the followings, if you use Cryfa:
 
 * M. Hosseini, D. Pratas and A.J. Pinho, "Cryfa: a secure encryption tool for genomic data," *Bioinformatics*, vol. 35, no. 1, pp. 146--148, 2018. [DOI: 10.1093/bioinformatics/bty645](https://doi.org/10.1093/bioinformatics/bty645)
 * D. Pratas, M. Hosseini and A.J. Pinho, "Cryfa: a tool to compact and encrypt FASTA files," *11'th International Conference on Practical Applications of Computational Biology & Bioinformatics* (PACBB), Springer, June 2017. [DOI: 10.1007/978-3-319-60816-7_37](https://doi.org/10.1007/978-3-319-60816-7_37)
-
-<!-- ## RELEASES
-* [Release](https://github.com/pratas/cryfa/releases) 2: Secure encryption of
-  FASTA/FASTQ/VCF/SAM/BAM PLUS compacting FASTA/FASTQ.
-
-* [Release](https://github.com/pratas/cryfa/releases) 1: Encryption PLUS 
-  compacting FASTA. -->
 
 # License
 
