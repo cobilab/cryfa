@@ -18,12 +18,8 @@ env:
 
 jobs:
   build:
-    runs-on: ${{matrix.os}}
-    strategy:
-      matrix:
-        os:
-          - ubuntu-latest
-          # - macos-latest
+    runs-on: ubuntu-latest
+    
     steps:
     - name: Checkout repo
       uses: actions/checkout@v3
@@ -34,8 +30,28 @@ jobs:
     - name: Build cryfa
       run: cmake --build ${{env.BUILD}} --parallel ${{env.PARALLEL}} --config ${{env.BUILD_TYPE}}
 
-    - name: Build the Docker image
-      run: docker build --tag ${{env.DOCKER_NAME}}:${{env.DOCKER_TAG}} .
+    - name: Login to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKERHUB_USERNAME }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+    - name: Build and push the Docker image
+      uses: docker/build-push-action@v3
+      with:
+        context: .
+        platforms: linux/amd64,linux/arm64
+        push: false
+        tags: ${{env.DOCKER_NAME}}:${{env.DOCKER_TAG}}
+
+    # - name: Build the Docker image
+    #   run: docker build --tag ${{env.DOCKER_NAME}}:${{env.DOCKER_TAG}} .
+
+  #   - name: Push the Docker image
+  #     run: |
+  #       docker push ${{env.DOCKER_NAME}}:${{env.DOCKER_TAG}}
+  #       docker push ${{env.DOCKER_NAME}}:latest
+
 
   # docker:
   #   needs: build
