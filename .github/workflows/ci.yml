@@ -12,9 +12,6 @@ env:
   BUILD_TYPE: Release
   BUILD: ${{github.workspace}}/build
   PARALLEL: 4
-  DOCKER_FILE: ${{github.workspace}}/Dockerfile
-  DOCKER_NAME: smortezah/cryfa
-  DOCKER_TAG: 20.04
 
 jobs:
   build:
@@ -29,38 +26,3 @@ jobs:
 
     - name: Build cryfa
       run: cmake --build ${{env.BUILD}} --parallel ${{env.PARALLEL}} --config ${{env.BUILD_TYPE}}
-
-    - name: Login to DockerHub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-    - name: Build and push the Docker image
-      uses: docker/build-push-action@v3
-      with:
-        context: .
-        platforms: linux/amd64,linux/arm64
-        push: false
-        tags: ${{env.DOCKER_NAME}}:${{env.DOCKER_TAG}}
-
-    # - name: Build the Docker image
-    #   run: docker build --tag ${{env.DOCKER_NAME}}:${{env.DOCKER_TAG}} .
-
-  #   - name: Push the Docker image
-  #     run: |
-  #       docker push ${{env.DOCKER_NAME}}:${{env.DOCKER_TAG}}
-  #       docker push ${{env.DOCKER_NAME}}:latest
-
-
-  # docker:
-  #   needs: build
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - name: Build the Docker image
-  #     run: docker build --tag ${{env.DOCKER_NAME}}:${{env.DOCKER_TAG}} .
-
-  #   - name: Push the Docker image
-  #     run: |
-  #       docker push ${{env.DOCKER_NAME}}:${{env.DOCKER_TAG}}
-  #       docker push ${{env.DOCKER_NAME}}:latest
