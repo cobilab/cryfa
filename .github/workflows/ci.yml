@@ -39,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Build the Docker image
-      run: docker build ${{github.workspace}} --file ${{env.DOCKER_FILE}} --tag ${{env.DOCKER_NAME}}:${{env.DOCKER_TAG}}
+      run: docker build --file ${{env.DOCKER_FILE}} --tag ${{env.DOCKER_NAME}}:${{env.DOCKER_TAG}} ${{github.workspace}}
 
     - name: Push the Docker image
       run: |
