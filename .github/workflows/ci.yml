@@ -23,7 +23,7 @@ jobs:
       matrix:
         os:
           - ubuntu-latest
-          - macos-latest
+          # - macos-latest
     steps:
     - name: Checkout repo
       uses: actions/checkout@v3
@@ -34,14 +34,17 @@ jobs:
     - name: Build cryfa
       run: cmake --build ${{env.BUILD}} --parallel ${{env.PARALLEL}} --config ${{env.BUILD_TYPE}}
 
-  docker:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
     - name: Build the Docker image
       run: docker build --tag ${{env.DOCKER_NAME}}:${{env.DOCKER_TAG}} .
 
-    - name: Push the Docker image
-      run: |
-        docker push ${{env.DOCKER_NAME}}:${{env.DOCKER_TAG}}
-        docker push ${{env.DOCKER_NAME}}:latest
+  # docker:
+  #   needs: build
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - name: Build the Docker image
+  #     run: docker build --tag ${{env.DOCKER_NAME}}:${{env.DOCKER_TAG}} .
+
+  #   - name: Push the Docker image
+  #     run: |
+  #       docker push ${{env.DOCKER_NAME}}:${{env.DOCKER_TAG}}
+  #       docker push ${{env.DOCKER_NAME}}:latest
