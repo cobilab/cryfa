@@ -12,6 +12,7 @@ env:
   BUILD_TYPE: Release
   BUILD: ${{github.workspace}}/build
   PARALLEL: 4
+  DOCKER_FILE: ${{github.workspace}}/Dockerfile
   DOCKER_NAME: smortezah/cryfa
   DOCKER_TAG: 20.04
 
@@ -38,7 +39,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag ${{env.DOCKER_NAME}}:${{env.DOCKER_TAG}}
+      run: docker build . --file ${{DOCKER_FILE}} --tag ${{env.DOCKER_NAME}}:${{env.DOCKER_TAG}}
 
     - name: Push the Docker image
       run: |
