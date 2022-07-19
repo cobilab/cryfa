@@ -11,7 +11,9 @@ on:
 env:
   BUILD_TYPE: Release
   BUILD: ${{github.workspace}}/build
-  PARALLEL: 8
+  PARALLEL: 4
+  DOCKER_NAME: smortezah/cryfa
+  DOCKER_TAG: 20.04
 
 jobs:
   build:
@@ -21,7 +23,6 @@ jobs:
         os:
           - ubuntu-latest
           - macos-latest
-
     steps:
     - name: Checkout repo
       uses: actions/checkout@v3
@@ -29,5 +30,17 @@ jobs:
     - name: Configure CMake
       run: cmake -B ${{env.BUILD}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
 
-    - name: Build
+    - name: Build cryfa
       run: cmake --build ${{env.BUILD}} --parallel ${{env.PARALLEL}} --config ${{env.BUILD_TYPE}}
+
+  docker:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile --tag ${{env.DOCKER_NAME}}:${{env.DOCKER_TAG}}
+
+    - name: Push the Docker image
+      run: |
+        docker push ${{env.DOCKER_NAME}}:${{env.DOCKER_TAG}}
+        docker push ${{env.DOCKER_NAME}}:latest
