@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Docker Image
 
 on:
   push:
@@ -7,6 +7,10 @@ on:
   pull_request:
     branches:
     - master
+
+env:
+  NAME: smortezah/cryfa
+  TAG: 20.04
 
 jobs:
   build:
@@ -17,4 +21,10 @@ jobs:
       uses: actions/checkout@v3
       
     - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag smortezah/cryfa:20.04
+      run: docker build . --file Dockerfile --tag ${{env.NAME}}:${{env.TAG}}
+
+    - name: Push the Docker image
+      run: |
+        docker push ${{env.NAME}}:${{env.TAG}}
+        docker push ${{env.NAME}}:latest
+        
