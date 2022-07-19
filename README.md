@@ -1,7 +1,7 @@
 <p align="center"><img src="logo.png" alt="Cryfa" height="150"/></p>
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
-[![CI](https://github.com/cobilab/cryfa/actions/workflows/CI.yml/badge.svg)](https://github.com/cobilab/cryfa/actions/workflows/CI.yml)
+[![CI](https://github.com/cobilab/cryfa/actions/workflows/ci.yml/badge.svg)](https://github.com/cobilab/cryfa/actions/workflows/ci.yml)
 
 Cryfa is an ultrafast secure encryption tool for genomic data, that is also able to compact FASTA/FASTQ sequences by a factor of three.
 
