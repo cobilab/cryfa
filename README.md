@@ -210,16 +210,16 @@ The automatically generated strong password will be saved in the file that you s
 
 If you are interested in the topic of "key management", which is to deal with generating, exchanging, storing, using and replacing keys, you can read the articles [[1]](https://en.wikipedia.org/wiki/Key_management), [[2]](https://info.townsendsecurity.com/definitive-guide-to-encryption-key-management-fundamentals), [[3]](https://csrc.nist.gov/projects/key-management/cryptographic-key-management-systems) and [[4]](https://www.cryptomathic.com/news-events/blog/what-is-key-management-a-ciso-perspective).
 
-# Codebase
-
-![Visualization of this repo](./diagram.svg)
-
 # Cite
 
 Please cite the followings, if you use Cryfa:
 
 * M. Hosseini, D. Pratas and A.J. Pinho, "Cryfa: a secure encryption tool for genomic data," *Bioinformatics*, vol. 35, no. 1, pp. 146--148, 2018. [DOI: 10.1093/bioinformatics/bty645](https://doi.org/10.1093/bioinformatics/bty645)
 * D. Pratas, M. Hosseini and A.J. Pinho, "Cryfa: a tool to compact and encrypt FASTA files," *11'th International Conference on Practical Applications of Computational Biology & Bioinformatics* (PACBB), Springer, June 2017. [DOI: 10.1007/978-3-319-60816-7_37](https://doi.org/10.1007/978-3-319-60816-7_37)
+
+# Codebase
+
+![Visualization of this repo](./diagram.svg)
 
 # License
 
