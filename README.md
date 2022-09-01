@@ -210,6 +210,10 @@ The automatically generated strong password will be saved in the file that you s
 
 If you are interested in the topic of "key management", which is to deal with generating, exchanging, storing, using and replacing keys, you can read the articles [[1]](https://en.wikipedia.org/wiki/Key_management), [[2]](https://info.townsendsecurity.com/definitive-guide-to-encryption-key-management-fundamentals), [[3]](https://csrc.nist.gov/projects/key-management/cryptographic-key-management-systems) and [[4]](https://www.cryptomathic.com/news-events/blog/what-is-key-management-a-ciso-perspective).
 
+# Codebase
+
+![Visualization of this repo](./diagram.svg)
+
 # Cite
 
 Please cite the followings, if you use Cryfa:
