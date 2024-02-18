@@ -158,7 +158,7 @@ inline void show_help() {
              "the maximum file size supported is 64 GB. For larger files, you "
              "can split them, e.g. by \"split\" command, and encrypt each "
              "chunk. After the decryption, you can concatenate the chunks, "
-             "e.g. by \"cat\" command.") << std::endl;
+             "e.g. by \"cat\" command.", "", 62) << std::endl;
 
   throw EXIT_SUCCESS;
 }
