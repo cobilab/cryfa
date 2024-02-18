@@ -15,5 +15,3 @@ jobs:
       run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release
     - name: Build cryfa
       run: cmake --build ${{github.workspace}}/build --parallel 4 --config Release
-    - name: Print cryfa help
-      run: ${{github.workspace}}/build/cryfa
