@@ -4,25 +4,14 @@ on:
   push:
     branches:
     - master
-  pull_request:
-    branches:
-    - master
-
-env:
-  BUILD_TYPE: Release
-  BUILD: ${{github.workspace}}/build
-  PARALLEL: 4
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
     steps:
     - name: Checkout repo
-      uses: actions/checkout@v3
-
+      uses: actions/checkout@v4
     - name: Configure CMake
-      run: cmake -B ${{env.BUILD}} -DCMAKE_BUILD_TYPE=${{env.BUILD_TYPE}}
-
+      run: cmake -B ${{github.workspace}}/build -DCMAKE_BUILD_TYPE=Release
     - name: Build cryfa
-      run: cmake --build ${{env.BUILD}} --parallel ${{env.PARALLEL}} --config ${{env.BUILD_TYPE}}
+      run: cmake --build ${{github.workspace}}/build --parallel 4 --config Release
