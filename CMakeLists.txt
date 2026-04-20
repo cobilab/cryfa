@@ -111,6 +111,7 @@ if(NOT MSVC)
     cryptopp_simd_flags(gf2n_simd.cpp     -mpclmul)
     # SHA extensions
     cryptopp_simd_flags(sha_simd.cpp      -msse4.1 -msha)
+    cryptopp_simd_flags(shacal2_simd.cpp  -mssse3 -msse4.1 -msha)
     # SSSE3 (LSH SSE variants)
     cryptopp_simd_flags(lsh256_sse.cpp    -mssse3)
     cryptopp_simd_flags(lsh512_sse.cpp    -mssse3)
