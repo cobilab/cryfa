@@ -42,3 +42,6 @@ jobs:
       if: runner.os == 'Windows'
       shell: cmd
       run: ${{github.workspace}}\build\Release\cryfa.exe 2>&1 | findstr /n "." | find "1:" || exit 0
+
+    - name: CTest round-trip
+      run: ctest --test-dir ${{github.workspace}}/build --output-on-failure

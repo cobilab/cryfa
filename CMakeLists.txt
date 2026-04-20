@@ -165,3 +165,15 @@ add_executable(keygen
     src/keygen.cpp
 )
 target_include_directories(keygen PRIVATE src/include)
+
+# ── CTest round-trip integration test ────────────────────────────────────────
+enable_testing()
+add_test(
+    NAME roundtrip
+    COMMAND ${CMAKE_COMMAND}
+        -DCRYFA=$<TARGET_FILE:cryfa>
+        -DPASS=${CMAKE_SOURCE_DIR}/pass.txt
+        -DINPUT=${CMAKE_SOURCE_DIR}/example/in.fq
+        -DWORKDIR=${CMAKE_BINARY_DIR}/test_roundtrip
+        -P ${CMAKE_SOURCE_DIR}/cmake/roundtrip.cmake
+)
