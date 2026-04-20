@@ -877,7 +877,7 @@ void EnDecrypto::shuffle_file() {
 
   if (!stop_shuffle) {
     const auto start = now();  // Start timer
-    std::thread arrThread[n_threads];
+    std::vector<std::thread> arrThread(n_threads);
 
     // Distribute file among threads, for shuffling
     for (byte t = 0; t != n_threads; ++t)
@@ -956,7 +956,7 @@ void EnDecrypto::unshuffle_file() {
     in.close();
 
     const auto start = now();  // Start timer
-    std::thread arrThread[n_threads];
+    std::vector<std::thread> arrThread(n_threads);
 
     // Distribute file among threads, for unshuffling
     for (byte t = 0; t != n_threads; ++t)

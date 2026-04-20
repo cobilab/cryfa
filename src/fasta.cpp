@@ -235,7 +235,7 @@ void Fasta::decompress() {
   char c;  // Chars in file
   std::string headers;
   unpackfa_s upkStruct;  // Collection of inputs to pass to unpack...
-  std::thread arrThread[n_threads];  // Array of threads
+  std::vector<std::thread> arrThread(n_threads);  // Array of threads
   std::ifstream in(DEC_FNAME);
 
   in.ignore(1);  // Jump over decText[0]==(char) 127

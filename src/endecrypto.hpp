@@ -10,6 +10,7 @@
 #define CRYFA_ENDECRYPTO_H
 
 #include <chrono>
+#include <vector>
 
 #include "security.hpp"
 

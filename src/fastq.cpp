@@ -50,7 +50,7 @@ bool Fastq::has_just_plus() const {
 void Fastq::compress() {
   if (!verbose) std::cerr << bold("[+]") << " Compacting ...";
   const auto start = now();  // Start timer
-  std::thread arrThread[n_threads];
+  std::vector<std::thread> arrThread(n_threads);
   std::string headers, qscores;
   packfq_s pkStruct;  // Collection of inputs to pass to pack...
 
@@ -285,7 +285,7 @@ void Fastq::decompress() {
   char c;  // Chars in file
   std::string headers, qscores;
   unpackfq_s upkStruct;  // Collection of inputs to pass to unpack...
-  std::thread arrThread[n_threads];  // Array of threads
+  std::vector<std::thread> arrThread(n_threads);  // Array of threads
   std::ifstream in(DEC_FNAME);
 
   in.ignore(1);  // Jump over decText[0]==(char) 126
