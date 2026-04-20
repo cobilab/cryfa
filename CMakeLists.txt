@@ -111,9 +111,12 @@ if(NOT MSVC)
     cryptopp_simd_flags(gf2n_simd.cpp     -mpclmul)
     # SHA extensions
     cryptopp_simd_flags(sha_simd.cpp      -msse4.1 -msha)
-    # AVX
-    cryptopp_simd_flags(lsh256_avx.cpp    -mavx)
-    cryptopp_simd_flags(lsh512_avx.cpp    -mavx)
+    # SSSE3 (LSH SSE variants)
+    cryptopp_simd_flags(lsh256_sse.cpp    -mssse3)
+    cryptopp_simd_flags(lsh512_sse.cpp    -mssse3)
+    # AVX2 (lsh*_avx files use AVX2 intrinsics, not just AVX)
+    cryptopp_simd_flags(lsh256_avx.cpp    -mavx2)
+    cryptopp_simd_flags(lsh512_avx.cpp    -mavx2)
     # AVX2
     cryptopp_simd_flags(chacha_avx.cpp    -mavx2)
     cryptopp_simd_flags(lsh224_avx2.cpp   -mavx2)
