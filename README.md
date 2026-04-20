@@ -50,7 +50,7 @@ sh install.sh;
 ```
 
 > [!NOTE]
-> Pre-compiled versions of Cryfa, optimized for 64-bit Linux and macOS, can be found in the `bin/` directory.
+> Pre-compiled binaries for 64-bit Linux, macOS, and Windows are available as assets on the [Releases](../../releases) page.
 
 # Usage
 
@@ -211,10 +211,6 @@ If you utilize Cryfa in your research, please acknowledge the tool by citing the
 
 - M. Hosseini, D. Pratas and A.J. Pinho, "Cryfa: a secure encryption tool for genomic data," *Bioinformatics*, vol. 35, no. 1, pp. 146--148, 2018. [DOI: 10.1093/bioinformatics/bty645](https://doi.org/10.1093/bioinformatics/bty645)
 - **[OPTIONAL]** D. Pratas, M. Hosseini and A.J. Pinho, "Cryfa: a tool to compact and encrypt FASTA files," *11'th International Conference on Practical Applications of Computational Biology & Bioinformatics* (PACBB), Springer, June 2017. [DOI: 10.1007/978-3-319-60816-7_37](https://doi.org/10.1007/978-3-319-60816-7_37)
-
-# Codebase
-
-![Visualization of this repo](./diagram.svg)
 
 # License
 
