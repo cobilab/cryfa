@@ -12,6 +12,7 @@
 #include <fstream>
 #include <iomanip>  // setw, std::setprecision
 #include <mutex>
+#include <numeric>  // std::accumulate, std::iota
 
 #include "assert.hpp"
 #include "cryptopp/aes.h"

@@ -9,6 +9,7 @@
 #include "endecrypto.hpp"
 
 #include <algorithm>
+#include <cmath>     // std::pow
 #include <fstream>
 #include <functional>
 #include <iomanip>  // setw, std::setprecision

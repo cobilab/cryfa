@@ -7,6 +7,7 @@
  */
 
 #include <cstdlib>
+#include <exception>  // std::exception
 #include <iostream>
 
 #include "assert.hpp"

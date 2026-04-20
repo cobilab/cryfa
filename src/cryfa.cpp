@@ -13,6 +13,8 @@
  * @copyright The GNU General Public License v3.0
  */
 
+#include <exception>  // std::exception
+
 #include "application.hpp"
 using namespace cryfa;
 

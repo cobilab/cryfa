@@ -10,6 +10,7 @@
 #define CRYFA_ASSERT_H
 
 #include <fstream>
+#include <stdexcept>  // std::runtime_error
 
 #include "string.hpp"
 

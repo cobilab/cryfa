@@ -10,6 +10,7 @@
 #define CRYFA_DEF_H
 
 #include <iostream>
+#include <limits>         // std::numeric_limits
 #include <random>         // std::mt19937
 #include <unordered_map>  // Hash table
 
