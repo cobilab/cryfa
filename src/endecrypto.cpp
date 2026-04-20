@@ -14,6 +14,7 @@
 #include <iomanip>  // setw, std::setprecision
 #include <mutex>
 #include <thread>
+#include <vector>
 
 #include "assert.hpp"
 #include "file.hpp"
@@ -1039,7 +1040,7 @@ void EnDecrypto::join_packed_files(const std::string& headers,
                                    const std::string& qscores, char fT,
                                    bool justPlus) const {
   byte t;  // For threads
-  std::ifstream pkFile[n_threads];
+  std::vector<std::ifstream> pkFile(n_threads);
   std::ofstream pckdFile(PCKD_FNAME);  // Packed file
   std::string content;
   content.reserve(BLOCK_SIZE);
@@ -1105,7 +1106,7 @@ void EnDecrypto::join_packed_files(const std::string& headers,
  */
 void EnDecrypto::join_unpacked_files() const {
   byte t;  // For threads
-  std::ifstream upkdFile[n_threads];
+  std::vector<std::ifstream> upkdFile(n_threads);
   for (t = n_threads; t--;) upkdFile[t].open(UPK_FNAME + std::to_string(t));
   std::string content;
   content.reserve(BLOCK_SIZE);
@@ -1148,7 +1149,7 @@ void EnDecrypto::join_unpacked_files() const {
  * @brief Join partially shuffled files
  */
 void EnDecrypto::join_shuffled_files() const {
-  std::ifstream shFile[n_threads];
+  std::vector<std::ifstream> shFile(n_threads);
   std::ofstream shdFile(PCKD_FNAME);  // Output Shuffled file
   std::string content;
   content.reserve(BLOCK_SIZE);
@@ -1196,7 +1197,7 @@ void EnDecrypto::join_shuffled_files() const {
  */
 void EnDecrypto::join_unshuffled_files() const {
   byte t;  // For threads
-  std::ifstream ushdFile[n_threads];
+  std::vector<std::ifstream> ushdFile(n_threads);
   for (t = n_threads; t--;) ushdFile[t].open(USH_FNAME + std::to_string(t));
   std::string content;
   content.reserve(BLOCK_SIZE);

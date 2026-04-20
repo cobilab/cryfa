@@ -27,7 +27,7 @@ void Fasta::compress() {
   if (!verbose) std::cerr << bold("[+]") << " Compacting ...";
   const auto start = now();  // Start timer
 
-  std::thread arrThr[n_threads];
+  std::vector<std::thread> arrThr(n_threads);
   std::string headers;
   packfa_s pkStruct;  // Collection of inputs to pass to pack...
 
