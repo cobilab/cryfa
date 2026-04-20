@@ -2,6 +2,13 @@ cmake_minimum_required(VERSION 4.0.0)
 
 project(cryfa)
 
+# On MSVC x64 the cryptopp runtime uses hand-coded MASM routines
+# (CPUID64, XGETBV64, Baseline_Add/Sub, SHA256/GCM/Rijndael_*_SSE2).
+# Enable the MASM language so CMake can assemble x64dll.asm.
+if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+    enable_language(ASM_MASM)
+endif()
+
 if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE Release)
 endif()
@@ -56,15 +63,14 @@ set_target_properties(cryptopp-static PROPERTIES
 )
 # README.txt: include -DNDEBUG for release builds to prevent assert-based
 # information leaks to platform error-reporting tools (Apport, CrashReporter).
-# On MSVC x64, cryptopp defines CRYPTOPP_X64_MASM_AVAILABLE and expects
-# x64msc.asm (Baseline_Add, Baseline_Sub, CPUID64, XGETBV64,
-# SHA256_HashMultipleBlocks_SSE2, GCM_AuthenticateBlocks_*_SSE2,
-# Rijndael_Enc_AdvancedProcessBlocks_SSE2) – which we do not compile.
-# CRYPTOPP_DISABLE_ASM suppresses that define so the C++ / intrinsic
-# implementations in *_simd.cpp are used instead.
 target_compile_definitions(cryptopp-static PRIVATE
-    $<$<CONFIG:Release>:NDEBUG>
-    $<$<CXX_COMPILER_ID:MSVC>:CRYPTOPP_DISABLE_ASM>)
+    $<$<CONFIG:Release>:NDEBUG>)
+# On MSVC x64 add x64dll.asm which provides the hand-coded implementations of
+# CPUID64, XGETBV64, Baseline_Add, Baseline_Sub, SHA256_HashMultipleBlocks_SSE2,
+# GCM_AuthenticateBlocks_{2K,64K}_SSE2, Rijndael_Enc_AdvancedProcessBlocks_SSE2.
+if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 8)
+    target_sources(cryptopp-static PRIVATE "${cryptopp_SOURCE_DIR}/x64dll.asm")
+endif()
 
 # Mirror cryptopp's GNUmakefile: apply per-file SIMD flags so that only the
 # files that need a given ISA extension request it. check_cxx_compiler_flag
