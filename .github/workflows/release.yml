@@ -45,13 +45,13 @@ jobs:
 
       - name: Upload cryfa (Unix)
         if: runner.os != 'Windows'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: build/cryfa-${{ matrix.asset_suffix }}.tar.xz
 
       - name: Upload keygen (Unix)
         if: runner.os != 'Windows'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: build/keygen-${{ matrix.asset_suffix }}.tar.xz
 
@@ -66,12 +66,12 @@ jobs:
 
       - name: Upload cryfa (Windows)
         if: runner.os == 'Windows'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: build/cryfa-windows.zip
 
       - name: Upload keygen (Windows)
         if: runner.os == 'Windows'
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: build/keygen-windows.zip
