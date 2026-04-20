@@ -8,8 +8,13 @@ endif()
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_FLAGS_RELEASE "-O3")
-set(CMAKE_CXX_FLAGS_DEBUG "-g")
+if(MSVC)
+    set(CMAKE_CXX_FLAGS_RELEASE "/O2")
+    set(CMAKE_CXX_FLAGS_DEBUG "/Zi")
+else()
+    set(CMAKE_CXX_FLAGS_RELEASE "-O3")
+    set(CMAKE_CXX_FLAGS_DEBUG "-g")
+endif()
 
 # ── Cryptopp ──────────────────────────────────────────────────────────────────
 include(FetchContent)
@@ -34,6 +39,10 @@ add_library(cryptopp-static STATIC ${CRYPTOPP_SOURCES})
 target_include_directories(cryptopp-static
     PRIVATE "${cryptopp_SOURCE_DIR}"   # internal: #include "aes.h"
     PUBLIC  "${CRYPTOPP_INCLUDE_DIR}"  # external: #include "cryptopp/aes.h"
+)
+set_target_properties(cryptopp-static PROPERTIES
+    CXX_STANDARD 17
+    CXX_STANDARD_REQUIRED ON
 )
 
 find_package(Threads REQUIRED)
