@@ -4,7 +4,7 @@ LABEL maintainer="Morteza Hosseini"
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
- && apt-get install -y --no-install-recommends build-essential python3-pip \
+ && apt-get install -y --no-install-recommends build-essential git python3-pip \
  && pip3 install cmake \
  && rm -rf /var/lib/apt/lists/*
 
