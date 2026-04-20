@@ -45,6 +45,19 @@ set_target_properties(cryptopp-static PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 
+# On GCC/Clang (x86/x86_64), cryptopp's SIMD source files need explicit
+# ISA flags that its own GNUmakefile supplies per-file. Add them to the
+# whole target; on non-x86 (ARM/Apple Silicon) these flags don't exist and
+# the check_cxx_compiler_flag guard keeps things safe.
+if(NOT MSVC)
+    include(CheckCXXCompilerFlag)
+    check_cxx_compiler_flag("-msse4.1" COMPILER_SUPPORTS_SSE41)
+    if(COMPILER_SUPPORTS_SSE41)
+        target_compile_options(cryptopp-static PRIVATE
+            -msse4.1 -mssse3 -maes -mpclmul)
+    endif()
+endif()
+
 find_package(Threads REQUIRED)
 
 add_library(libCryfaCommon OBJECT
