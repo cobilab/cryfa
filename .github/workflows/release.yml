@@ -1,0 +1,77 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write   # needed to create releases and upload assets
+
+jobs:
+  build:
+    name: build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            asset_suffix: linux
+          - os: macos-latest
+            asset_suffix: macOS
+          - os: windows-latest
+            asset_suffix: windows
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Get CMake
+        uses: lukka/get-cmake@latest
+
+      - name: Configure
+        run: cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build --parallel 4 --config Release
+
+      # ── Linux / macOS ────────────────────────────────────────────────────---
+      - name: Package (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          cd build
+          tar -cJf cryfa-${{ matrix.asset_suffix }}.tar.xz cryfa
+          tar -cJf keygen-${{ matrix.asset_suffix }}.tar.xz keygen
+
+      - name: Upload cryfa (Unix)
+        if: runner.os != 'Windows'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/cryfa-${{ matrix.asset_suffix }}.tar.xz
+
+      - name: Upload keygen (Unix)
+        if: runner.os != 'Windows'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/keygen-${{ matrix.asset_suffix }}.tar.xz
+
+      # ── Windows ──────────────────────────────────────────────────────────---
+      - name: Package (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          cd build\Release
+          Compress-Archive -Path cryfa.exe  -DestinationPath ..\cryfa-windows.zip
+          Compress-Archive -Path keygen.exe -DestinationPath ..\keygen-windows.zip
+
+      - name: Upload cryfa (Windows)
+        if: runner.os == 'Windows'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/cryfa-windows.zip
+
+      - name: Upload keygen (Windows)
+        if: runner.os == 'Windows'
+        uses: softprops/action-gh-release@v2
+        with:
+          files: build/keygen-windows.zip
