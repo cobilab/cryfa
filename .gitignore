@@ -48,5 +48,6 @@ gprof2dot.py
 **/build
 
 # Cryfa
+bin/
 cryfa
 keygen
