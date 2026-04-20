@@ -4,7 +4,8 @@ LABEL maintainer="Morteza Hosseini"
 
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \
- && apt-get install -y --no-install-recommends cmake g++ \
+ && apt-get install -y --no-install-recommends g++ python3-pip \
+ && pip3 install cmake \
  && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /src
