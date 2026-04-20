@@ -6,6 +6,7 @@
  * @copyright The GNU General Public License v3.0
  */
 
+#include <cstdlib>
 #include <iostream>
 
 #include "assert.hpp"
@@ -17,7 +18,7 @@ using namespace cryfa;
  * @brief  Generate a key and save in a file
  * @param  argc  number of command line arguments
  * @param  argv  command line arguments
- * @return SUCCESS or FAILURE   
+ * @return SUCCESS or FAILURE
  */
 int main(int argc, char* argv[]) {
   try {
@@ -39,13 +40,13 @@ int main(int argc, char* argv[]) {
 
     std::uniform_int_distribution<rng_t::result_type> udist(0, 255);
     rng_t rng;
-    // Using old random to generate the new random initSeed
-    srandom(static_cast<u32>(
+    // Using old rand to generate the new random initSeed
+    srand(static_cast<u32>(
         36721 * (94583 * accum_even(pass.begin(), pass.end(), 0ul) +
                  279431 * accum_odd(pass.begin(), pass.end(), 0ul)) +
         623681));
     u64 initSeed = 0;
-    for (char c : pass) initSeed += c * random() + random();
+    for (char c : pass) initSeed += c * rand() + rand();
     rng.seed(static_cast<rng_t::result_type>(initSeed));
 
     std::string key;
