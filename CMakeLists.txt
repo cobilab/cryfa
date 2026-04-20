@@ -39,6 +39,7 @@ target_include_directories(cryptopp-static
 find_package(Threads REQUIRED)
 
 add_library(libCryfaCommon OBJECT
+    src/application.cpp
     src/endecrypto.cpp
     src/fasta.cpp
     src/fastq.cpp

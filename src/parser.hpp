@@ -14,6 +14,7 @@
 
 #include "def.hpp"
 #include "file.hpp"
+#include "numeric.hpp"
 #include "string.hpp"
 
 namespace cryfa {
