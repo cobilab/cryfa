@@ -1,10 +1,21 @@
-FROM ubuntu:22.04
-LABEL maintainer "Morteza Hosseini"
+# ── Stage 1: builder ─────────────────────────────────────────────────────────-
+FROM ubuntu:22.04 AS builder
+LABEL maintainer="Morteza Hosseini"
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt update && apt install -y cmake g++
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends cmake g++ \
+ && rm -rf /var/lib/apt/lists/*
 
-COPY . /cryfa
-WORKDIR /cryfa
-RUN bash install.sh
-# ENTRYPOINT ["./cryfa"]
+WORKDIR /src
+COPY . .
+RUN cmake -B build -DCMAKE_BUILD_TYPE=Release \
+ && cmake --build build --parallel "$(nproc)" --config Release
+
+# ── Stage 2: runtime ─────────────────────────────────────────────────────────-
+FROM debian:bookworm-slim
+
+COPY --from=builder /src/build/cryfa  /usr/local/bin/cryfa
+COPY --from=builder /src/build/keygen /usr/local/bin/keygen
+
+ENTRYPOINT ["cryfa"]

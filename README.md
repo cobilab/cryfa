@@ -15,10 +15,19 @@ conda install -c bioconda -y cryfa
 
 ## Docker
 
+The image is available for **linux/amd64** and **linux/arm64** (Apple Silicon, AWS Graviton).
+
 ```bash
-# Pull & Run the image
-docker pull smortezah/cryfa;
-docker run -it smortezah/cryfa;
+# Pull the image
+docker pull smortezah/cryfa
+
+# Encrypt (mount the directory containing your key file and input)
+docker run --rm -v /path/to/data:/data smortezah/cryfa \
+    -k /data/pass.txt /data/in.fq > out.crf
+
+# Decrypt
+docker run --rm -v /path/to/data:/data smortezah/cryfa \
+    -k /data/pass.txt -d /data/out.crf > restored.fq
 ```
 
 ## Build from source
