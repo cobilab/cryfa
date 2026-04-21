@@ -159,7 +159,9 @@ inline void show_help() {
              "the maximum file size supported is 64 GB. For larger files, you "
              "can split them, e.g. by \"split\" command, and encrypt each "
              "chunk. After the decryption, you can concatenate the chunks, "
-             "e.g. by \"cat\" command.", "", 62) << std::endl;
+             "e.g. by \"cat\" command.",
+             "", 62)
+      << std::endl;
 
   throw EXIT_SUCCESS;
 }
@@ -209,8 +211,8 @@ char parse(Param& par, int argc, char** argv) {
 
   // key -- MANDATORY
   assert_single(!exist(vArgs.begin(), vArgs.end(), "-k") &&
-             !exist(vArgs.begin(), vArgs.end(), "--key"),
-         "no password file has been set.");
+                    !exist(vArgs.begin(), vArgs.end(), "--key"),
+                "no password file has been set.");
   for (auto i = vArgs.begin(); i != vArgs.end(); ++i) {
     if (*i == "-k" || *i == "--key") {
       if (i + 1 != vArgs.end() && (*(i + 1))[0] != '-') {

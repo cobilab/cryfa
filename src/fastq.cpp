@@ -507,7 +507,7 @@ void Fastq::unpack_hS_qS(const unpackfq_s& upkStruct, byte threadID) {
       ++i;  // +
 
       (this->*unpackQS)(upkQsOut, i, upkStruct.qsUnpack);
-      content += upkQsOut + "\n";    // Qs
+      content += upkQsOut + "\n";  // Qs
     } while (++i != decText.end());  // If trouble: change "!=" to "<"
 
     // Update the chunk size and positions (beg & end)
@@ -596,7 +596,7 @@ void Fastq::unpack_hS_qL(const unpackfq_s& upkStruct, byte threadID) {
       ++i;  // +
 
       unpack_large(upkQsOut, i, upkStruct.XChar_qs, upkStruct.qsUnpack);
-      content += upkQsOut + "\n";    // Qs
+      content += upkQsOut + "\n";  // Qs
     } while (++i != decText.end());  // If trouble: change "!=" to "<"
 
     // Update the chunk size and positions (beg & end)
@@ -685,7 +685,7 @@ void Fastq::unpack_hL_qS(const unpackfq_s& upkStruct, byte threadID) {
       ++i;  // +
 
       (this->*unpackQS)(upkQsOut, i, upkStruct.qsUnpack);
-      content += upkQsOut + "\n";    // Qs
+      content += upkQsOut + "\n";  // Qs
     } while (++i != decText.end());  // If trouble: change "!=" to "<"
 
     // Update the chunk size and positions (beg & end)
@@ -773,7 +773,7 @@ void Fastq::unpack_hL_qL(const unpackfq_s& upkStruct, byte threadID) {
       ++i;  // +
 
       unpack_large(upkQsOut, i, upkStruct.XChar_qs, upkStruct.qsUnpack);
-      content += upkQsOut + "\n";    // Qs
+      content += upkQsOut + "\n";  // Qs
     } while (++i != decText.end());  // If trouble: change "!=" to "<"
 
     // Update the chunk size and positions (beg & end)

@@ -118,8 +118,7 @@ inline std::string wrap_text(std::string text, std::string pre_str = "",
       if (word.empty()) return "";
 
       auto p = std::end(word);
-      while (p != std::begin(word) && *--p != ' ')
-        ;
+      while (p != std::begin(word) && *--p != ' ');
       if (*p == ' ') word = std::string(++p, std::end(word));
 
       out += "\n" + pre_str + word;
