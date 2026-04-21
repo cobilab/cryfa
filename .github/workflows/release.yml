@@ -47,12 +47,14 @@ jobs:
         if: runner.os != 'Windows'
         uses: softprops/action-gh-release@v3
         with:
+          draft: true
           files: build/cryfa-${{ matrix.asset_suffix }}.tar.xz
 
       - name: Upload keygen (Unix)
         if: runner.os != 'Windows'
         uses: softprops/action-gh-release@v3
         with:
+          draft: true
           files: build/keygen-${{ matrix.asset_suffix }}.tar.xz
 
       # ── Windows ──────────────────────────────────────────────────────────---
@@ -68,10 +70,12 @@ jobs:
         if: runner.os == 'Windows'
         uses: softprops/action-gh-release@v3
         with:
+          draft: true
           files: build/cryfa-windows.zip
 
       - name: Upload keygen (Windows)
         if: runner.os == 'Windows'
         uses: softprops/action-gh-release@v3
         with:
+          draft: true
           files: build/keygen-windows.zip
