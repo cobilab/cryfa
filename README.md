@@ -35,9 +35,10 @@ docker run --rm -v /path/to/data:/data smortezah/cryfa \
 ### Linux
 
 ```bash
-# Install git and cmake
+# Install git and cmake (≥ 4.0)
 sudo apt update;
-sudo apt install git cmake;
+sudo apt install git python3-pip;
+pip3 install cmake;
 
 # Clone and install Cryfa
 git clone https://github.com/cobilab/cryfa.git;
@@ -49,13 +50,26 @@ sh install.sh;
 
 ```bash
 # Install Homebrew, git and cmake
-/usr/bin/ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/master/install)";
+/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)";
 brew install git cmake;
 
 # Clone and install Cryfa
 git clone https://github.com/cobilab/cryfa.git;
 cd cryfa;
 sh install.sh;
+```
+
+### Windows
+
+```powershell
+# Install CMake and Visual Studio Build Tools (requires winget)
+winget install --id Kitware.CMake --source winget
+winget install --id Microsoft.VisualStudio.2022.BuildTools --source winget
+
+# Clone and install Cryfa
+git clone https://github.com/cobilab/cryfa.git
+cd cryfa
+.\install.ps1
 ```
 
 > [!NOTE]
