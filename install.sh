@@ -3,7 +3,6 @@
 # Parameters
 BUILD_TYPE=Release
 BUILD=build
-SOURCE=src
 PARALLEL=8
 
 # Configure CMake
