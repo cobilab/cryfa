@@ -17,7 +17,7 @@
 namespace cryfa {
 // Version
 static const std::string MONTH = "04";
-static const std::string YEAR = "20";
+static const std::string YEAR = "26";
 static const std::string VERSION = YEAR + "." + MONTH;
 
 // Typedefs
