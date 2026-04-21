@@ -1,7 +1,9 @@
 <p align="center"><img src="logo.png" alt="Cryfa" height="150"/></p>
 
-[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
+[![Conda Version](https://anaconda.org/bioconda/cryfa/badges/version.svg)](https://anaconda.org/bioconda/cryfa)
 [![CI](https://github.com/cobilab/cryfa/actions/workflows/ci.yml/badge.svg)](https://github.com/cobilab/cryfa/actions/workflows/ci.yml)
+[![Platforms](https://anaconda.org/bioconda/cryfa/badges/platforms.svg)](https://anaconda.org/bioconda/cryfa)
+[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 
 Cryfa is an ultrafast encryption tool specifically designed for genomic data. Besides providing robust security, it also compresses FASTA/FASTQ sequences by a factor of three, making it an efficient solution for managing genomic data.
 
@@ -9,15 +11,15 @@ Cryfa is an ultrafast encryption tool specifically designed for genomic data. Be
 
 ## Conda
 
-```bash
-conda install -c bioconda -y cryfa
+```sh
+conda install -y bioconda::cryfa
 ```
 
 ## Docker
 
 The image is available for **linux/amd64** and **linux/arm64** (Apple Silicon, AWS Graviton).
 
-```bash
+```sh
 # Pull the image
 docker pull smortezah/cryfa
 
@@ -34,7 +36,7 @@ docker run --rm -v /path/to/data:/data smortezah/cryfa \
 
 ### Linux
 
-```bash
+```sh
 # Install git and cmake (≥ 4.0)
 sudo apt update;
 sudo apt install git python3-pip;
@@ -48,7 +50,7 @@ sh install.sh;
 
 ### macOS
 
-```bash
+```sh
 # Install Homebrew, git and cmake
 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)";
 brew install git cmake;
@@ -77,121 +79,73 @@ cd cryfa
 
 # Usage
 
-To execute Cryfa in stand-alone mode, utilize the command below:
+Run Cryfa with:
 
-```bash
+```sh
 ./cryfa [OPTION]... -k [KEY_FILE] [-d] [IN_FILE] > [OUT_FILE]
 ```
 
-For instance, to compact and encrypt data, execute the following command:
+For example, to compact and encrypt:
 
-```bash
+```sh
 ./cryfa -k pass.txt in.fq > comp
 ```
 
-To decrypt and unpack the data, execute the command below:
+To decrypt and unpack:
 
-```bash
+```sh
 ./cryfa -k pass.txt -d comp > orig.fq
 ```
 
-A sample file, "in.fq", is available in the example/ directory. Detailed descriptions of the options are provided in the subsequent sections.
+A sample file, `in.fq`, is available in the `example/` directory.
 
 > [!NOTE]
 > Cryfa supports a maximum file size of 64 GB. For larger files, consider splitting them into smaller chunks, e.g. using the `split` command in Linux, and then encrypt each chunk separately. After decryption, you can reassemble the chunks using the `cat` command.
 
 ## Input file format
-Cryfa identifies the format of a genomic data file by examining its content, not its extension. For instance, a FASTA file named "test" can be input into Cryfa with any extension, such as "test", "test.fa", "test.fasta", "test.fas", "test.fsa", etc. Based on this, executing the command
 
-```bash
+Cryfa identifies the format of a genomic data file by examining its content, not its extension. For instance, a FASTA file named `test` can be provided with any extension — `test`, `test.fa`, `test.fasta`, `test.fas`, `test.fsa`, etc. So, running
+
+```sh
 ./cryfa -k pass.txt test > comp
 ```
 
 is equivalent to running
 
-```bash
+```sh
 ./cryfa -k pass.txt test.fa > comp
 ```
 
 > [!NOTE]
-> The password file extension is not a limiting factor for Cryfa. It can have any extension or even no extension at all. For instance, "pass", "pass.txt", "pass.dat", and so on, are all valid and yield the same result.
+> The password file can have any extension or none at all -- `pass`, `pass.txt`, `pass.dat`, etc. are all valid and yield the same result.
 
-## Benchmarking Cryfa Against Other Methods
+## Options
 
-To benchmark Cryfa against other methods, configure the parameters in the **run.sh** bash script and execute it:
+Cryfa supports the following options:
 
-```bash
-./run.sh
-```
+| Option | Long form        | Argument   | Required | Description                                                                 |
+| ------ | ---------------- | ---------- | -------- | --------------------------------------------------------------------------- |
+| `-k`   | `--key`          | `KEY_FILE` | Yes      | Key file containing the password. Use `./keygen` to generate a strong one.  |
+| `-d`   | `--dec`          |            | No       | Decrypt and unpack the input file.                                          |
+| `-f`   | `--force`        |            | No       | Force non-FASTA/FASTQ mode: skip compaction, but still shuffle and encrypt. |
+| `-s`   | `--stop_shuffle` |            | No       | Disable shuffling of the input.                                             |
+| `-t`   | `--thread`       | `NUMBER`   | No       | Number of threads to use.                                                   |
+| `-v`   | `--verbose`      |            | No       | Enable verbose mode for more detailed output.                               |
+| `-h`   | `--help`         |            | No       | Display the usage guide.                                                    |
+|        | `--version`      |            | No       | Display version information.                                                |
 
-This script automates the process of downloading datasets, installing dependencies, setting up compression and encryption tools, executing these tools, and finally, displaying the results.
-
-# Options
-
-To explore the available options in Cryfa, execute the command below:
-
-```bash
-./cryfa
-```
-
-which will yield the following:
-
-```
-SYNOPSIS
-      ./cryfa [OPTION]... -k [KEY_FILE] [-d] [IN_FILE] > [OUT_FILE]
-
-SAMPLE
-      Encrypt and compact:  ./cryfa -k pass.txt in.fq > comp     
-      Decrypt and unpack:   ./cryfa -k pass.txt -d comp > orig.fq
-      
-      Encrypt:              ./cryfa -k pass.txt in > enc
-      Decrypt:              ./cryfa -k pass.txt -d enc > orig
-
-OPTIONS
-      Compact & encrypt FASTA/FASTQ files.
-      Encrypt any text-based genomic data, e.g., VCF/SAM/BAM.
-
-      -k [KEY_FILE],  --key [KEY_FILE]
-           key file name -- MANDATORY
-           The KEY_FILE should contain a password.
-           To make a strong password, the "keygen" program can be
-           used via the command "./keygen".
-
-      -d,  --dec
-           decrypt & unpack
-           
-      -f,  --force
-           force to consider input as non-FASTA/FASTQ
-           Forces Cryfa not to compact, but shuffle and encrypt.
-           If the input is FASTA/FASTQ, it is considered as
-           non-FASTA/FASTQ; so, compaction will be ignored, but 
-           shuffling and encryption will be performed.
-           
-      -s,  --stop_shuffle
-           stop shuffling the input
-
-      -t [NUMBER],  --thread [NUMBER]
-           number of threads
-
-      -v,  --verbose
-           verbose mode (more information)
-      
-      -h,  --help
-           usage guide
-
-      --version
-           version information
-```
+> [!NOTE]
+> Cryfa can compact and encrypt FASTA/FASTQ files, or encrypt any other text-based genomic data (e.g., VCF, SAM, BAM) without compaction.
 
 Cryfa leverages the standard output stream, allowing seamless integration with existing data processing pipelines.
 
 ## Creating a Key File
 
-There are two approaches to create a "KEY_FILE" that can be used with the `-k` or `--key` flags. You can either save a raw password in a file or use the provided "keygen" program to generate a robust password. The latter method is strongly recommended for enhanced security.
+There are two ways to create a `KEY_FILE` for use with `-k` / `--key`: save a raw password in a file, or use the `keygen` program to generate a strong one. The latter is strongly recommended.
 
-To utilize the first method, use the commands below to save a raw password in a file, which can then be passed to Cryfa. In this example, "Such a strong password!" is the raw password and "pass.txt" is the file where the password is stored. Alternatively, you can use a text editor to save the password in a file:
+To use the first method, save a raw password to a file (e.g., `pass.txt`) and pass it to Cryfa. You can use any text editor or run:
 
-```bash
+```sh
 echo "Such a strong password!" > pass.txt
 ./cryfa -k pass.txt IN_FILE > OUT_FILE
 ```
@@ -202,9 +156,9 @@ While the password must contain at least 8 characters, it's highly recommended t
 - Includes a mix of lowercase (a-z) and uppercase (A-Z) letters, digits (0-9), and symbols (e.g., !, #, $, %, and })
 - Is not a simple repetition of characters (e.g., zzzzzz), a keyboard pattern (e.g., qwerty), or a sequence of digits (e.g., 123456)
 
-Alternatively, you can leverage the "keygen" program to automatically generate a robust password. To do this, execute:
+To use `keygen` instead, run:
 
-```bash
+```sh
 ./keygen
 ```
 
@@ -214,26 +168,36 @@ You'll be prompted with:
 Enter a password, then press 'Enter':
 ```
 
-At this point, input a raw password, for example, "A keygen raw pass!", and press "Enter". Subsequently, you'll see:
+Enter a raw password (e.g., `A keygen raw pass!`) and press Enter. You'll then see:
 
 ```text
 Enter a file name to save the generated key, then press 'Enter':
 ```
 
-The robust password generated by the "keygen" program will be stored in the file you specify, such as "key.txt". Note that "keygen" requires an initial raw password to generate a strong password, but this initial password doesn't need to be particularly strong. Once the key file is created, you can use it with Cryfa as shown below:
+The generated key will be saved to the file you specify (e.g., `key.txt`). Note that `keygen` requires an initial raw password, but it doesn't need to be particularly strong. Use the resulting key file with Cryfa:
 
-```bash
+```sh
 ./cryfa -k key.txt IN_FILE > OUT_FILE
 ```
 
-For a deeper understanding of "key management" - which encompasses the generation, exchange, storage, usage, and replacement of keys - consider exploring [[1]](https://en.wikipedia.org/wiki/Key_management), [[2]](https://info.townsendsecurity.com/definitive-guide-to-encryption-key-management-fundamentals), [[3]](https://csrc.nist.gov/projects/key-management/cryptographic-key-management-systems) and [[4]](https://www.cryptomathic.com/news-events/blog/what-is-key-management-a-ciso-perspective).
+To learn more about key management (generation, exchange, storage, usage, and replacement of keys), see [[1]](https://en.wikipedia.org/wiki/Key_management), [[2]](https://info.townsendsecurity.com/definitive-guide-to-encryption-key-management-fundamentals), [[3]](https://csrc.nist.gov/projects/key-management/cryptographic-key-management-systems) and [[4]](https://www.cryptomathic.com/news-events/blog/what-is-key-management-a-ciso-perspective).
+
+## Benchmarking Cryfa Against Other Methods
+
+To benchmark Cryfa against other methods, configure the parameters in the **run.sh** bash script and execute it:
+
+```sh
+./run.sh
+```
+
+This script automates the process of downloading datasets, installing dependencies, setting up compression and encryption tools, executing these tools, and finally, displaying the results.
 
 # Citation
 
-If you utilize Cryfa in your research, please acknowledge the tool by citing the following references:
+If you use Cryfa in your research, please cite the following references:
 
-- M. Hosseini, D. Pratas and A.J. Pinho, "Cryfa: a secure encryption tool for genomic data," *Bioinformatics*, vol. 35, no. 1, pp. 146--148, 2018. [DOI: 10.1093/bioinformatics/bty645](https://doi.org/10.1093/bioinformatics/bty645)
-- **[OPTIONAL]** D. Pratas, M. Hosseini and A.J. Pinho, "Cryfa: a tool to compact and encrypt FASTA files," *11'th International Conference on Practical Applications of Computational Biology & Bioinformatics* (PACBB), Springer, June 2017. [DOI: 10.1007/978-3-319-60816-7_37](https://doi.org/10.1007/978-3-319-60816-7_37)
+- M. Hosseini, D. Pratas and A.J. Pinho, "Cryfa: a secure encryption tool for genomic data," _Bioinformatics_, vol. 35, no. 1, pp. 146--148, 2018. [DOI: 10.1093/bioinformatics/bty645](https://doi.org/10.1093/bioinformatics/bty645)
+- **[OPTIONAL]** D. Pratas, M. Hosseini and A.J. Pinho, "Cryfa: a tool to compact and encrypt FASTA files," _11'th International Conference on Practical Applications of Computational Biology & Bioinformatics_ (PACBB), Springer, June 2017. [DOI: 10.1007/978-3-319-60816-7_37](https://doi.org/10.1007/978-3-319-60816-7_37)
 
 # License
 
