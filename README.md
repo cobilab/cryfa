@@ -184,10 +184,10 @@ To learn more about key management (generation, exchange, storage, usage, and re
 
 ## Benchmarking Cryfa Against Other Methods
 
-To benchmark Cryfa against other methods, configure the parameters in the **run.sh** bash script and execute it:
+To benchmark Cryfa against other methods, configure the parameters in the **bench_cryfa.sh** bash script and execute it:
 
 ```sh
-./run.sh
+./bench_cryfa.sh
 ```
 
 This script automates the process of downloading datasets, installing dependencies, setting up compression and encryption tools, executing these tools, and finally, displaying the results.
