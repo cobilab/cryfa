@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+# Install boost
+
+sudo apt-get update
+sudo apt-get install libboost1.54-dev
+sudo apt-get install libboost-system1.54-dev
+sudo apt-get install libboost-system-dev
+sudo apt-get install libboost-filesystem1.54-dev
+sudo apt-get install libboost-filesystem-dev
+sudo apt-get install libboost-iostreams-dev
+sudo apt-get install libboost-iostreams1.54-dev
+sudo apt-get install libboost-thread1.54-dev
+sudo apt-get install libboost-thread-dev
