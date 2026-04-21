@@ -73,7 +73,7 @@ cd cryfa
 ```
 
 > [!NOTE]
-> Pre-compiled binaries for 64-bit Linux, macOS, and Windows are available as assets on the [Releases](../../releases) page.
+> Pre-compiled binaries for 64-bit Linux, macOS, and Windows are available as assets on the [Releases](https://github.com/cobilab/cryfa/releases) page.
 
 # Usage
 
