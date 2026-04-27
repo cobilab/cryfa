@@ -54,8 +54,6 @@ class EnDecrypto : public Security {
 
   void build_hash_tbl(htbl_t&, const std::string&, short);
   void build_unpack_tbl(std::vector<std::string>&, const std::string&, u16);
-  auto dna_pack_idx(const std::string&) -> byte;
-  auto large_pack_idx(const std::string&, const htbl_t&) -> u16;
   void pack_seq(std::string&, const std::string&);
   void unpack_seq(std::string&, std::string::iterator&);
   void unpack_large(std::string&, std::string::iterator&, char, const std::vector<std::string>&);

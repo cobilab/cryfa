@@ -9,11 +9,13 @@
 #include "endecrypto.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>  // std::pow
 #include <format>
 #include <fstream>
 #include <functional>
 #include <iomanip>  // setw, std::setprecision
+#include <limits>
 #include <mutex>
 #include <thread>
 #include <vector>
@@ -24,6 +26,104 @@
 using namespace cryfa;
 
 std::mutex mutxEnDe;
+
+namespace {
+constexpr u16 INVALID_RANK = std::numeric_limits<u16>::max();
+
+struct DenseLookup {
+  std::string alphabet;
+  bool with_extra = false;
+  u16 base = 0;
+  u16 extra_rank = 0;
+  std::array<u16, 256> rank{};
+};
+
+auto build_dense_lookup(const std::string& alphabet, bool with_extra) -> DenseLookup {
+  DenseLookup lookup;
+  lookup.alphabet = alphabet;
+  lookup.with_extra = with_extra;
+  lookup.base = static_cast<u16>(alphabet.size() + (with_extra ? 1 : 0));
+  lookup.extra_rank = static_cast<u16>(alphabet.size());
+  lookup.rank.fill(INVALID_RANK);
+
+  for (u16 i = 0; i != alphabet.size(); ++i) {
+    lookup.rank[(byte)alphabet[i]] = i;
+  }
+  if (with_extra) {
+    lookup.rank[(byte)(alphabet.back() + 1)] = lookup.extra_rank;
+  }
+
+  return lookup;
+}
+
+auto dense_lookup(const std::string& alphabet, bool with_extra = false) -> const DenseLookup& {
+  thread_local std::vector<DenseLookup> cache;
+  for (const DenseLookup& lookup : cache) {
+    if (lookup.with_extra == with_extra && lookup.alphabet == alphabet) {
+      return lookup;
+    }
+  }
+
+  cache.push_back(build_dense_lookup(alphabet, with_extra));
+  return cache.back();
+}
+
+auto checked_rank(const DenseLookup& lookup, char c) -> u16 {
+  const u16 rank = lookup.rank[(byte)c];
+  if (rank == INVALID_RANK) {
+    error(std::format("symbol \"{}\" not found!", c));
+  }
+  return rank;
+}
+
+auto tuple_index(const DenseLookup& lookup, const char* tuple, size_t width) -> u16 {
+  u64 index = 0;
+  for (size_t i = 0; i != width; ++i) {
+    index = index * lookup.base + checked_rank(lookup, tuple[i]);
+  }
+  return static_cast<u16>(index);
+}
+
+auto large_tuple_index(const DenseLookup& lookup, char s0, char s1, char s2, bool& first_not_in,
+                       bool& second_not_in, bool& third_not_in) -> u16 {
+  auto rank_or_extra = [&](char c, bool& not_in) {
+    const u16 rank = lookup.rank[(byte)c];
+    not_in = (rank == INVALID_RANK);
+    return not_in ? lookup.extra_rank : rank;
+  };
+
+  const u16 r0 = rank_or_extra(s0, first_not_in);
+  const u16 r1 = rank_or_extra(s1, second_not_in);
+  const u16 r2 = rank_or_extra(s2, third_not_in);
+  return static_cast<u16>((r0 * lookup.base + r1) * lookup.base + r2);
+}
+
+auto dna_rank_or_x(char c, bool& not_in) -> byte {
+  not_in = false;
+  switch (c) {
+    case 'A':
+      return 0;
+    case 'C':
+      return 1;
+    case 'G':
+      return 2;
+    case 'T':
+      return 3;
+    case 'N':
+      return 4;
+    default:
+      not_in = true;
+      return 5;
+  }
+}
+
+void append_penalty_tail(std::string& packed, const std::string& input, size_t pos) {
+  for (; pos != input.size(); ++pos) {
+    packed += (char)255;
+    packed += input[pos];
+  }
+}
+}  // namespace
 
 /**
  * @brief Build a hash table
@@ -234,55 +334,25 @@ void EnDecrypto::build_unpack_tbl(std::vector<std::string>& unpack, const std::s
 }
 
 /**
- * @brief Index of each DNA bases pack
- * @param key Key
- * @return Value (based on the idea of key-value in a hash table)
- */
-byte EnDecrypto::dna_pack_idx(const std::string& key) {
-  const auto found = DNA_MAP.find(key);
-  if (found == DNA_MAP.end()) {
-    error(std::format("key \"{}\" not found!", key));
-  }
-
-  return (byte)found->second;
-}
-
-/**
- * @brief Index of each pack, when # > 39
- * @param key Key
- * @param map Hash table
- * @return Value (based on the idea of key-value in a hash table)
- */
-u16 EnDecrypto::large_pack_idx(const std::string& key, const htbl_t& map) {
-  const auto found = map.find(key);
-  if (found == map.end()) {
-    error(std::format("key \"{}\" not found!", key));
-  }
-  return (u16)found->second;
-}
-
-/**
  * @brief Encapsulate each 3 DNA bases in 1 byte. Reduction: ~2/3
  * @param[out] packedSeq Packed sequence
  * @param seq Sequence
  */
 void EnDecrypto::pack_seq(std::string& packedSeq, const std::string& seq) {
-  auto i = seq.begin();
+  size_t pos = 0;
+  const size_t tuple_limit = seq.size() - (seq.size() % 3);
 
-  for (auto iEnd = seq.end() - 2; i < iEnd; i += 3) {
-    char s0 = *i, s1 = *(i + 1), s2 = *(i + 2);
-
-    std::string tuple;
-    tuple.reserve(3);
+  for (; pos != tuple_limit; pos += 3) {
+    const char s0 = seq[pos];
+    const char s1 = seq[pos + 1];
+    const char s2 = seq[pos + 2];
     bool firstNotIn, secondNotIn, thirdNotIn;
-    tuple +=
-        (firstNotIn = (s0 != 'A' && s0 != 'C' && s0 != 'G' && s0 != 'T' && s0 != 'N')) ? 'X' : s0;
-    tuple +=
-        (secondNotIn = (s1 != 'A' && s1 != 'C' && s1 != 'G' && s1 != 'T' && s1 != 'N')) ? 'X' : s1;
-    tuple +=
-        (thirdNotIn = (s2 != 'A' && s2 != 'C' && s2 != 'G' && s2 != 'T' && s2 != 'N')) ? 'X' : s2;
 
-    packedSeq += dna_pack_idx(tuple);
+    const byte r0 = dna_rank_or_x(s0, firstNotIn);
+    const byte r1 = dna_rank_or_x(s1, secondNotIn);
+    const byte r2 = dna_rank_or_x(s2, thirdNotIn);
+    packedSeq += static_cast<char>((r0 * 6 + r1) * 6 + r2);
+
     if (firstNotIn) {
       packedSeq += s0;
     }
@@ -294,23 +364,7 @@ void EnDecrypto::pack_seq(std::string& packedSeq, const std::string& seq) {
     }
   }
 
-  // If seq len isn't multiple of 3, add (char) 255 before each sym
-  switch (seq.length() % 3) {
-    case 1:
-      packedSeq += (char)255;
-      packedSeq += *i;
-      break;
-
-    case 2:
-      packedSeq += (char)255;
-      packedSeq += *i;
-      packedSeq += (char)255;
-      packedSeq += *(i + 1);
-      break;
-
-    default:
-      break;
-  }
+  append_penalty_tail(packedSeq, seq, pos);
 }
 
 /**
@@ -345,21 +399,19 @@ void EnDecrypto::pack_qL_fq(std::string& packed, const std::string& strIn, const
  */
 inline void EnDecrypto::pack_large(std::string& packed, const std::string& strIn,
                                    const std::string& hdrQs, const htbl_t& map) {
-  // ASCII char after the last char in QUALITY_SCORES std::string
-  const auto XChar = (char)(hdrQs.back() + 1);
-  auto i = strIn.begin();
+  (void)map;
+  const DenseLookup& lookup = dense_lookup(hdrQs, true);
+  size_t pos = 0;
+  const size_t tuple_limit = strIn.size() - (strIn.size() % 3);
 
-  for (auto iEnd = strIn.end() - 2; i < iEnd; i += 3) {
-    char s0 = *i, s1 = *(i + 1), s2 = *(i + 2);
-
-    std::string tuple;
-    tuple.reserve(3);
+  for (; pos != tuple_limit; pos += 3) {
+    const char s0 = strIn[pos];
+    const char s1 = strIn[pos + 1];
+    const char s2 = strIn[pos + 2];
     bool firstNotIn, secondNotIn, thirdNotIn;
-    tuple = (firstNotIn = (hdrQs.find(s0) == std::string::npos)) ? XChar : s0;
-    tuple += (secondNotIn = (hdrQs.find(s1) == std::string::npos)) ? XChar : s1;
-    tuple += (thirdNotIn = (hdrQs.find(s2) == std::string::npos)) ? XChar : s2;
 
-    u16 shortTuple = large_pack_idx(tuple, map);
+    const u16 shortTuple =
+        large_tuple_index(lookup, s0, s1, s2, firstNotIn, secondNotIn, thirdNotIn);
     packed += (unsigned char)(shortTuple >> 8);    // Left byte
     packed += (unsigned char)(shortTuple & 0xFF);  // Right byte
 
@@ -374,23 +426,7 @@ inline void EnDecrypto::pack_large(std::string& packed, const std::string& strIn
     }
   }
 
-  // If len isn't multiple of 3, add (char) 255 before each sym
-  switch (strIn.length() % 3) {
-    case 1:
-      packed += (char)255;
-      packed += *i;
-      break;
-
-    case 2:
-      packed += (char)255;
-      packed += *i;
-      packed += (char)255;
-      packed += *(i + 1);
-      break;
-
-    default:
-      break;
-  }
+  append_penalty_tail(packed, strIn, pos);
 }
 
 /**
@@ -400,36 +436,17 @@ inline void EnDecrypto::pack_large(std::string& packed, const std::string& strIn
  * @param map Hash table
  */
 void EnDecrypto::pack_3to2(std::string& packed, const std::string& strIn, const htbl_t& map) {
-  auto i = strIn.begin();
+  const DenseLookup& lookup = dense_lookup((&map == &QsMap) ? QSs : Hdrs);
+  size_t pos = 0;
+  const size_t tuple_limit = strIn.size() - (strIn.size() % 3);
 
-  for (auto iEnd = strIn.end() - 2; i < iEnd; i += 3) {
-    std::string tuple;
-    tuple.reserve(3);
-    tuple = *i;
-    tuple += *(i + 1);
-    tuple += *(i + 2);
-    u16 shortTuple = (u16)map.find(tuple)->second;
+  for (; pos != tuple_limit; pos += 3) {
+    const u16 shortTuple = tuple_index(lookup, strIn.data() + pos, 3);
     packed += (byte)(shortTuple >> 8);    // Left byte
     packed += (byte)(shortTuple & 0xFF);  // Right byte
   }
 
-  // If len isn't multiple of 3, add (char) 255 before each sym
-  switch (strIn.length() % 3) {
-    case 1:
-      packed += (char)255;
-      packed += *i;
-      break;
-
-    case 2:
-      packed += (char)255;
-      packed += *i;
-      packed += (char)255;
-      packed += *(i + 1);
-      break;
-
-    default:
-      break;
-  }
+  append_penalty_tail(packed, strIn, pos);
 }
 
 /**
@@ -439,21 +456,15 @@ void EnDecrypto::pack_3to2(std::string& packed, const std::string& strIn, const 
  * @param map Hash table
  */
 void EnDecrypto::pack_2to1(std::string& packed, const std::string& strIn, const htbl_t& map) {
-  auto i = strIn.begin();
+  const DenseLookup& lookup = dense_lookup((&map == &QsMap) ? QSs : Hdrs);
+  size_t pos = 0;
+  const size_t tuple_limit = strIn.size() - (strIn.size() % 2);
 
-  for (auto iEnd = strIn.end() - 1; i < iEnd; i += 2) {
-    std::string tuple;
-    tuple.reserve(2);
-    tuple = *i;
-    tuple += *(i + 1);
-    packed += (char)map.find(tuple)->second;
+  for (; pos != tuple_limit; pos += 2) {
+    packed += static_cast<char>(tuple_index(lookup, strIn.data() + pos, 2));
   }
 
-  // If len isn't multiple of 2 (it's odd), add (char) 255 before each sym
-  if (strIn.length() & 1) {
-    packed += (char)255;
-    packed += *i;
-  }
+  append_penalty_tail(packed, strIn, pos);
 }
 
 /**
@@ -463,34 +474,15 @@ void EnDecrypto::pack_2to1(std::string& packed, const std::string& strIn, const 
  * @param map Hash table
  */
 void EnDecrypto::pack_3to1(std::string& packed, const std::string& strIn, const htbl_t& map) {
-  auto i = strIn.begin();
+  const DenseLookup& lookup = dense_lookup((&map == &QsMap) ? QSs : Hdrs);
+  size_t pos = 0;
+  const size_t tuple_limit = strIn.size() - (strIn.size() % 3);
 
-  for (auto iEnd = strIn.end() - 2; i < iEnd; i += 3) {
-    std::string tuple;
-    tuple.reserve(3);
-    tuple = *i;
-    tuple += *(i + 1);
-    tuple += *(i + 2);
-    packed += (char)map.find(tuple)->second;
+  for (; pos != tuple_limit; pos += 3) {
+    packed += static_cast<char>(tuple_index(lookup, strIn.data() + pos, 3));
   }
 
-  // If len isn't multiple of 3, add (char) 255 before each sym
-  switch (strIn.length() % 3) {
-    case 1:
-      packed += (char)255;
-      packed += *i;
-      break;
-
-    case 2:
-      packed += (char)255;
-      packed += *i;
-      packed += (char)255;
-      packed += *(i + 1);
-      break;
-
-    default:
-      break;
-  }
+  append_penalty_tail(packed, strIn, pos);
 }
 
 /**
@@ -500,56 +492,15 @@ void EnDecrypto::pack_3to1(std::string& packed, const std::string& strIn, const 
  * @param map Hash table
  */
 void EnDecrypto::pack_5to1(std::string& packed, const std::string& strIn, const htbl_t& map) {
-  auto i = strIn.begin();
+  const DenseLookup& lookup = dense_lookup((&map == &QsMap) ? QSs : Hdrs);
+  size_t pos = 0;
+  const size_t tuple_limit = strIn.size() - (strIn.size() % 5);
 
-  for (auto iEnd = strIn.end() - 4; i < iEnd; i += 5) {
-    std::string tuple;
-    tuple.reserve(5);
-    tuple = *i;
-    tuple += *(i + 1);
-    tuple += *(i + 2);
-    tuple += *(i + 3);
-    tuple += *(i + 4);
-    packed += (char)map.find(tuple)->second;
+  for (; pos != tuple_limit; pos += 5) {
+    packed += static_cast<char>(tuple_index(lookup, strIn.data() + pos, 5));
   }
 
-  // If len isn't multiple of 5, add (char) 255 before each sym
-  switch (strIn.length() % 5) {
-    case 1:
-      packed += (char)255;
-      packed += *i;
-      break;
-
-    case 2:
-      packed += (char)255;
-      packed += *i;
-      packed += (char)255;
-      packed += *(i + 1);
-      break;
-
-    case 3:
-      packed += (char)255;
-      packed += *i;
-      packed += (char)255;
-      packed += *(i + 1);
-      packed += (char)255;
-      packed += *(i + 2);
-      break;
-
-    case 4:
-      packed += (char)255;
-      packed += *i;
-      packed += (char)255;
-      packed += *(i + 1);
-      packed += (char)255;
-      packed += *(i + 2);
-      packed += (char)255;
-      packed += *(i + 3);
-      break;
-
-    default:
-      break;
-  }
+  append_penalty_tail(packed, strIn, pos);
 }
 
 /**
@@ -559,86 +510,15 @@ void EnDecrypto::pack_5to1(std::string& packed, const std::string& strIn, const 
  * @param map Hash table
  */
 void EnDecrypto::pack_7to1(std::string& packed, const std::string& strIn, const htbl_t& map) {
-  auto i = strIn.begin();
+  const DenseLookup& lookup = dense_lookup((&map == &QsMap) ? QSs : Hdrs);
+  size_t pos = 0;
+  const size_t tuple_limit = strIn.size() - (strIn.size() % 7);
 
-  for (auto iEnd = strIn.end() - 6; i < iEnd; i += 7) {
-    std::string tuple;
-    tuple.reserve(7);
-    tuple = *i;
-    tuple += *(i + 1);
-    tuple += *(i + 2);
-    tuple += *(i + 3);
-    tuple += *(i + 4);
-    tuple += *(i + 5);
-    tuple += *(i + 6);
-    packed += (char)map.find(tuple)->second;
+  for (; pos != tuple_limit; pos += 7) {
+    packed += static_cast<char>(tuple_index(lookup, strIn.data() + pos, 7));
   }
 
-  // If len isn't multiple of 7, add (char) 255 before each sym
-  switch (strIn.length() % 7) {
-    case 1:
-      packed += (char)255;
-      packed += *i;
-      break;
-
-    case 2:
-      packed += (char)255;
-      packed += *i;
-      packed += (char)255;
-      packed += *(i + 1);
-      break;
-
-    case 3:
-      packed += (char)255;
-      packed += *i;
-      packed += (char)255;
-      packed += *(i + 1);
-      packed += (char)255;
-      packed += *(i + 2);
-      break;
-
-    case 4:
-      packed += (char)255;
-      packed += *i;
-      packed += (char)255;
-      packed += *(i + 1);
-      packed += (char)255;
-      packed += *(i + 2);
-      packed += (char)255;
-      packed += *(i + 3);
-      break;
-
-    case 5:
-      packed += (char)255;
-      packed += *i;
-      packed += (char)255;
-      packed += *(i + 1);
-      packed += (char)255;
-      packed += *(i + 2);
-      packed += (char)255;
-      packed += *(i + 3);
-      packed += (char)255;
-      packed += *(i + 4);
-      break;
-
-    case 6:
-      packed += (char)255;
-      packed += *i;
-      packed += (char)255;
-      packed += *(i + 1);
-      packed += (char)255;
-      packed += *(i + 2);
-      packed += (char)255;
-      packed += *(i + 3);
-      packed += (char)255;
-      packed += *(i + 4);
-      packed += (char)255;
-      packed += *(i + 5);
-      break;
-
-    default:
-      break;
-  }
+  append_penalty_tail(packed, strIn, pos);
 }
 
 /**
@@ -648,10 +528,9 @@ void EnDecrypto::pack_7to1(std::string& packed, const std::string& strIn, const 
  * @param map Hash table
  */
 void EnDecrypto::pack_1to1(std::string& packed, const std::string& strIn, const htbl_t& map) {
-  for (auto i = strIn.begin(), iEnd = strIn.end(); i < iEnd; ++i) {
-    std::string single;
-    single = *i;
-    packed += (char)map.find(single)->second;
+  const DenseLookup& lookup = dense_lookup((&map == &QsMap) ? QSs : Hdrs);
+  for (char c : strIn) {
+    packed += static_cast<char>(checked_rank(lookup, c));
   }
 }
 
@@ -689,7 +568,7 @@ void EnDecrypto::unpack_large(std::string& out, std::string::iterator& i, char X
       const auto rightB = (byte) * (i + 1);
       const u16 doubleB = leftB << 8 | rightB;  // Join two bytes
 
-      const std::string tpl = unpack[doubleB];
+      const std::string& tpl = unpack[doubleB];
 
       if (tpl[0] != XChar && tpl[1] != XChar && tpl[2] != XChar) {  // ...
         out += tpl;
@@ -790,7 +669,7 @@ void EnDecrypto::unpack_seq(std::string& out, std::string::iterator& i) {
     if (*i == (char)255) {  // Seq len not multiple of 3
       out += penalty_sym(*(++i));
     } else {
-      const std::string tpl = DNA_UNPACK[(byte)*i];
+      const std::string& tpl = DNA_UNPACK[(byte)*i];
 
       if (tpl[0] != 'X' && tpl[1] != 'X' && tpl[2] != 'X') {  // ...
         out += tpl;
