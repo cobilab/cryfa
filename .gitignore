@@ -51,3 +51,4 @@ gprof2dot.py
 bin/
 cryfa
 keygen
+results/

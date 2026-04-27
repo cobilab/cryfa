@@ -99,6 +99,20 @@ RUN_CRYFA_THR=1
 # Results
 RESULTS_CRYFA_THR=0
 
+# Run lightweight local performance harness
+RUN_LOCAL_PERF=0
+LOCAL_PERF_LABEL="baseline"
+LOCAL_PERF_COMPARE_TO=""
+LOCAL_PERF_INPUT="example/in.fq"
+LOCAL_PERF_TARGET_MB=200
+LOCAL_PERF_THREADS="1 4 8"
+LOCAL_PERF_RUNS=1
+LOCAL_PERF_MODES="default stop-shuffle"
+LOCAL_PERF_INTERACTIVE="auto"
+LOCAL_PERF_BIN="build/cryfa"
+LOCAL_PERF_KEY_FILE="pass.txt"
+LOCAL_PERF_OUT_DIR="results/local_perf"
+
 # Run different methods to explore redundancy
 RUN_REDUNDANCY=0 # Cryfa, DELIMINATE, MFCompress
 # Dataset (FASTA) -- archaea, bacteria, fungi, plants, viruses
