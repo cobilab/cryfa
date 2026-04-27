@@ -58,18 +58,19 @@ struct POWER<B, 0> {
 #define IGNORE_THIS_LINE(in) (in).ignore(std::numeric_limits<std::streamsize>::max(), '\n')
 
 // Constants
-static const std::string THR_ID_HDR = "THRD=";       // Thread ID header
-static const std::string PK_FNAME = "CRYFA_PK";      // Packed file name
-static const std::string PCKD_FNAME = "CRYFA_PCKD";  // Packed file name - joined
-static const std::string SH_FNAME = "CRYFA_SH";      // Shuffled file name
-static const std::string DEC_FNAME = "CRYFA_DEC";    // Decrypted file name
-static const std::string UPK_FNAME = "CRYFA_UPK";    // Unpacked file name
-static const std::string USH_FNAME = "CRYFA_USH";    // Unshuffled file name
-constexpr byte DEF_N_THR = 8;                        // Default number of threads
-constexpr u64 BLOCK_SIZE = 8 * 1024;                 // To read/write from/to file
-constexpr byte C1 = 2;                               // Cat 1 = 2
-constexpr byte C2 = 3;                               // Cat 2 = 3
-constexpr byte MIN_C3 = 4;                           // 4 <= Cat 3 <= 6
+static const std::string THR_ID_HDR = "THRD=";        // Thread ID header
+static const std::string PK_FNAME = "CRYFA_PK";       // Packed file name
+static const std::string PCKD_FNAME = "CRYFA_PCKD";   // Packed file name - joined
+static const std::string SH_FNAME = "CRYFA_SH";       // Shuffled file name
+static const std::string DEC_FNAME = "CRYFA_DEC";     // Decrypted file name
+static const std::string UPK_FNAME = "CRYFA_UPK";     // Unpacked file name
+static const std::string USH_FNAME = "CRYFA_USH";     // Unshuffled file name
+constexpr byte DEF_N_THR = 8;                         // Default number of threads
+constexpr u64 IO_BUFFER_SIZE = 8ULL * 1024ULL;        // Buffered output writes
+constexpr u64 CHUNK_TARGET_SIZE = 1024ULL * 1024ULL;  // Internal worker chunk target
+constexpr byte C1 = 2;                                // Cat 1 = 2
+constexpr byte C2 = 3;                                // Cat 2 = 3
+constexpr byte MIN_C3 = 4;                            // 4 <= Cat 3 <= 6
 constexpr byte MID_C3 = 5;
 constexpr byte MAX_C3 = 6;
 constexpr byte MIN_C4 = 7;  // 7 <= Cat 4 <= 15

@@ -876,11 +876,12 @@ void EnDecrypto::shuffle_block(byte threadID) {
   std::ofstream shfile(std::format("{}{}", SH_FNAME, static_cast<unsigned>(threadID)),
                        std::ios_base::app);
   // Characters ignored at the beginning
-  in.ignore((std::streamsize)(threadID * BLOCK_SIZE));
+  in.ignore((std::streamsize)(threadID * CHUNK_TARGET_SIZE));
 
   for (char c; in.peek() != EOF;) {
     std::string context;
-    for (u64 bs = BLOCK_SIZE; bs--;) {
+    context.reserve(CHUNK_TARGET_SIZE);
+    for (u64 bs = CHUNK_TARGET_SIZE; bs--;) {
       if (in.get(c)) {
         context += c;
       }
@@ -904,7 +905,7 @@ void EnDecrypto::shuffle_block(byte threadID) {
     shfile << context << '\n';
 
     // Ignore to go to the next related chunk
-    in.ignore((std::streamsize)((n_threads - 1) * BLOCK_SIZE));
+    in.ignore((std::streamsize)((n_threads - 1) * CHUNK_TARGET_SIZE));
   }
   shfile.close();
 }
@@ -962,11 +963,12 @@ void EnDecrypto::unshuffle_block(byte threadID) {
                         std::ios_base::app);
 
   // filetype char (125) + shuffed (128) + characters ignored at the beginning
-  in.ignore((std::streamsize)(2 + threadID * BLOCK_SIZE));
+  in.ignore((std::streamsize)(2 + threadID * CHUNK_TARGET_SIZE));
 
   for (char c; in.peek() != EOF;) {
     std::string unshText;
-    for (u64 bs = BLOCK_SIZE; bs--;) {
+    unshText.reserve(CHUNK_TARGET_SIZE);
+    for (u64 bs = CHUNK_TARGET_SIZE; bs--;) {
       if (in.get(c)) {
         unshText += c;
       }
@@ -992,7 +994,7 @@ void EnDecrypto::unshuffle_block(byte threadID) {
     ushfile << unshText << '\n';
 
     // Ignore to go to the next related chunk
-    in.ignore((std::streamsize)((n_threads - 1) * BLOCK_SIZE));
+    in.ignore((std::streamsize)((n_threads - 1) * CHUNK_TARGET_SIZE));
   }
 
   ushfile.close();
@@ -1012,7 +1014,7 @@ void EnDecrypto::join_packed_files(const std::string& headers, const std::string
   std::vector<std::ifstream> pkFile(n_threads);
   std::ofstream pckdFile(PCKD_FNAME);  // Packed file
   std::string content;
-  content.reserve(BLOCK_SIZE);
+  content.reserve(IO_BUFFER_SIZE);
   auto write_content = [&]() { pckdFile << content; };
 
   switch (fT) {
@@ -1051,10 +1053,10 @@ void EnDecrypto::join_packed_files(const std::string& headers, const std::string
         }
         content += line;
 
-        if (content.size() >= BLOCK_SIZE) {
+        if (content.size() >= IO_BUFFER_SIZE) {
           write_content();
           content.clear();
-          content.reserve(BLOCK_SIZE);
+          content.reserve(IO_BUFFER_SIZE);
         }
 
         prevLineNotThrID = true;
@@ -1083,7 +1085,7 @@ void EnDecrypto::join_unpacked_files() const {
     upkdFile[t].open(std::format("{}{}", UPK_FNAME, static_cast<unsigned>(t)));
   }
   std::string content;
-  content.reserve(BLOCK_SIZE);
+  content.reserve(IO_BUFFER_SIZE);
   auto write_content = [&]() { std::cout << content; };
 
   bool prevLineNotThrID;  // If previous line was "THRD=" or not
@@ -1098,10 +1100,10 @@ void EnDecrypto::join_unpacked_files() const {
         }
         content += line;
 
-        if (content.size() >= BLOCK_SIZE) {
+        if (content.size() >= IO_BUFFER_SIZE) {
           write_content();
           content.clear();
-          content.reserve(BLOCK_SIZE);
+          content.reserve(IO_BUFFER_SIZE);
         }
 
         prevLineNotThrID = true;
@@ -1129,7 +1131,7 @@ void EnDecrypto::join_shuffled_files() const {
   std::vector<std::ifstream> shFile(n_threads);
   std::ofstream shdFile(PCKD_FNAME);  // Output Shuffled file
   std::string content;
-  content.reserve(BLOCK_SIZE);
+  content.reserve(IO_BUFFER_SIZE);
   auto write_content = [&]() { shdFile << content; };
 
   content += (char)125;
@@ -1151,10 +1153,10 @@ void EnDecrypto::join_shuffled_files() const {
         }
         content += line;
 
-        if (content.size() >= BLOCK_SIZE) {
+        if (content.size() >= IO_BUFFER_SIZE) {
           write_content();
           content.clear();
-          content.reserve(BLOCK_SIZE);
+          content.reserve(IO_BUFFER_SIZE);
         }
 
         prevLineNotThrID = true;
@@ -1182,7 +1184,7 @@ void EnDecrypto::join_unshuffled_files() const {
     ushdFile[t].open(std::format("{}{}", USH_FNAME, static_cast<unsigned>(t)));
   }
   std::string content;
-  content.reserve(BLOCK_SIZE);
+  content.reserve(IO_BUFFER_SIZE);
   auto write_content = [&]() { std::cout << content; };
 
   while (!ushdFile[0].eof()) {
@@ -1196,10 +1198,10 @@ void EnDecrypto::join_unshuffled_files() const {
         }
         content += line;
 
-        if (content.size() >= BLOCK_SIZE) {
+        if (content.size() >= IO_BUFFER_SIZE) {
           write_content();
           content.clear();
-          content.reserve(BLOCK_SIZE);
+          content.reserve(IO_BUFFER_SIZE);
         }
 
         prevLineNotThrID = true;

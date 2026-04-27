@@ -193,6 +193,7 @@ void Fastq::pack(const packfq_s& pkStruct, byte threadID) {
 
   while (in.peek() != EOF) {
     std::string context;  // Output std::string
+    context.reserve(CHUNK_TARGET_SIZE);
 
     std::string line;
     for (u64 l = 0; l != BlockLine; l += 4) {  // Process 4 lines by 4 lines
@@ -279,7 +280,7 @@ void Fastq::gather_h_q(std::string& headers, std::string& qscores) {
   in.close();
 
   // Number of lines read from input file while compression
-  BlockLine = (u32)(4 * (BLOCK_SIZE / (maxHLen + 2 * maxQLen)));
+  BlockLine = (u32)(4 * (CHUNK_TARGET_SIZE / (maxHLen + 2 * maxQLen)));
   if (!BlockLine) BlockLine = 4;
 
   // Gather the characters -- ignore '@'=64 for headers
@@ -494,7 +495,7 @@ void Fastq::unpack_hS_qS(const unpackfq_s& upkStruct, byte threadID) {
                         std::ios_base::app);
   std::string upkHdrOut, upkSeqOut, upkQsOut;
   std::string content;
-  content.reserve(BLOCK_SIZE);
+  content.reserve(IO_BUFFER_SIZE);
   auto write_content = [&]() { upkfile << content; };
 
   while (in.peek() != EOF) {
@@ -502,6 +503,7 @@ void Fastq::unpack_hS_qS(const unpackfq_s& upkStruct, byte threadID) {
     in.seekg(begPos);  // Read the file from this position
     // Take a chunk of decrypted file
     std::string decText;
+    decText.reserve(chunkSize);
     for (u64 u = chunkSize; u--;) {
       in.get(c);
       decText += c;
@@ -558,10 +560,10 @@ void Fastq::unpack_hS_qS(const unpackfq_s& upkStruct, byte threadID) {
       }
     }
 
-    if (content.size() >= BLOCK_SIZE) {
+    if (content.size() >= IO_BUFFER_SIZE) {
       write_content();
       content.clear();
-      content.reserve(BLOCK_SIZE);
+      content.reserve(IO_BUFFER_SIZE);
     }
   }
   write_content();
@@ -585,7 +587,7 @@ void Fastq::unpack_hS_qL(const unpackfq_s& upkStruct, byte threadID) {
                         std::ios_base::app);
   std::string upkHdrOut, upkSeqOut, upkQsOut;
   std::string content;
-  content.reserve(BLOCK_SIZE);
+  content.reserve(IO_BUFFER_SIZE);
   auto write_content = [&]() { upkfile << content; };
 
   while (in.peek() != EOF) {
@@ -593,6 +595,7 @@ void Fastq::unpack_hS_qL(const unpackfq_s& upkStruct, byte threadID) {
     in.seekg(begPos);  // Read file from this position
     // Take a chunk of decrypted file
     std::string decText;
+    decText.reserve(chunkSize);
     for (u64 u = chunkSize; u--;) {
       in.get(c);
       decText += c;
@@ -649,10 +652,10 @@ void Fastq::unpack_hS_qL(const unpackfq_s& upkStruct, byte threadID) {
       }
     }
 
-    if (content.size() >= BLOCK_SIZE) {
+    if (content.size() >= IO_BUFFER_SIZE) {
       write_content();
       content.clear();
-      content.reserve(BLOCK_SIZE);
+      content.reserve(IO_BUFFER_SIZE);
     }
   }
   write_content();
@@ -676,7 +679,7 @@ void Fastq::unpack_hL_qS(const unpackfq_s& upkStruct, byte threadID) {
                         std::ios_base::app);
   std::string upkHdrOut, upkSeqOut, upkQsOut;
   std::string content;
-  content.reserve(BLOCK_SIZE);
+  content.reserve(IO_BUFFER_SIZE);
   auto write_content = [&]() { upkfile << content; };
 
   while (in.peek() != EOF) {
@@ -684,6 +687,7 @@ void Fastq::unpack_hL_qS(const unpackfq_s& upkStruct, byte threadID) {
     in.seekg(begPos);  // Read file from this position
     // Take a chunk of decrypted file
     std::string decText;
+    decText.reserve(chunkSize);
     for (u64 u = chunkSize; u--;) {
       in.get(c);
       decText += c;
@@ -740,10 +744,10 @@ void Fastq::unpack_hL_qS(const unpackfq_s& upkStruct, byte threadID) {
       }
     }
 
-    if (content.size() >= BLOCK_SIZE) {
+    if (content.size() >= IO_BUFFER_SIZE) {
       write_content();
       content.clear();
-      content.reserve(BLOCK_SIZE);
+      content.reserve(IO_BUFFER_SIZE);
     }
   }
   write_content();
@@ -766,7 +770,7 @@ void Fastq::unpack_hL_qL(const unpackfq_s& upkStruct, byte threadID) {
                         std::ios_base::app);
   std::string upkHdrOut, upkSeqOut, upkQsOut;
   std::string content;
-  content.reserve(BLOCK_SIZE);
+  content.reserve(IO_BUFFER_SIZE);
   auto write_content = [&]() { upkfile << content; };
 
   while (in.peek() != EOF) {
@@ -774,6 +778,7 @@ void Fastq::unpack_hL_qL(const unpackfq_s& upkStruct, byte threadID) {
     in.seekg(begPos);  // Read file from this position
     // Take a chunk of decrypted file
     std::string decText;
+    decText.reserve(chunkSize);
     for (u64 u = chunkSize; u--;) {
       in.get(c);
       decText += c;
@@ -829,10 +834,10 @@ void Fastq::unpack_hL_qL(const unpackfq_s& upkStruct, byte threadID) {
       }
     }
 
-    if (content.size() >= BLOCK_SIZE) {
+    if (content.size() >= IO_BUFFER_SIZE) {
       write_content();
       content.clear();
-      content.reserve(BLOCK_SIZE);
+      content.reserve(IO_BUFFER_SIZE);
     }
   }
   write_content();

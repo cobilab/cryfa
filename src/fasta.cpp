@@ -124,6 +124,8 @@ void Fasta::pack(const packfa_s& pkStruct, byte threadID) {
   packFP_t packHdr = pkStruct.packHdrFP;  // Function pointer
   std::ifstream in(in_file);
   std::string line, context, seq;
+  context.reserve(CHUNK_TARGET_SIZE);
+  seq.reserve(CHUNK_TARGET_SIZE);
   std::ofstream pkfile(std::format("{}{}", PK_FNAME, static_cast<unsigned>(threadID)),
                        std::ios_base::app);
   // Lines ignored at the beginning
@@ -226,7 +228,7 @@ void Fasta::gather_h_bs(std::string& headers) {
   in.close();
 
   // Number of lines read from input file while compression
-  BlockLine = (u32)(BLOCK_SIZE / maxBLen);
+  BlockLine = (u32)(CHUNK_TARGET_SIZE / maxBLen);
   if (!BlockLine) {
     BlockLine = 2;
   }
@@ -383,7 +385,7 @@ void Fasta::unpack_hS(const unpackfa_s& upkStruct, byte threadID) {
                         std::ios_base::app);
   std::string upkhdrOut, upkSeqOut;
   std::string content;
-  content.reserve(BLOCK_SIZE);
+  content.reserve(IO_BUFFER_SIZE);
   auto write_content = [&]() { upkfile << content; };
 
   while (in.peek() != EOF) {
@@ -391,6 +393,7 @@ void Fasta::unpack_hS(const unpackfa_s& upkStruct, byte threadID) {
     in.seekg(begPos);  // Read the file from this position
     // Take a chunk of decrypted file
     std::string decText;
+    decText.reserve(chunkSize);
     for (u64 u = chunkSize; u--;) {
       in.get(c);
       decText += c;
@@ -438,10 +441,10 @@ void Fasta::unpack_hS(const unpackfa_s& upkStruct, byte threadID) {
       }
     }
 
-    if (content.size() >= BLOCK_SIZE) {
+    if (content.size() >= IO_BUFFER_SIZE) {
       write_content();
       content.clear();
-      content.reserve(BLOCK_SIZE);
+      content.reserve(IO_BUFFER_SIZE);
     }
   }
   write_content();
@@ -463,7 +466,7 @@ void Fasta::unpack_hL(const unpackfa_s& upkStruct, byte threadID) {
                         std::ios_base::app);
   std::string upkHdrOut, upkSeqOut;
   std::string content;
-  content.reserve(BLOCK_SIZE);
+  content.reserve(IO_BUFFER_SIZE);
   auto write_content = [&]() { upkfile << content; };
 
   while (in.peek() != EOF) {
@@ -471,6 +474,7 @@ void Fasta::unpack_hL(const unpackfa_s& upkStruct, byte threadID) {
     in.seekg(begPos);  // Read the file from this position
     // Take a chunk of decrypted file
     std::string decText;
+    decText.reserve(chunkSize);
     for (u64 u = chunkSize; u--;) {
       in.get(c);
       decText += c;
@@ -518,10 +522,10 @@ void Fasta::unpack_hL(const unpackfa_s& upkStruct, byte threadID) {
       }
     }
 
-    if (content.size() >= BLOCK_SIZE) {
+    if (content.size() >= IO_BUFFER_SIZE) {
       write_content();
       content.clear();
-      content.reserve(BLOCK_SIZE);
+      content.reserve(IO_BUFFER_SIZE);
     }
   }
   write_content();
