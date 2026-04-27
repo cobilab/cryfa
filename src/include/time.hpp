@@ -1,8 +1,8 @@
 /**
- * @file      time.hpp
- * @brief     time-related functions
- * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
- * @author    Diogo Pratas      (pratas@ua.pt)
+ * @file time.hpp
+ * @brief Time-related functions
+ * @author Morteza Hosseini (seyedmorteza.hosseini@manchester.ac.uk)
+ * @author Diogo Pratas (pratas@ua.pt)
  * @copyright The GNU General Public License v3.0
  */
 
@@ -10,37 +10,36 @@
 #define CRYFA_TIME_HPP
 
 #include <chrono>
+#include <format>
 #include <string>
 
 /**
- * @brief  Accumulate hop index values in a range
- * @param  first  beginning of the range
- * @param  last   end of the range
- * @param  init   initial value
- * @param  h      hop value
- * @return A number
+ * @brief Get the current high-resolution time point
+ * @return Current time point
  */
-
-inline static std::chrono::time_point<std::chrono::high_resolution_clock>
-now() noexcept {
+inline static std::chrono::time_point<std::chrono::high_resolution_clock> now() noexcept {
   return std::chrono::high_resolution_clock::now();
 }
 
+/**
+ * @brief Format an elapsed duration as a human-readable string
+ * @tparam Time Duration type accepted by std::chrono::duration_cast
+ * @param elapsed Elapsed duration
+ * @return Formatted elapsed time
+ */
 template <typename Time>
 inline static std::string hms(Time elapsed) {
-  const auto durSec =
-      std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
+  const auto durSec = std::chrono::duration_cast<std::chrono::seconds>(elapsed).count();
   const auto h = durSec / 3600;
   const auto m = (durSec % 3600) / 60;
   const auto s = durSec % 60;
 
   if (m < 1) {
-    return (s == 0 ? "< 1" : std::to_string(s)) + " sec.\n";
+    return (s == 0) ? "< 1 sec.\n" : std::format("{} sec.\n", s);
   } else if (h < 1) {
-    return std::to_string(m) + ":" + std::to_string(s) + " min:sec.\n";
+    return std::format("{}:{} min:sec.\n", m, s);
   } else {
-    return std::to_string(h) + ":" + std::to_string(m) + ":" +
-           std::to_string(s) + " hour:min:sec.\n";
+    return std::format("{}:{}:{} hour:min:sec.\n", h, m, s);
   }
 }
 

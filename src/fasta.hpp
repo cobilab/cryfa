@@ -1,8 +1,8 @@
 /**
- * @file      fasta.hpp
- * @brief     Compression/Decompression of FASTA
- * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
- * @author    Diogo Pratas      (pratas@ua.pt)
+ * @file fasta.hpp
+ * @brief Compression/Decompression of FASTA
+ * @author Morteza Hosseini (seyedmorteza.hosseini@manchester.ac.uk)
+ * @author Diogo Pratas (pratas@ua.pt)
  * @copyright The GNU General Public License v3.0
  */
 
@@ -24,12 +24,11 @@ struct packfa_s {
  * @brief Unpakcing FASTA
  */
 struct unpackfa_s {
-  char XChar_hdr; /**< @brief Extra char if header's length > 39 */
-  pos_t begPos;   /**< @brief Begining position for each thread */
-  u64 chunkSize;  /**< @brief Chunk size */
-  std::vector<std::string>
-      hdrUnpack;          /**< @brief Lookup table for unpacking headers */
-  unpackFP_t unpackHdrFP; /**< @brief Points to a header unpacking fn */
+  char XChar_hdr;                     /**< @brief Extra char if header's length > 39 */
+  pos_t begPos;                       /**< @brief Begining position for each thread */
+  u64 chunkSize;                      /**< @brief Chunk size */
+  std::vector<std::string> hdrUnpack; /**< @brief Lookup table for unpacking headers */
+  unpackFP_t unpackHdrFP;             /**< @brief Points to a header unpacking fn */
 };
 
 /**

@@ -1,40 +1,44 @@
 /**
- * @file      file.hpp
- * @brief     file handling
- * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
- * @author    Diogo Pratas      (pratas@ua.pt)
+ * @file file.hpp
+ * @brief File handling
+ * @author Morteza Hosseini (seyedmorteza.hosseini@manchester.ac.uk)
+ * @author Diogo Pratas (pratas@ua.pt)
  * @copyright The GNU General Public License v3.0
  */
 
 #ifndef CRYFA_FILE_HPP
 #define CRYFA_FILE_HPP
 
+#include <format>
 #include <fstream>
 
 /**
  * @brief Check if file can be opened correctly
- * @param name  name of the file
+ * @param name Name of the file
  */
 inline static void check_file(std::string name) {  // Must be inline
   std::ifstream f(name);
   if (!f) {
     f.close();
-    error("the file \"" + name + "\" cannot be opened or is empty.");
+    error(std::format("the file \"{}\" cannot be opened or is empty.", name));
   } else {
     bool foundChar{false};
-    for (char c; f.get(c) && !foundChar;)
-      if (c != ' ' && c != '\n' && c != '\t') foundChar = true;
+    for (char c; f.get(c) && !foundChar;) {
+      if (c != ' ' && c != '\n' && c != '\t') {
+        foundChar = true;
+      }
+    }
     if (!foundChar) {
       f.close();
-      error("the file \"" + name + "\" is empty.");
+      error(std::format("the file \"{}\" is empty.", name));
     }
     f.close();
   }
 }
 
 /**
- * @brief  Extract file name
- * @param  path  path including the file name
+ * @brief Extract file name
+ * @param path Path including the file name
  * @return File name
  */
 inline static std::string file_name(std::string path) {
@@ -43,8 +47,8 @@ inline static std::string file_name(std::string path) {
 }
 
 /**
- * @brief  Find file size
- * @param  name name of the file
+ * @brief Find file size
+ * @param name Name of the file
  * @return File size
  */
 inline static uint64_t file_size(std::string name) {

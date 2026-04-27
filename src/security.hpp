@@ -1,8 +1,8 @@
 /**
- * @file      security.hpp
- * @brief     Security
- * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
- * @author    Diogo Pratas      (pratas@ua.pt)
+ * @file security.hpp
+ * @brief Security
+ * @author Morteza Hosseini (seyedmorteza.hosseini@manchester.ac.uk)
+ * @author Diogo Pratas (pratas@ua.pt)
  * @copyright The GNU General Public License v3.0
  */
 

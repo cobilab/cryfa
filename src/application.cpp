@@ -1,13 +1,14 @@
 /**
- * @file      application.cpp
- * @brief     Application
- * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
- * @author    Diogo Pratas      (pratas@ua.pt)
+ * @file application.cpp
+ * @brief Application
+ * @author Morteza Hosseini (seyedmorteza.hosseini@manchester.ac.uk)
+ * @author Diogo Pratas (pratas@ua.pt)
  * @copyright The GNU General Public License v3.0
  */
 
 #include "application.hpp"
 
+#include <format>
 #include <fstream>
 
 #include "assert.hpp"
@@ -39,7 +40,7 @@ void application::exe_compress_encrypt() {
       crypt.shuffle_file();
       break;
     default:
-      error("\"" + par.in_file + "\" is not a valid FASTA or FASTQ file.");
+      error(std::format("\"{}\" is not a valid FASTA or FASTQ file.", par.in_file));
   }
 }
 
@@ -67,8 +68,8 @@ void application::exe_decrypt_decompress() {
 
 /**
  * @brief Execute Cryfa
- * @param argc  number of command line arguments
- * @param argv  command line arguments
+ * @param argc Number of command line arguments
+ * @param argv Command line arguments
  */
 void application::exe(int argc, char* argv[]) {
   const char action = parse(par, argc, argv);
