@@ -9,7 +9,6 @@
 #include "application.hpp"
 
 #include <format>
-#include <fstream>
 
 #include "assert.hpp"
 #include "numeric.hpp"
@@ -48,9 +47,7 @@ void application::exe_compress_encrypt() {
  * @brief Decrypt and/or unshuffle + decompress
  */
 void application::exe_decrypt_decompress() {
-  crypt.decrypt();
-  std::ifstream in(DEC_FNAME);
-  switch (in.peek()) {
+  switch (crypt.peek_decrypted_type()) {
     case (char)127:
       fa.decompress();
       break;
@@ -58,12 +55,12 @@ void application::exe_decrypt_decompress() {
       fq.decompress();
       break;
     case (char)125:
+      crypt.decrypt();
       crypt.unshuffle_file();
       break;
     default:
       error("corrupted file.");
   }
-  in.close();
 }
 
 /**

@@ -28,6 +28,7 @@ class Security : public Param {
  public:
   Security() = default;
   void decrypt();
+  auto peek_decrypted_type() -> char;
 
  protected:
   using PlaintextSink = std::function<void(std::string_view)>;
@@ -38,6 +39,7 @@ class Security : public Param {
 
   void encrypt();
   void encrypt_stream(const PlaintextProducer&);
+  void decrypt_stream(const PlaintextSink&);
   void shuffle(std::string&);
   void unshuffle(std::string::iterator&, u64);
 

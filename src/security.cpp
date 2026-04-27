@@ -18,6 +18,7 @@
 #include "cryptopp/eax.h"
 #include "cryptopp/files.h"
 #include "cryptopp/gcm.h"
+#include "cryptopp/simple.h"
 #include "numeric.hpp"
 #include "string.hpp"
 #include "time.hpp"
@@ -27,6 +28,28 @@ std::mutex mutxSec; /**< @brief Mutex */
 std::mutex Security::derived_state_mutex;
 std::unordered_map<std::string, std::shared_ptr<const Security::DerivedState>>
     Security::derived_state_cache;
+
+namespace {
+class FunctionSink : public CryptoPP::Bufferless<CryptoPP::Sink> {
+ public:
+  explicit FunctionSink(const std::function<void(std::string_view)>& sink) : sink_(sink) {}
+
+  std::string AlgorithmName() const override { return "FunctionSink"; }
+
+  size_t Put2(const CryptoPP::byte* inString, size_t length, int messageEnd,
+              bool blocking) override {
+    (void)messageEnd;
+    (void)blocking;
+    if (length != 0) {
+      sink_(std::string_view(reinterpret_cast<const char*>(inString), length));
+    }
+    return 0;
+  }
+
+ private:
+  std::function<void(std::string_view)> sink_;
+};
+}  // namespace
 
 /**
  * @brief Encrypt
@@ -123,6 +146,58 @@ void Security::decrypt() {
     std::cerr << "Caught InvalidArgument...\n" << e.what() << "\n";
   } catch (CryptoPP::Exception& e) {
     std::cerr << "Caught Exception...\n" << e.what() << "\n";
+  }
+
+  const auto finish = now();  // Stop timer
+  std::cerr << "\r" << bold("[+]") << " Decrypting done in " << hms(finish - start);
+}
+
+char Security::peek_decrypted_type() {
+  assert_file_good(in_file);
+
+  const auto state = derived_state();
+  std::ifstream in(in_file, std::ios::binary);
+  char encrypted_type = 0;
+  if (!in.get(encrypted_type)) {
+    error("corrupted file.");
+  }
+
+  CryptoPP::GCM<CryptoPP::AES>::Decryption d;
+  d.SetKeyWithIV(state->key.data(), state->key.size(), state->iv.data(), state->iv.size());
+
+  CryptoPP::byte decrypted_type = 0;
+  d.ProcessData(&decrypted_type, reinterpret_cast<const CryptoPP::byte*>(&encrypted_type), 1);
+  return static_cast<char>(decrypted_type);
+}
+
+void Security::decrypt_stream(const PlaintextSink& consume_plaintext) {
+  assert_file_good(in_file);
+
+  std::cerr << bold("[+]") << " Decrypting ...";
+  const auto start = now();  // Start timer
+
+  const auto state = derived_state();
+
+  try {
+    std::ifstream in(in_file);
+
+    CryptoPP::GCM<CryptoPP::AES>::Decryption d;
+    d.SetKeyWithIV(state->key.data(), state->key.size(), state->iv.data(), state->iv.size());
+
+    CryptoPP::AuthenticatedDecryptionFilter df(
+        d, new FunctionSink(consume_plaintext),
+        CryptoPP::AuthenticatedDecryptionFilter::DEFAULT_FLAGS, TAG_SIZE);
+    CryptoPP::FileSource(in, true, new CryptoPP::Redirector(df /*, PASS_EVERYTHING */));
+    in.close();
+  } catch (CryptoPP::HashVerificationFilter::HashVerificationFailed& e) {
+    std::cerr << "Caught HashVerificationFailed...\n" << e.what() << "\n";
+    throw;
+  } catch (CryptoPP::InvalidArgument& e) {
+    std::cerr << "Caught InvalidArgument...\n" << e.what() << "\n";
+    throw;
+  } catch (CryptoPP::Exception& e) {
+    std::cerr << "Caught Exception...\n" << e.what() << "\n";
+    throw;
   }
 
   const auto finish = now();  // Stop timer

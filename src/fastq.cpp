@@ -9,15 +9,18 @@
 #include "fastq.hpp"
 
 #include <cstring>
+#include <exception>
 #include <format>
 #include <fstream>
 #include <iomanip>  // setw, std::setprecision
 #include <mutex>
 #include <optional>
+#include <stdexcept>
 #include <thread>
 #include <vector>
 
 #include "ordered_pipeline.hpp"
+#include "plaintext_stream.hpp"
 #include "string.hpp"
 #include "time.hpp"
 using namespace cryfa;
@@ -388,80 +391,163 @@ void Fastq::decompress() {
   }
   const auto start = now();  // Start timer
 
-  char c;  // Chars in file
+  PlaintextStream plaintext;
+  std::exception_ptr decrypt_error;
+  std::thread decrypt_thread([&]() {
+    try {
+      decrypt_stream([&](std::string_view decrypted) { plaintext.push(decrypted); });
+      plaintext.close();
+    } catch (...) {
+      decrypt_error = std::current_exception();
+      plaintext.fail(decrypt_error);
+    }
+  });
+
+  auto join_decrypt = [&]() {
+    if (decrypt_thread.joinable()) {
+      decrypt_thread.join();
+    }
+    if (decrypt_error) {
+      std::rethrow_exception(decrypt_error);
+    }
+  };
+
   std::string headers, qscores;
-  unpackfq_s upkStruct;                           // Collection of inputs to pass to unpack...
-  std::vector<std::thread> arrThread(n_threads);  // Array of threads
-  std::ifstream in(DEC_FNAME);
+  unpackfq_s upkStruct;  // Collection of inputs to pass to unpack...
 
-  in.ignore(1);  // Jump over decText[0]==(char) 126
-  in.get(c);
-  shuffled = (c == (char)128);  // Check if file had been shuffled
-  if (verbose) {
-    std::cerr << bold("[+]") << " Extracting no. unique characters ...";
-  }
-  while (in.get(c) && c != (char)254) headers += c;
-  while (in.get(c) && c != '\n' && c != (char)253) qscores += c;
-  // Show number of different chars in headers and qs -- ignore '@'=64
-  if (verbose) {
-    std::cerr << "\r" << bold("[+]") << " No. unique characters: headers => " << headers.length()
-              << ", qscores => " << qscores.length() << "\n";
-  }
-  if (c == '\n') {
-    justPlus = false;  // If 3rd line is just +
-  }
+  try {
+    const auto file_type = plaintext.get();
+    if (!file_type || *file_type != (char)126) {
+      throw std::runtime_error("corrupted file.");
+    }
 
-  // Header -- Set unpack table and unpack function
-  set_unpackTbl_unpackFn(upkStruct, headers, qscores);
+    const auto shuffle_flag = plaintext.get();
+    if (!shuffle_flag || (*shuffle_flag != (char)128 && *shuffle_flag != (char)129)) {
+      throw std::runtime_error("corrupted file.");
+    }
 
-  // Distribute file among threads, for reading and unpacking
-  using unpackHQFP = void (Fastq::*)(const unpackfq_s&, byte);
-  unpackHQFP unpackHQ =
-      (headers.length() <= MAX_C5)
-          ? (qscores.length() <= MAX_C5 ? &Fastq::unpack_hS_qS : &Fastq::unpack_hS_qL)
-          : (qscores.length() > MAX_C5 ? &Fastq::unpack_hL_qL : &Fastq::unpack_hL_qS);
+    shuffled = (*shuffle_flag == (char)128);  // Check if file had been shuffled
+    if (verbose) {
+      std::cerr << bold("[+]") << " Extracting no. unique characters ...";
+    }
+    if (!plaintext.read_until((char)254, headers)) {
+      throw std::runtime_error("corrupted file.");
+    }
 
-  for (byte t = 0; t != n_threads; ++t) {
-    in.get(c);
-    if (c == (char)253) {
-      std::string chunkSizeStr;  // Chunk size (std::string) -- For unshuffling
-      while (in.get(c) && c != (char)254) {
-        chunkSizeStr += c;
+    char c = 0;
+    while (std::optional<char> next = plaintext.get()) {
+      c = *next;
+      if (c == '\n' || c == (char)253) {
+        break;
       }
-      const u64 offset = stoull(chunkSizeStr);  // To traverse decompressed file
-
-      upkStruct.begPos = in.tellg();
-      upkStruct.chunkSize = offset;
-
-      arrThread[t] = std::thread(unpackHQ, this, upkStruct, t);
-
-      // Jump to the beginning of the next chunk
-      in.seekg((std::streamoff)offset, std::ios_base::cur);
+      qscores += c;
     }
-    // End of file
-    if (in.peek() == 252) {
-      break;
+    if (c != '\n' && c != (char)253) {
+      throw std::runtime_error("corrupted file.");
     }
-  }
-  // Join threads
-  for (auto& thr : arrThread) {
-    if (thr.joinable()) {
-      thr.join();
+    // Show number of different chars in headers and qs -- ignore '@'=64
+    if (verbose) {
+      std::cerr << "\r" << bold("[+]") << " No. unique characters: headers => " << headers.length()
+                << ", qscores => " << qscores.length() << "\n";
     }
+    justPlus = (c != '\n');  // If 3rd line is just +
+
+    // Header -- Set unpack table and unpack function
+    set_unpackTbl_unpackFn(upkStruct, headers, qscores);
+    const bool has_small_header = headers.length() <= MAX_C5;
+    const bool has_small_qscore = qscores.length() <= MAX_C5;
+
+    auto read_chunk = [&]() -> std::optional<std::string> {
+      const auto marker = plaintext.get();
+      if (!marker || *marker == (char)252) {
+        return std::nullopt;
+      }
+      if (*marker != (char)253) {
+        throw std::runtime_error("corrupted file.");
+      }
+
+      std::string chunk_size_str;
+      if (!plaintext.read_until((char)254, chunk_size_str) || chunk_size_str.empty()) {
+        throw std::runtime_error("corrupted file.");
+      }
+
+      std::string chunk;
+      if (!plaintext.read_bytes(std::stoull(chunk_size_str), chunk)) {
+        throw std::runtime_error("corrupted file.");
+      }
+      return chunk;
+    };
+
+    auto unpack_chunk = [this, upkStruct, has_small_header,
+                         has_small_qscore](std::string decText) mutable {
+      if (decText.empty()) {
+        return std::string{};
+      }
+
+      auto i = decText.begin();
+
+      // Unshuffle
+      if (shuffled) {
+        mutxFQ.lock();  //--------------------------------------------------
+        if (verbose && shuffInProg) {
+          std::cerr << bold("[+]") << " Unshuffling ...";
+          shuffle_timer = now();
+        }
+        shuffInProg = false;
+        mutxFQ.unlock();  //------------------------------------------------
+
+        unshuffle(i, decText.size());
+      }
+
+      std::string upkHdrOut, upkSeqOut, upkQsOut;
+      std::string content;
+      content.reserve(decText.size() * 2);
+      do {
+        content += '@';
+        std::string plusMore;
+
+        if (has_small_header) {
+          (this->*upkStruct.unpackHdrFPtr)(upkHdrOut, i, upkStruct.hdrUnpack);
+        } else {
+          unpack_large(upkHdrOut, i, upkStruct.XChar_hdr, upkStruct.hdrUnpack);
+        }
+        plusMore = upkHdrOut;
+        content += std::format("{}\n", upkHdrOut);
+        ++i;  // Hdr
+
+        unpack_seq(upkSeqOut, i);
+        content += std::format("{}\n", upkSeqOut);  // Seq
+
+        content += justPlus ? "+\n" : std::format("+{}\n", plusMore);
+        ++i;  // +
+
+        if (has_small_qscore) {
+          (this->*upkStruct.unpackQSFPtr)(upkQsOut, i, upkStruct.qsUnpack);
+        } else {
+          unpack_large(upkQsOut, i, upkStruct.XChar_qs, upkStruct.qsUnpack);
+        }
+        content += std::format("{}\n", upkQsOut);  // Qs
+      } while (++i != decText.end());
+
+      return content;
+    };
+
+    run_ordered_pipeline<std::string>(n_threads, read_chunk, unpack_chunk,
+                                      [](const std::string& output) { std::cout << output; });
+
+    if (verbose && shuffled) {
+      std::cerr << "\r" << bold("[+]") << " Unshuffling done in " << hms(now() - shuffle_timer);
+      std::cerr << bold("[+]") << " Decompressing ...";
+    }
+  } catch (...) {
+    plaintext.fail(std::current_exception());
+    if (decrypt_thread.joinable()) {
+      decrypt_thread.join();
+    }
+    throw;
   }
 
-  if (verbose) {
-    std::cerr << "\r" << bold("[+]") << " Unshuffling done in " << hms(now() - shuffle_timer);
-    std::cerr << bold("[+]") << " Decompressing ...";
-  }
-
-  // Close/delete decrypted file
-  in.close();
-  const std::string decFileName = DEC_FNAME;
-  std::remove(decFileName.c_str());
-
-  // Join partially unpacked files
-  join_unpacked_files();
+  join_decrypt();
 
   const auto finish = now();  // Stop timer
   std::cerr << "\r" << bold("[+]") << " Decompressing done in " << hms(finish - start);
