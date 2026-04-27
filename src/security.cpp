@@ -62,6 +62,34 @@ void Security::encrypt() {
   std::remove(pkdFileName.c_str());
 }
 
+void Security::encrypt_stream(const PlaintextProducer& produce_plaintext) {
+  std::cerr << bold("[+]") << " Encrypting ...";
+  const auto start = now();  // Start timer
+
+  const auto state = derived_state();
+
+  try {
+    CryptoPP::GCM<CryptoPP::AES>::Encryption e;
+    e.SetKeyWithIV(state->key.data(), state->key.size(), state->iv.data(), state->iv.size());
+
+    CryptoPP::AuthenticatedEncryptionFilter filter(e, new CryptoPP::FileSink(std::cout), false,
+                                                   TAG_SIZE);
+    const PlaintextSink sink = [&](std::string_view plaintext) {
+      filter.Put(reinterpret_cast<const CryptoPP::byte*>(plaintext.data()), plaintext.size());
+    };
+
+    produce_plaintext(sink);
+    filter.MessageEnd();
+  } catch (CryptoPP::InvalidArgument& e) {
+    std::cerr << "Caught InvalidArgument...\n" << e.what() << "\n";
+  } catch (CryptoPP::Exception& e) {
+    std::cerr << "Caught Exception...\n" << e.what() << "\n";
+  }
+
+  const auto finish = now();  // Stop timer
+  std::cerr << "\r" << bold("[+]") << " Encrypting done in " << hms(finish - start);
+}
+
 /**
  * @brief Decrypt
  * @details AES encryption uses a secret key of a variable length (128, 196 or 256 bit).

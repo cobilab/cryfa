@@ -13,13 +13,28 @@
 #include <fstream>
 #include <iomanip>  // setw, std::setprecision
 #include <mutex>
+#include <optional>
 #include <thread>
+#include <vector>
 
+#include "ordered_pipeline.hpp"
 #include "string.hpp"
 #include "time.hpp"
 using namespace cryfa;
 
 std::mutex mutxFQ; /**< @brief Mutex */
+
+namespace {
+struct FastqRecord {
+  std::string header;
+  std::string sequence;
+  std::string quality;
+};
+
+struct FastqChunk {
+  std::vector<FastqRecord> records;
+};
+}  // namespace
 
 /**
  * @brief Check if the third line contains only +
@@ -53,7 +68,6 @@ void Fastq::compress() {
     std::cerr << bold("[+]") << " Compacting ...";
   }
   const auto start = now();  // Start timer
-  std::vector<std::thread> arrThread(n_threads);
   std::string headers, qscores;
   packfq_s pkStruct;  // Collection of inputs to pass to pack...
 
@@ -71,29 +85,93 @@ void Fastq::compress() {
   // Set Hash table and pack function
   set_hashTbl_packFn(pkStruct, headers, qscores);
 
-  // Distribute file among threads, for reading and packing
-  for (byte t = 0; t != n_threads; ++t) {
-    arrThread[t] = std::thread(&Fastq::pack, this, pkStruct, t);
-  }
-  for (auto& thr : arrThread) {
-    if (thr.joinable()) {
-      thr.join();
+  const bool plus_is_plain = has_just_plus();
+
+  auto read_chunk = [this, in = std::ifstream(in_file)]() mutable -> std::optional<FastqChunk> {
+    FastqChunk chunk;
+    std::string plus;
+    u64 chunk_bytes = 0;
+
+    while (chunk_bytes < CHUNK_TARGET_SIZE) {
+      FastqRecord record;
+      if (!std::getline(in, record.header)) {
+        break;
+      }
+      if (!std::getline(in, record.sequence)) {
+        break;
+      }
+      if (!std::getline(in, plus)) {
+        break;
+      }
+      if (!std::getline(in, record.quality)) {
+        break;
+      }
+
+      chunk_bytes +=
+          record.header.size() + record.sequence.size() + plus.size() + record.quality.size() + 4;
+      chunk.records.push_back(std::move(record));
     }
-  }
 
-  if (verbose) {
-    std::cerr << "\r" << bold("[+]") << " Shuffling done in " << hms(now() - shuffle_timer);
-    std::cerr << bold("[+]") << " Compacting ...";
-  }
+    if (chunk.records.empty()) {
+      return std::nullopt;
+    }
+    return chunk;
+  };
 
-  // Join partially packed and/or shuffled files
-  join_packed_files(headers, qscores, 'Q', has_just_plus());
+  auto pack_chunk = [this, pkStruct](FastqChunk chunk) {
+    packFP_t packHdr = pkStruct.packHdrFPtr;
+    packFP_t packQS = pkStruct.packQSFPtr;
+    std::string context;
+    context.reserve(CHUNK_TARGET_SIZE);
 
-  const auto finish = now();  // Stop timer
-  std::cerr << "\r" << bold("[+]") << " Compacting done in " << hms(finish - start);
+    for (const FastqRecord& record : chunk.records) {
+      (this->*packHdr)(context, record.header.substr(1), HdrMap);
+      context += (char)254;
+      pack_seq(context, record.sequence);
+      context += (char)254;
+      (this->*packQS)(context, record.quality, QsMap);
+      context += (char)254;
+    }
 
-  // Cout encrypted content
-  encrypt();
+    if (!stop_shuffle) {
+      mutxFQ.lock();  //----------------------------------------------------
+      if (verbose && shuffInProg) {
+        std::cerr << bold("[+]") << " Shuffling ...";
+        shuffle_timer = now();
+      }
+      shuffInProg = false;
+      mutxFQ.unlock();  //--------------------------------------------------
+
+      shuffle(context);
+    }
+
+    std::string packed = std::format("{}{}{}", (char)253, context.size(), (char)254);
+    packed += context;
+    return packed;
+  };
+
+  encrypt_stream([&](const PlaintextSink& emit) {
+    std::string header;
+    header.reserve(headers.size() + qscores.size() + 3);
+    header += (char)126;
+    header += (!stop_shuffle ? (char)128 : (char)129);
+    header += headers;
+    header += (char)254;
+    header += qscores;
+    header += (plus_is_plain ? (char)253 : '\n');
+    emit(header);
+
+    run_ordered_pipeline<FastqChunk>(n_threads, read_chunk, pack_chunk, emit);
+    emit(std::string(1, (char)252));
+
+    if (verbose && !stop_shuffle) {
+      std::cerr << "\r" << bold("[+]") << " Shuffling done in " << hms(now() - shuffle_timer);
+      std::cerr << bold("[+]") << " Compacting ...";
+    }
+
+    const auto finish = now();  // Stop timer
+    std::cerr << "\r" << bold("[+]") << " Compacting done in " << hms(finish - start);
+  });
 }
 
 /**

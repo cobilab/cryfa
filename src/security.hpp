@@ -11,8 +11,10 @@
 
 #include <array>
 #include <cstddef>
+#include <functional>
 #include <memory>
 #include <mutex>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -28,10 +30,14 @@ class Security : public Param {
   void decrypt();
 
  protected:
+  using PlaintextSink = std::function<void(std::string_view)>;
+  using PlaintextProducer = std::function<void(const PlaintextSink&)>;
+
   bool shuffInProg = true; /**< @brief Shuffle in progress @hideinitializer */
   bool shuffled = true;    /**< @hideinitializer */
 
   void encrypt();
+  void encrypt_stream(const PlaintextProducer&);
   void shuffle(std::string&);
   void unshuffle(std::string::iterator&, u64);
 
