@@ -519,7 +519,7 @@ function write_compare_report {
   baseline_summary=$(summary_input_for_compare "$COMPARE_DIR")
 
   append_csv_row "$COMPARE_CSV" \
-    mode threads compress_speedup decompress_speedup size_ratio_delta baseline_verified current_verified
+    mode threads compress_speedup decompress_speedup roundtrip_speedup size_ratio_delta baseline_verified current_verified
 
   if [[ $baseline_summary == *.tsv ]]; then
     baseline_csv=$(mktemp "${TMPDIR:-/tmp}/cryfa-compare-baseline.XXXXXX.csv")
@@ -546,9 +546,10 @@ function write_compare_report {
       if (!(key in base_c)) next
       compress_speedup = ($7 + 0 > 0) ? base_c[key] / $7 : 0
       decompress_speedup = ($11 + 0 > 0) ? base_d[key] / $11 : 0
+      roundtrip_speedup = (($7 + $11) + 0 > 0) ? (base_c[key] + base_d[key]) / ($7 + $11) : 0
       ratio_delta = ($6 / $5) - base_ratio[key]
-      printf "%s,%s,%.3f,%.3f,%.6f,%s,%s\n",
-        $2, $3, compress_speedup, decompress_speedup, ratio_delta,
+      printf "%s,%s,%.3f,%.3f,%.3f,%.6f,%s,%s\n",
+        $2, $3, compress_speedup, decompress_speedup, roundtrip_speedup, ratio_delta,
         base_verified[key], $15
     }
   ' "$baseline_csv" "$SUMMARY_CSV" >>"$COMPARE_CSV"
@@ -566,12 +567,12 @@ function write_compare_report {
     echo "- Negative size deltas mean the new run produced smaller output."
     echo "- Comparison data: $(basename "$COMPARE_CSV")"
     echo
-    echo "| Mode | Threads | Compress Speedup | Decompress Speedup | Size Ratio Delta | Baseline Verified | Current Verified |"
-    echo "| --- | ---: | ---: | ---: | ---: | --- | --- |"
+    echo "| Mode | Threads | Compress Speedup | Decompress Speedup | Round-Trip Speedup | Size Ratio Delta | Baseline Verified | Current Verified |"
+    echo "| --- | ---: | ---: | ---: | ---: | ---: | --- | --- |"
     awk -F ',' '
       NR > 1 {
-        printf "| %s | %s | %.3f | %.3f | %.6f | %s | %s |\n",
-          $1, $2, $3, $4, $5, $6, $7
+        printf "| %s | %s | %.3f | %.3f | %.3f | %.6f | %s | %s |\n",
+          $1, $2, $3, $4, $5, $6, $7, $8
       }
     ' "$COMPARE_CSV"
   } >"$COMPARE_MD"
