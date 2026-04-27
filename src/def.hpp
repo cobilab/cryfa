@@ -9,18 +9,14 @@
 #ifndef CRYFA_DEF_H
 #define CRYFA_DEF_H
 
-#include <format>
 #include <iostream>
 #include <limits>         // std::numeric_limits
 #include <random>         // std::mt19937
 #include <unordered_map>  // Hash table
 
-namespace cryfa {
-// Version
-static const std::string MONTH = "05";
-static const std::string YEAR = "26";
-static const std::string VERSION = std::format("{}.{}", YEAR, MONTH);
+#include "cryfa/version.hpp"
 
+namespace cryfa {
 // Typedefs
 using byte = unsigned char;
 using u16 = unsigned short;
