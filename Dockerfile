@@ -1,4 +1,3 @@
-# ── Stage 1: builder ─────────────────────────────────────────────────────────-
 FROM ubuntu:22.04 AS builder
 LABEL maintainer="Morteza Hosseini"
 
@@ -13,8 +12,7 @@ COPY . .
 RUN cmake -B build -DCMAKE_BUILD_TYPE=Release \
     && cmake --build build --parallel "$(nproc)" --config Release
 
-# ── Stage 2: runtime ─────────────────────────────────────────────────────────-
-FROM debian:bookworm-slim
+FROM debian:bookworm-slim AS runtime
 
 COPY --from=builder /src/build/cryfa  /usr/local/bin/cryfa
 COPY --from=builder /src/build/keygen /usr/local/bin/keygen
