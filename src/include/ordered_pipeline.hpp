@@ -1,3 +1,11 @@
+// SPDX-FileCopyrightText: 2026 Morteza Hosseini
+// SPDX-License-Identifier: GPL-3.0-only
+
+/**
+ * @file ordered_pipeline.hpp
+ * @brief Ordered pipeline functions
+ */
+
 #ifndef CRYFA_ORDERED_PIPELINE_HPP
 #define CRYFA_ORDERED_PIPELINE_HPP
 

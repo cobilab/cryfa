@@ -1,3 +1,11 @@
+// SPDX-FileCopyrightText: 2026 Morteza Hosseini
+// SPDX-License-Identifier: GPL-3.0-only
+
+/**
+ * @file plaintext_stream.hpp
+ * @brief Plaintext stream functions
+ */
+
 #ifndef CRYFA_PLAINTEXT_STREAM_HPP
 #define CRYFA_PLAINTEXT_STREAM_HPP
 

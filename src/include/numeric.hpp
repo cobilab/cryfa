@@ -1,9 +1,9 @@
+// SPDX-FileCopyrightText: 2026 Morteza Hosseini
+// SPDX-License-Identifier: GPL-3.0-only
+
 /**
  * @file numeric.hpp
  * @brief Numerical functions
- * @author Morteza Hosseini (seyedmorteza.hosseini@manchester.ac.uk)
- * @author Diogo Pratas (pratas@ua.pt)
- * @copyright The GNU General Public License v3.0
  */
 
 #ifndef CRYFA_NUMERIC_HPP

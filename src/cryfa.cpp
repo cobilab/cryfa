@@ -1,9 +1,9 @@
+// SPDX-FileCopyrightText: 2026 Morteza Hosseini
+// SPDX-License-Identifier: GPL-3.0-only
+
 /**
  * @file cryfa.cpp
  * @brief Main file - Cryfa: a secure encryption tool for genomic data
- * @author Morteza Hosseini (seyedmorteza.hosseini@manchester.ac.uk)
- * @author Diogo Pratas (pratas@ua.pt)
- * @copyright The GNU General Public License v3.0
  */
 
 #include <exception>  // std::exception
