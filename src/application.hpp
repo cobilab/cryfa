@@ -1,9 +1,9 @@
+// SPDX-FileCopyrightText: 2026 Morteza Hosseini
+// SPDX-License-Identifier: GPL-3.0-only
+
 /**
- * @file      application.hpp
- * @brief     Application
- * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
- * @author    Diogo Pratas      (pratas@ua.pt)
- * @copyright The GNU General Public License v3.0
+ * @file application.hpp
+ * @brief Application
  */
 
 #ifndef CRYFA_APPLICATION_H

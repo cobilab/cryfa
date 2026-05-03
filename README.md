@@ -1,21 +1,21 @@
 <p align="center"><img src="logo.png" alt="Cryfa" height="150"/></p>
 
-[![Conda Version](https://anaconda.org/bioconda/cryfa/badges/version.svg)](https://anaconda.org/bioconda/cryfa)
+[![Anaconda version](https://anaconda.org/bioconda/cryfa/badges/version.svg)](https://anaconda.org/bioconda/cryfa)
+[![Anaconda downloads](https://anaconda.org/bioconda/cryfa/badges/downloads.svg)](https://anaconda.org/bioconda/cryfa)
 [![CI](https://github.com/cobilab/cryfa/actions/workflows/ci.yml/badge.svg)](https://github.com/cobilab/cryfa/actions/workflows/ci.yml)
-[![Platforms](https://anaconda.org/bioconda/cryfa/badges/platforms.svg)](https://anaconda.org/bioconda/cryfa)
-[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 
 Cryfa is an ultrafast encryption tool specifically designed for genomic data. Besides providing robust security, it also compresses FASTA/FASTQ sequences by a factor of three, making it an efficient solution for managing genomic data.
 
-# Installation
+## Installation
 
-## Conda
+### Conda
 
 ```sh
 conda install -y bioconda::cryfa
 ```
 
-## Docker
+### Docker
 
 The image is available for **linux/amd64** and **linux/arm64** (Apple Silicon, AWS Graviton).
 
@@ -32,9 +32,9 @@ docker run --rm -v /path/to/data:/data smortezah/cryfa \
     -k /data/pass.txt -d /data/out.crf > restored.fq
 ```
 
-## Build from source
+### Build from source
 
-### Linux
+#### Linux
 
 ```sh
 # Install git and cmake (≥ 4.0)
@@ -48,7 +48,7 @@ cd cryfa;
 sh install.sh;
 ```
 
-### macOS
+#### macOS
 
 ```sh
 # Install Homebrew, git and cmake
@@ -61,7 +61,7 @@ cd cryfa;
 sh install.sh;
 ```
 
-### Windows
+#### Windows
 
 ```powershell
 # Install CMake and Visual Studio Build Tools (requires winget)
@@ -77,7 +77,7 @@ cd cryfa
 > [!NOTE]
 > Pre-compiled binaries for 64-bit Linux, macOS, and Windows are available as assets on the [Releases](https://github.com/cobilab/cryfa/releases) page.
 
-# Usage
+## Usage
 
 Run Cryfa with:
 
@@ -102,7 +102,7 @@ A sample file, `in.fq`, is available in the `example/` directory.
 > [!NOTE]
 > Cryfa supports a maximum file size of 64 GB. For larger files, consider splitting them into smaller chunks, e.g. using the `split` command in Linux, and then encrypt each chunk separately. After decryption, you can reassemble the chunks using the `cat` command.
 
-## Input file format
+### Input file format
 
 Cryfa identifies the format of a genomic data file by examining its content, not its extension. For instance, a FASTA file named `test` can be provided with any extension — `test`, `test.fa`, `test.fasta`, `test.fas`, `test.fsa`, etc. So, running
 
@@ -119,7 +119,7 @@ is equivalent to running
 > [!NOTE]
 > The password file can have any extension or none at all -- `pass`, `pass.txt`, `pass.dat`, etc. are all valid and yield the same result.
 
-## Options
+### Options
 
 Cryfa supports the following options:
 
@@ -139,7 +139,7 @@ Cryfa supports the following options:
 
 Cryfa leverages the standard output stream, allowing seamless integration with existing data processing pipelines.
 
-## Creating a Key File
+### Creating a Key File
 
 There are two ways to create a `KEY_FILE` for use with `-k` / `--key`: save a raw password in a file, or use the `keygen` program to generate a strong one. The latter is strongly recommended.
 
@@ -182,7 +182,7 @@ The generated key will be saved to the file you specify (e.g., `key.txt`). Note 
 
 To learn more about key management (generation, exchange, storage, usage, and replacement of keys), see [[1]](https://en.wikipedia.org/wiki/Key_management), [[2]](https://info.townsendsecurity.com/definitive-guide-to-encryption-key-management-fundamentals), [[3]](https://csrc.nist.gov/projects/key-management/cryptographic-key-management-systems) and [[4]](https://www.cryptomathic.com/news-events/blog/what-is-key-management-a-ciso-perspective).
 
-## Benchmarking Cryfa Against Other Methods
+### Benchmarking Cryfa Against Other Methods
 
 To benchmark Cryfa against other methods, configure the parameters in the **bench_cryfa.sh** bash script and execute it:
 
@@ -192,13 +192,21 @@ To benchmark Cryfa against other methods, configure the parameters in the **benc
 
 This script automates the process of downloading datasets, installing dependencies, setting up compression and encryption tools, executing these tools, and finally, displaying the results.
 
-# Citation
+For quick local performance and correctness checks, use the local harness:
+
+```sh
+bash scripts/runtime/run_local_perf.sh --label local-check --input example/in.fq --target-mb 200 --threads "1 4 8" --runs 1 --modes both --no-prompt
+```
+
+The local harness expands the seed input to the requested size, measures compression and decompression, verifies every round trip with `cmp`, and writes CSV/Markdown reports under `results/local_perf/`.
+
+## Citation
 
 If you use Cryfa in your research, please cite the following references:
 
 - M. Hosseini, D. Pratas and A.J. Pinho, "Cryfa: a secure encryption tool for genomic data," _Bioinformatics_, vol. 35, no. 1, pp. 146--148, 2018. [DOI: 10.1093/bioinformatics/bty645](https://doi.org/10.1093/bioinformatics/bty645)
 - **[OPTIONAL]** D. Pratas, M. Hosseini and A.J. Pinho, "Cryfa: a tool to compact and encrypt FASTA files," _11'th International Conference on Practical Applications of Computational Biology & Bioinformatics_ (PACBB), Springer, June 2017. [DOI: 10.1007/978-3-319-60816-7_37](https://doi.org/10.1007/978-3-319-60816-7_37)
 
-# License
+## License
 
 Cryfa is licensed under the [GPLv3](http://www.gnu.org/licenses/gpl-3.0.html).

@@ -253,6 +253,56 @@ function run_benchmark_cryfa_threads {
   fi
 }
 
+function run_benchmark_local_perf {
+  if [[ $RUN_LOCAL_PERF -ne 1 ]]; then
+    return
+  fi
+
+  ensureDir $result
+
+  local label=${LOCAL_PERF_LABEL:-baseline}
+  local compare_to=${LOCAL_PERF_COMPARE_TO:-}
+  local input=${LOCAL_PERF_INPUT:-example/in.fq}
+  local target_mb=${LOCAL_PERF_TARGET_MB:-200}
+  local threads=${LOCAL_PERF_THREADS:-1\ 4\ 8}
+  local runs=${LOCAL_PERF_RUNS:-1}
+  local modes=${LOCAL_PERF_MODES:-default\ stop-shuffle}
+  local interactive_mode=${LOCAL_PERF_INTERACTIVE:-auto}
+  local bin=${LOCAL_PERF_BIN:-build/cryfa}
+  local key_file=${LOCAL_PERF_KEY_FILE:-pass.txt}
+  local out_dir=${LOCAL_PERF_OUT_DIR:-results/local_perf}
+  local compare_args=()
+  local prompt_args=()
+  if [[ -n $compare_to ]]; then
+    compare_args=(--compare-to "$compare_to")
+  fi
+  case "$interactive_mode" in
+    yes)
+      prompt_args=(--interactive)
+      ;;
+    no)
+      prompt_args=(--no-prompt)
+      ;;
+  esac
+
+  echo "[local_perf] Starting local performance harness..."
+  echo "[local_perf] Base label: $label"
+  echo "[local_perf] Output dir: $out_dir"
+
+  bash "$scripts_runtime/run_local_perf.sh" \
+    --label "$label" \
+    "${compare_args[@]}" \
+    "${prompt_args[@]}" \
+    --bin "$bin" \
+    --key-file "$key_file" \
+    --input "$input" \
+    --out-dir "$out_dir" \
+    --target-mb "$target_mb" \
+    --threads "$threads" \
+    --runs "$runs" \
+    --modes "$modes"
+}
+
 function run_benchmark_redundancy {
   if [[ $RUN_REDUNDANCY -ne 1 ]]; then
     return
@@ -278,5 +328,6 @@ function run_benchmark {
   run_benchmark_encryption
   run_benchmark_compression_encryption
   run_benchmark_cryfa_threads || return 1
+  run_benchmark_local_perf || return 1
   run_benchmark_redundancy
 }

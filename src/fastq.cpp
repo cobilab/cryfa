@@ -1,27 +1,46 @@
+// SPDX-FileCopyrightText: 2026 Morteza Hosseini
+// SPDX-License-Identifier: GPL-3.0-only
+
 /**
- * @file      fastq.cpp
- * @brief     Compression/Decompression of FASTQ
- * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
- * @author    Diogo Pratas      (pratas@ua.pt)
- * @copyright The GNU General Public License v3.0
+ * @file fastq.cpp
+ * @brief Compression/Decompression of FASTQ
  */
 
 #include "fastq.hpp"
 
 #include <cstring>
+#include <exception>
+#include <format>
 #include <fstream>
 #include <iomanip>  // setw, std::setprecision
 #include <mutex>
+#include <optional>
+#include <stdexcept>
 #include <thread>
+#include <vector>
 
+#include "ordered_pipeline.hpp"
+#include "plaintext_stream.hpp"
 #include "string.hpp"
 #include "time.hpp"
 using namespace cryfa;
 
 std::mutex mutxFQ; /**< @brief Mutex */
 
+namespace {
+struct FastqRecord {
+  std::string header;
+  std::string sequence;
+  std::string quality;
+};
+
+struct FastqChunk {
+  std::vector<FastqRecord> records;
+};
+}  // namespace
+
 /**
- * @brief  Check if the third line contains only +
+ * @brief Check if the third line contains only +
  * @return True or false
  */
 bool Fastq::has_just_plus() const {
@@ -48,53 +67,121 @@ bool Fastq::has_just_plus() const {
  * @brief Compress
  */
 void Fastq::compress() {
-  if (!verbose) std::cerr << bold("[+]") << " Compacting ...";
+  if (!verbose) {
+    std::cerr << bold("[+]") << " Compacting ...";
+  }
   const auto start = now();  // Start timer
-  std::vector<std::thread> arrThread(n_threads);
   std::string headers, qscores;
   packfq_s pkStruct;  // Collection of inputs to pass to pack...
 
-  if (verbose)
+  if (verbose) {
     std::cerr << bold("[+]") << " Calculating no. unique characters ...";
+  }
   // Gather different chars and max length in all headers and quality scores
   gather_h_q(headers, qscores);
   // Show number of different chars in headers and qs -- Ignore '@'=64 in hdr
-  if (verbose)
-    std::cerr << "\r" << bold("[+]") << " No. unique characters: headers => "
-              << headers.length() << ", qscores => " << qscores.length()
-              << "\n";
+  if (verbose) {
+    std::cerr << "\r" << bold("[+]") << " No. unique characters: headers => " << headers.length()
+              << ", qscores => " << qscores.length() << "\n";
+  }
 
   // Set Hash table and pack function
   set_hashTbl_packFn(pkStruct, headers, qscores);
 
-  // Distribute file among threads, for reading and packing
-  for (byte t = 0; t != n_threads; ++t)
-    arrThread[t] = std::thread(&Fastq::pack, this, pkStruct, t);
-  for (auto& thr : arrThread)
-    if (thr.joinable()) thr.join();
+  const bool plus_is_plain = has_just_plus();
 
-  if (verbose) {
-    std::cerr << "\r" << bold("[+]") << " Shuffling done in "
-              << hms(now() - shuffle_timer);
-    std::cerr << bold("[+]") << " Compacting ...";
-  }
+  auto read_chunk = [this, in = std::ifstream(in_file)]() mutable -> std::optional<FastqChunk> {
+    FastqChunk chunk;
+    std::string plus;
+    u64 chunk_bytes = 0;
 
-  // Join partially packed and/or shuffled files
-  join_packed_files(headers, qscores, 'Q', has_just_plus());
+    while (chunk_bytes < CHUNK_TARGET_SIZE) {
+      FastqRecord record;
+      if (!std::getline(in, record.header)) {
+        break;
+      }
+      if (!std::getline(in, record.sequence)) {
+        break;
+      }
+      if (!std::getline(in, plus)) {
+        break;
+      }
+      if (!std::getline(in, record.quality)) {
+        break;
+      }
 
-  const auto finish = now();  // Stop timer
-  std::cerr << "\r" << bold("[+]") << " Compacting done in "
-            << hms(finish - start);
+      chunk_bytes +=
+          record.header.size() + record.sequence.size() + plus.size() + record.quality.size() + 4;
+      chunk.records.push_back(std::move(record));
+    }
 
-  // Cout encrypted content
-  encrypt();
+    if (chunk.records.empty()) {
+      return std::nullopt;
+    }
+    return chunk;
+  };
+
+  auto pack_chunk = [this, pkStruct](FastqChunk chunk) {
+    packFP_t packHdr = pkStruct.packHdrFPtr;
+    packFP_t packQS = pkStruct.packQSFPtr;
+    std::string context;
+    context.reserve(CHUNK_TARGET_SIZE);
+
+    for (const FastqRecord& record : chunk.records) {
+      (this->*packHdr)(context, record.header.substr(1), HdrMap);
+      context += (char)254;
+      pack_seq(context, record.sequence);
+      context += (char)254;
+      (this->*packQS)(context, record.quality, QsMap);
+      context += (char)254;
+    }
+
+    if (!stop_shuffle) {
+      mutxFQ.lock();  //----------------------------------------------------
+      if (verbose && shuffInProg) {
+        std::cerr << bold("[+]") << " Shuffling ...";
+        shuffle_timer = now();
+      }
+      shuffInProg = false;
+      mutxFQ.unlock();  //--------------------------------------------------
+
+      shuffle(context);
+    }
+
+    std::string packed = std::format("{}{}{}", (char)253, context.size(), (char)254);
+    packed += context;
+    return packed;
+  };
+
+  encrypt_stream([&](const PlaintextSink& emit) {
+    std::string header;
+    header.reserve(headers.size() + qscores.size() + 3);
+    header += (char)126;
+    header += (!stop_shuffle ? (char)128 : (char)129);
+    header += headers;
+    header += (char)254;
+    header += qscores;
+    header += (plus_is_plain ? (char)253 : '\n');
+    emit(header);
+
+    run_ordered_pipeline<FastqChunk>(n_threads, read_chunk, pack_chunk, emit);
+    emit(std::string(1, (char)252));
+
+    if (verbose && !stop_shuffle) {
+      std::cerr << "\r" << bold("[+]") << " Shuffling done in " << hms(now() - shuffle_timer);
+      std::cerr << bold("[+]") << " Compacting ...";
+    }
+
+    const auto finish = now();  // Stop timer
+    std::cerr << "\r" << bold("[+]") << " Compacting done in " << hms(finish - start);
+  });
 }
 
 /**
  * @brief Set hash table and pack function
- * @param[out] pkStruct  Pack structure
- * @param[in]  headers   Headers
- * @param[in]  qscores   Quality scores
+ * @param[out] pkStruct Pack structure
+ * @param headers Headers
+ * @param qscores Quality scores
  */
 void Fastq::set_hashTbl_packFn(packfq_s& pkStruct, const std::string& headers,
                                const std::string& qscores) {
@@ -170,20 +257,24 @@ void Fastq::set_hashTbl_packFn(packfq_s& pkStruct, const std::string& headers,
 
 /**
  * @brief Pack. '@' at the beginning of headers is not packed
- * @param pkStruct  Pack structure
- * @param threadID  Thread ID
+ * @param pkStruct Pack structure
+ * @param threadID Thread ID
  */
 void Fastq::pack(const packfq_s& pkStruct, byte threadID) {
   packFP_t packHdr = pkStruct.packHdrFPtr;  // Function pointer
   packFP_t packQS = pkStruct.packQSFPtr;    // Function pointer
   std::ifstream in(in_file);
-  std::ofstream pkfile(PK_FNAME + std::to_string(threadID), std::ios_base::app);
+  std::ofstream pkfile(std::format("{}{}", PK_FNAME, static_cast<unsigned>(threadID)),
+                       std::ios_base::app);
 
   // Lines ignored at the beginning
-  for (u64 l = (u64)threadID * BlockLine; l--;) IGNORE_THIS_LINE(in);
+  for (u64 l = (u64)threadID * BlockLine; l--;) {
+    IGNORE_THIS_LINE(in);
+  }
 
   while (in.peek() != EOF) {
     std::string context;  // Output std::string
+    context.reserve(CHUNK_TARGET_SIZE);
 
     std::string line;
     for (u64 l = 0; l != BlockLine; l += 4) {  // Process 4 lines by 4 lines
@@ -216,18 +307,17 @@ void Fastq::pack(const packfq_s& pkStruct, byte threadID) {
     }
 
     // For unshuffling: insert the size of packed context in the beginning
-    std::string contextSize;
-    contextSize += (char)253;
-    contextSize += std::to_string(context.size());
-    contextSize += (char)254;
+    std::string contextSize = std::format("{}{}{}", (char)253, context.size(), (char)254);
     context.insert(0, contextSize);
 
     // Write header containing threadID for each
-    pkfile << THR_ID_HDR << std::to_string(threadID) << '\n';
+    pkfile << std::format("{}{}\n", THR_ID_HDR, static_cast<unsigned>(threadID));
     pkfile << context << '\n';
 
     // Ignore to go to the next related chunk
-    for (u64 l = (u64)(n_threads - 1) * BlockLine; l--;) IGNORE_THIS_LINE(in);
+    for (u64 l = (u64)(n_threads - 1) * BlockLine; l--;) {
+      IGNORE_THIS_LINE(in);
+    }
   }
 
   pkfile.close();
@@ -236,8 +326,8 @@ void Fastq::pack(const packfq_s& pkStruct, byte threadID) {
 
 /**
  * @brief Gather chars of all headers & quality scores, excluding '@' in headers
- * @param[out] headers  Chars of all headers
- * @param[out] qscores  Chars of all quality scores
+ * @param[out] headers Chars of all headers
+ * @param[out] qscores Chars of all quality scores
  */
 void Fastq::gather_h_q(std::string& headers, std::string& qscores) {
   u32 maxHLen = 0, maxQLen = 0;  // Max length of headers & quality scores
@@ -248,168 +338,275 @@ void Fastq::gather_h_q(std::string& headers, std::string& qscores) {
   std::ifstream in(in_file);
   for (std::string line; !in.eof();) {
     if (getline(in, line).good()) {
-      for (char c : line) hChars[c] = true;
-      if (line.size() > maxHLen) maxHLen = (u32)line.size();
+      for (char c : line) {
+        hChars[c] = true;
+      }
+      if (line.size() > maxHLen) {
+        maxHLen = (u32)line.size();
+      }
     }
 
     IGNORE_THIS_LINE(in);  // Ignore sequence
     IGNORE_THIS_LINE(in);  // Ignore +
 
     if (getline(in, line).good()) {
-      for (char c : line) qChars[c] = true;
-      if (line.size() > maxQLen) maxQLen = (u32)line.size();
+      for (char c : line) {
+        qChars[c] = true;
+      }
+      if (line.size() > maxQLen) {
+        maxQLen = (u32)line.size();
+      }
     }
   }
   in.close();
 
   // Number of lines read from input file while compression
-  BlockLine = (u32)(4 * (BLOCK_SIZE / (maxHLen + 2 * maxQLen)));
+  BlockLine = (u32)(4 * (CHUNK_TARGET_SIZE / (maxHLen + 2 * maxQLen)));
   if (!BlockLine) BlockLine = 4;
 
   // Gather the characters -- ignore '@'=64 for headers
-  for (byte i = 32; i != 64; ++i)
-    if (*(hChars + i)) headers += i;
-  for (byte i = 65; i != 127; ++i)
-    if (*(hChars + i)) headers += i;
-  for (byte i = 32; i != 127; ++i)
-    if (*(qChars + i)) qscores += i;
+  for (byte i = 32; i != 64; ++i) {
+    if (*(hChars + i)) {
+      headers += i;
+    }
+  }
+  for (byte i = 65; i != 127; ++i) {
+    if (*(hChars + i)) {
+      headers += i;
+    }
+  }
+  for (byte i = 32; i != 127; ++i) {
+    if (*(qChars + i)) {
+      qscores += i;
+    }
+  }
 }
 
 /**
  * @brief Decompress
  */
 void Fastq::decompress() {
-  if (!verbose) std::cerr << bold("[+]") << " Decompressing ...";
-  const auto start = now();  // Start timer
-
-  char c;  // Chars in file
-  std::string headers, qscores;
-  unpackfq_s upkStruct;  // Collection of inputs to pass to unpack...
-  std::vector<std::thread> arrThread(n_threads);  // Array of threads
-  std::ifstream in(DEC_FNAME);
-
-  in.ignore(1);  // Jump over decText[0]==(char) 126
-  in.get(c);
-  shuffled = (c == (char)128);  // Check if file had been shuffled
-  if (verbose)
-    std::cerr << bold("[+]") << " Extracting no. unique characters ...";
-  while (in.get(c) && c != (char)254) headers += c;
-  while (in.get(c) && c != '\n' && c != (char)253) qscores += c;
-  // Show number of different chars in headers and qs -- ignore '@'=64
-  if (verbose)
-    std::cerr << "\r" << bold("[+]") << " No. unique characters: headers => "
-              << headers.length() << ", qscores => " << qscores.length()
-              << "\n";
-  if (c == '\n') justPlus = false;  // If 3rd line is just +
-
-  // Header -- Set unpack table and unpack function
-  set_unpackTbl_unpackFn(upkStruct, headers, qscores);
-
-  // Distribute file among threads, for reading and unpacking
-  using unpackHQFP = void (Fastq::*)(const unpackfq_s&, byte);
-  unpackHQFP unpackHQ =
-      (headers.length() <= MAX_C5)
-          ? (qscores.length() <= MAX_C5 ? &Fastq::unpack_hS_qS
-                                        : &Fastq::unpack_hS_qL)
-          : (qscores.length() > MAX_C5 ? &Fastq::unpack_hL_qL
-                                       : &Fastq::unpack_hL_qS);
-
-  for (byte t = 0; t != n_threads; ++t) {
-    in.get(c);
-    if (c == (char)253) {
-      std::string chunkSizeStr;  // Chunk size (std::string) -- For unshuffling
-      while (in.get(c) && c != (char)254) chunkSizeStr += c;
-      const u64 offset = stoull(chunkSizeStr);  // To traverse decompressed file
-
-      upkStruct.begPos = in.tellg();
-      upkStruct.chunkSize = offset;
-
-      arrThread[t] = std::thread(unpackHQ, this, upkStruct, t);
-
-      // Jump to the beginning of the next chunk
-      in.seekg((std::streamoff)offset, std::ios_base::cur);
-    }
-    // End of file
-    if (in.peek() == 252) break;
-  }
-  // Join threads
-  for (auto& thr : arrThread)
-    if (thr.joinable()) thr.join();
-
-  if (verbose) {
-    std::cerr << "\r" << bold("[+]") << " Unshuffling done in "
-              << hms(now() - shuffle_timer);
+  if (!verbose) {
     std::cerr << bold("[+]") << " Decompressing ...";
   }
+  const auto start = now();  // Start timer
 
-  // Close/delete decrypted file
-  in.close();
-  const std::string decFileName = DEC_FNAME;
-  std::remove(decFileName.c_str());
+  PlaintextStream plaintext;
+  std::exception_ptr decrypt_error;
+  std::thread decrypt_thread([&]() {
+    try {
+      decrypt_stream([&](std::string_view decrypted) { plaintext.push(decrypted); });
+      plaintext.close();
+    } catch (...) {
+      decrypt_error = std::current_exception();
+      plaintext.fail(decrypt_error);
+    }
+  });
 
-  // Join partially unpacked files
-  join_unpacked_files();
+  auto join_decrypt = [&]() {
+    if (decrypt_thread.joinable()) {
+      decrypt_thread.join();
+    }
+    if (decrypt_error) {
+      std::rethrow_exception(decrypt_error);
+    }
+  };
+
+  std::string headers, qscores;
+  unpackfq_s upkStruct;  // Collection of inputs to pass to unpack...
+
+  try {
+    const auto file_type = plaintext.get();
+    if (!file_type || *file_type != (char)126) {
+      throw std::runtime_error("corrupted file.");
+    }
+
+    const auto shuffle_flag = plaintext.get();
+    if (!shuffle_flag || (*shuffle_flag != (char)128 && *shuffle_flag != (char)129)) {
+      throw std::runtime_error("corrupted file.");
+    }
+
+    shuffled = (*shuffle_flag == (char)128);  // Check if file had been shuffled
+    if (verbose) {
+      std::cerr << bold("[+]") << " Extracting no. unique characters ...";
+    }
+    if (!plaintext.read_until((char)254, headers)) {
+      throw std::runtime_error("corrupted file.");
+    }
+
+    char c = 0;
+    while (std::optional<char> next = plaintext.get()) {
+      c = *next;
+      if (c == '\n' || c == (char)253) {
+        break;
+      }
+      qscores += c;
+    }
+    if (c != '\n' && c != (char)253) {
+      throw std::runtime_error("corrupted file.");
+    }
+    // Show number of different chars in headers and qs -- ignore '@'=64
+    if (verbose) {
+      std::cerr << "\r" << bold("[+]") << " No. unique characters: headers => " << headers.length()
+                << ", qscores => " << qscores.length() << "\n";
+    }
+    justPlus = (c != '\n');  // If 3rd line is just +
+
+    // Header -- Set unpack table and unpack function
+    set_unpackTbl_unpackFn(upkStruct, headers, qscores);
+    const bool has_small_header = headers.length() <= MAX_C5;
+    const bool has_small_qscore = qscores.length() <= MAX_C5;
+
+    auto read_chunk = [&]() -> std::optional<std::string> {
+      const auto marker = plaintext.get();
+      if (!marker || *marker == (char)252) {
+        return std::nullopt;
+      }
+      if (*marker != (char)253) {
+        throw std::runtime_error("corrupted file.");
+      }
+
+      std::string chunk_size_str;
+      if (!plaintext.read_until((char)254, chunk_size_str) || chunk_size_str.empty()) {
+        throw std::runtime_error("corrupted file.");
+      }
+
+      std::string chunk;
+      if (!plaintext.read_bytes(std::stoull(chunk_size_str), chunk)) {
+        throw std::runtime_error("corrupted file.");
+      }
+      return chunk;
+    };
+
+    auto unpack_chunk = [this, upkStruct, has_small_header,
+                         has_small_qscore](std::string decText) mutable {
+      if (decText.empty()) {
+        return std::string{};
+      }
+
+      auto i = decText.begin();
+
+      // Unshuffle
+      if (shuffled) {
+        mutxFQ.lock();  //--------------------------------------------------
+        if (verbose && shuffInProg) {
+          std::cerr << bold("[+]") << " Unshuffling ...";
+          shuffle_timer = now();
+        }
+        shuffInProg = false;
+        mutxFQ.unlock();  //------------------------------------------------
+
+        unshuffle(i, decText.size());
+      }
+
+      std::string upkHdrOut, upkSeqOut, upkQsOut;
+      std::string content;
+      content.reserve(decText.size() * 2);
+      do {
+        content += '@';
+        std::string plusMore;
+
+        if (has_small_header) {
+          (this->*upkStruct.unpackHdrFPtr)(upkHdrOut, i, upkStruct.hdrUnpack);
+        } else {
+          unpack_large(upkHdrOut, i, upkStruct.XChar_hdr, upkStruct.hdrUnpack);
+        }
+        plusMore = upkHdrOut;
+        content += std::format("{}\n", upkHdrOut);
+        ++i;  // Hdr
+
+        unpack_seq(upkSeqOut, i);
+        content += std::format("{}\n", upkSeqOut);  // Seq
+
+        content += justPlus ? "+\n" : std::format("+{}\n", plusMore);
+        ++i;  // +
+
+        if (has_small_qscore) {
+          (this->*upkStruct.unpackQSFPtr)(upkQsOut, i, upkStruct.qsUnpack);
+        } else {
+          unpack_large(upkQsOut, i, upkStruct.XChar_qs, upkStruct.qsUnpack);
+        }
+        content += std::format("{}\n", upkQsOut);  // Qs
+      } while (++i != decText.end());
+
+      return content;
+    };
+
+    run_ordered_pipeline<std::string>(n_threads, read_chunk, unpack_chunk,
+                                      [](const std::string& output) { std::cout << output; });
+
+    if (verbose && shuffled) {
+      std::cerr << "\r" << bold("[+]") << " Unshuffling done in " << hms(now() - shuffle_timer);
+      std::cerr << bold("[+]") << " Decompressing ...";
+    }
+  } catch (...) {
+    plaintext.fail(std::current_exception());
+    if (decrypt_thread.joinable()) {
+      decrypt_thread.join();
+    }
+    throw;
+  }
+
+  join_decrypt();
 
   const auto finish = now();  // Stop timer
-  std::cerr << "\r" << bold("[+]") << " Decompressing done in "
-            << hms(finish - start);
+  std::cerr << "\r" << bold("[+]") << " Decompressing done in " << hms(finish - start);
 }
 
 /**
  * @brief Set unpack table and unpack function
- * @param[out] upkStruct  Unpack structure
- * @param[in]  headers    Headers
- * @param[in]  qscores    Quality scores
+ * @param[out] upkStruct Unpack structure
+ * @param headers Headers
+ * @param qscores Quality scores
  */
-void Fastq::set_unpackTbl_unpackFn(unpackfq_s& upkStruct,
-                                   const std::string& headers,
+void Fastq::set_unpackTbl_unpackFn(unpackfq_s& upkStruct, const std::string& headers,
                                    const std::string& qscores) {
   const auto headersLen = headers.length();
   const auto qscoresLen = qscores.length();
   u16 keyLen_hdr = 0, keyLen_qs = 0;
 
   // Header
-  if (headersLen > MAX_C5)
+  if (headersLen > MAX_C5) {
     keyLen_hdr = KEYLEN_C5;
-  else if (headersLen > MAX_C4) {  // Cat 5
+  } else if (headersLen > MAX_C4) {  // Cat 5
     upkStruct.unpackHdrFPtr = &EnDecrypto::unpack_2B;
     keyLen_hdr = KEYLEN_C5;
   } else {
     upkStruct.unpackHdrFPtr = &EnDecrypto::unpack_1B;
 
-    if (headersLen > MAX_C3)
+    if (headersLen > MAX_C3) {
       keyLen_hdr = KEYLEN_C4;  // Cat 4
-    else if (headersLen == MAX_C3 || headersLen == MID_C3 ||
-             headersLen == MIN_C3)
+    } else if (headersLen == MAX_C3 || headersLen == MID_C3 || headersLen == MIN_C3) {
       keyLen_hdr = KEYLEN_C3;  // Cat 3
-    else if (headersLen == C2)
+    } else if (headersLen == C2) {
       keyLen_hdr = KEYLEN_C2;  // Cat 2
-    else if (headersLen == C1)
+    } else if (headersLen == C1) {
       keyLen_hdr = KEYLEN_C1;  // Cat 1
-    else
+    } else {
       keyLen_hdr = 1;  // = 1
+    }
   }
 
   // Quality score
-  if (qscoresLen > MAX_C5)
+  if (qscoresLen > MAX_C5) {
     keyLen_qs = KEYLEN_C5;
-  else if (qscoresLen > MAX_C4) {  // Cat 5
+  } else if (qscoresLen > MAX_C4) {  // Cat 5
     upkStruct.unpackQSFPtr = &EnDecrypto::unpack_2B;
     keyLen_qs = KEYLEN_C5;
   } else {
     upkStruct.unpackQSFPtr = &EnDecrypto::unpack_1B;
 
-    if (qscoresLen > MAX_C3)
+    if (qscoresLen > MAX_C3) {
       keyLen_qs = KEYLEN_C4;  // Cat 4
-    else if (qscoresLen == MAX_C3 || qscoresLen == MID_C3 ||
-             qscoresLen == MIN_C3)
+    } else if (qscoresLen == MAX_C3 || qscoresLen == MID_C3 || qscoresLen == MIN_C3) {
       keyLen_qs = KEYLEN_C3;  // Cat 3
-    else if (qscoresLen == C2)
+    } else if (qscoresLen == C2) {
       keyLen_qs = KEYLEN_C2;  // Cat 2
-    else if (qscoresLen == C1)
+    } else if (qscoresLen == C1) {
       keyLen_qs = KEYLEN_C1;  // Cat 1
-    else
+    } else {
       keyLen_qs = 1;  // = 1
+    }
   }
 
   // Build unpacking tables
@@ -449,8 +646,8 @@ void Fastq::set_unpackTbl_unpackFn(unpackfq_s& upkStruct,
 /**
  * @brief Unpack: small header, small quality score.
  *        '@' at the beginning of headers not packed
- * @param upkStruct  Unpack structure
- * @param threadID   Thread ID
+ * @param upkStruct Unpack structure
+ * @param threadID  Thread ID
  */
 void Fastq::unpack_hS_qS(const unpackfq_s& upkStruct, byte threadID) {
   unpackFP_t unpackHdr = upkStruct.unpackHdrFPtr;  // Function pointer
@@ -458,11 +655,11 @@ void Fastq::unpack_hS_qS(const unpackfq_s& upkStruct, byte threadID) {
   pos_t begPos = upkStruct.begPos;
   u64 chunkSize = upkStruct.chunkSize;
   std::ifstream in(DEC_FNAME);
-  std::ofstream upkfile(UPK_FNAME + std::to_string(threadID),
+  std::ofstream upkfile(std::format("{}{}", UPK_FNAME, static_cast<unsigned>(threadID)),
                         std::ios_base::app);
   std::string upkHdrOut, upkSeqOut, upkQsOut;
   std::string content;
-  content.reserve(BLOCK_SIZE);
+  content.reserve(IO_BUFFER_SIZE);
   auto write_content = [&]() { upkfile << content; };
 
   while (in.peek() != EOF) {
@@ -470,6 +667,7 @@ void Fastq::unpack_hS_qS(const unpackfq_s& upkStruct, byte threadID) {
     in.seekg(begPos);  // Read the file from this position
     // Take a chunk of decrypted file
     std::string decText;
+    decText.reserve(chunkSize);
     for (u64 u = chunkSize; u--;) {
       in.get(c);
       decText += c;
@@ -490,24 +688,24 @@ void Fastq::unpack_hS_qS(const unpackfq_s& upkStruct, byte threadID) {
       unshuffle(i, chunkSize);
     }
 
-    content += THR_ID_HDR + std::to_string(threadID) + "\n";
+    content += std::format("{}{}\n", THR_ID_HDR, static_cast<unsigned>(threadID));
     do {
       content += '@';
       std::string plusMore;
 
       (this->*unpackHdr)(upkHdrOut, i, upkStruct.hdrUnpack);
       plusMore = upkHdrOut;
-      content += upkHdrOut + "\n";
+      content += std::format("{}\n", upkHdrOut);
       ++i;  // Hdr
 
       unpack_seq(upkSeqOut, i);
-      content += upkSeqOut + "\n";  // Seq
+      content += std::format("{}\n", upkSeqOut);  // Seq
 
-      content += (justPlus ? "+" : "+" + plusMore) + "\n";
+      content += justPlus ? "+\n" : std::format("+{}\n", plusMore);
       ++i;  // +
 
       (this->*unpackQS)(upkQsOut, i, upkStruct.qsUnpack);
-      content += upkQsOut + "\n";  // Qs
+      content += std::format("{}\n", upkQsOut);  // Qs
     } while (++i != decText.end());  // If trouble: change "!=" to "<"
 
     // Update the chunk size and positions (beg & end)
@@ -516,7 +714,9 @@ void Fastq::unpack_hS_qS(const unpackfq_s& upkStruct, byte threadID) {
       in.get(c);
       if (c == (char)253) {
         std::string chunkSizeStr;
-        while (in.get(c) && c != (char)254) chunkSizeStr += c;
+        while (in.get(c) && c != (char)254) {
+          chunkSizeStr += c;
+        }
 
         chunkSize = stoull(chunkSizeStr);
         begPos = in.tellg();
@@ -524,10 +724,10 @@ void Fastq::unpack_hS_qS(const unpackfq_s& upkStruct, byte threadID) {
       }
     }
 
-    if (content.size() >= BLOCK_SIZE) {
+    if (content.size() >= IO_BUFFER_SIZE) {
       write_content();
       content.clear();
-      content.reserve(BLOCK_SIZE);
+      content.reserve(IO_BUFFER_SIZE);
     }
   }
   write_content();
@@ -539,19 +739,19 @@ void Fastq::unpack_hS_qS(const unpackfq_s& upkStruct, byte threadID) {
 /**
  * @brief Unpack: small header, large quality score.
  *        '@' at the beginning of headers not packed
- * @param upkStruct  Unpack structure
- * @param threadID   Thread ID
+ * @param upkStruct Unpack structure
+ * @param threadID  Thread ID
  */
 void Fastq::unpack_hS_qL(const unpackfq_s& upkStruct, byte threadID) {
   unpackFP_t unpackHdr = upkStruct.unpackHdrFPtr;  // Function pointer
   pos_t begPos = upkStruct.begPos;
   u64 chunkSize = upkStruct.chunkSize;
   std::ifstream in(DEC_FNAME);
-  std::ofstream upkfile(UPK_FNAME + std::to_string(threadID),
+  std::ofstream upkfile(std::format("{}{}", UPK_FNAME, static_cast<unsigned>(threadID)),
                         std::ios_base::app);
   std::string upkHdrOut, upkSeqOut, upkQsOut;
   std::string content;
-  content.reserve(BLOCK_SIZE);
+  content.reserve(IO_BUFFER_SIZE);
   auto write_content = [&]() { upkfile << content; };
 
   while (in.peek() != EOF) {
@@ -559,6 +759,7 @@ void Fastq::unpack_hS_qL(const unpackfq_s& upkStruct, byte threadID) {
     in.seekg(begPos);  // Read file from this position
     // Take a chunk of decrypted file
     std::string decText;
+    decText.reserve(chunkSize);
     for (u64 u = chunkSize; u--;) {
       in.get(c);
       decText += c;
@@ -579,24 +780,24 @@ void Fastq::unpack_hS_qL(const unpackfq_s& upkStruct, byte threadID) {
       unshuffle(i, chunkSize);
     }
 
-    content += THR_ID_HDR + std::to_string(threadID) + "\n";
+    content += std::format("{}{}\n", THR_ID_HDR, static_cast<unsigned>(threadID));
     do {
       content += '@';
       std::string plusMore;
 
       (this->*unpackHdr)(upkHdrOut, i, upkStruct.hdrUnpack);
       plusMore = upkHdrOut;
-      content += upkHdrOut + "\n";
+      content += std::format("{}\n", upkHdrOut);
       ++i;  // Hdr
 
       unpack_seq(upkSeqOut, i);
-      content += upkSeqOut + "\n";  // Seq
+      content += std::format("{}\n", upkSeqOut);  // Seq
 
-      content += (justPlus ? "+" : "+" + plusMore) + "\n";
+      content += justPlus ? "+\n" : std::format("+{}\n", plusMore);
       ++i;  // +
 
       unpack_large(upkQsOut, i, upkStruct.XChar_qs, upkStruct.qsUnpack);
-      content += upkQsOut + "\n";  // Qs
+      content += std::format("{}\n", upkQsOut);  // Qs
     } while (++i != decText.end());  // If trouble: change "!=" to "<"
 
     // Update the chunk size and positions (beg & end)
@@ -605,7 +806,9 @@ void Fastq::unpack_hS_qL(const unpackfq_s& upkStruct, byte threadID) {
       in.get(c);
       if (c == (char)253) {
         std::string chunkSizeStr;
-        while (in.get(c) && c != (char)254) chunkSizeStr += c;
+        while (in.get(c) && c != (char)254) {
+          chunkSizeStr += c;
+        }
 
         chunkSize = stoull(chunkSizeStr);
         begPos = in.tellg();
@@ -613,10 +816,10 @@ void Fastq::unpack_hS_qL(const unpackfq_s& upkStruct, byte threadID) {
       }
     }
 
-    if (content.size() >= BLOCK_SIZE) {
+    if (content.size() >= IO_BUFFER_SIZE) {
       write_content();
       content.clear();
-      content.reserve(BLOCK_SIZE);
+      content.reserve(IO_BUFFER_SIZE);
     }
   }
   write_content();
@@ -628,19 +831,19 @@ void Fastq::unpack_hS_qL(const unpackfq_s& upkStruct, byte threadID) {
 /**
  * @brief Unpack: large header, small quality score.
  *        '@' at the beginning of headers not packed
- * @param upkStruct  Unpack structure
- * @param threadID   Thread ID
+ * @param upkStruct Unpack structure
+ * @param threadID  Thread ID
  */
 void Fastq::unpack_hL_qS(const unpackfq_s& upkStruct, byte threadID) {
   unpackFP_t unpackQS = upkStruct.unpackQSFPtr;  // Function pointer
   pos_t begPos = upkStruct.begPos;
   u64 chunkSize = upkStruct.chunkSize;
   std::ifstream in(DEC_FNAME);
-  std::ofstream upkfile(UPK_FNAME + std::to_string(threadID),
+  std::ofstream upkfile(std::format("{}{}", UPK_FNAME, static_cast<unsigned>(threadID)),
                         std::ios_base::app);
   std::string upkHdrOut, upkSeqOut, upkQsOut;
   std::string content;
-  content.reserve(BLOCK_SIZE);
+  content.reserve(IO_BUFFER_SIZE);
   auto write_content = [&]() { upkfile << content; };
 
   while (in.peek() != EOF) {
@@ -648,6 +851,7 @@ void Fastq::unpack_hL_qS(const unpackfq_s& upkStruct, byte threadID) {
     in.seekg(begPos);  // Read file from this position
     // Take a chunk of decrypted file
     std::string decText;
+    decText.reserve(chunkSize);
     for (u64 u = chunkSize; u--;) {
       in.get(c);
       decText += c;
@@ -668,24 +872,24 @@ void Fastq::unpack_hL_qS(const unpackfq_s& upkStruct, byte threadID) {
       unshuffle(i, chunkSize);
     }
 
-    content += THR_ID_HDR + std::to_string(threadID) + "\n";
+    content += std::format("{}{}\n", THR_ID_HDR, static_cast<unsigned>(threadID));
     do {
       content += "@";
       std::string plusMore;
 
       unpack_large(upkHdrOut, i, upkStruct.XChar_hdr, upkStruct.hdrUnpack);
       plusMore = upkHdrOut;
-      content += upkHdrOut + "\n";
+      content += std::format("{}\n", upkHdrOut);
       ++i;  // Hdr
 
       unpack_seq(upkSeqOut, i);
-      content += upkSeqOut + "\n";  // Seq
+      content += std::format("{}\n", upkSeqOut);  // Seq
 
-      content += (justPlus ? "+" : "+" + plusMore) + "\n";
+      content += justPlus ? "+\n" : std::format("+{}\n", plusMore);
       ++i;  // +
 
       (this->*unpackQS)(upkQsOut, i, upkStruct.qsUnpack);
-      content += upkQsOut + "\n";  // Qs
+      content += std::format("{}\n", upkQsOut);  // Qs
     } while (++i != decText.end());  // If trouble: change "!=" to "<"
 
     // Update the chunk size and positions (beg & end)
@@ -694,7 +898,9 @@ void Fastq::unpack_hL_qS(const unpackfq_s& upkStruct, byte threadID) {
       in.get(c);
       if (c == (char)253) {
         std::string chunkSizeStr;
-        while (in.get(c) && c != (char)254) chunkSizeStr += c;
+        while (in.get(c) && c != (char)254) {
+          chunkSizeStr += c;
+        }
 
         chunkSize = stoull(chunkSizeStr);
         begPos = in.tellg();
@@ -702,10 +908,10 @@ void Fastq::unpack_hL_qS(const unpackfq_s& upkStruct, byte threadID) {
       }
     }
 
-    if (content.size() >= BLOCK_SIZE) {
+    if (content.size() >= IO_BUFFER_SIZE) {
       write_content();
       content.clear();
-      content.reserve(BLOCK_SIZE);
+      content.reserve(IO_BUFFER_SIZE);
     }
   }
   write_content();
@@ -717,18 +923,18 @@ void Fastq::unpack_hL_qS(const unpackfq_s& upkStruct, byte threadID) {
 /**
  * @brief Unpack: large header, large quality score.
  *        '@' at the beginning of headers not packed
- * @param upkStruct  Unpack structure
- * @param threadID   Thread ID
+ * @param upkStruct Unpack structure
+ * @param threadID  Thread ID
  */
 void Fastq::unpack_hL_qL(const unpackfq_s& upkStruct, byte threadID) {
   pos_t begPos = upkStruct.begPos;
   u64 chunkSize = upkStruct.chunkSize;
   std::ifstream in(DEC_FNAME);
-  std::ofstream upkfile(UPK_FNAME + std::to_string(threadID),
+  std::ofstream upkfile(std::format("{}{}", UPK_FNAME, static_cast<unsigned>(threadID)),
                         std::ios_base::app);
   std::string upkHdrOut, upkSeqOut, upkQsOut;
   std::string content;
-  content.reserve(BLOCK_SIZE);
+  content.reserve(IO_BUFFER_SIZE);
   auto write_content = [&]() { upkfile << content; };
 
   while (in.peek() != EOF) {
@@ -736,6 +942,7 @@ void Fastq::unpack_hL_qL(const unpackfq_s& upkStruct, byte threadID) {
     in.seekg(begPos);  // Read file from this position
     // Take a chunk of decrypted file
     std::string decText;
+    decText.reserve(chunkSize);
     for (u64 u = chunkSize; u--;) {
       in.get(c);
       decText += c;
@@ -756,24 +963,24 @@ void Fastq::unpack_hL_qL(const unpackfq_s& upkStruct, byte threadID) {
       unshuffle(i, chunkSize);
     }
 
-    content += THR_ID_HDR + std::to_string(threadID) + "\n";
+    content += std::format("{}{}\n", THR_ID_HDR, static_cast<unsigned>(threadID));
     do {
       content += "@";
       std::string plusMore;
 
       unpack_large(upkHdrOut, i, upkStruct.XChar_hdr, upkStruct.hdrUnpack);
       plusMore = upkHdrOut;
-      content += upkHdrOut + "\n";
+      content += std::format("{}\n", upkHdrOut);
       ++i;  // Hdr
 
       unpack_seq(upkSeqOut, i);
-      content += upkSeqOut + "\n";  // Seq
+      content += std::format("{}\n", upkSeqOut);  // Seq
 
-      content += (justPlus ? "+" : "+" + plusMore) + "\n";
+      content += justPlus ? "+\n" : std::format("+{}\n", plusMore);
       ++i;  // +
 
       unpack_large(upkQsOut, i, upkStruct.XChar_qs, upkStruct.qsUnpack);
-      content += upkQsOut + "\n";  // Qs
+      content += std::format("{}\n", upkQsOut);  // Qs
     } while (++i != decText.end());  // If trouble: change "!=" to "<"
 
     // Update the chunk size and positions (beg & end)
@@ -782,18 +989,19 @@ void Fastq::unpack_hL_qL(const unpackfq_s& upkStruct, byte threadID) {
       in.get(c);
       if (c == (char)253) {
         std::string chunkSizeStr;
-        while (in.get(c) && c != (char)254) chunkSizeStr += c;
-
+        while (in.get(c) && c != (char)254) {
+          chunkSizeStr += c;
+        }
         chunkSize = stoull(chunkSizeStr);
         begPos = in.tellg();
         endPos = begPos + (pos_t)chunkSize;
       }
     }
 
-    if (content.size() >= BLOCK_SIZE) {
+    if (content.size() >= IO_BUFFER_SIZE) {
       write_content();
       content.clear();
-      content.reserve(BLOCK_SIZE);
+      content.reserve(IO_BUFFER_SIZE);
     }
   }
   write_content();

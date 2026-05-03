@@ -1,0 +1,10 @@
+#ifndef CRYFA_VERSION_HPP
+#define CRYFA_VERSION_HPP
+
+#include <string>
+
+namespace cryfa {
+inline const std::string VERSION = "@CRYFA_VERSION@";
+}  // namespace cryfa
+
+#endif  // CRYFA_VERSION_HPP

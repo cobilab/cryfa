@@ -1,14 +1,14 @@
+// SPDX-FileCopyrightText: 2026 Morteza Hosseini
+// SPDX-License-Identifier: GPL-3.0-only
+
 /**
- * @file      application.cpp
- * @brief     Application
- * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
- * @author    Diogo Pratas      (pratas@ua.pt)
- * @copyright The GNU General Public License v3.0
+ * @file application.cpp
+ * @brief Application
  */
 
 #include "application.hpp"
 
-#include <fstream>
+#include <format>
 
 #include "assert.hpp"
 #include "numeric.hpp"
@@ -39,7 +39,7 @@ void application::exe_compress_encrypt() {
       crypt.shuffle_file();
       break;
     default:
-      error("\"" + par.in_file + "\" is not a valid FASTA or FASTQ file.");
+      error(std::format("\"{}\" is not a valid FASTA or FASTQ file.", par.in_file));
   }
 }
 
@@ -47,9 +47,7 @@ void application::exe_compress_encrypt() {
  * @brief Decrypt and/or unshuffle + decompress
  */
 void application::exe_decrypt_decompress() {
-  crypt.decrypt();
-  std::ifstream in(DEC_FNAME);
-  switch (in.peek()) {
+  switch (crypt.peek_decrypted_type()) {
     case (char)127:
       fa.decompress();
       break;
@@ -57,18 +55,18 @@ void application::exe_decrypt_decompress() {
       fq.decompress();
       break;
     case (char)125:
+      crypt.decrypt();
       crypt.unshuffle_file();
       break;
     default:
       error("corrupted file.");
   }
-  in.close();
 }
 
 /**
  * @brief Execute Cryfa
- * @param argc  number of command line arguments
- * @param argv  command line arguments
+ * @param argc Number of command line arguments
+ * @param argv Command line arguments
  */
 void application::exe(int argc, char* argv[]) {
   const char action = parse(par, argc, argv);

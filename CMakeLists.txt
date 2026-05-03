@@ -2,6 +2,54 @@ cmake_minimum_required(VERSION 4.0.0)
 
 project(cryfa)
 
+set(CRYFA_VERSION_OVERRIDE "" CACHE STRING "Override the version embedded in Cryfa")
+set(CRYFA_VERSION "0.0.0-dev")
+
+if(CRYFA_VERSION_OVERRIDE)
+    set(CRYFA_VERSION "${CRYFA_VERSION_OVERRIDE}")
+elseif(DEFINED ENV{GITHUB_REF_TYPE} AND "$ENV{GITHUB_REF_TYPE}" STREQUAL "tag")
+    set(CRYFA_VERSION "$ENV{GITHUB_REF_NAME}")
+    string(REGEX REPLACE "^v" "" CRYFA_VERSION "${CRYFA_VERSION}")
+else()
+    find_package(Git QUIET)
+
+    if(Git_FOUND AND EXISTS "${CMAKE_SOURCE_DIR}/.git")
+        execute_process(
+            COMMAND "${GIT_EXECUTABLE}" describe --tags --exact-match
+                    --match "v[0-9]*" --match "[0-9]*"
+            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+            OUTPUT_VARIABLE CRYFA_GIT_VERSION
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+            ERROR_QUIET
+            RESULT_VARIABLE CRYFA_GIT_VERSION_RESULT
+        )
+
+        if(NOT CRYFA_GIT_VERSION_RESULT EQUAL 0)
+            execute_process(
+                COMMAND "${GIT_EXECUTABLE}" describe --tags --dirty --always
+                        --match "v[0-9]*" --match "[0-9]*"
+                WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+                OUTPUT_VARIABLE CRYFA_GIT_VERSION
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                ERROR_QUIET
+                RESULT_VARIABLE CRYFA_GIT_VERSION_RESULT
+            )
+        endif()
+
+        if(CRYFA_GIT_VERSION_RESULT EQUAL 0 AND CRYFA_GIT_VERSION)
+            string(REGEX REPLACE "^v" "" CRYFA_VERSION "${CRYFA_GIT_VERSION}")
+        endif()
+    endif()
+endif()
+
+set(CRYFA_GENERATED_INCLUDE_DIR "${CMAKE_CURRENT_BINARY_DIR}/generated")
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/cmake/version.hpp.in"
+    "${CRYFA_GENERATED_INCLUDE_DIR}/cryfa/version.hpp"
+    @ONLY
+)
+message(STATUS "Cryfa version: ${CRYFA_VERSION}")
+
 # On MSVC x64 the cryptopp runtime uses hand-coded MASM routines
 # (CPUID64, XGETBV64, Baseline_Add/Sub, SHA256/GCM/Rijndael_*_SSE2).
 # Enable the MASM language so CMake can assemble x64dll.asm.
@@ -169,13 +217,19 @@ add_library(libCryfaCommon OBJECT
     src/fastq.cpp
     src/security.cpp
 )
-target_include_directories(libCryfaCommon PRIVATE src/include)
+target_include_directories(libCryfaCommon PRIVATE
+    src/include
+    "${CRYFA_GENERATED_INCLUDE_DIR}"
+)
 target_link_libraries(libCryfaCommon PRIVATE cryptopp-dep)
 
 add_executable(cryfa
     src/cryfa.cpp
 )
-target_include_directories(cryfa PRIVATE src/include)
+target_include_directories(cryfa PRIVATE
+    src/include
+    "${CRYFA_GENERATED_INCLUDE_DIR}"
+)
 target_link_libraries(cryfa PRIVATE
     Threads::Threads
     libCryfaCommon
@@ -185,7 +239,10 @@ target_link_libraries(cryfa PRIVATE
 add_executable(keygen
     src/keygen.cpp
 )
-target_include_directories(keygen PRIVATE src/include)
+target_include_directories(keygen PRIVATE
+    src/include
+    "${CRYFA_GENERATED_INCLUDE_DIR}"
+)
 
 # ── CTest round-trip integration test ────────────────────────────────────────
 enable_testing()

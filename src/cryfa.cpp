@@ -1,16 +1,9 @@
-/*****************************************************
-  Cryfa :: A secure encryption tool for genomic data
-******************************************************
-         Morteza Hosseini    seyedmorteza@ua.pt
-         Diogo Pratas        pratas@ua.pt
-******************************************************/
+// SPDX-FileCopyrightText: 2026 Morteza Hosseini
+// SPDX-License-Identifier: GPL-3.0-only
 
 /**
- * @file      cryfa.cpp
- * @brief     Main
- * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
- * @author    Diogo Pratas      (pratas@ua.pt)
- * @copyright The GNU General Public License v3.0
+ * @file cryfa.cpp
+ * @brief Main file - Cryfa: a secure encryption tool for genomic data
  */
 
 #include <exception>  // std::exception
@@ -19,9 +12,9 @@
 using namespace cryfa;
 
 /**
- * @brief  Run Cryfa
- * @param  argc  number of command line arguments
- * @param  argv  command line arguments
+ * @brief Run Cryfa
+ * @param argc Number of command line arguments
+ * @param argv Command line arguments
  * @return SUCCESS or FAILURE
  */
 int main(int argc, char* argv[]) {

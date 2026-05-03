@@ -1,13 +1,22 @@
+// SPDX-FileCopyrightText: 2026 Morteza Hosseini
+// SPDX-License-Identifier: GPL-3.0-only
+
 /**
- * @file      security.hpp
- * @brief     Security
- * @author    Morteza Hosseini  (seyedmorteza@ua.pt)
- * @author    Diogo Pratas      (pratas@ua.pt)
- * @copyright The GNU General Public License v3.0
+ * @file security.hpp
+ * @brief Security
  */
 
 #ifndef CRYFA_SECURITY_H
 #define CRYFA_SECURITY_H
+
+#include <array>
+#include <cstddef>
+#include <functional>
+#include <memory>
+#include <mutex>
+#include <string_view>
+#include <unordered_map>
+#include <vector>
 
 #include "def.hpp"
 
@@ -19,23 +28,43 @@ class Security : public Param {
  public:
   Security() = default;
   void decrypt();
+  auto peek_decrypted_type() -> char;
 
  protected:
+  using PlaintextSink = std::function<void(std::string_view)>;
+  using PlaintextProducer = std::function<void(const PlaintextSink&)>;
+
   bool shuffInProg = true; /**< @brief Shuffle in progress @hideinitializer */
   bool shuffled = true;    /**< @hideinitializer */
 
   void encrypt();
+  void encrypt_stream(const PlaintextProducer&);
+  void decrypt_stream(const PlaintextSink&);
   void shuffle(std::string&);
   void unshuffle(std::string::iterator&, u64);
 
  private:
-  u64 seed_shared; /**< @brief Shared seed */
-  // const int TAG_SIZE = 12; /**< @brief Tag size used in GCC mode auth enc */
+  static constexpr size_t AES_KEY_SIZE = 16;
+  static constexpr size_t AES_IV_SIZE = 16;
+
+  struct DerivedState {
+    std::array<byte, AES_KEY_SIZE> key{};
+    std::array<byte, AES_IV_SIZE> iv{};
+    u64 shuffle_seed = 0;
+  };
+
+  static std::mutex derived_state_mutex;
+  static std::unordered_map<std::string, std::shared_ptr<const DerivedState>> derived_state_cache;
+
+  std::mutex unshuffle_cache_mutex;
+  std::unordered_map<u64, std::shared_ptr<const std::vector<u64>>> unshuffle_cache;
 
   void srandom(u32);
   auto random() -> int;
   auto random_engine() -> std::minstd_rand0&;
-  void gen_shuff_seed();
+  auto derived_state() -> std::shared_ptr<const DerivedState>;
+  auto build_shuff_seed(const std::string&) -> u64;
+  auto unshuffle_positions(u64) -> std::shared_ptr<const std::vector<u64>>;
   void build_iv(byte*, const std::string&);
   void build_key(byte*, const std::string&);
 
