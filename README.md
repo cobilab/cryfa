@@ -1,8 +1,9 @@
 <p align="center"><img src="logo.png" alt="Cryfa" height="150"/></p>
 
-[![Conda Version](https://anaconda.org/bioconda/cryfa/badges/version.svg)](https://anaconda.org/bioconda/cryfa)
+[![Anaconda version](https://anaconda.org/bioconda/cryfa/badges/version.svg)](https://anaconda.org/bioconda/cryfa)
+[![Anaconda downloads](https://anaconda.org/bioconda/cryfa/badges/downloads.svg)](https://anaconda.org/bioconda/cryfa)
 [![CI](https://github.com/cobilab/cryfa/actions/workflows/ci.yml/badge.svg)](https://github.com/cobilab/cryfa/actions/workflows/ci.yml)
-[![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
+[![License](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](LICENSE)
 
 Cryfa is an ultrafast encryption tool specifically designed for genomic data. Besides providing robust security, it also compresses FASTA/FASTQ sequences by a factor of three, making it an efficient solution for managing genomic data.
 
