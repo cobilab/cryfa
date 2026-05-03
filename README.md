@@ -195,7 +195,7 @@ This script automates the process of downloading datasets, installing dependenci
 For quick local performance and correctness checks, use the local harness:
 
 ```sh
-sh scripts/runtime/run_local_perf.sh --label local-check --input example/in.fq --target-mb 200 --threads "1 4 8" --runs 1 --modes both --no-prompt
+bash scripts/runtime/run_local_perf.sh --label local-check --input example/in.fq --target-mb 200 --threads "1 4 8" --runs 1 --modes both --no-prompt
 ```
 
 The local harness expands the seed input to the requested size, measures compression and decompression, verifies every round trip with `cmp`, and writes CSV/Markdown reports under `results/local_perf/`.

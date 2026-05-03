@@ -123,6 +123,18 @@ handle_existing_cache() {
   clear_stale_cmake_state "$build_dir"
 }
 
+built_executable() {
+  name=$1
+  for candidate in "$BUILD/$name" "$BUILD/$BUILD_TYPE/$name"; do
+    if [ -f "$candidate" ]; then
+      printf '%s\n' "$candidate"
+      return
+    fi
+  done
+
+  fail "unable to find built executable \"$name\" in \"$BUILD\" or \"$BUILD/$BUILD_TYPE\"."
+}
+
 while [ "$#" -gt 0 ]; do
   case "$1" in
     --build-dir)
@@ -178,7 +190,7 @@ log "Building targets with $PARALLEL parallel jobs"
 cmake --build "$BUILD" --parallel "$PARALLEL" --config "$BUILD_TYPE"
 
 log "Copying executables to the repository root"
-cp "$BUILD/cryfa" "$ROOT_DIR/cryfa"
-cp "$BUILD/keygen" "$ROOT_DIR/keygen"
+cp "$(built_executable cryfa)" "$ROOT_DIR/cryfa"
+cp "$(built_executable keygen)" "$ROOT_DIR/keygen"
 
 log "Install complete"

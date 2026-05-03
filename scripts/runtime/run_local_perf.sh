@@ -127,6 +127,14 @@ function file_size_bytes {
   wc -c <"$1" | awk '{print $1}'
 }
 
+function file_checksum {
+  cksum "$1" | awk '{print $1 ":" $2}'
+}
+
+function cache_key {
+  printf '%s' "$1" | cksum | awk '{print $1}'
+}
+
 function format_mib {
   awk -v bytes="$1" 'BEGIN { printf "%.2f", bytes / 1048576.0 }'
 }
@@ -260,7 +268,11 @@ function build_run_label {
 
 function build_dataset {
   local seed_bytes
+  local source_path
+  local source_checksum
+  local source_key
   seed_bytes=$(file_size_bytes "$INPUT")
+  source_path=$(resolve_path "$INPUT")
 
   if (( TARGET_MB <= 0 )) || (( seed_bytes >= TARGET_MB * 1024 * 1024 )); then
     DATASET=$INPUT
@@ -282,10 +294,17 @@ function build_dataset {
     ext="dat"
   fi
 
-  DATASET="$dataset_dir/${base_name}_${TARGET_MB}mb_x${copies}.${ext}"
+  source_checksum=$(file_checksum "$INPUT")
+  source_key=$(cache_key "${source_path}:${source_checksum}")
+  DATASET="$dataset_dir/${base_name}_${source_key}_${TARGET_MB}mb_x${copies}.${ext}"
 
   if [[ -f $DATASET && -f $DATASET.meta ]] &&
-    grep -qx "copies=$copies" "$DATASET.meta"; then
+    grep -Fqx "dataset_format=2" "$DATASET.meta" &&
+    grep -Fqx "source=$source_path" "$DATASET.meta" &&
+    grep -Fqx "source_checksum=$source_checksum" "$DATASET.meta" &&
+    grep -Fqx "seed_bytes=$seed_bytes" "$DATASET.meta" &&
+    grep -Fqx "copies=$copies" "$DATASET.meta" &&
+    grep -Fqx "target_mb=$TARGET_MB" "$DATASET.meta"; then
     log "Reusing cached generated dataset: $DATASET ($(format_mib "$(file_size_bytes "$DATASET")") MiB)"
     return
   fi
@@ -313,11 +332,13 @@ function build_dataset {
       local $/;
       my $chunk = <$in>;
       close $in;
+      my $terminator = length($chunk) && substr($chunk, -1) eq "\n" ? "" : "\n";
 
       open my $out, ">", $output or die "Unable to open $output: $!";
       binmode $out;
       for (1 .. $copies) {
         print {$out} $chunk;
+        print {$out} $terminator if length($terminator);
       }
       close $out or die "Unable to write $output: $!";
     ' "$INPUT" "$copies" "$tmp"
@@ -325,7 +346,9 @@ function build_dataset {
 
   mv "$tmp" "$DATASET"
   cat >"$DATASET.meta" <<EOF
-source=$INPUT
+dataset_format=2
+source=$source_path
+source_checksum=$source_checksum
 seed_bytes=$seed_bytes
 copies=$copies
 target_mb=$TARGET_MB

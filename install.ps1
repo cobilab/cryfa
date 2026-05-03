@@ -98,6 +98,24 @@ function Ensure-FreshBuildDirectory {
     }
 }
 
+function Get-BuiltExecutable {
+    param([string]$Name)
+
+    $exeName = "$Name.exe"
+    $candidates = @(
+        (Join-Path $BUILD $exeName),
+        (Join-Path (Join-Path $BUILD $BUILD_TYPE) $exeName)
+    )
+
+    foreach ($candidate in $candidates) {
+        if (Test-Path $candidate) {
+            return $candidate
+        }
+    }
+
+    throw "Unable to find built executable '$exeName' in '$BUILD' or '$BUILD\$BUILD_TYPE'."
+}
+
 for ($i = 0; $i -lt $args.Length; $i++) {
     switch ($args[$i]) {
         "--build-dir" {
@@ -155,7 +173,7 @@ Write-Log "Building targets with $PARALLEL parallel jobs"
 cmake --build $BUILD --parallel $PARALLEL --config $BUILD_TYPE
 
 Write-Log "Copying executables to the repository root"
-Copy-Item "$BUILD\cryfa.exe"  -Destination $Root -Force
-Copy-Item "$BUILD\keygen.exe" -Destination $Root -Force
+Copy-Item (Get-BuiltExecutable "cryfa")  -Destination $Root -Force
+Copy-Item (Get-BuiltExecutable "keygen") -Destination $Root -Force
 
 Write-Log "Install complete"
